@@ -1,8 +1,28 @@
-use crate::ControllerPosition;
 use bevy::{
     input::{gamepad::GamepadEvent, keyboard::KeyboardInput},
     prelude::*,
 };
+
+#[derive(Debug, Resource)]
+struct ControllerPosition(Vec4);
+
+impl ControllerPosition {
+    fn set_throttle(&mut self, value: f32) {
+        self.0[0] = value;
+    }
+
+    fn set_yaw(&mut self, value: f32) {
+        self.0[1] = value;
+    }
+
+    fn set_pitch(&mut self, value: f32) {
+        self.0[2] = value;
+    }
+
+    fn set_roll(&mut self, value: f32) {
+        self.0[3] = value;
+    }
+}
 
 fn handle_controller_event(
     controller: &mut ResMut<ControllerPosition>,
