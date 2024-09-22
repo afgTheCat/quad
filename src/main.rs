@@ -2,25 +2,73 @@ mod control;
 mod rigid_body;
 mod ui;
 
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, PrimitiveTopology},
+        render_asset::RenderAssetUsages,
+    },
+};
 use control::handle_keyboard_events;
 use rigid_body::{debug_move_cube, setup_rigid_body_context};
 
 /// set up a simple 3D scene
-fn setup(mut commands: Commands) {
-    // light
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            shadows_enabled: true,
-            ..default()
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // Add a directional light to simulate the sun
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: Color::rgb(1.0, 1.0, 0.9), // Slightly warm sunlight
+            illuminance: 100000.0, // Intensity of the light, tweak this based on your scene
+            shadows_enabled: true, // Enable shadows for the sunlight
+            ..Default::default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
+        transform: Transform {
+            // Tilt the light to simulate the sun's angle (e.g., 45-degree angle)
+            rotation: Quat::from_euler(EulerRot::XYZ, -std::f32::consts::FRAC_PI_4, 0.0, 0.0),
+            ..Default::default()
+        },
+        ..Default::default()
     });
+
     // camera
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
+    });
+
+    // Create grid lines
+    let grid_size = 20;
+    let line_spacing = 1.0;
+    let mut grid_vertices = vec![];
+    let mut grid_indices = vec![];
+
+    for i in -grid_size..=grid_size {
+        let pos = i as f32 * line_spacing;
+        // Horizontal lines (along X-axis)
+        grid_vertices.push([pos, -1.0, -grid_size as f32 * line_spacing]);
+        grid_vertices.push([pos, -1.0, grid_size as f32 * line_spacing]);
+        // Vertical lines (along Z-axis)
+        grid_vertices.push([-grid_size as f32 * line_spacing, -1.0, pos]);
+        grid_vertices.push([grid_size as f32 * line_spacing, -1.0, pos]);
+    }
+
+    for i in 0..grid_vertices.len() as u32 {
+        grid_indices.push(i);
+    }
+
+    let mut grid_mesh = Mesh::new(PrimitiveTopology::LineList, RenderAssetUsages::RENDER_WORLD);
+    grid_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, grid_vertices);
+    grid_mesh.insert_indices(Indices::U32(grid_indices));
+
+    // Spawn the grid
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(grid_mesh),
+        material: materials.add(Color::rgb(1., 1., 1.)),
+        ..Default::default()
     });
 }
 
