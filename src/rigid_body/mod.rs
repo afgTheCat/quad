@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{
     asset::Assets,
     color::Color,
-    math::Vec3,
+    math::{Mat3, Quat, Vec3},
     pbr::{PbrBundle, StandardMaterial},
     prelude::{default, Commands, Component, Cuboid, Mesh, Query, Res, ResMut, Transform},
     time::Time,
@@ -13,12 +13,17 @@ use bevy::{
 pub struct RigidBody {
     mass: f32,
     linear_veolcity: Vec3,
+    omega: Vec3,
 }
 
 // Euler for now
 impl RigidBody {
     fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration) {
         transform.translation += self.linear_veolcity * dt.as_secs_f32();
+        let q_omega = Quat::from_xyzw(self.omega[0], self.omega[1], self.omega[2], 0.);
+        let dq_omega = q_omega * dt.as_secs_f32() * 0.5;
+        let d_rotation = transform.rotation * dq_omega;
+        transform.rotation = (transform.rotation + d_rotation).normalize();
     }
 }
 
@@ -27,6 +32,7 @@ impl Default for RigidBody {
         Self {
             mass: 1.,
             linear_veolcity: Vec3::new(1.0, 0.0, 0.),
+            omega: Vec3::new(1.0, 0., 0.),
         }
     }
 }
