@@ -13,35 +13,47 @@ use bevy::{
 pub struct RigidBody {
     mass: f32,
     linear_velocity: Vec3,
-    inertia_tensor: Mat3,
+    inv_inertia_tensor: Mat3,
     angular_momentum: Vec3,
 }
 
-fn rectangular_cuboid_inertia_matrix(a: f32, b: f32, c: f32) -> Mat3 {
+fn inv_rectangular_cuboid_inertia_matrix(a: f32, b: f32, c: f32) -> Mat3 {
+    let diag = Vec3::new(
+        b.powi(2) + c.powi(2),
+        a.powi(2) + c.powi(2),
+        a.powi(2) + c.powi(2),
+    );
     let v = a * b * c;
-    v * Mat3::from_diagonal(Vec3::new(
-        b.powi(2) + c.powi(2) / 12.,
-        b.powi(2) + c.powi(2) / 12.,
-        b.powi(2) + c.powi(2) / 12.,
-    ))
+    1. / (v * Mat3::from_diagonal(diag) / 12.)
+}
+
+fn cross_product_matrix(omega: Vec3) -> Mat3 {
+    Mat3::from_cols(
+        Vec3::new(0., omega[2], -omega[1]),
+        Vec3::new(-omega[2], 0., omega[0]),
+        Vec3::new(omega[1], -omega[0], 0.),
+    )
 }
 
 // Euler for now
 impl RigidBody {
     fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration) {
-        // linear part
-        transform.translation += self.linear_velocity * dt.as_secs_f32();
+        let dt_f32 = dt.as_secs_f32();
 
-        let r = Mat3::from_quat(transform.rotation.inverse());
-        let omega = r * self.inertia_tensor.inverse() * r.transpose() * self.angular_momentum;
+        // Compute the angular velocity in world space
+        let r = Mat3::from_quat(transform.rotation);
+        let angular_velocity = r * self.inv_inertia_tensor * r.transpose() * self.angular_momentum;
 
-        // Quaternion representation of angular velocity
-        let q_omega = Quat::from_xyzw(omega[0], omega[1], omega[2], 0.);
+        // Convert angular velocity to quaternion derivative
+        let half_dt_omega = 0.5 * dt_f32 * angular_velocity;
+        let dq = Quat::from_xyzw(0.0, half_dt_omega.x, half_dt_omega.y, half_dt_omega.z)
+            * transform.rotation;
 
-        // Update rotation
-        let dq_omega = q_omega * dt.as_secs_f32() * 0.5;
-        let d_rotation = transform.rotation * dq_omega;
-        transform.rotation = (transform.rotation + d_rotation).normalize();
+        // Update quaternion rotation (Euler step)
+        transform.rotation = (transform.rotation + dq).normalize();
+
+        // Update translation using linear velocity
+        transform.translation += dt_f32 * self.linear_velocity;
     }
 }
 
@@ -50,12 +62,12 @@ impl Default for RigidBody {
         Self {
             mass: 1.,
             linear_velocity: Vec3::new(0.0, 0.0, 0.),
-            inertia_tensor: Mat3::from_cols(
+            inv_inertia_tensor: Mat3::from_cols(
                 Vec3::new(1., 0., 0.),
                 Vec3::new(0., 1., 0.),
                 Vec3::new(0., 0., 1.),
             ),
-            angular_momentum: Vec3::new(40., 4., 1.),
+            angular_momentum: Vec3::new(1., 1., 10.),
         }
     }
 }
@@ -92,7 +104,7 @@ pub fn setup_rigid_body_context(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let (a, b, c) = (3.0, 0.3, 6.);
+    let (a, b, c) = (1.4, 0.7, 2.1);
     let simulation_context = SimulationContext::default();
     let cube_mesh = PbrBundle {
         mesh: meshes.add(Cuboid::new(a, b, c)),
@@ -107,7 +119,7 @@ pub fn setup_rigid_body_context(
     };
     commands.spawn((
         RigidBody {
-            inertia_tensor: rectangular_cuboid_inertia_matrix(a, b, c),
+            inv_inertia_tensor: inv_rectangular_cuboid_inertia_matrix(a, b, c),
             ..RigidBody::default()
         },
         cube_mesh,
