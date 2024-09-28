@@ -9,8 +9,10 @@ use bevy::{
         render_asset::RenderAssetUsages,
     },
 };
+use bevy_egui::EguiPlugin;
 use control::handle_keyboard_events;
-use rigid_body::{debug_move_cube, setup_rigid_body_context};
+use rigid_body::{main_qube, setup_rigid_body_context};
+use ui::ui;
 
 /// set up a simple 3D scene
 fn setup(
@@ -75,9 +77,17 @@ fn setup(
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(EguiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Startup, setup_rigid_body_context)
         .add_systems(Update, handle_keyboard_events)
-        .add_systems(Update, debug_move_cube)
+        .add_systems(Update, main_qube)
+        .add_systems(Update, ui)
         .run();
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn integrate_thing() {}
 }
