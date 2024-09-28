@@ -1,6 +1,6 @@
 use bevy::prelude::Query;
 use bevy_egui::{
-    egui::{self, DragValue},
+    egui::{self},
     EguiContexts,
 };
 
@@ -41,9 +41,20 @@ pub fn ui(mut contexts: EguiContexts, mut query: Query<(&mut RigidBody, &mut Sim
             toggle_ui(ui, &mut simulation_context.simulation_running);
         });
         ui.end_row();
+
         ui.horizontal(|ui| {
             ui.label("X length");
             ui.add(egui::Slider::new(&mut rigid_body.sides.x, 0.1..=10.0));
+        });
+
+        ui.horizontal(|ui| {
+            ui.label("Y length");
+            ui.add(egui::Slider::new(&mut rigid_body.sides.y, 0.1..=10.0));
+        });
+
+        ui.horizontal(|ui| {
+            ui.label("Z length");
+            ui.add(egui::Slider::new(&mut rigid_body.sides.z, 0.1..=10.0));
         });
 
         if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
