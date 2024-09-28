@@ -1,24 +1,23 @@
 use std::time::Duration;
 
 use bevy::{
-    asset::Assets,
-    color::Color,
+    asset::{Assets, Handle},
     math::{Mat3, Quat, Vec3},
-    pbr::{PbrBundle, StandardMaterial},
-    prelude::{default, Commands, Component, Cuboid, Mesh, Query, Res, ResMut, Transform},
+    prelude::{Component, Cuboid, Mesh, Query, Res, ResMut, Transform},
     time::Time,
 };
 
 #[derive(Component)]
 pub struct RigidBody {
-    mass: f32,
+    pub mass: f32,
     pub sides: Vec3,
     pub linear_velocity: Vec3,
     pub inv_inertia_tensor: Mat3,
     pub angular_momentum: Vec3,
+    pub mesh_handle: Handle<Mesh>,
 }
 
-fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> Mat3 {
+pub fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> Mat3 {
     let Vec3 { x, y, z } = sides;
     let diag = Vec3::new(
         y.powi(2) + z.powi(2),
@@ -31,6 +30,20 @@ fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> Mat3 {
 
 // Euler for now
 impl RigidBody {
+    pub fn reset_rigid_body(
+        &mut self,
+        sides: Vec3,
+        angular_momentum: Vec3,
+        mut meshes: ResMut<Assets<Mesh>>,
+    ) {
+        self.sides = sides;
+        self.angular_momentum = angular_momentum;
+        self.inv_inertia_tensor = inv_rectangular_cuboid_inertia_matrix(sides);
+        if let Some(mesh) = meshes.get_mut(&self.mesh_handle) {
+            *mesh = Mesh::from(Cuboid::from_size(sides))
+        }
+    }
+
     fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration) {
         // println!("{:?}", Mat3::from_quat(transform.rotation));
         // Linear part (position update)
@@ -80,36 +93,6 @@ impl Default for SimulationContext {
             time_accu: Duration::default(),
         }
     }
-}
-
-pub fn setup_rigid_body_context(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let sides = Vec3::new(1.4, 0.2, 2.1);
-    let simulation_context = SimulationContext::default();
-    let cube_mesh = PbrBundle {
-        mesh: meshes.add(Cuboid::from_size(sides)),
-        material: materials.add(Color::srgb_u8(124, 144, 255)),
-        transform: Transform {
-            translation: Vec3::ZERO,
-            rotation: Quat::IDENTITY,
-            scale: Vec3::ONE,
-        },
-        ..default()
-    };
-    commands.spawn((
-        RigidBody {
-            inv_inertia_tensor: inv_rectangular_cuboid_inertia_matrix(sides),
-            mass: 1.,
-            sides,
-            angular_momentum: Vec3::new(1., 0.8, 0.9),
-            linear_velocity: Vec3::ZERO,
-        },
-        cube_mesh,
-        simulation_context,
-    ));
 }
 
 pub fn main_qube(

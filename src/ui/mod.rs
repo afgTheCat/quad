@@ -1,4 +1,8 @@
-use bevy::prelude::Query;
+use bevy::{
+    asset::{Assets, Handle},
+    math::Vec3,
+    prelude::{Component, Cuboid, Mesh, Query, ResMut},
+};
 use bevy_egui::{
     egui::{self},
     EguiContexts,
@@ -33,32 +37,68 @@ fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
     response
 }
 
-pub fn ui(mut contexts: EguiContexts, mut query: Query<(&mut RigidBody, &mut SimulationContext)>) {
-    let (mut rigid_body, mut simulation_context) = query.single_mut();
-    egui::Window::new("Simulation").show(contexts.ctx_mut(), |ui| {
+#[derive(Component)]
+pub struct UiState {
+    pub sides: Vec3,
+    pub angular_momentum: Vec3,
+}
+
+pub fn ui(
+    mut contexts: EguiContexts,
+    mut query: Query<(&mut RigidBody, &mut SimulationContext, &mut UiState)>,
+    meshes: ResMut<Assets<Mesh>>,
+) {
+    let (mut rigid_body, mut simulation_context, mut ui_state) = query.single_mut();
+    egui::Window::new("Simulation cotroll").show(contexts.ctx_mut(), |ui| {
         ui.horizontal(|ui| {
             ui.label("Simulation running");
             toggle_ui(ui, &mut simulation_context.simulation_running);
         });
         ui.end_row();
 
+        ui.label("Simulation variables");
+
         ui.horizontal(|ui| {
             ui.label("X length");
-            ui.add(egui::Slider::new(&mut rigid_body.sides.x, 0.1..=10.0));
+            ui.add(egui::Slider::new(&mut ui_state.sides.x, 0.1..=10.0));
         });
 
         ui.horizontal(|ui| {
             ui.label("Y length");
-            ui.add(egui::Slider::new(&mut rigid_body.sides.y, 0.1..=10.0));
+            ui.add(egui::Slider::new(&mut ui_state.sides.y, 0.1..=10.0));
         });
 
         ui.horizontal(|ui| {
             ui.label("Z length");
-            ui.add(egui::Slider::new(&mut rigid_body.sides.z, 0.1..=10.0));
+            ui.add(egui::Slider::new(&mut ui_state.sides.z, 0.1..=10.0));
         });
 
-        if ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-            println!("LOOOL");
+        ui.horizontal(|ui| {
+            ui.label("X anular momentum");
+            ui.add(egui::Slider::new(
+                &mut ui_state.angular_momentum.x,
+                0.1..=10.0,
+            ));
+        });
+
+        ui.horizontal(|ui| {
+            ui.label("Y anular momentum");
+            ui.add(egui::Slider::new(
+                &mut ui_state.angular_momentum.y,
+                0.1..=10.0,
+            ));
+        });
+
+        ui.horizontal(|ui| {
+            ui.label("Z anular momentum");
+            ui.add(egui::Slider::new(
+                &mut ui_state.angular_momentum.z,
+                0.1..=10.0,
+            ));
+        });
+
+        if ui.add(egui::Button::new("Submit")).clicked() {
+            rigid_body.reset_rigid_body(ui_state.sides, ui_state.angular_momentum, meshes);
         }
     });
 }
