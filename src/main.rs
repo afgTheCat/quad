@@ -10,6 +10,7 @@ use bevy::{
     },
 };
 use bevy_egui::EguiPlugin;
+use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use control::handle_keyboard_events;
 use rigid_body::{inv_rectangular_cuboid_inertia_matrix, rigid_body, RigidBody, SimulationContext};
 use ui::{ui, UiState};
@@ -37,10 +38,13 @@ fn setup(
     });
 
     // camera
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3dBundle {
+            transform: Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
+            ..default()
+        },
+        PanOrbitCamera::default(),
+    ));
 
     // Create grid lines
     let grid_size = 20;
@@ -73,8 +77,8 @@ fn setup(
         ..Default::default()
     });
 
-    let sides = Vec3::new(1.4, 0.2, 2.1);
-    let angular_momentum = Vec3::new(1., 0.8, 0.9);
+    let sides = Vec3::new(2.0, 0.1, 1.);
+    let angular_momentum = Vec3::new(0., 0.002, 0.2);
 
     let simulation_context = SimulationContext::default();
     let cuboid_mesh = meshes.add(Cuboid::from_size(sides));
@@ -110,6 +114,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
+        .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, handle_keyboard_events)
         .add_systems(Update, rigid_body)

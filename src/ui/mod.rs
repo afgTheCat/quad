@@ -1,7 +1,7 @@
 use bevy::{
-    asset::{Assets, Handle},
+    asset::Assets,
     math::{Quat, Vec3},
-    prelude::{Component, Cuboid, Mesh, Query, ResMut, Transform},
+    prelude::{Component, Mesh, Query, ResMut, Transform},
 };
 use bevy_egui::{
     egui::{self},
@@ -93,7 +93,7 @@ pub fn ui(
                 &mut ui_state.inertia_matrix_diag.x,
                 0.001..=1.0,
             ));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_sides();
             }
         });
@@ -104,7 +104,7 @@ pub fn ui(
                 &mut ui_state.inertia_matrix_diag.y,
                 0.001..=1.0,
             ));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_sides();
             }
         });
@@ -115,7 +115,7 @@ pub fn ui(
                 &mut ui_state.inertia_matrix_diag.z,
                 0.001..=1.0,
             ));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_sides();
             }
         });
@@ -123,7 +123,7 @@ pub fn ui(
         ui.horizontal(|ui| {
             ui.label("X length");
             let slider = ui.add(egui::Slider::new(&mut ui_state.sides.x, 0.1..=10.0));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_inertia_matrix_diag();
             }
         });
@@ -131,7 +131,7 @@ pub fn ui(
         ui.horizontal(|ui| {
             ui.label("Y length");
             let slider = ui.add(egui::Slider::new(&mut ui_state.sides.y, 0.1..=10.0));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_inertia_matrix_diag();
             }
         });
@@ -139,14 +139,14 @@ pub fn ui(
         ui.horizontal(|ui| {
             ui.label("Z length");
             let slider = ui.add(egui::Slider::new(&mut ui_state.sides.z, 0.1..=10.0));
-            if slider.lost_focus() || slider.drag_released() {
+            if slider.lost_focus() || slider.drag_stopped() {
                 ui_state.recalculate_inertia_matrix_diag();
             }
         });
 
         ui.horizontal(|ui| {
             ui.label("X anular momentum");
-            let slider = ui.add(egui::Slider::new(
+            ui.add(egui::Slider::new(
                 &mut ui_state.angular_momentum.x,
                 0.0..=10.0,
             ));
