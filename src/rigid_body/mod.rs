@@ -9,7 +9,7 @@ use bevy::{
 
 #[derive(Component)]
 pub struct RigidBody {
-    pub mass: f32,
+    pub density: f32,
     pub sides: Vec3,
     pub linear_velocity: Vec3,
     pub inv_inertia_tensor: Mat3,
@@ -17,20 +17,40 @@ pub struct RigidBody {
     pub mesh_handle: Handle<Mesh>,
 }
 
-pub fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> Mat3 {
+pub fn inertia_cuboid_diag(sides: Vec3) -> Vec3 {
     let Vec3 { x, y, z } = sides;
-    let diag = Vec3::new(
-        y.powi(2) + z.powi(2),
-        x.powi(2) + z.powi(2),
-        x.powi(2) + y.powi(2),
-    );
     let v = x * y * z;
-    1. / (v * Mat3::from_diagonal(diag) / 12.)
+    (1. / 12.)
+        * v
+        * Vec3::new(
+            y.powi(2) + z.powi(2),
+            x.powi(2) + z.powi(2),
+            x.powi(2) + y.powi(2),
+        )
+}
+
+pub fn cube_from_inertia(inertia: Vec3) -> Vec3 {
+    let w1 = (inertia[0] + inertia[1] - inertia[2]) * 6.;
+    let w2 = (inertia[0] + inertia[2] - inertia[1]) * 6.;
+    let w3 = (inertia[1] + inertia[2] - inertia[0]) * 6.;
+    let a = w1.powf(2. / 5.) / (w2 * w3).powf(1. / 10.);
+    let b = w2.powf(2. / 5.) / (w1 * w3).powf(1. / 10.);
+    let c = w3.powf(2. / 5.) / (w1 * w2).powf(1. / 10.);
+    Vec3::new(a, b, c)
+}
+
+pub fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> Mat3 {
+    let diag = 1. / inertia_cuboid_diag(sides);
+    Mat3::from_diagonal(diag)
 }
 
 // Euler for now
 impl RigidBody {
-    pub fn reset_rigid_body(
+    pub fn mass(&self) -> f32 {
+        self.density * self.sides[0] * self.sides[1] * self.sides[2]
+    }
+
+    pub fn set_rigid_body_props(
         &mut self,
         sides: Vec3,
         angular_momentum: Vec3,
@@ -44,9 +64,15 @@ impl RigidBody {
         }
     }
 
+    pub fn inertia_diag(&self) -> Vec3 {
+        Vec3::new(
+            1. / self.inv_inertia_tensor.row(0)[0],
+            1. / self.inv_inertia_tensor.row(1)[1],
+            1. / self.inv_inertia_tensor.row(2)[2],
+        )
+    }
+
     fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration) {
-        // println!("{:?}", Mat3::from_quat(transform.rotation));
-        // Linear part (position update)
         transform.translation += self.linear_velocity * dt.as_secs_f32();
 
         let r = Mat3::from_quat(transform.rotation);
@@ -62,7 +88,6 @@ impl RigidBody {
         let dq_omega = q_omega * dt.as_secs_f32() * 0.5;
         let d_rotation = transform.rotation * dq_omega;
         transform.rotation = (transform.rotation + d_rotation).normalize();
-        // println!("{:?}", Mat3::from_quat(transform.rotation));
     }
 }
 
@@ -88,14 +113,14 @@ impl SimulationContext {
 impl Default for SimulationContext {
     fn default() -> Self {
         Self {
-            simulation_running: true,
+            simulation_running: false,
             dt: Duration::from_millis(1),
             time_accu: Duration::default(),
         }
     }
 }
 
-pub fn main_qube(
+pub fn rigid_body(
     mut query: Query<(&mut Transform, &mut RigidBody, &mut SimulationContext)>,
     timer: Res<Time>,
 ) {
@@ -105,5 +130,26 @@ pub fn main_qube(
         while simulation_context.step_context() {
             rigid_body.euler_integrate(&mut transform, &simulation_context.dt);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::rigid_body::{cube_from_inertia, inertia_cuboid_diag};
+    use bevy::math::{Mat3, Vec3};
+
+    #[test]
+    fn inv_rect_inverat_matrix() {
+        let inertia = inertia_cuboid_diag(Vec3::new(3., 4., 5.));
+        let diag = Vec3::new(205., 170., 125.);
+        assert_eq!(inertia, diag);
+    }
+
+    #[test]
+    fn cube_from_inertia_test() {
+        let sides = Vec3::new(3., 4., 10.);
+        let ineratia = inertia_cuboid_diag(sides);
+        let calculated_sides = cube_from_inertia(ineratia);
+        println!("sides: {:?}", calculated_sides);
     }
 }

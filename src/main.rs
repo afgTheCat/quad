@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_egui::EguiPlugin;
 use control::handle_keyboard_events;
-use rigid_body::{inv_rectangular_cuboid_inertia_matrix, main_qube, RigidBody, SimulationContext};
+use rigid_body::{inv_rectangular_cuboid_inertia_matrix, rigid_body, RigidBody, SimulationContext};
 use ui::{ui, UiState};
 
 /// set up a simple 3D scene
@@ -75,20 +75,22 @@ fn setup(
 
     let sides = Vec3::new(1.4, 0.2, 2.1);
     let angular_momentum = Vec3::new(1., 0.8, 0.9);
-    let ui_state = UiState {
-        sides,
-        angular_momentum,
-    };
 
     let simulation_context = SimulationContext::default();
     let cuboid_mesh = meshes.add(Cuboid::from_size(sides));
     let rigid_body = RigidBody {
         inv_inertia_tensor: inv_rectangular_cuboid_inertia_matrix(sides),
-        mass: 1.,
+        density: 1.,
         sides,
         angular_momentum,
         linear_velocity: Vec3::ZERO,
         mesh_handle: cuboid_mesh.clone(),
+    };
+
+    let ui_state = UiState {
+        sides,
+        angular_momentum,
+        inertia_matrix_diag: rigid_body.inertia_diag(),
     };
     let mesh_bundle = PbrBundle {
         mesh: cuboid_mesh,
@@ -110,7 +112,7 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, handle_keyboard_events)
-        .add_systems(Update, main_qube)
+        .add_systems(Update, rigid_body)
         .add_systems(Update, ui)
         .run();
 }
