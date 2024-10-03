@@ -72,8 +72,10 @@ impl RigidBody {
         )
     }
 
-    fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration) {
-        transform.translation += self.linear_velocity * dt.as_secs_f32();
+    // TODO: fix this!
+    fn euler_integrate(&mut self, transform: &mut Transform, dt: &Duration, dialation: f32) {
+        let dt_f32 = dt.as_secs_f32() * dialation;
+        transform.translation += self.linear_velocity * dt_f32;
 
         let r = Mat3::from_quat(transform.rotation);
         let angular_velocity_world =
@@ -85,7 +87,7 @@ impl RigidBody {
             angular_velocity_world[2],
             0.,
         );
-        let dq_omega = q_omega * dt.as_secs_f32() * 0.5;
+        let dq_omega = q_omega * dt_f32 * 0.5;
         let d_rotation = transform.rotation * dq_omega;
         transform.rotation = (transform.rotation + d_rotation).normalize();
     }
@@ -96,7 +98,8 @@ pub struct SimulationContext {
     pub dt: Duration,
     pub simulation_running: bool,
     pub time_accu: Duration, // the accumulated time between two steps + the correction from the
-                             // previus step
+    // previus step
+    pub dialation: f32,
 }
 
 impl SimulationContext {
@@ -116,6 +119,7 @@ impl Default for SimulationContext {
             simulation_running: false,
             dt: Duration::from_millis(1),
             time_accu: Duration::default(),
+            dialation: 1.,
         }
     }
 }
@@ -128,7 +132,11 @@ pub fn rigid_body(
     if simulation_context.simulation_running {
         simulation_context.time_accu += timer.delta();
         while simulation_context.step_context() {
-            rigid_body.euler_integrate(&mut transform, &simulation_context.dt);
+            rigid_body.euler_integrate(
+                &mut transform,
+                &simulation_context.dt,
+                simulation_context.dialation,
+            );
         }
     }
 }

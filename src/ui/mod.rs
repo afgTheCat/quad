@@ -77,6 +77,18 @@ pub fn ui(
             ui.label("Simulation running");
             toggle_ui(ui, &mut simulation_context.simulation_running);
         });
+
+        ui.horizontal(|ui| {
+            ui.label("Dialation");
+            let slider = ui.add(egui::Slider::new(
+                &mut simulation_context.dialation,
+                0.1..=1.5,
+            ));
+            if slider.lost_focus() || slider.drag_stopped() {
+                ui_state.recalculate_inertia_matrix_diag();
+            }
+        });
+
         ui.end_row();
 
         if ui.add(egui::Button::new("Reset")).clicked() {
