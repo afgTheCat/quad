@@ -8,8 +8,9 @@ use bevy::{
     time::Time,
 };
 
+// This is the
 #[derive(Component)]
-pub struct RigidBody {
+pub struct CubeRigidBody {
     pub density: f32,
     pub sides: Vec3,
     pub linear_velocity: Vec3,
@@ -65,7 +66,7 @@ pub fn angular_velocity(
 }
 
 // Euler for now
-impl RigidBody {
+impl CubeRigidBody {
     pub fn mass(&self) -> f32 {
         self.density * self.sides[0] * self.sides[1] * self.sides[2]
     }
@@ -137,7 +138,7 @@ impl Default for SimulationContext {
 
 pub fn rigid_body(
     mut gizmos: Gizmos,
-    mut query: Query<(&mut Transform, &mut RigidBody, &mut SimulationContext)>,
+    mut query: Query<(&mut Transform, &mut CubeRigidBody, &mut SimulationContext)>,
     timer: Res<Time>,
 ) {
     let (mut transform, mut rigid_body, mut simulation_context) = query.single_mut();

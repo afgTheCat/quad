@@ -16,7 +16,9 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use control::handle_keyboard_events;
 use noise::{NoiseFn, Perlin};
 use rand::{rngs::ThreadRng, thread_rng, Rng};
-use rigid_body::{inv_rectangular_cuboid_inertia_matrix, rigid_body, RigidBody, SimulationContext};
+use rigid_body::{
+    inv_rectangular_cuboid_inertia_matrix, rigid_body, CubeRigidBody, SimulationContext,
+};
 use std::{cell::RefCell, ops::Range};
 use ui::{ui, UiState};
 
@@ -100,7 +102,7 @@ fn setup(
 
     let simulation_context = SimulationContext::default();
     let cuboid_mesh = meshes.add(Cuboid::from_size(sides));
-    let rigid_body = RigidBody {
+    let rigid_body = CubeRigidBody {
         inv_inertia_tensor: inv_rectangular_cuboid_inertia_matrix(sides),
         density: 1.,
         sides,

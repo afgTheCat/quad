@@ -9,7 +9,7 @@ use bevy_egui::{
 };
 
 use crate::rigid_body::{
-    angular_velocity, cube_from_inertia, inertia_cuboid_diag, RigidBody, SimulationContext,
+    angular_velocity, cube_from_inertia, inertia_cuboid_diag, CubeRigidBody, SimulationContext,
 };
 
 fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
@@ -59,7 +59,7 @@ impl UiState {
 pub fn ui(
     mut contexts: EguiContexts,
     mut query: Query<(
-        &mut RigidBody,
+        &mut CubeRigidBody,
         &mut SimulationContext,
         &mut UiState,
         &mut Transform,
