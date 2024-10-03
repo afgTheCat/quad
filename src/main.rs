@@ -1,7 +1,8 @@
+mod constants;
 mod control;
+mod drone;
 mod rigid_body;
 mod ui;
-
 use bevy::{
     math::{DMat3, DVec3},
     prelude::*,
@@ -13,8 +14,24 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use control::handle_keyboard_events;
+use noise::{NoiseFn, Perlin};
+use rand::{rngs::ThreadRng, thread_rng, Rng};
 use rigid_body::{inv_rectangular_cuboid_inertia_matrix, rigid_body, RigidBody, SimulationContext};
+use std::{cell::RefCell, ops::Range};
 use ui::{ui, UiState};
+
+thread_local! {
+    static RNG: RefCell<ThreadRng> = RefCell::new(thread_rng());
+    static PERLIN_NOISE: Perlin = Perlin::new(0);
+}
+
+pub fn rng_gen_range(range: Range<f64>) -> f64 {
+    RNG.with(|rng| rng.borrow_mut().gen_range(range))
+}
+
+pub fn perlin_noise(point: f64) -> f64 {
+    PERLIN_NOISE.with(|p| p.get([point]))
+}
 
 /// set up a simple 3D scene
 fn setup(

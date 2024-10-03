@@ -157,7 +157,7 @@ pub fn rigid_body(
 #[cfg(test)]
 mod test {
     use crate::rigid_body::{cube_from_inertia, inertia_cuboid_diag};
-    use bevy::math::{DMat3, DQuat, DVec3, Mat3, Quat, Vec3};
+    use bevy::math::{DMat3, DVec3, Vec3};
 
     use super::inv_rectangular_cuboid_inertia_matrix;
 

@@ -1,0 +1,6 @@
+pub const MAX_EFFECT_SPEED: f64 = 18.0;
+pub const M_PI: f64 = 3.14159265358979323846264338327950288;
+pub const MAX_SPEED_PROP_COOLING: f64 = 20.0;
+pub const AIR_RHO: f64 = 1.225;
+pub const FREQUENCY: i64 = 8000;
+pub const DELTA: i64 = 125;
