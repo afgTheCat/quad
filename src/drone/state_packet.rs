@@ -2,7 +2,6 @@ use bevy::math::{DMat3, DVec3, DVec4};
 
 #[derive(Debug, Clone)]
 pub struct StatePacket {
-    // PacketType type = PacketType::State;
     pub delta: f64,
     rc_data: [f64; 8],
     position: DVec3,

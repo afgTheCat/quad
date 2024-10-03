@@ -206,7 +206,7 @@ impl Motor {
     }
 
     // Effective volts calculated by running it through the low pass filter
-    pub fn volts(&self, dt: f64, vbat: f64) -> f64 {
+    pub fn volts(&mut self, dt: f64, vbat: f64) -> f64 {
         self.state
             .pwm_low_pass_filter
             .update(self.state.pwm, dt, 120.0)
@@ -234,7 +234,7 @@ impl Motor {
         current * nm_per_a
     }
 
-    pub fn prop_wash_noise(&self, dt: f64) -> f64 {
+    pub fn prop_wash_noise(&mut self, dt: f64) -> f64 {
         let motor_phase_compressed = (self.state.phase_slow * 3.0).floor() / 3.0;
         self.state.prop_wash_low_pass_filter.update(
             f64::max(0.0, 0.5 * perlin_noise(motor_phase_compressed) + 1.0),

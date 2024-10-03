@@ -2,7 +2,9 @@ mod constants;
 mod control;
 mod drone;
 mod rigid_body;
+mod sim;
 mod ui;
+
 use bevy::{
     math::{DMat3, DVec3},
     prelude::*,

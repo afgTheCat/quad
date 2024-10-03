@@ -75,7 +75,7 @@ impl Arm {
     }
 
     fn motor_thrust(
-        &self,
+        &mut self,
         dt: f64,
         rpm: f64,
         rotation: DMat3,

@@ -6,14 +6,17 @@ mod motor;
 mod propeller;
 mod rigid_body;
 mod sample_curve;
-mod state_packet;
+pub mod state_packet;
 mod state_update_packet;
 
 use crate::constants::M_PI;
 use crate::rng_gen_range;
 use arm::Arm;
 pub use battery::Battery;
-use bevy::math::{DMat3, DVec3, DVec4};
+use bevy::{
+    math::{DMat3, DVec3, DVec4},
+    prelude::Component,
+};
 use gyro::Gyro;
 use rigid_body::RigidBody;
 use state_packet::StatePacket;
@@ -46,6 +49,7 @@ pub fn shifted_phase(dt: f64, hz: f64, phase_start: f64) -> f64 {
     }
 }
 
+// This is the implementation that the thing used
 pub fn mat3_to_quat(mat3: DMat3) -> DVec4 {
     let trace = mat3.x_axis[0] + mat3.y_axis[1] + mat3.z_axis[2];
 
@@ -87,7 +91,7 @@ pub fn rpm_to_hz(rpm: f64) -> f64 {
     rpm / 60.
 }
 
-#[derive(Clone)]
+#[derive(Clone, Component)]
 pub struct Drone {
     armed: bool,
 

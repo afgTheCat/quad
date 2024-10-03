@@ -43,8 +43,8 @@ impl Gyro {
         self.gyro_noise
     }
 
-    pub fn low_pass_filter(&self) -> &[LowPassFilter; 3] {
-        &self.low_pass_filter
+    pub fn low_pass_filter(&mut self) -> &mut [LowPassFilter; 3] {
+        &mut self.low_pass_filter
     }
 
     pub fn set_acceleration(&mut self, acceleration: DVec3) {
