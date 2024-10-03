@@ -3,6 +3,7 @@ mod rigid_body;
 mod ui;
 
 use bevy::{
+    math::{DMat3, DVec3},
     prelude::*,
     render::{
         mesh::{Indices, PrimitiveTopology},
@@ -77,8 +78,8 @@ fn setup(
         ..Default::default()
     });
 
-    let sides = Vec3::new(2.0, 0.1, 1.);
-    let angular_momentum = Vec3::new(0., 0.002, 0.2);
+    let sides = Vec3::new(1.0, 0.1, 2.);
+    let angular_momentum = DVec3::new(0.2, 0., 0.002);
 
     let simulation_context = SimulationContext::default();
     let cuboid_mesh = meshes.add(Cuboid::from_size(sides));
@@ -89,6 +90,7 @@ fn setup(
         angular_momentum,
         linear_velocity: Vec3::ZERO,
         mesh_handle: cuboid_mesh.clone(),
+        rotation: DMat3::IDENTITY,
     };
 
     let ui_state = UiState {
@@ -110,11 +112,16 @@ fn setup(
     commands.spawn((rigid_body, mesh_bundle, simulation_context, ui_state));
 }
 
+// We can create our own gizmo config group!
+#[derive(Default, Reflect, GizmoConfigGroup)]
+struct MyRoundGizmos {}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
+        .init_gizmo_group::<MyRoundGizmos>()
         .add_systems(Startup, setup)
         .add_systems(Update, handle_keyboard_events)
         .add_systems(Update, rigid_body)

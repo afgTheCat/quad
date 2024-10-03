@@ -1,6 +1,6 @@
 use bevy::{
     asset::Assets,
-    math::{Quat, Vec3},
+    math::{DMat3, DQuat, DVec3, Mat3, Quat, Vec3},
     prelude::{Component, Mesh, Query, ResMut, Transform},
 };
 use bevy_egui::{
@@ -8,7 +8,9 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::rigid_body::{cube_from_inertia, inertia_cuboid_diag, RigidBody, SimulationContext};
+use crate::rigid_body::{
+    angular_velocity, cube_from_inertia, inertia_cuboid_diag, RigidBody, SimulationContext,
+};
 
 fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
     let desired_size = ui.spacing().interact_size.y * egui::vec2(2.0, 1.0);
@@ -40,8 +42,8 @@ fn toggle_ui(ui: &mut egui::Ui, on: &mut bool) -> egui::Response {
 #[derive(Component)]
 pub struct UiState {
     pub sides: Vec3,
-    pub angular_momentum: Vec3,
-    pub inertia_matrix_diag: Vec3,
+    pub angular_momentum: DVec3,
+    pub inertia_matrix_diag: DVec3,
 }
 
 impl UiState {
@@ -50,7 +52,7 @@ impl UiState {
     }
 
     fn recalculate_sides(&mut self) {
-        self.sides = cube_from_inertia(self.inertia_matrix_diag);
+        self.sides = cube_from_inertia(self.inertia_matrix_diag).as_vec3();
     }
 }
 
@@ -91,9 +93,27 @@ pub fn ui(
 
         ui.end_row();
 
-        if ui.add(egui::Button::new("Reset")).clicked() {
+        let angular_velocity = angular_velocity(
+            &transform,
+            rigid_body.inv_inertia_tensor,
+            rigid_body.angular_momentum,
+        );
+        let angular_velocity_log = format!(
+            "Angular velocity: {:.4}, {:.4}, {:.4}, sum: {:.4}",
+            angular_velocity[0],
+            angular_velocity[1],
+            angular_velocity[2],
+            angular_velocity.length()
+        );
+        ui.label(angular_velocity_log);
+
+        if ui.add(egui::Button::new("Reset rotation")).clicked() {
             transform.rotation = Quat::IDENTITY;
+            rigid_body.rotation = DMat3::IDENTITY;
         }
+
+        let rotation_determinant = format!("rot matrix det: {}", rigid_body.rotation.determinant());
+        ui.label(rotation_determinant);
     });
 
     egui::Window::new("Simulation cotroll").show(contexts.ctx_mut(), |ui| {
