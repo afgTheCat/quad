@@ -1,4 +1,5 @@
 use super::sample_curve::SampleCurve;
+use crate::rng_gen_range;
 
 #[derive(Debug, Clone)]
 struct BatteryProps {
