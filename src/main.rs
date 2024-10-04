@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use noise::{NoiseFn, Perlin};
-use quboid::{handle_keyboard_events, quboid_update, setup, update_ui};
+use quboid::{cuboid_setup, handle_keyboard_events, quboid_update, update_ui};
 use rand::{rngs::ThreadRng, thread_rng, Rng};
 use std::{cell::RefCell, ops::Range};
 
@@ -30,7 +30,7 @@ fn build_app() -> App {
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .init_gizmo_group::<MyRoundGizmos>()
-        .add_systems(Startup, setup)
+        .add_systems(Startup, cuboid_setup)
         .add_systems(Update, handle_keyboard_events)
         .add_systems(Update, quboid_update)
         .add_systems(Update, update_ui);
@@ -39,15 +39,17 @@ fn build_app() -> App {
 
 #[cfg(not(feature = "legacy_sim"))]
 fn build_app() -> App {
+    use drone::drone_setup;
+
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .init_gizmo_group::<MyRoundGizmos>()
-        .add_systems(Startup, setup)
-        .add_systems(Update, handle_keyboard_events)
-        .add_systems(Update, quboid_update)
-        .add_systems(Update, update_ui);
+        .add_systems(Startup, drone_setup)
+        .add_systems(Update, handle_keyboard_events);
+    // .add_systems(Update, quboid_update);
+    // .add_systems(Update, update_ui);
     app
 }
 

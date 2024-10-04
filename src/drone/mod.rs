@@ -1,14 +1,16 @@
 use std::time::Duration;
 
 use bevy::{
-    asset::Assets,
+    asset::{AssetServer, Assets},
     color::Color,
+    gltf::GltfAssetLabel,
     math::{EulerRot, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle, PbrBundle, StandardMaterial},
     prelude::{
         default, Camera3dBundle, Commands, Component, Gizmos, Mesh, Meshable, Plane3d, Query, Res,
         ResMut, Transform,
     },
+    scene::SceneBundle,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
@@ -73,10 +75,11 @@ fn sim_step(
     }
 }
 
-pub fn setup(
+pub fn drone_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     // Add a directional light to simulate the sun
     commands.spawn(DirectionalLightBundle {
@@ -103,9 +106,15 @@ pub fn setup(
         PanOrbitCamera::default(),
     ));
 
+    // plane
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
         material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
+        ..default()
+    });
+    let drone_handle = asset_server.load(GltfAssetLabel::Scene(0).from_asset("drone.glb"));
+    commands.spawn(SceneBundle {
+        scene: drone_handle,
         ..default()
     });
 }

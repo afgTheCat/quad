@@ -16,7 +16,7 @@ use ui::UiState;
 pub use ui::{handle_keyboard_events, update_ui};
 
 /// set up a simple 3D scene
-pub fn setup(
+pub fn cuboid_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
