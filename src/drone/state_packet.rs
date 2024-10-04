@@ -3,12 +3,11 @@ use bevy::math::{DMat3, DVec3, DVec4};
 #[derive(Debug, Clone)]
 pub struct StatePacket {
     pub delta: f64,
-    rc_data: [f64; 8],
-    position: DVec3,
-    pub rotation: DMat3,
-    pub angular_velocity: DVec3,
-    pub linear_velocity: DVec3,
-    // length is amplitude per axis
+    // rc_data: [f64; 8], // TODO: readd when hooking up the thing
+    // position: DVec3,
+    // pub rotation: DMat3,
+    // pub angular_velocity: DVec3,
+    // pub linear_velocity: DVec3,
     pub motor_imbalance: [DVec3; 4],
     pub gyro_base_noise_amp: f64,
     gyrobase_noise_freq: f64,
@@ -19,9 +18,7 @@ pub struct StatePacket {
     pub prop_damage: DVec4,
     ground_effect: [f64; 4],
     vbat: f64,
-    // 1 true 0 false
     pub contact: u8,
-    // combination of CommandType (bitmask)
     commands: i32,
 }
 
@@ -48,12 +45,11 @@ impl StatePacket {
     ) -> Self {
         Self {
             delta,
-            rc_data,
-            position,
-            rotation,
-            angular_velocity,
-            linear_velocity,
-            // length is amplitude per axis
+            // rc_data,
+            // position,
+            // rotation,
+            // angular_velocity,
+            // linear_velocity,
             motor_imbalance,
             gyro_base_noise_amp,
             gyrobase_noise_freq,

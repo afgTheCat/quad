@@ -119,15 +119,17 @@ impl Arm {
         m_torque: f64,
         vbat: f64,
         ambient_temp: f64,
+        rotation: DMat3,
+        linear_velocity: DVec3,
     ) {
-        let speed = state_packet.linear_velocity.length();
+        let speed = linear_velocity.length();
         let current = m_torque * self.motor.kv() / 8.3;
         let ground_effect = state_packet.ground_effect(self.arm_index);
         let thrust = self.motor_thrust(
             dt,
             rpm,
-            state_packet.rotation,
-            state_packet.linear_velocity,
+            rotation,
+            linear_velocity,
             state_packet.prop_damage,
             ground_effect,
         );
@@ -144,10 +146,12 @@ impl Arm {
         vbat: f64,
         is_armed: bool,
         ambient_temp: f64,
+        rotation: DMat3,
+        linear_velocity: DVec3,
     ) -> f64 {
         // TODO: verify
-        let up = state_packet.rotation.x_axis;
-        let vel_up = DVec3::dot(state_packet.linear_velocity, up);
+        let up = rotation.x_axis;
+        let vel_up = DVec3::dot(linear_velocity, up);
         let volts = self.motor.volts(dt, vbat);
         let (p_torque, m_torque) = self.calculate_motor_torques_inner(
             vel_up,
@@ -156,7 +160,16 @@ impl Arm {
             is_armed,
         );
         let rpm = self.calculate_rpm(dt, volts, m_torque, p_torque);
-        self.update_aux_motor(state_packet, dt, rpm, m_torque, vbat, ambient_temp);
+        self.update_aux_motor(
+            state_packet,
+            dt,
+            rpm,
+            m_torque,
+            vbat,
+            ambient_temp,
+            rotation,
+            linear_velocity,
+        );
         self.motor.dir() * m_torque
     }
 
@@ -167,10 +180,12 @@ impl Arm {
         vbat: f64,
         is_armed: bool,
         ambient_temp: f64,
+        rotation: DMat3,
+        linear_velocity: DVec3,
     ) -> f64 {
-        let up = state_packet.rotation.x_axis;
-        let vel_up = DVec3::dot(state_packet.linear_velocity, up);
-        let speed = state_packet.linear_velocity.length();
+        let up = rotation.x_axis;
+        let vel_up = DVec3::dot(linear_velocity, up);
+        let speed = linear_velocity.length();
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts, is_armed);
         let p_torque = self.propeller.prop_torque(
@@ -193,8 +208,8 @@ impl Arm {
         let thrust = self.motor_thrust(
             dt,
             rpm,
-            state_packet.rotation,
-            state_packet.linear_velocity,
+            rotation,
+            linear_velocity,
             state_packet.prop_damage,
             ground_effect,
         );

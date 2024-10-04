@@ -155,77 +155,68 @@ impl Drone {
                 vbat,
                 self.armed,
                 ambient_temp,
+                self.body.rotation,
+                self.body.linear_velocity,
             );
         }
         res_prop_torque
     }
 
-    pub fn calculate_physics(
-        &mut self,
-        state_packet: &mut StatePacket,
-        motor_torque: f64,
-        dt: f64,
-    ) -> DVec3 {
+    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) -> DVec3 {
         let gravity_force = self.body.gravity_force();
-        let drag_linear = self
-            .body
-            .drag_linear(state_packet.linear_velocity, state_packet.rotation);
+        let drag_linear = self.body.drag_linear();
+        let drag_angular = self.body.drag_angular();
+        let rotation = self.body.rotation;
         let total_force = gravity_force - drag_linear
             + self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-                acc + xform(state_packet.rotation, DVec3::new(0., arm.thrust(), 0.))
+                acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
             });
         let acceleration = self.body.acceleration(total_force);
         // Step 1: update linear velocity
-        state_packet.linear_velocity =
-            state_packet.linear_velocity.clone() + acceleration.clone() * dt;
-        let drag_angular = self
-            .body
-            .drag_angular(state_packet.linear_velocity, state_packet.rotation);
+        self.body.linear_velocity = self.body.linear_velocity + acceleration.clone() * dt;
 
         let prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-            let force = xform(state_packet.rotation, DVec3::new(0., arm.thrust(), 0.));
-            let rad = xform(state_packet.rotation, arm.motor_pos());
+            let force = xform(rotation, DVec3::new(0., arm.thrust(), 0.));
+            let rad = xform(rotation, arm.motor_pos());
             acc + DVec3::cross(rad, force)
         });
-        let total_moment = state_packet.rotation.y_axis * motor_torque
-            + state_packet.rotation.x_axis * drag_angular[1]
-            + state_packet.rotation.y_axis * drag_angular[0]
-            + state_packet.rotation.z_axis * drag_angular[2]
+        let total_moment = rotation.y_axis * motor_torque
+            + rotation.x_axis * drag_angular[1]
+            + rotation.y_axis * drag_angular[0]
+            + rotation.z_axis * drag_angular[2]
             + prop_torques;
-        let angular_acc = self.body.angular_acc(total_moment, &state_packet.rotation);
-        let angular_velocity = (state_packet.angular_velocity.clone() + angular_acc * dt).clamp(
+        let angular_acc = self.body.angular_acc(total_moment);
+        let angular_velocity = (self.body.angular_velocity + angular_acc * dt).clamp(
             DVec3::new(-100., -100., -100.),
             DVec3::new(100., 100., 100.),
         );
         // Step 2: update angular velocity
-        state_packet.angular_velocity = angular_velocity.clone();
+        self.body.angular_velocity = angular_velocity;
 
-        let rotation = self
-            .body
-            .rotation(angular_velocity, dt, &state_packet.rotation);
+        let rotation = self.body.rotation(angular_velocity, dt);
         // STEP 3: update rotation
-        state_packet.rotation = rotation;
+        self.body.rotation = rotation;
         acceleration
     }
 
     pub fn update_physics(
         &mut self,
-        state_packet: &mut StatePacket,
+        state_packet: &StatePacket,
         dt: f64,
         ambient_temp: f64,
     ) -> StateUpdatePacket {
         let motor_torque = self.calculate_motors(state_packet, dt, ambient_temp);
-        self.acceleration = self.calculate_physics(state_packet, motor_torque, dt);
+        self.acceleration = self.calculate_physics(motor_torque, dt);
 
         let pwm_sum = self.arms.iter().fold(0.0, |pwm, arm| pwm + arm.pwm());
         let current_sum = self.arms.iter().fold(0., |acc, arm| acc + arm.current());
         self.battery.update(dt, pwm_sum, current_sum);
         // bunch of updates to the state update packet
-        let orientation = mat3_to_quat(state_packet.rotation);
+        let orientation = mat3_to_quat(self.body.rotation);
         StateUpdatePacket::new(
             orientation,
-            state_packet.angular_velocity,
-            state_packet.linear_velocity,
+            self.body.angular_velocity,
+            self.body.linear_velocity,
             self.motor_rpm(),
             self.motor_temp(),
             false, // wtf
@@ -405,9 +396,8 @@ impl Drone {
             .update_gyro_noise(state_packet.gyro_base_noise_amp);
         self.update_motor_noise(dt, state_packet);
         self.combined_noise = self.gyro.gyro_noise() + self.motor_noise.clone();
-        self.gyro.set_rotation(mat3_to_quat(state_packet.rotation));
-        let mut angular_velocity =
-            state_packet.angular_velocity.clone() + self.combined_noise.clone();
+        self.gyro.set_rotation(mat3_to_quat(self.body.rotation));
+        let mut angular_velocity = self.body.angular_velocity + self.combined_noise.clone();
 
         let cutoff_freq = 300.;
         angular_velocity[0] =
@@ -417,10 +407,10 @@ impl Drone {
         angular_velocity[2] =
             self.gyro.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
         self.gyro
-            .set_gyro(xform_inv(state_packet.rotation, angular_velocity));
+            .set_gyro(xform_inv(self.body.rotation, angular_velocity));
         let gravity_acceleration = DVec3::new(0., -9.81, 0.);
         self.gyro.set_acceleration(xform_inv(
-            state_packet.rotation,
+            self.body.rotation,
             self.acceleration.clone() + gravity_acceleration,
         ));
     }

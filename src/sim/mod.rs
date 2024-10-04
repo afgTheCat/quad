@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{f64, time::Duration};
 
 use bevy::{
     prelude::{Component, Gizmos, Query, Res, Transform},
@@ -11,6 +11,7 @@ use crate::drone::{state_packet::StatePacket, Drone};
 pub struct DroneContext {
     pub dt: Duration,
     pub time_accu: Duration, // the accumulated time between two steps + the correction from the
+    pub ambient_temp: f64,
 }
 
 #[derive(Component)]
@@ -44,5 +45,10 @@ fn sim_step(
     let state_packet = model.provide_packet();
     while drone_context.step_context() {
         drone.update_gyro(&state_packet, drone_context.dt.as_secs_f64());
+        drone.update_physics(
+            &state_packet,
+            drone_context.dt.as_secs_f64(),
+            drone_context.ambient_temp,
+        );
     }
 }
