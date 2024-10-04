@@ -2,7 +2,10 @@ use bevy::math::{DMat3, DVec3};
 
 use crate::{constants::MAX_SPEED_PROP_COOLING, perlin_noise};
 
-use super::{low_pass_filter::LowPassFilter, rpm_to_hz, shifted_phase};
+use super::{
+    body::{rpm_to_hz, shifted_phase},
+    low_pass_filter::LowPassFilter,
+};
 
 #[derive(Debug, Clone)]
 pub struct MotorProps {

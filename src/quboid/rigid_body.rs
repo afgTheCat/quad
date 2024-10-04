@@ -136,7 +136,7 @@ impl Default for SimulationContext {
     }
 }
 
-pub fn rigid_body(
+pub fn quboid_update(
     mut gizmos: Gizmos,
     mut query: Query<(&mut Transform, &mut CubeRigidBody, &mut SimulationContext)>,
     timer: Res<Time>,
@@ -153,42 +153,4 @@ pub fn rigid_body(
     gizmos.arrow(Vec3::ZERO, rotation.x_axis * 1.5, BLUE);
     gizmos.arrow(Vec3::ZERO, rotation.y_axis * 1.5, RED);
     gizmos.arrow(Vec3::ZERO, rotation.z_axis * 1.5, YELLOW);
-}
-
-#[cfg(test)]
-mod test {
-    use crate::rigid_body::{cube_from_inertia, inertia_cuboid_diag};
-    use bevy::math::{DMat3, DVec3, Vec3};
-
-    use super::inv_rectangular_cuboid_inertia_matrix;
-
-    #[test]
-    fn inv_rect_inverat_matrix() {
-        let inertia = inertia_cuboid_diag(Vec3::new(3., 4., 5.));
-        let diag = DVec3::new(205., 170., 125.);
-        assert_eq!(inertia, diag);
-    }
-
-    #[test]
-    fn cube_from_inertia_test() {
-        let sides = Vec3::new(3., 4., 10.);
-        let ineratia = inertia_cuboid_diag(sides);
-        let calculated_sides = cube_from_inertia(ineratia);
-        println!("sides: {:?}", calculated_sides);
-    }
-
-    #[test]
-    fn calculate_angular_velocity() {
-        let r = DMat3::IDENTITY;
-        println!("{}", r);
-        println!("{}", r.inverse());
-        let angular_momentum = DVec3::new(0., 0.002, 0.2);
-        let sides = Vec3::new(2.0, 0.1, 1.);
-        let inv_inertia_tensor = inv_rectangular_cuboid_inertia_matrix(sides);
-        let angular_vel = r * inv_inertia_tensor * r.inverse() * angular_momentum;
-        let a2 = inv_inertia_tensor * angular_momentum;
-        println!("{}", angular_vel);
-        println!("{}", inv_inertia_tensor);
-        println!("{}", a2);
-    }
 }

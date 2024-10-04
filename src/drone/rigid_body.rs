@@ -2,7 +2,7 @@ use bevy::math::{DMat3, DVec3};
 
 use crate::constants::AIR_RHO;
 
-use super::{xform, xform_inv};
+use super::body::{xform, xform_inv};
 
 // TODO: this is kinda stupid as we are not planning to store the location
 #[derive(Debug, Clone)]
