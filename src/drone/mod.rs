@@ -2,21 +2,20 @@ use std::time::Duration;
 
 use bevy::{
     asset::{AssetServer, Assets, Handle},
-    color::Color,
+    color::{palettes::css::RED, Color},
     gltf::{Gltf, GltfMesh, GltfNode},
-    math::{EulerRot, Quat, Vec3},
+    math::{EulerRot, Quat, Vec3, VectorSpace},
     pbr::{DirectionalLight, DirectionalLightBundle, PbrBundle},
     prelude::{
         default, Camera3dBundle, Commands, Component, Gizmos, Mesh, NextState, Query, Res, ResMut,
         Resource, Transform,
     },
-    scene::SceneBundle,
     time::Time,
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
 use body::Drone;
-use itertools::Itertools;
+use motor::Motor;
 use state_packet::StatePacket;
 
 use crate::SimState;
@@ -32,6 +31,13 @@ mod rigid_body;
 mod sample_curve;
 pub mod state_packet;
 mod state_update_packet;
+
+const PROP_BLADES: [&str; 4] = [
+    "prop_blade.001",
+    "prop_blade.002",
+    "prop_blade.003",
+    "prop_blade.004",
+];
 
 #[derive(Component)]
 pub struct DroneContext {
@@ -122,23 +128,55 @@ pub fn setup_drone(
     gltf_node_assets: Res<Assets<GltfNode>>,
     gltf_mesh_assets: Res<Assets<GltfMesh>>,
     mut next_state: ResMut<NextState<SimState>>,
-    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     // Wait until the scene is loaded
     if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
         next_state.set(SimState::Running);
-        let gltf_nodes = gltf.named_nodes.values().map(|e| e.id()).collect_vec();
-        for node_id in gltf_nodes {
-            let node = gltf_node_assets.get(node_id).unwrap().clone();
-            let mesh_id = node.mesh.unwrap().id();
-            let mesh = gltf_mesh_assets.get(mesh_id).unwrap();
 
-            commands.spawn(PbrBundle {
-                mesh: mesh.primitives[0].mesh.clone(),
-                transform: node.transform,
-                ..Default::default()
-            });
+        let prop_nodes = gltf
+            .named_nodes
+            .keys()
+            .filter(|key| PROP_BLADES.contains(&key.as_ref()))
+            .map(|key| gltf.named_nodes[key].id());
+
+        // add props
+        for prop_node_id in prop_nodes {
+            let prop_asset_node = gltf_node_assets.get(prop_node_id).unwrap().clone();
+            let mesh_id = prop_asset_node.mesh.unwrap().id();
+            let mesh = gltf_mesh_assets.get(mesh_id).unwrap();
+            let primitive = mesh.primitives[0].clone();
+
+            // props are only one primitive
+            commands.spawn((
+                PbrBundle {
+                    mesh: primitive.mesh.clone(),
+                    material: primitive.material.unwrap(),
+                    transform: prop_asset_node.transform,
+                    ..Default::default()
+                },
+                Motor::default(),
+            ));
         }
+
+        // let drone_body_node = gltf.named_nodes["drone_body"].clone();
+        // let drone_body_asset_node = gltf_node_assets.get(drone_body_node.id()).unwrap().clone();
+        // let drone_body_asset_id = drone_body_asset_node.mesh.unwrap().id();
+        // let drone_body_mesh = gltf_mesh_assets.get(drone_body_asset_id).unwrap();
+        // for primitive in &drone_body_mesh.primitives {
+        //     commands.spawn(PbrBundle {
+        //         mesh: primitive.mesh.clone(),
+        //         material: primitive.material.clone().unwrap(),
+        //         transform: drone_body_asset_node.transform, // Apply the same transform to all primitives
+        //         ..Default::default()
+        //     });
+        // }
+    }
+}
+
+pub fn debug_drone(mut gizmos: Gizmos, mut query: Query<(&Transform, &Motor)>) {
+    for (transform, motor) in query.iter() {
+        println!("{}", transform.translation);
+        gizmos.arrow(Vec3::ZERO, transform.translation, RED);
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::constants::M_PI;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LowPassFilter {
     output: f64,
     e_pow: f64,

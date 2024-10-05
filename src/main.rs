@@ -47,7 +47,7 @@ enum SimState {
 #[cfg(not(feature = "legacy_sim"))]
 fn build_app() -> App {
     use bevy_infinite_grid::InfiniteGridPlugin;
-    use drone::{base_setup, setup_drone};
+    use drone::{base_setup, debug_drone, setup_drone};
 
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
@@ -58,6 +58,7 @@ fn build_app() -> App {
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, base_setup)
         .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
+        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
         .add_systems(
             Update,
             handle_keyboard_events.run_if(in_state(SimState::Running)),
