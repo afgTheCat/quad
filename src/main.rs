@@ -37,19 +37,31 @@ fn build_app() -> App {
     app
 }
 
+#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+enum SimState {
+    #[default]
+    Loading,
+    Running,
+}
+
 #[cfg(not(feature = "legacy_sim"))]
 fn build_app() -> App {
-    use drone::drone_setup;
+    use bevy_infinite_grid::InfiniteGridPlugin;
+    use drone::{base_setup, setup_drone};
 
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
+        .insert_state(SimState::Loading)
         .init_gizmo_group::<MyRoundGizmos>()
-        .add_systems(Startup, drone_setup)
-        .add_systems(Update, handle_keyboard_events);
-    // .add_systems(Update, quboid_update);
-    // .add_systems(Update, update_ui);
+        .add_plugins(InfiniteGridPlugin)
+        .add_systems(Startup, base_setup)
+        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
+        .add_systems(
+            Update,
+            handle_keyboard_events.run_if(in_state(SimState::Running)),
+        );
     app
 }
 

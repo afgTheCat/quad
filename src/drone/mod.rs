@@ -1,21 +1,24 @@
 use std::time::Duration;
 
 use bevy::{
-    asset::{AssetServer, Assets},
+    asset::{AssetServer, Assets, Handle},
     color::Color,
-    gltf::GltfAssetLabel,
+    gltf::Gltf,
     math::{EulerRot, Quat, Vec3},
-    pbr::{DirectionalLight, DirectionalLightBundle, PbrBundle, StandardMaterial},
+    pbr::{DirectionalLight, DirectionalLightBundle, StandardMaterial},
     prelude::{
-        default, Camera3dBundle, Commands, Component, Gizmos, Mesh, Meshable, Plane3d, Query, Res,
-        ResMut, Transform,
+        default, Camera3dBundle, Commands, Component, Gizmos, Mesh, NextState, Query, Res, ResMut,
+        Resource, State, Transform,
     },
-    scene::SceneBundle,
     time::Time,
 };
+use bevy_egui::egui::debug_text::print;
+use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
 use body::Drone;
 use state_packet::StatePacket;
+
+use crate::SimState;
 
 mod arm;
 mod battery;
@@ -75,11 +78,15 @@ fn sim_step(
     }
 }
 
-pub fn drone_setup(
+#[derive(Resource, Clone)]
+pub struct DroneAssets(Handle<Gltf>);
+
+pub fn base_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    gltf_assets: Res<Assets<Gltf>>,
 ) {
     // Add a directional light to simulate the sun
     commands.spawn(DirectionalLightBundle {
@@ -106,15 +113,21 @@ pub fn drone_setup(
         PanOrbitCamera::default(),
     ));
 
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane3d::default().mesh().size(5.0, 5.0)),
-        material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
-        ..default()
-    });
-    let drone_handle = asset_server.load(GltfAssetLabel::Scene(0).from_asset("drone.glb"));
-    commands.spawn(SceneBundle {
-        scene: drone_handle,
-        ..default()
-    });
+    commands.spawn(InfiniteGridBundle::default());
+
+    let drone_scene = asset_server.load("drone.glb");
+    let drone_assets = DroneAssets(drone_scene);
+    commands.insert_resource(drone_assets.clone());
+}
+
+pub fn setup_drone(
+    drone_assets: Res<DroneAssets>,
+    gltf_assets: Res<Assets<Gltf>>,
+    mut next_state: ResMut<NextState<SimState>>,
+) {
+    // Wait until the scene is loaded
+    let Some(gltf) = gltf_assets.get(&drone_assets.0) else {
+        return;
+    };
+    next_state.set(SimState::Running);
 }
