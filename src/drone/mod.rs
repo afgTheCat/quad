@@ -3,19 +3,20 @@ use std::time::Duration;
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::Color,
-    gltf::Gltf,
+    gltf::{Gltf, GltfMesh, GltfNode},
     math::{EulerRot, Quat, Vec3},
-    pbr::{DirectionalLight, DirectionalLightBundle, StandardMaterial},
+    pbr::{DirectionalLight, DirectionalLightBundle, PbrBundle},
     prelude::{
         default, Camera3dBundle, Commands, Component, Gizmos, Mesh, NextState, Query, Res, ResMut,
-        Resource, State, Transform,
+        Resource, Transform,
     },
+    scene::SceneBundle,
     time::Time,
 };
-use bevy_egui::egui::debug_text::print;
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
 use body::Drone;
+use itertools::Itertools;
 use state_packet::StatePacket;
 
 use crate::SimState;
@@ -81,13 +82,7 @@ fn sim_step(
 #[derive(Resource, Clone)]
 pub struct DroneAssets(Handle<Gltf>);
 
-pub fn base_setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    asset_server: Res<AssetServer>,
-    gltf_assets: Res<Assets<Gltf>>,
-) {
+pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Add a directional light to simulate the sun
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -121,13 +116,41 @@ pub fn base_setup(
 }
 
 pub fn setup_drone(
+    mut commands: Commands,
     drone_assets: Res<DroneAssets>,
     gltf_assets: Res<Assets<Gltf>>,
+    gltf_node_assets: Res<Assets<GltfNode>>,
+    gltf_mesh_assets: Res<Assets<GltfMesh>>,
     mut next_state: ResMut<NextState<SimState>>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
     // Wait until the scene is loaded
-    let Some(gltf) = gltf_assets.get(&drone_assets.0) else {
-        return;
-    };
-    next_state.set(SimState::Running);
+    if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
+        next_state.set(SimState::Running);
+        let gltf_nodes = gltf.named_nodes.values().map(|e| e.id()).collect_vec();
+        for node_id in gltf_nodes {
+            let node = gltf_node_assets.get(node_id).unwrap().clone();
+            let mesh_id = node.mesh.unwrap().id();
+            let mesh = gltf_mesh_assets.get(mesh_id).unwrap();
+
+            commands.spawn(PbrBundle {
+                mesh: mesh.primitives[0].mesh.clone(),
+                transform: node.transform,
+                ..Default::default()
+            });
+        }
+    }
 }
+
+// let meshes = gltf.named_meshes.keys().collect_vec();
+// println!("meshes: {:?}", meshes);
+//
+// let meshes = gltf.named_materials.keys().collect_vec();
+// println!("named materials: {:?}", meshes);
+//
+// let nodes = gltf.named_nodes.keys().collect_vec();
+// println!("named nodes: {:?}", nodes);
+//
+// let node_ids = gltf.named_nodes.values().map(|v| v.id()).collect_vec();
+// let asd = gltf_nodes.get(node_ids[0]);
+// println!("{:?}", asd);
