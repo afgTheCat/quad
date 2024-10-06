@@ -13,17 +13,19 @@ use super::{
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorProps {
-    pub motor_kv: f64,  // kv
-    pub motor_r: f64,   // resistence
-    pub motor_io: f64,  // idle current
-    pub motor_rth: f64, // thermal resistance (deg C per Watt)
-    pub motor_cth: f64, // thermal heat capacity (joules per deg C)
+    pub position: DVec3, // position relative to the main body
+    pub motor_kv: f64,   // kv
+    pub motor_r: f64,    // resistence
+    pub motor_io: f64,   // idle current
+    pub motor_rth: f64,  // thermal resistance (deg C per Watt)
+    pub motor_cth: f64,  // thermal heat capacity (joules per deg C)
     pub motor_dir: f64,
     pub motor_max_t: f64,
 }
 
 impl MotorProps {
     fn new(
+        position: DVec3,
         motor_kv: f64,
         motor_r: f64,
         motor_io: f64,
@@ -33,6 +35,7 @@ impl MotorProps {
         motor_max_t: f64,
     ) -> Self {
         Self {
+            position,
             motor_kv,
             motor_r,
             motor_io,
@@ -47,7 +50,6 @@ impl MotorProps {
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorState {
-    pub position: DVec3,                          // position
     pub pwm: f64,                                 // pwm signal in percent [0,1]
     pub pwm_low_pass_filter: LowPassFilter,       // low pass filtered pwm value
     pub temp: f64,                                // motor core temp in deg C
@@ -66,7 +68,6 @@ pub struct MotorState {
 
 impl MotorState {
     fn new(
-        position: DVec3,
         pwm: f64,
         pwm_low_pass_filter: LowPassFilter,
         temp: f64,
@@ -83,7 +84,6 @@ impl MotorState {
         burned_out: bool,
     ) -> Self {
         Self {
-            position,
             pwm,
             pwm_low_pass_filter,
             temp,
@@ -205,7 +205,7 @@ impl Motor {
     }
 
     pub fn position(&self) -> DVec3 {
-        self.state.position.clone()
+        self.props.position.clone()
     }
 
     pub fn motor_torque(&self, volts: f64, is_armed: bool) -> f64 {

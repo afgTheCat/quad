@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 pub use rigid_body::quboid_update;
-use rigid_body::{inv_rectangular_cuboid_inertia_matrix, CubeRigidBody, SimulationContext};
+use rigid_body::{inv_cuboid_inertia_tensor, CubeRigidBody, SimulationContext};
 use ui::UiState;
 pub use ui::{handle_keyboard_events, update_ui};
 
@@ -83,7 +83,7 @@ pub fn cuboid_setup(
     let simulation_context = SimulationContext::default();
     let cuboid_mesh = meshes.add(Cuboid::from_size(sides));
     let rigid_body = CubeRigidBody {
-        inv_inertia_tensor: inv_rectangular_cuboid_inertia_matrix(sides),
+        inv_inertia_tensor: inv_cuboid_inertia_tensor(sides),
         density: 1.,
         sides,
         angular_momentum,

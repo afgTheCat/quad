@@ -42,7 +42,7 @@ pub fn cube_from_inertia(inertia: DVec3) -> DVec3 {
     DVec3::new(a, b, c)
 }
 
-pub fn inv_rectangular_cuboid_inertia_matrix(sides: Vec3) -> DMat3 {
+pub fn inv_cuboid_inertia_tensor(sides: Vec3) -> DMat3 {
     let inertia = inertia_cuboid_diag(sides);
     let diag = 1. / inertia;
     DMat3::from_diagonal(diag)
@@ -79,7 +79,7 @@ impl CubeRigidBody {
     ) {
         self.sides = sides;
         self.angular_momentum = angular_momentum;
-        self.inv_inertia_tensor = inv_rectangular_cuboid_inertia_matrix(sides);
+        self.inv_inertia_tensor = inv_cuboid_inertia_tensor(sides);
         if let Some(mesh) = meshes.get_mut(&self.mesh_handle) {
             *mesh = Mesh::from(Cuboid::from_size(sides))
         }

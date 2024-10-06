@@ -18,6 +18,7 @@ pub fn xform_inv(m: DMat3, v: DVec3) -> DVec3 {
     )
 }
 
+// rotates a position according to the rotation matrix
 pub fn xform(m: DMat3, v: DVec3) -> DVec3 {
     DVec3::new(
         DVec3::dot(m.x_axis, v),
@@ -86,11 +87,10 @@ pub struct Body {
     pub frame_harmonic_phase_1: f64,
     pub frame_harmonic_phase_2: f64,
     pub combined_noise: DVec3,
-    pub acceleration: DVec3,
     pub motor_noise: DVec3,
     pub battery: Battery,
     pub arms: [Arm; 4],
-    pub body: RigidBody,
+    pub rigid_body: RigidBody,
     pub gyro: Gyro,
 }
 
@@ -101,7 +101,6 @@ impl Body {
         frame_harmonic_phase_1: f64,
         frame_harmonic_phase_2: f64,
         combined_noise: DVec3,
-        acceleration: DVec3,
         motor_noise: DVec3,
         battery: Battery,
         arms: [Arm; 4],
@@ -114,11 +113,10 @@ impl Body {
             frame_harmonic_phase_1,
             frame_harmonic_phase_2,
             combined_noise,
-            acceleration,
             motor_noise,
             battery,
             arms,
-            body,
+            rigid_body: body,
             gyro,
         }
     }
@@ -138,28 +136,35 @@ impl Body {
                 vbat,
                 true, // we say that it is armed
                 ambient_temp,
-                self.body.rotation,
-                self.body.linear_velocity,
+                self.rigid_body.rotation,
+                self.rigid_body.linear_velocity,
             );
         }
         res_prop_torque
     }
 
-    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) -> DVec3 {
-        let gravity_force = self.body.gravity_force();
-        let drag_linear = self.body.drag_linear();
-        let drag_angular = self.body.drag_angular();
-        let rotation = self.body.rotation;
+    // Step first, we have to test this!
+    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
+        let gravity_force = self.rigid_body.gravity_force();
+        let drag_linear = self.rigid_body.drag_linear();
+        let drag_angular = self.rigid_body.drag_angular();
+        let rotation = self.rigid_body.rotation;
+        // This is probably not what we want!
+        // The total force should not just be added up like this but whatever
         let total_force = gravity_force - drag_linear
             + self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
                 acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
             });
-        let acceleration = self.body.acceleration(total_force);
-        // Step 1: update linear velocity
-        self.body.linear_velocity = self.body.linear_velocity + acceleration * dt;
+        self.rigid_body.acceleration = self.rigid_body.calculate_acceleration(total_force);
+        self.rigid_body.position +=
+            dt * self.rigid_body.linear_velocity + (self.rigid_body.acceleration * dt.powi(2)) / 2.;
 
+        // Step 1: update linear velocity
+        self.rigid_body.linear_velocity += self.rigid_body.acceleration * dt;
         let prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
+            // calculates the force that is the downwards compared to the drone
             let force = xform(rotation, DVec3::new(0., arm.thrust(), 0.));
+            // calculates the motor position relative to the body frame
             let rad = xform(rotation, arm.motor_pos());
             acc + DVec3::cross(rad, force)
         });
@@ -168,23 +173,23 @@ impl Body {
             + rotation.y_axis * drag_angular[0]
             + rotation.z_axis * drag_angular[2]
             + prop_torques;
-        let angular_acc = self.body.angular_acc(total_moment);
-        let angular_velocity = (self.body.angular_velocity + angular_acc * dt).clamp(
+        let angular_acc = self.rigid_body.angular_acc(total_moment);
+        let angular_velocity = (self.rigid_body.angular_velocity + angular_acc * dt).clamp(
             DVec3::new(-100., -100., -100.),
             DVec3::new(100., 100., 100.),
         );
-        // Step 2: update angular velocity
-        self.body.angular_velocity = angular_velocity;
 
-        let rotation = self.body.rotation(angular_velocity, dt);
+        // Step 2: update angular velocity
+        self.rigid_body.angular_velocity = angular_velocity;
+
+        let rotation = self.rigid_body.rotation(angular_velocity, dt);
         // STEP 3: update rotation
-        self.body.rotation = rotation;
-        acceleration
+        self.rigid_body.rotation = rotation;
     }
 
     pub fn update_physics(&mut self, state_packet: &StatePacket, dt: f64, ambient_temp: f64) {
         let motor_torque = self.calculate_motors(state_packet, dt, ambient_temp);
-        self.acceleration = self.calculate_physics(motor_torque, dt);
+        self.calculate_physics(motor_torque, dt);
 
         let pwm_sum = self.arms.iter().fold(0.0, |pwm, arm| pwm + arm.pwm());
         let current_sum = self.arms.iter().fold(0., |acc, arm| acc + arm.current());
@@ -364,8 +369,9 @@ impl Body {
             .update_gyro_noise(state_packet.gyro_base_noise_amp);
         self.update_motor_noise(dt, state_packet);
         self.combined_noise = self.gyro.gyro_noise() + self.motor_noise.clone();
-        self.gyro.set_rotation(mat3_to_quat(self.body.rotation));
-        let mut angular_velocity = self.body.angular_velocity + self.combined_noise.clone();
+        self.gyro
+            .set_rotation(mat3_to_quat(self.rigid_body.rotation));
+        let mut angular_velocity = self.rigid_body.angular_velocity + self.combined_noise.clone();
 
         let cutoff_freq = 300.;
         angular_velocity[0] =
@@ -375,11 +381,11 @@ impl Body {
         angular_velocity[2] =
             self.gyro.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
         self.gyro
-            .set_gyro(xform_inv(self.body.rotation, angular_velocity));
+            .set_gyro(xform_inv(self.rigid_body.rotation, angular_velocity));
         let gravity_acceleration = DVec3::new(0., -9.81, 0.);
         self.gyro.set_acceleration(xform_inv(
-            self.body.rotation,
-            self.acceleration + gravity_acceleration,
+            self.rigid_body.rotation,
+            self.rigid_body.acceleration + gravity_acceleration,
         ));
     }
 }
