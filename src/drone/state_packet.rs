@@ -2,7 +2,7 @@ use bevy::math::{DVec3, DVec4};
 
 #[derive(Debug, Clone)]
 pub struct StatePacket {
-    pub delta: f64,
+    // pub delta: f64,
     // rc_data: [f64; 8], // TODO: readd when hooking up the thing
     // position: DVec3,
     // pub rotation: DMat3,
@@ -15,7 +15,7 @@ pub struct StatePacket {
     pub frame_harmonic_1_freq: f64,
     pub frame_harmonic_2_amp: f64,
     pub frame_harmonic_2_freq: f64,
-    pub prop_damage: DVec4,
+    // pub prop_damage: DVec4,
     ground_effect: [f64; 4],
     vbat: f64,
     // pub contact: u8,
@@ -24,27 +24,25 @@ pub struct StatePacket {
 
 impl StatePacket {
     pub fn new(
-        delta: f64,
         motor_imbalance: [DVec3; 4],
         gyro_base_noise_amp: f64,
         frame_harmonic_1_amp: f64,
         frame_harmonic_1_freq: f64,
         frame_harmonic_2_amp: f64,
         frame_harmonic_2_freq: f64,
-        prop_damage: DVec4,
+        // prop_damage: DVec4,
         ground_effect: [f64; 4],
         vbat: f64,
         commands: i32,
     ) -> Self {
         Self {
-            delta,
             motor_imbalance,
             gyro_base_noise_amp,
             frame_harmonic_1_amp,
             frame_harmonic_1_freq,
             frame_harmonic_2_amp,
             frame_harmonic_2_freq,
-            prop_damage,
+            // prop_damage,
             ground_effect,
             vbat,
             commands,

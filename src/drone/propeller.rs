@@ -1,12 +1,24 @@
 use bevy::math::DVec3;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Propeller {
     prop_max_rpm: f64,
     prop_a_factor: f64,
     prop_torque_factor: f64,
     prop_inertia: f64,
     prop_thrust_factor: DVec3,
+}
+
+impl Default for Propeller {
+    fn default() -> Self {
+        Self {
+            prop_max_rpm: 1.,
+            prop_a_factor: 0.,
+            prop_torque_factor: 0.,
+            prop_inertia: 0.1,
+            prop_thrust_factor: DVec3::ZERO,
+        }
+    }
 }
 
 impl Propeller {
@@ -41,9 +53,8 @@ impl Propeller {
         f64::max(result, 0.0)
     }
 
-    pub fn prop_torque(&self, prop_damage: f64, vel_up: f64, rpm: f64) -> f64 {
-        let prop_health_torque_factor = 1.0 + prop_damage;
-        self.prop_thrust(vel_up, rpm) * self.prop_torque_factor * prop_health_torque_factor
+    pub fn prop_torque(&self, vel_up: f64, rpm: f64) -> f64 {
+        self.prop_thrust(vel_up, rpm) * self.prop_torque_factor
     }
 }
 

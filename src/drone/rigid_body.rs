@@ -36,40 +36,10 @@ pub struct RigidBody {
     pub acceleration: DVec3,
 }
 
-impl RigidBody {
-    fn new(
-        linear_velocity: DVec3,
-        position: DVec3,
-        angular_velocity: DVec3,
-        mass: f64,
-        frame_drag_area: DVec3,
-        frame_drag_constant: f64,
-        inv_tensor: DMat3,
-        rotation: DMat3,
-        acceleration: DVec3,
-    ) -> Self {
-        Self {
-            linear_velocity,
-            position,
-            angular_velocity,
-            mass,
-            frame_drag_area,
-            frame_drag_constant,
-            inv_tensor,
-            rotation,
-            acceleration,
-        }
-    }
-}
-
 // we are concerned with 3 things: linear velocity,
 impl RigidBody {
-    pub fn gravity_force(&self) -> DVec3 {
+    fn gravity_force(&self) -> DVec3 {
         DVec3::new(0., -9.81 * self.mass, 0.)
-    }
-
-    pub fn calculate_acceleration(&self, force: DVec3) -> DVec3 {
-        force / f64::max(self.mass, 0.0001)
     }
 
     fn drag_dir(&self) -> DVec3 {
@@ -78,7 +48,7 @@ impl RigidBody {
         dir * 0.5 * AIR_RHO * vel2 * self.frame_drag_constant
     }
 
-    pub fn drag_linear(&self) -> DVec3 {
+    fn drag_linear(&self) -> DVec3 {
         if self.linear_velocity == DVec3::ZERO {
             return DVec3::ZERO;
         }
@@ -89,7 +59,11 @@ impl RigidBody {
         drag_dir * area_linear
     }
 
-    pub fn drag_angular(&self) -> DVec3 {
+    // TODO: fix this
+    fn drag_angular(&self) -> DVec3 {
+        if self.linear_velocity == DVec3::ZERO {
+            return DVec3::ZERO;
+        }
         let dir = self.linear_velocity.normalize();
         let drag_dir = self.drag_dir();
         let local_dir = xform_inv(self.rotation, dir);
@@ -101,11 +75,11 @@ impl RigidBody {
         )
     }
 
-    pub fn angular_acc(&self, moment: DVec3) -> DVec3 {
+    fn angular_acc(&self, moment: DVec3) -> DVec3 {
         xform(self.rotation * self.inv_tensor * self.rotation, moment)
     }
 
-    pub fn rotation(&self, angular_velocity: DVec3, dt: f64) -> DMat3 {
+    fn rotation(&self, angular_velocity: DVec3, dt: f64) -> DMat3 {
         let w = angular_velocity * dt;
         let W = DMat3 {
             x_axis: DVec3::new(1., -w[2], w[1]),
@@ -113,5 +87,37 @@ impl RigidBody {
             z_axis: DVec3::new(-w[1], w[0], 1.),
         };
         W * self.rotation
+    }
+
+    pub fn integrate(
+        &mut self,
+        motor_torque: f64,
+        sum_arm_forces: DVec3,
+        sum_prop_torques: DVec3,
+        dt: f64,
+    ) {
+        let gravity_force = self.gravity_force();
+        let drag_linear = self.drag_linear();
+        let drag_angular = self.drag_angular();
+        let total_force = gravity_force - drag_linear + sum_arm_forces;
+        let acceleration = total_force / self.mass;
+
+        let total_moment = self.rotation.y_axis * motor_torque
+            + self.rotation.x_axis * drag_angular[1]
+            + self.rotation.y_axis * drag_angular[0]
+            + self.rotation.z_axis * drag_angular[2]
+            + sum_prop_torques;
+        let angular_acc = self.angular_acc(total_moment);
+        let angular_velocity = (self.angular_velocity + angular_acc * dt).clamp(
+            DVec3::new(-100., -100., -100.),
+            DVec3::new(100., 100., 100.),
+        );
+        let rotation = self.rotation(angular_velocity, dt);
+
+        // update things
+        self.acceleration = acceleration;
+        self.position += dt * self.linear_velocity + (acceleration * dt.powi(2)) / 2.;
+        self.rotation = rotation;
+        self.angular_velocity = angular_velocity;
     }
 }

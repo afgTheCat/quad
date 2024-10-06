@@ -50,20 +50,21 @@ impl MotorProps {
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorState {
-    pub pwm: f64,                                 // pwm signal in percent [0,1]
-    pub pwm_low_pass_filter: LowPassFilter,       // low pass filtered pwm value
-    pub temp: f64,                                // motor core temp in deg C
-    pub current: f64,                             // current running through motor in Amps
-    pub rpm: f64,                                 // motor revolutions per minute
-    pub thrust: f64,                              // thrust output of motor / propeller combo
-    pub m_torque: f64,                            // motor torque
-    pub p_torque: f64,                            // propeller torque, counter acting motor torque
+    pub pwm: f64, // pwm signal in percent [0,1]. Thiw will be
+    // updated by BF
+    pub pwm_low_pass_filter: LowPassFilter, // low pass filtered pwm value
+    pub temp: f64,                          // motor core temp in deg C
+    pub current: f64,                       // current running through motor in Amps
+    pub rpm: f64,                           // motor revolutions per minute
+    pub thrust: f64,                        // thrust output of motor / propeller combo
+    pub m_torque: f64,                      // motor torque
+    pub p_torque: f64,                      // propeller torque, counter acting motor torque
     pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
     pub phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
     pub phase_harmonic_1: f64, // phase freq * 2
     pub phase_harmonic_2: f64, // phase freq * 3
     pub phase_slow: f64, // phase freq * 0.01f
-    pub burned_out: bool, // is the motor destroyed by over temp
+                    // pub burned_out: bool, // is the motor destroyed by over temp
 }
 
 impl MotorState {
@@ -81,7 +82,7 @@ impl MotorState {
         phase_harmonic_1: f64,
         phase_harmonic_2: f64,
         phase_slow: f64,
-        burned_out: bool,
+        // burned_out: bool,
     ) -> Self {
         Self {
             pwm,
@@ -97,7 +98,7 @@ impl MotorState {
             phase_harmonic_1,
             phase_harmonic_2,
             phase_slow,
-            burned_out,
+            // burned_out,
         }
     }
 }
@@ -208,14 +209,14 @@ impl Motor {
         self.props.position.clone()
     }
 
-    pub fn motor_torque(&self, volts: f64, is_armed: bool) -> f64 {
+    pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
         let back_emf_v = self.state.rpm / f64::max(kv, 0.0001);
         let base_current = (volts - back_emf_v) / f64::max(self.props.motor_r, 0.0001);
-        let current = match (is_armed, base_current > 0.) {
-            (true, true) => f64::max(0., base_current - self.props.motor_io),
-            (true, false) => f64::min(0., base_current + self.props.motor_io),
-            _ => base_current,
+        let current = if base_current > 0. {
+            f64::max(0., base_current - self.props.motor_io)
+        } else {
+            f64::min(0., base_current + self.props.motor_io)
         };
         let nm_per_a = 8.3 / f64::max(self.props.motor_kv, 0.0001);
         current * nm_per_a
@@ -228,10 +229,6 @@ impl Motor {
             dt,
             120.,
         )
-    }
-
-    pub fn burned_out(&self) -> bool {
-        self.state.burned_out
     }
 
     pub fn kv(&self) -> f64 {
@@ -262,26 +259,6 @@ impl Motor {
         self.state.m_torque = m_torque;
         self.state.thrust = thrust;
         self.state.rpm = rpm;
-        if self.state.temp > self.props.motor_max_t {
-            self.state.burned_out = true;
-        }
-    }
-
-    pub fn update_motor_corrected(
-        &mut self,
-        current: f64,
-        speed: f64,
-        thrust: f64,
-        dt: f64,
-        vbat: f64,
-        ambient_temp: f64,
-    ) {
-        self.update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);
-        self.state.current = current;
-        self.state.thrust = thrust;
-        if self.state.temp > self.props.motor_max_t {
-            self.state.burned_out = true;
-        }
     }
 
     pub fn dir(&self) -> f64 {

@@ -121,6 +121,23 @@ impl Body {
         }
     }
 
+    // Step first, we have to test this!
+    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
+        let rotation = self.rigid_body.rotation;
+        let sum_arm_forces = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
+            acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
+        });
+        let sum_prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
+            // calculates the force that is the downwards compared to the drone
+            let force = xform(rotation, DVec3::new(0., arm.thrust(), 0.));
+            // calculates the motor position relative to the body frame
+            let rad = xform(rotation, arm.motor_pos());
+            acc + DVec3::cross(rad, force)
+        });
+        self.rigid_body
+            .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
+    }
+
     pub fn calculate_motors(
         &mut self,
         state_packet: &StatePacket,
@@ -130,61 +147,17 @@ impl Body {
         let mut res_prop_torque: f64 = 0.;
         let vbat = self.battery.vbat_sagged(); // is this what we want?
         for i in 0..4 {
+            let ground_effect = state_packet.ground_effect(i);
             res_prop_torque += self.arms[i].calculate_arm_m_torque(
-                state_packet,
+                ground_effect,
                 dt,
                 vbat,
-                true, // we say that it is armed
                 ambient_temp,
                 self.rigid_body.rotation,
                 self.rigid_body.linear_velocity,
             );
         }
         res_prop_torque
-    }
-
-    // Step first, we have to test this!
-    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
-        let gravity_force = self.rigid_body.gravity_force();
-        let drag_linear = self.rigid_body.drag_linear();
-        let drag_angular = self.rigid_body.drag_angular();
-        let rotation = self.rigid_body.rotation;
-        // This is probably not what we want!
-        // The total force should not just be added up like this but whatever
-        let total_force = gravity_force - drag_linear
-            + self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-                acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
-            });
-        self.rigid_body.acceleration = self.rigid_body.calculate_acceleration(total_force);
-        self.rigid_body.position +=
-            dt * self.rigid_body.linear_velocity + (self.rigid_body.acceleration * dt.powi(2)) / 2.;
-
-        // Step 1: update linear velocity
-        self.rigid_body.linear_velocity += self.rigid_body.acceleration * dt;
-        let prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-            // calculates the force that is the downwards compared to the drone
-            let force = xform(rotation, DVec3::new(0., arm.thrust(), 0.));
-            // calculates the motor position relative to the body frame
-            let rad = xform(rotation, arm.motor_pos());
-            acc + DVec3::cross(rad, force)
-        });
-        let total_moment = rotation.y_axis * motor_torque
-            + rotation.x_axis * drag_angular[1]
-            + rotation.y_axis * drag_angular[0]
-            + rotation.z_axis * drag_angular[2]
-            + prop_torques;
-        let angular_acc = self.rigid_body.angular_acc(total_moment);
-        let angular_velocity = (self.rigid_body.angular_velocity + angular_acc * dt).clamp(
-            DVec3::new(-100., -100., -100.),
-            DVec3::new(100., 100., 100.),
-        );
-
-        // Step 2: update angular velocity
-        self.rigid_body.angular_velocity = angular_velocity;
-
-        let rotation = self.rigid_body.rotation(angular_velocity, dt);
-        // STEP 3: update rotation
-        self.rigid_body.rotation = rotation;
     }
 
     pub fn update_physics(&mut self, state_packet: &StatePacket, dt: f64, ambient_temp: f64) {
@@ -238,8 +211,8 @@ impl Body {
         let motor_rpm = self.motor_rpm();
         let rpm_factor = motor_rpm.max(DVec4::ZERO) / max_rpm.clone();
         let rpm_factor_squared = rpm_factor.powf(2.);
-        let dmg_factor = state_packet.prop_damage + 0.05;
-        let rpm_dmg_factor = dmg_factor.clone() * rpm_factor_squared;
+        let dmg_factor = DVec4::splat(0.05);
+        let rpm_dmg_factor = dmg_factor * rpm_factor_squared;
         let m_noise = self.motor_noise(dt);
 
         let mut noise = DVec3::new(0., 0., 0.);
@@ -368,10 +341,10 @@ impl Body {
         self.gyro
             .update_gyro_noise(state_packet.gyro_base_noise_amp);
         self.update_motor_noise(dt, state_packet);
-        self.combined_noise = self.gyro.gyro_noise() + self.motor_noise.clone();
+        self.combined_noise = self.gyro.gyro_noise() + self.motor_noise;
         self.gyro
             .set_rotation(mat3_to_quat(self.rigid_body.rotation));
-        let mut angular_velocity = self.rigid_body.angular_velocity + self.combined_noise.clone();
+        let mut angular_velocity = self.rigid_body.angular_velocity + self.combined_noise;
 
         let cutoff_freq = 300.;
         angular_velocity[0] =
