@@ -17,7 +17,7 @@ impl SamplePoint {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SampleCurve {
     sample_points: Vec<SamplePoint>,
 }

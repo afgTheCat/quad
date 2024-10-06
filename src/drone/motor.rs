@@ -13,13 +13,13 @@ use super::{
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorProps {
-    motor_kv: f64,  // kv
-    motor_r: f64,   // resistence
-    motor_io: f64,  // idle current
-    motor_rth: f64, // thermal resistance (deg C per Watt)
-    motor_cth: f64, // thermal heat capacity (joules per deg C)
-    motor_dir: f64,
-    motor_max_t: f64,
+    pub motor_kv: f64,  // kv
+    pub motor_r: f64,   // resistence
+    pub motor_io: f64,  // idle current
+    pub motor_rth: f64, // thermal resistance (deg C per Watt)
+    pub motor_cth: f64, // thermal heat capacity (joules per deg C)
+    pub motor_dir: f64,
+    pub motor_max_t: f64,
 }
 
 impl MotorProps {
@@ -47,21 +47,21 @@ impl MotorProps {
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorState {
-    position: DVec3,                          // position
-    pwm: f64,                                 // pwm signal in percent [0,1]
-    pwm_low_pass_filter: LowPassFilter,       // low pass filtered pwm value
-    temp: f64,                                // motor core temp in deg C
-    current: f64,                             // current running through motor in Amps
-    rpm: f64,                                 // motor revolutions per minute
-    thrust: f64,                              // thrust output of motor / propeller combo
-    m_torque: f64,                            // motor torque
-    p_torque: f64,                            // propeller torque, counter acting motor torque
-    prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
-    phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
-    phase_harmonic_1: f64, // phase freq * 2
-    phase_harmonic_2: f64, // phase freq * 3
-    phase_slow: f64, // phase freq * 0.01f
-    burned_out: bool, // is the motor destroyed by over temp
+    pub position: DVec3,                          // position
+    pub pwm: f64,                                 // pwm signal in percent [0,1]
+    pub pwm_low_pass_filter: LowPassFilter,       // low pass filtered pwm value
+    pub temp: f64,                                // motor core temp in deg C
+    pub current: f64,                             // current running through motor in Amps
+    pub rpm: f64,                                 // motor revolutions per minute
+    pub thrust: f64,                              // thrust output of motor / propeller combo
+    pub m_torque: f64,                            // motor torque
+    pub p_torque: f64,                            // propeller torque, counter acting motor torque
+    pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
+    pub phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
+    pub phase_harmonic_1: f64, // phase freq * 2
+    pub phase_harmonic_2: f64, // phase freq * 3
+    pub phase_slow: f64, // phase freq * 0.01f
+    pub burned_out: bool, // is the motor destroyed by over temp
 }
 
 impl MotorState {
@@ -138,8 +138,8 @@ impl MotorState {
 
 #[derive(Debug, Clone, Default, Component)]
 pub struct Motor {
-    state: MotorState,
-    props: MotorProps,
+    pub state: MotorState,
+    pub props: MotorProps,
 }
 
 impl Motor {

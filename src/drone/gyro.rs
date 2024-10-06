@@ -2,7 +2,7 @@ use super::low_pass_filter::LowPassFilter;
 use crate::rng_gen_range;
 use bevy::math::{DVec3, DVec4};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Gyro {
     gyro_noise: DVec3,
     low_pass_filter: [LowPassFilter; 3],

@@ -79,24 +79,22 @@ pub fn rpm_to_hz(rpm: f64) -> f64 {
     rpm / 60.
 }
 
-#[derive(Clone, Component)]
-pub struct Drone {
-    // armed: bool,
-    prop_harmonic_1_amp: f64,
-    prop_harmonic_2_amp: f64,
-    frame_harmonic_phase_1: f64,
-    frame_harmonic_phase_2: f64,
-    combined_noise: DVec3,
-    acceleration: DVec3,
-
-    motor_noise: DVec3,
-    battery: Battery,
-    arms: [Arm; 4],
-    body: RigidBody,
-    gyro: Gyro,
+#[derive(Clone, Default, Component)]
+pub struct Body {
+    pub prop_harmonic_1_amp: f64,
+    pub prop_harmonic_2_amp: f64,
+    pub frame_harmonic_phase_1: f64,
+    pub frame_harmonic_phase_2: f64,
+    pub combined_noise: DVec3,
+    pub acceleration: DVec3,
+    pub motor_noise: DVec3,
+    pub battery: Battery,
+    pub arms: [Arm; 4],
+    pub body: RigidBody,
+    pub gyro: Gyro,
 }
 
-impl Drone {
+impl Body {
     pub fn new(
         prop_harmonic_1_amp: f64,
         prop_harmonic_2_amp: f64,

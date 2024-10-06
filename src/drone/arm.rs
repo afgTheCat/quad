@@ -7,11 +7,11 @@ use crate::{
 
 use super::{motor::Motor, propeller::Propeller, state_packet::StatePacket};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Arm {
-    propeller: Propeller,
-    motor: Motor,
-    arm_index: usize,
+    pub propeller: Propeller,
+    pub motor: Motor,
+    pub arm_index: usize,
 }
 
 impl Arm {

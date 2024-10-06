@@ -1,6 +1,6 @@
 use bevy::math::DVec3;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Propeller {
     prop_max_rpm: f64,
     prop_a_factor: f64,

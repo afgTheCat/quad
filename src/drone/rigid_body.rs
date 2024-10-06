@@ -5,7 +5,7 @@ use crate::constants::AIR_RHO;
 use super::body::{xform, xform_inv};
 
 // TODO: this is kinda stupid as we are not planning to store the location
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RigidBody {
     pub linear_velocity: DVec3,
     pub angular_velocity: DVec3,

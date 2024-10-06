@@ -1,7 +1,7 @@
 use super::sample_curve::SampleCurve;
 use crate::rng_gen_range;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct BatteryProps {
     full_capacity: f64,
     bat_voltage_curve: SampleCurve,
@@ -10,7 +10,7 @@ struct BatteryProps {
     max_voltage_sag: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct BatteryState {
     capacity: f64,
     bat_voltage: f64,
@@ -19,7 +19,7 @@ struct BatteryState {
     m_ah_drawn: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Battery {
     props: BatteryProps,
     state: BatteryState,
