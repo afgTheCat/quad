@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use noise::{NoiseFn, Perlin};
-use quboid::{cuboid_setup, handle_keyboard_events, quboid_update, update_ui};
+use quboid::handle_keyboard_events;
 use rand::{rngs::ThreadRng, thread_rng, Rng};
 use std::{cell::RefCell, ops::Range};
 
@@ -25,6 +25,8 @@ pub fn perlin_noise(point: f64) -> f64 {
 
 #[cfg(feature = "legacy_sim")]
 fn build_app() -> App {
+    use quboid::{cuboid_setup, quboid_update, update_ui};
+
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)

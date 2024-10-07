@@ -1,7 +1,7 @@
-use std::env;
-use std::process::Command;
-
+#[cfg(feature = "betaflight")]
 fn main() {
+    use std::env;
+    use std::process::Command;
     let target = env::var("TARGET").unwrap_or_else(|_| "SITL".to_string());
 
     let status = Command::new("make")
@@ -14,3 +14,6 @@ fn main() {
         panic!("Betaflight build failed");
     }
 }
+
+// If betaflight is not enabled, there is no reason to use it!
+fn main() {}
