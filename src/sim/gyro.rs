@@ -9,6 +9,7 @@ pub struct Gyro {
     rotation: DVec4,
     acceleration: DVec3,
     gyro: DVec3,
+    gyro_base_noise_amp: f64,
 }
 
 impl Gyro {
@@ -18,6 +19,7 @@ impl Gyro {
         rotation: DVec4,
         acceleration: DVec3,
         gyro: DVec3,
+        gyro_base_noise_amp: f64,
     ) -> Self {
         Self {
             gyro_noise,
@@ -25,15 +27,16 @@ impl Gyro {
             rotation,
             acceleration,
             gyro,
+            gyro_base_noise_amp,
         }
     }
 }
 
 impl Gyro {
-    pub fn update_gyro_noise(&mut self, gyro_base_noise_amp: f64) {
-        let white_noise_x = rng_gen_range(-1.0..1.) * gyro_base_noise_amp;
-        let white_noise_y = rng_gen_range(-1.0..1.) * gyro_base_noise_amp;
-        let white_noise_z = rng_gen_range(-1.0..1.) * gyro_base_noise_amp;
+    pub fn update_gyro_noise(&mut self) {
+        let white_noise_x = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
+        let white_noise_y = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
+        let white_noise_z = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
         self.gyro_noise[0] = white_noise_x;
         self.gyro_noise[1] = white_noise_y;
         self.gyro_noise[1] = white_noise_z;

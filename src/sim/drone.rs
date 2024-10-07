@@ -2,7 +2,6 @@ use super::arm::Arm;
 use super::battery::Battery;
 use super::gyro::Gyro;
 use super::rigid_body::RigidBody;
-use super::state_packet::StatePacket;
 use crate::constants::M_PI;
 use crate::rng_gen_range;
 use bevy::{
@@ -86,6 +85,11 @@ pub struct Drone {
     pub prop_harmonic_2_amp: f64,
     pub frame_harmonic_phase_1: f64,
     pub frame_harmonic_phase_2: f64,
+    pub frame_harmonic_1_amp: f64, // TODO: can this change?
+    pub frame_harmonic_1_freq: f64,
+    pub frame_harmonic_2_amp: f64,
+    pub frame_harmonic_2_freq: f64,
+    pub motor_imbalance: [DVec3; 4],
     pub combined_noise: DVec3,
     pub motor_noise: DVec3,
     pub battery: Battery,
@@ -100,6 +104,11 @@ impl Drone {
         prop_harmonic_2_amp: f64,
         frame_harmonic_phase_1: f64,
         frame_harmonic_phase_2: f64,
+        frame_harmonic_1_amp: f64,
+        frame_harmonic_1_freq: f64,
+        frame_harmonic_2_amp: f64,
+        frame_harmonic_2_freq: f64,
+        motor_imbalance: [DVec3; 4],
         combined_noise: DVec3,
         motor_noise: DVec3,
         battery: Battery,
@@ -112,6 +121,11 @@ impl Drone {
             prop_harmonic_2_amp,
             frame_harmonic_phase_1,
             frame_harmonic_phase_2,
+            frame_harmonic_1_amp,
+            frame_harmonic_1_freq,
+            frame_harmonic_2_amp,
+            frame_harmonic_2_freq,
+            motor_imbalance,
             combined_noise,
             motor_noise,
             battery,
@@ -140,16 +154,14 @@ impl Drone {
 
     pub fn calculate_motors(
         &mut self,
-        state_packet: &StatePacket,
+        // state_packet: &StatePacket,
         dt: f64,
         ambient_temp: f64,
     ) -> f64 {
         let mut res_prop_torque: f64 = 0.;
         let vbat = self.battery.vbat_sagged(); // is this what we want?
         for i in 0..4 {
-            let ground_effect = state_packet.ground_effect(i);
             res_prop_torque += self.arms[i].calculate_arm_m_torque(
-                ground_effect,
                 dt,
                 vbat,
                 ambient_temp,
@@ -160,8 +172,8 @@ impl Drone {
         res_prop_torque
     }
 
-    pub fn update_physics(&mut self, state_packet: &StatePacket, dt: f64, ambient_temp: f64) {
-        let motor_torque = self.calculate_motors(state_packet, dt, ambient_temp);
+    pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
+        let motor_torque = self.calculate_motors(dt, ambient_temp);
         self.calculate_physics(motor_torque, dt);
 
         let pwm_sum = self.arms.iter().fold(0.0, |pwm, arm| pwm + arm.pwm());
@@ -205,11 +217,11 @@ impl Drone {
         )
     }
 
-    fn update_motor_noise(&mut self, dt: f64, state_packet: &StatePacket) {
+    fn update_motor_noise(&mut self, dt: f64) {
         let max_v = self.battery.cell_count() * 4.2;
         let max_rpm = (self.motor_kv() * max_v).max(DVec4::splat(0.1));
         let motor_rpm = self.motor_rpm();
-        let rpm_factor = motor_rpm.max(DVec4::ZERO) / max_rpm.clone();
+        let rpm_factor = motor_rpm.max(DVec4::ZERO) / max_rpm;
         let rpm_factor_squared = rpm_factor.powf(2.);
         let dmg_factor = DVec4::splat(0.05);
         let rpm_dmg_factor = dmg_factor * rpm_factor_squared;
@@ -217,47 +229,44 @@ impl Drone {
 
         let mut noise = DVec3::new(0., 0., 0.);
         for i in 0..3 {
-            noise[0] +=
-                m_noise[i].x_axis[0] * state_packet.motor_imbalance[i][0] * rpm_dmg_factor[i]
-                    + m_noise[i].x_axis[1]
-                        * state_packet.motor_imbalance[i][0]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_1_amp
-                    + m_noise[i].x_axis[2]
-                        * state_packet.motor_imbalance[i][0]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_2_amp;
-            noise[1] +=
-                m_noise[i].y_axis[0] * state_packet.motor_imbalance[i][1] * rpm_dmg_factor[i]
-                    + m_noise[i].y_axis[1]
-                        * state_packet.motor_imbalance[i][1]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_1_amp
-                    + m_noise[i].y_axis[2]
-                        * state_packet.motor_imbalance[i][1]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_2_amp;
+            noise[0] += m_noise[i].x_axis[0] * self.motor_imbalance[i][0] * rpm_dmg_factor[i]
+                + m_noise[i].x_axis[1]
+                    * self.motor_imbalance[i][0]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_1_amp
+                + m_noise[i].x_axis[2]
+                    * self.motor_imbalance[i][0]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_2_amp;
+            noise[1] += m_noise[i].y_axis[0] * self.motor_imbalance[i][1] * rpm_dmg_factor[i]
+                + m_noise[i].y_axis[1]
+                    * self.motor_imbalance[i][1]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_1_amp
+                + m_noise[i].y_axis[2]
+                    * self.motor_imbalance[i][1]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_2_amp;
 
-            noise[2] +=
-                (m_noise[i].z_axis[0] * state_packet.motor_imbalance[i][2] * rpm_dmg_factor[i]
-                    + m_noise[i].z_axis[1]
-                        * state_packet.motor_imbalance[i][2]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_1_amp
-                    + m_noise[i].z_axis[2]
-                        * state_packet.motor_imbalance[i][2]
-                        * rpm_dmg_factor[i]
-                        * self.prop_harmonic_2_amp)
-                    * 0.5;
+            noise[2] += (m_noise[i].z_axis[0] * self.motor_imbalance[i][2] * rpm_dmg_factor[i]
+                + m_noise[i].z_axis[1]
+                    * self.motor_imbalance[i][2]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_1_amp
+                + m_noise[i].z_axis[2]
+                    * self.motor_imbalance[i][2]
+                    * rpm_dmg_factor[i]
+                    * self.prop_harmonic_2_amp)
+                * 0.5;
         }
         self.frame_harmonic_phase_1 = shifted_phase(
             dt,
-            state_packet.frame_harmonic_1_freq + rng_gen_range(-70.0..70.),
+            self.frame_harmonic_1_freq + rng_gen_range(-70.0..70.),
             self.frame_harmonic_phase_1,
         );
         self.frame_harmonic_phase_2 = shifted_phase(
             dt,
-            state_packet.frame_harmonic_2_freq + rng_gen_range(-60.0..60.),
+            self.frame_harmonic_2_freq + rng_gen_range(-60.0..60.),
             self.frame_harmonic_phase_2,
         );
         let rpm_factor_h_dec = DVec4::min(
@@ -278,69 +287,68 @@ impl Drone {
         );
         let rpm_factor_h_2_inv = (rpm_factor_h_2_inc + -1.).element_sum() * 0.25;
 
-        noise[0] += (state_packet.motor_imbalance[0][0] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][0] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][0] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][0] * dmg_factor[3])
+        noise[0] += (self.motor_imbalance[0][0] * dmg_factor[0]
+            + self.motor_imbalance[1][0] * dmg_factor[1]
+            + self.motor_imbalance[2][0] * dmg_factor[2]
+            + self.motor_imbalance[3][0] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_1_amp
+            * self.frame_harmonic_1_amp
             * self.frame_harmonic_phase_1.sin()
             * rpm_factor_h_1_inv
             * rpm_factor_h;
-        noise[0] += (state_packet.motor_imbalance[0][0] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][0] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][0] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][0] * dmg_factor[3])
+        noise[0] += (self.motor_imbalance[0][0] * dmg_factor[0]
+            + self.motor_imbalance[1][0] * dmg_factor[1]
+            + self.motor_imbalance[2][0] * dmg_factor[2]
+            + self.motor_imbalance[3][0] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_2_amp
+            * self.frame_harmonic_2_amp
             * self.frame_harmonic_phase_2.sin()
             * rpm_factor_h_2_inv
             * rpm_factor_h;
 
-        noise[1] += (state_packet.motor_imbalance[0][1] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][1] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][1] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][1] * dmg_factor[3])
+        noise[1] += (self.motor_imbalance[0][1] * dmg_factor[0]
+            + self.motor_imbalance[1][1] * dmg_factor[1]
+            + self.motor_imbalance[2][1] * dmg_factor[2]
+            + self.motor_imbalance[3][1] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_1_amp
+            * self.frame_harmonic_1_amp
             * self.frame_harmonic_phase_1.cos()
             * rpm_factor_h_1_inv
             * rpm_factor_h;
-        noise[1] += (state_packet.motor_imbalance[0][1] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][1] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][1] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][1] * dmg_factor[3])
+        noise[1] += (self.motor_imbalance[0][1] * dmg_factor[0]
+            + self.motor_imbalance[1][1] * dmg_factor[1]
+            + self.motor_imbalance[2][1] * dmg_factor[2]
+            + self.motor_imbalance[3][1] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_2_amp
+            * self.frame_harmonic_2_amp
             * self.frame_harmonic_phase_2.cos()
             * rpm_factor_h_2_inv
             * rpm_factor_h;
 
-        noise[2] += (state_packet.motor_imbalance[0][0] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][0] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][0] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][0] * dmg_factor[3])
+        noise[2] += (self.motor_imbalance[0][0] * dmg_factor[0]
+            + self.motor_imbalance[1][0] * dmg_factor[1]
+            + self.motor_imbalance[2][0] * dmg_factor[2]
+            + self.motor_imbalance[3][0] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_1_amp
+            * self.frame_harmonic_1_amp
             * self.frame_harmonic_phase_1.sin()
             * rpm_factor_h_1_inv
             * rpm_factor_h;
-        noise[2] += (state_packet.motor_imbalance[0][2] * dmg_factor[0]
-            + state_packet.motor_imbalance[1][2] * dmg_factor[1]
-            + state_packet.motor_imbalance[2][2] * dmg_factor[2]
-            + state_packet.motor_imbalance[3][2] * dmg_factor[3])
+        noise[2] += (self.motor_imbalance[0][2] * dmg_factor[0]
+            + self.motor_imbalance[1][2] * dmg_factor[1]
+            + self.motor_imbalance[2][2] * dmg_factor[2]
+            + self.motor_imbalance[3][2] * dmg_factor[3])
             * 0.25
-            * state_packet.frame_harmonic_2_amp
+            * self.frame_harmonic_2_amp
             * self.frame_harmonic_phase_2.sin()
             * rpm_factor_h_2_inv
             * rpm_factor_h;
         self.motor_noise = noise;
     }
 
-    pub fn update_gyro(&mut self, state_packet: &StatePacket, dt: f64) {
-        self.gyro
-            .update_gyro_noise(state_packet.gyro_base_noise_amp);
-        self.update_motor_noise(dt, state_packet);
+    pub fn update_gyro(&mut self, dt: f64) {
+        self.gyro.update_gyro_noise();
+        self.update_motor_noise(dt);
         self.combined_noise = self.gyro.gyro_noise() + self.motor_noise;
         self.gyro
             .set_rotation(mat3_to_quat(self.rigid_body.rotation));

@@ -359,7 +359,7 @@ impl Arm {
         rpm: f64,
         rotation: DMat3,
         linear_velocity: DVec3,
-        ground_effect: f64,
+        // ground_effect: f64,
     ) -> f64 {
         // TODO: verify
         let up = rotation.x_axis;
@@ -381,14 +381,14 @@ impl Arm {
         let prop_damage_effect =
             1.0 - (f64::max(0.0, 0.5 * (perlin_noise(self.motor.phase() * speed) + 1.0)));
         self.propeller.prop_thrust(vel_up, rpm)
-            * ground_effect
+            // * ground_effect
             * prop_wash_effect
             * prop_damage_effect
     }
 
     pub fn calculate_arm_m_torque(
         &mut self,
-        ground_effect: f64,
+        // ground_effect: f64,
         dt: f64,
         vbat: f64,
         ambient_temp: f64,
@@ -409,8 +409,7 @@ impl Arm {
         let maxdrpm = f64::abs(volts * self.motor.kv() - self.motor.rpm());
         let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.kv() / 8.3;
-        // let ground_effect = state_packet.ground_effect(self.arm_index);
-        let thrust = self.motor_thrust(dt, rpm, rotation, linear_velocity, ground_effect);
+        let thrust = self.motor_thrust(dt, rpm, rotation, linear_velocity);
         self.motor.update_motor(
             current,
             speed,

@@ -1,5 +1,6 @@
 mod arm;
 mod battery;
+mod controller;
 mod drone;
 mod gyro;
 mod low_pass_filter;
@@ -11,19 +12,20 @@ mod state_update_packet;
 use arm::{Arm, Motor, MotorProps, MotorState};
 use bevy::{
     asset::{AssetServer, Assets, Handle},
-    color::{palettes::css::RED, Color},
-    gltf::{Gltf, GltfMesh, GltfNode},
-    math::{DVec3, EulerRot, Quat, Vec3, VectorSpace},
-    pbr::{DirectionalLight, DirectionalLightBundle, PbrBundle},
+    color::Color,
+    gltf::{Gltf, GltfNode},
+    math::{EulerRot, Quat, Vec3},
+    pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, BuildChildren, Camera3dBundle, Commands, Component, Gizmos, Mesh, NextState,
-        Query, Res, ResMut, Resource, SpatialBundle, Transform, With,
+        default, BuildChildren, Camera3dBundle, Commands, Component, NextState, Query, Res, ResMut,
+        Resource, SpatialBundle, Transform,
     },
-    scene::{Scene, SceneBundle},
+    scene::SceneBundle,
     time::Time,
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
+use controller::Controller;
 use drone::Drone;
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use state_packet::StatePacket;
@@ -77,14 +79,9 @@ fn sim_step(
 ) {
     let (mut transform, mut drone_context, mut model, mut drone) = query.single_mut();
     drone_context.time_accu += timer.delta();
-    let state_packet = model.provide_packet();
     while drone_context.step_context() {
-        drone.update_gyro(&state_packet, drone_context.dt.as_secs_f64());
-        drone.update_physics(
-            &state_packet,
-            drone_context.dt.as_secs_f64(),
-            drone_context.ambient_temp,
-        );
+        drone.update_gyro(drone_context.dt.as_secs_f64());
+        drone.update_physics(drone_context.dt.as_secs_f64(), drone_context.ambient_temp);
     }
 }
 
@@ -171,7 +168,7 @@ pub fn setup_drone(
             ..Default::default()
         };
         commands
-            .spawn((drone, SpatialBundle::default()))
+            .spawn((drone, SpatialBundle::default(), Controller::default()))
             .with_children(|parent| {
                 parent.spawn(SceneBundle {
                     scene: gltf.scenes[0].clone(),
@@ -182,18 +179,19 @@ pub fn setup_drone(
 }
 
 pub fn debug_drone(
-    mut drone_query: Query<(&mut Transform, &mut Drone)>,
+    mut drone_query: Query<(&mut Transform, &mut Drone, &mut Controller)>,
     mut context_query: Query<&mut SimContext>,
     timer: Res<Time>,
 ) {
-    let (mut transform, mut body) = drone_query.single_mut();
+    let (mut transform, mut drone, mut controller) = drone_query.single_mut();
     let mut sim_context = context_query.single_mut();
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
-        body.calculate_physics(0., sim_context.dt.as_secs_f64());
+        drone.update_gyro(sim_context.dt.as_secs_f64());
+        drone.update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
     }
 
-    transform.translation = body.rigid_body.position.as_vec3();
-    transform.rotation = Quat::from_mat3(&body.rigid_body.rotation.as_mat3());
+    transform.translation = drone.rigid_body.position.as_vec3();
+    transform.rotation = Quat::from_mat3(&drone.rigid_body.rotation.as_mat3());
 }
