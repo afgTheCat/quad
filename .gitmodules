@@ -1,0 +1,3 @@
+[submodule "betaflight"]
+	path = betaflight
+	url = git@github.com:betaflight/betaflight.git
