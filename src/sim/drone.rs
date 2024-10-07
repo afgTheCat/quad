@@ -81,7 +81,7 @@ pub fn rpm_to_hz(rpm: f64) -> f64 {
 }
 
 #[derive(Clone, Default, Component)]
-pub struct Body {
+pub struct Drone {
     pub prop_harmonic_1_amp: f64,
     pub prop_harmonic_2_amp: f64,
     pub frame_harmonic_phase_1: f64,
@@ -94,7 +94,7 @@ pub struct Body {
     pub gyro: Gyro,
 }
 
-impl Body {
+impl Drone {
     pub fn new(
         prop_harmonic_1_amp: f64,
         prop_harmonic_2_amp: f64,

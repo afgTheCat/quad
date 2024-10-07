@@ -8,7 +8,7 @@ pub struct StatePacket {
     // pub rotation: DMat3,
     // pub angular_velocity: DVec3,
     // pub linear_velocity: DVec3,
-    pub motor_imbalance: [DVec3; 4],
+    pub motor_imbalance: [DVec3; 4], // TODO: what is this?
     pub gyro_base_noise_amp: f64,
     // gyrobase_noise_freq: f64,
     pub frame_harmonic_1_amp: f64,

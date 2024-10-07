@@ -1,4 +1,14 @@
-use arm::Arm;
+mod arm;
+mod battery;
+mod drone;
+mod gyro;
+mod low_pass_filter;
+mod rigid_body;
+mod sample_curve;
+pub mod state_packet;
+mod state_update_packet;
+
+use arm::{Arm, Motor, MotorProps, MotorState};
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::{palettes::css::RED, Color},
@@ -14,25 +24,12 @@ use bevy::{
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
-use body::Body;
-use motor::{Motor, MotorProps, MotorState};
+use drone::Drone;
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use state_packet::StatePacket;
 use std::time::Duration;
 
 use crate::{constants::PROP_BLADE_MESH_NAMES, SimState};
-
-mod arm;
-mod battery;
-mod body;
-mod gyro;
-mod low_pass_filter;
-mod motor;
-mod propeller;
-mod rigid_body;
-mod sample_curve;
-pub mod state_packet;
-mod state_update_packet;
 
 #[derive(Component)]
 pub struct SimContext {
@@ -75,7 +72,7 @@ impl SimContext {
 }
 
 fn sim_step(
-    mut query: Query<(&mut Transform, &mut SimContext, &mut Model, &mut Body)>,
+    mut query: Query<(&mut Transform, &mut SimContext, &mut Model, &mut Drone)>,
     timer: Res<Time>,
 ) {
     let (mut transform, mut drone_context, mut model, mut drone) = query.single_mut();
@@ -163,7 +160,7 @@ pub fn setup_drone(
             }
         });
 
-        let drone = Body {
+        let drone = Drone {
             arms,
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
@@ -185,7 +182,7 @@ pub fn setup_drone(
 }
 
 pub fn debug_drone(
-    mut drone_query: Query<(&mut Transform, &mut Body)>,
+    mut drone_query: Query<(&mut Transform, &mut Drone)>,
     mut context_query: Query<&mut SimContext>,
     timer: Res<Time>,
 ) {

@@ -1,6 +1,6 @@
 mod constants;
-mod drone;
 mod quboid;
+mod sim;
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
@@ -49,7 +49,7 @@ enum SimState {
 #[cfg(not(feature = "legacy_sim"))]
 fn build_app() -> App {
     use bevy_infinite_grid::InfiniteGridPlugin;
-    use drone::{base_setup, debug_drone, setup_drone};
+    use sim::{base_setup, debug_drone, setup_drone};
 
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)

@@ -2,7 +2,7 @@ use bevy::math::{DMat3, DVec3, Vec3};
 
 use crate::constants::AIR_RHO;
 
-use super::body::{xform, xform_inv};
+use super::drone::{xform, xform_inv};
 
 fn inertia_cuboid_diag(sides: Vec3) -> DVec3 {
     let DVec3 { x, y, z } = sides.into();
