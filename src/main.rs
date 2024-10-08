@@ -1,5 +1,7 @@
 mod constants;
+mod low_pass_filter;
 mod quboid;
+mod sample_curve;
 mod sim;
 
 use bevy::prelude::*;

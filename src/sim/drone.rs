@@ -1,13 +1,84 @@
 use super::arm::Arm;
 use super::battery::Battery;
-use super::gyro::Gyro;
 use super::rigid_body::RigidBody;
-use crate::constants::M_PI;
 use crate::rng_gen_range;
+use crate::{constants::M_PI, low_pass_filter::LowPassFilter};
 use bevy::{
     math::{DMat3, DVec3, DVec4},
     prelude::Component,
 };
+
+#[derive(Debug, Clone, Default)]
+pub struct Gyro {
+    gyro_noise: DVec3,
+    low_pass_filter: [LowPassFilter; 3],
+    rotation: DVec4,
+    acceleration: DVec3,
+    gyro_angular_vel: DVec3,
+    gyro_base_noise_amp: f64,
+}
+
+impl Gyro {
+    pub fn update_gyro_noise(&mut self) {
+        let white_noise_x = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
+        let white_noise_y = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
+        let white_noise_z = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
+        self.gyro_noise[0] = white_noise_x;
+        self.gyro_noise[1] = white_noise_y;
+        self.gyro_noise[1] = white_noise_z;
+    }
+
+    pub fn set_angular_velocity(
+        &mut self,
+        rotation: DMat3,
+        angular_velocity: DVec3,
+        combined_noise: DVec3,
+        dt: f64,
+    ) {
+        let mut angular_velocity = angular_velocity + combined_noise;
+        let cutoff_freq = 300.;
+        angular_velocity[0] =
+            self.low_pass_filter()[0].update(angular_velocity[0], dt, cutoff_freq);
+        angular_velocity[1] =
+            self.low_pass_filter()[1].update(angular_velocity[0], dt, cutoff_freq);
+        angular_velocity[2] =
+            self.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
+        self.gyro_angular_vel = xform_inv(rotation, angular_velocity);
+    }
+
+    pub fn set_acceleration(&mut self, rotation: DMat3, acceleration: DVec3) {
+        let gravity_acceleration = DVec3::new(0., -9.81, 0.);
+        self.acceleration = xform_inv(rotation, acceleration + gravity_acceleration)
+    }
+
+    pub fn gyro_noise(&self) -> DVec3 {
+        self.gyro_noise
+    }
+
+    pub fn low_pass_filter(&mut self) -> &mut [LowPassFilter; 3] {
+        &mut self.low_pass_filter
+    }
+
+    pub fn set_gyro_angular_vel(&mut self, gyro: DVec3) {
+        self.gyro_angular_vel = gyro
+    }
+
+    pub fn angular_vel(&self) -> DVec3 {
+        self.gyro_angular_vel
+    }
+
+    pub fn set_rotation(&mut self, rotation: DVec4) {
+        self.rotation = rotation
+    }
+
+    pub fn rotation(&self) -> DVec4 {
+        self.rotation
+    }
+
+    pub fn acceleration(&self) -> DVec3 {
+        self.acceleration
+    }
+}
 
 pub fn xform_inv(m: DMat3, v: DVec3) -> DVec3 {
     DVec3::new(
@@ -316,28 +387,31 @@ impl Drone {
         self.motor_noise = noise;
     }
 
-    // TODO: I will have to review this
-    pub fn update_gyro(&mut self, dt: f64) {
+    #[cfg(feature = "noise")]
+    pub fn calculate_noise(&mut self, dt: f64) {
         self.gyro.update_gyro_noise();
         self.update_motor_noise(dt);
         self.combined_noise = self.gyro.gyro_noise() + self.motor_noise;
+    }
+
+    pub fn update_gyro(&mut self, dt: f64) {
+        // Only calculate noise if we need it to
+        #[cfg(feature = "noise")]
+        self.calculate_noise(dt);
+
+        // sets attitude
         self.gyro
             .set_rotation(mat3_to_quat(self.rigid_body.rotation));
-        let mut angular_velocity = self.rigid_body.angular_velocity + self.combined_noise;
 
-        let cutoff_freq = 300.;
-        angular_velocity[0] =
-            self.gyro.low_pass_filter()[0].update(angular_velocity[0], dt, cutoff_freq);
-        angular_velocity[1] =
-            self.gyro.low_pass_filter()[1].update(angular_velocity[0], dt, cutoff_freq);
-        angular_velocity[2] =
-            self.gyro.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
-        self.gyro
-            .set_gyro_angular_vel(xform_inv(self.rigid_body.rotation, angular_velocity));
-        let gravity_acceleration = DVec3::new(0., -9.81, 0.);
-        self.gyro.set_acceleration(xform_inv(
+        self.gyro.set_angular_velocity(
             self.rigid_body.rotation,
-            self.rigid_body.acceleration + gravity_acceleration,
-        ));
+            self.rigid_body.angular_velocity,
+            self.combined_noise,
+            dt,
+        );
+
+        // sets acceleration
+        self.gyro
+            .set_acceleration(self.rigid_body.rotation, self.rigid_body.acceleration);
     }
 }

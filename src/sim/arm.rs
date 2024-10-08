@@ -5,13 +5,11 @@ use bevy::{
 
 use crate::{
     constants::{MAX_EFFECT_SPEED, MAX_SPEED_PROP_COOLING, M_PI},
+    low_pass_filter::LowPassFilter,
     perlin_noise,
 };
 
-use super::{
-    drone::{rpm_to_hz, shifted_phase},
-    low_pass_filter::LowPassFilter,
-};
+use super::drone::{rpm_to_hz, shifted_phase};
 
 #[derive(Debug, Clone)]
 pub struct Propeller {

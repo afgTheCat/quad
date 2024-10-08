@@ -2,10 +2,7 @@ mod arm;
 mod battery;
 mod controller;
 mod drone;
-mod gyro;
-mod low_pass_filter;
 mod rigid_body;
-mod sample_curve;
 pub mod state_packet;
 mod state_update_packet;
 

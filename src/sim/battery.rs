@@ -1,7 +1,6 @@
 use std::f64;
 
-use super::sample_curve::SampleCurve;
-use crate::rng_gen_range;
+use crate::{rng_gen_range, sample_curve::SampleCurve};
 
 #[derive(Debug, Clone, Default)]
 struct BatteryProps {
