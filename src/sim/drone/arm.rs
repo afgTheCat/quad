@@ -9,7 +9,9 @@ use crate::{
     perlin_noise,
 };
 
-use super::drone::{rpm_to_hz, shifted_phase};
+use super::{rpm_to_hz, shifted_phase};
+
+// use super::drone::{rpm_to_hz, shifted_phase};
 
 #[derive(Debug, Clone)]
 pub struct Propeller {
@@ -33,22 +35,6 @@ impl Default for Propeller {
 }
 
 impl Propeller {
-    pub fn new(
-        prop_max_rpm: f64,
-        prop_a_factor: f64,
-        prop_torque_factor: f64,
-        prop_inertia: f64,
-        prop_thrust_factor: DVec3,
-    ) -> Self {
-        Self {
-            prop_max_rpm,
-            prop_a_factor,
-            prop_torque_factor,
-            prop_inertia,
-            prop_thrust_factor,
-        }
-    }
-
     // the thrust a propeller does
     pub fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
         let prop_f = f64::max(
@@ -88,30 +74,6 @@ pub struct MotorProps {
     pub motor_max_t: f64,
 }
 
-impl MotorProps {
-    fn new(
-        position: DVec3,
-        motor_kv: f64,
-        motor_r: f64,
-        motor_io: f64,
-        motor_rth: f64,
-        motor_cth: f64,
-        motor_dir: f64,
-        motor_max_t: f64,
-    ) -> Self {
-        Self {
-            position,
-            motor_kv,
-            motor_r,
-            motor_io,
-            motor_rth,
-            motor_cth,
-            motor_dir,
-            motor_max_t,
-        }
-    }
-}
-
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorState {
@@ -133,50 +95,6 @@ pub struct MotorState {
 }
 
 impl MotorState {
-    fn new(
-        pwm: f64,
-        pwm_low_pass_filter: LowPassFilter,
-        temp: f64,
-        current: f64,
-        rpm: f64,
-        thrust: f64,
-        m_torque: f64,
-        p_torque: f64,
-        prop_wash_low_pass_filter: LowPassFilter,
-        phase: f64,
-        phase_harmonic_1: f64,
-        phase_harmonic_2: f64,
-        phase_slow: f64,
-        // burned_out: bool,
-    ) -> Self {
-        Self {
-            pwm,
-            pwm_low_pass_filter,
-            temp,
-            current,
-            rpm,
-            thrust,
-            m_torque,
-            p_torque,
-            prop_wash_low_pass_filter,
-            phase,
-            phase_harmonic_1,
-            phase_harmonic_2,
-            phase_slow,
-            // burned_out,
-        }
-    }
-}
-
-impl MotorState {
-    fn set_rpm(&mut self, rpm: f64) {
-        self.rpm = rpm
-    }
-
-    fn get_rpm(&self) -> f64 {
-        self.rpm
-    }
-
     fn motor_noise(&mut self, dt: f64) -> DMat3 {
         self.phase = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase);
         self.phase_harmonic_1 = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_harmonic_1);
@@ -209,7 +127,7 @@ pub struct Motor {
 }
 
 impl Motor {
-    fn update_motor_temp(
+    pub fn update_motor_temp(
         &mut self,
         current: f64,
         speed: f64,
@@ -227,25 +145,9 @@ impl Motor {
             / self.props.motor_cth
             * dt;
     }
-
-    pub fn temp(&self) -> f64 {
-        self.state.temp
-    }
 }
 
 impl Motor {
-    pub fn set_rpm(&mut self, rpm: f64) {
-        self.state.set_rpm(rpm)
-    }
-
-    pub fn get_rpm(&self) -> f64 {
-        self.state.get_rpm()
-    }
-
-    pub fn phase_slow(&self) -> f64 {
-        self.state.phase_slow
-    }
-
     pub fn rpm(&self) -> f64 {
         self.state.rpm
     }
@@ -267,7 +169,7 @@ impl Motor {
     }
 
     pub fn position(&self) -> DVec3 {
-        self.props.position.clone()
+        self.props.position
     }
 
     pub fn motor_torque(&self, volts: f64) -> f64 {
@@ -296,32 +198,6 @@ impl Motor {
         self.props.motor_kv
     }
 
-    pub fn update_motor_torques(&mut self, p_torque: f64, m_torque: f64) {
-        self.state.p_torque = p_torque;
-        self.state.m_torque = m_torque;
-    }
-
-    // TODO: too many arguments, propbably also wrong, will need to refactor
-    pub fn update_motor(
-        &mut self,
-        current: f64,
-        speed: f64,
-        thrust: f64,
-        dt: f64,
-        vbat: f64,
-        ambient_temp: f64,
-        p_torque: f64,
-        m_torque: f64,
-        rpm: f64,
-    ) {
-        self.update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);
-        self.state.current = current;
-        self.state.p_torque = p_torque;
-        self.state.m_torque = m_torque;
-        self.state.thrust = thrust;
-        self.state.rpm = rpm;
-    }
-
     pub fn dir(&self) -> f64 {
         self.props.motor_dir
     }
@@ -343,7 +219,6 @@ impl Motor {
 pub struct Arm {
     pub propeller: Propeller,
     pub motor: Motor,
-    pub arm_index: usize,
 }
 
 impl Arm {
@@ -404,17 +279,14 @@ impl Arm {
         let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.kv() / 8.3;
         let thrust = self.motor_thrust(dt, rpm, rotation, linear_velocity);
-        self.motor.update_motor(
-            current,
-            speed,
-            thrust,
-            dt,
-            vbat,
-            ambient_temp,
-            p_torque,
-            m_torque,
-            rpm,
-        );
+
+        self.motor
+            .update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);
+        self.motor.state.current = current;
+        self.motor.state.p_torque = p_torque;
+        self.motor.state.m_torque = m_torque;
+        self.motor.state.thrust = thrust;
+        self.motor.state.rpm = rpm;
         self.motor.dir() * m_torque
     }
 
@@ -444,10 +316,6 @@ impl Arm {
 
     pub fn motor_noise(&mut self, dt: f64) -> DMat3 {
         self.motor.motor_noise(dt)
-    }
-
-    pub fn motor_temp(&self) -> f64 {
-        self.motor.temp()
     }
 
     pub fn set_pwm(&mut self, pwm: f64) {

@@ -1,7 +1,7 @@
 // Done in the style so that BF can be added later on
 
 use bevy::{
-    math::{DQuat, DVec3, DVec4, Quat, Vec3},
+    math::{DQuat, DVec3, DVec4},
     prelude::Component,
 };
 
@@ -80,9 +80,9 @@ impl FlightController {
 
     fn update_battery(&mut self, drone: &Drone) {
         // set voltage meter
-        self.voltage_meter.unfiltered = (drone.battery.getBatVoltageSag() * 1e2) as u16;
-        self.voltage_meter.display_filtered = (drone.battery.getBatVoltageSag() * 1e2) as u16;
-        self.voltage_meter.sag_filtered = (drone.battery.getBatVoltage() * 1e2) as u16;
+        self.voltage_meter.unfiltered = (drone.battery.get_bat_voltage_sag() * 1e2) as u16;
+        self.voltage_meter.display_filtered = (drone.battery.get_bat_voltage_sag() * 1e2) as u16;
+        self.voltage_meter.sag_filtered = (drone.battery.get_bat_voltage() * 1e2) as u16;
 
         // set amperage meter
         self.current_meter.amperage = (drone.battery.amperage() * 1e2) as i32;

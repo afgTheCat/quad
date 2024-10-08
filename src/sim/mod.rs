@@ -1,13 +1,8 @@
-mod arm;
-mod battery;
 mod controller;
 mod drone;
 mod rigid_body;
-pub mod state_packet;
-mod state_update_packet;
 
 use crate::{constants::PROP_BLADE_MESH_NAMES, SimState};
-use arm::{Arm, Motor, MotorProps, MotorState};
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::Color,
@@ -23,10 +18,12 @@ use bevy::{
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
-use controller::{FlightController, Model};
-use drone::Drone;
+use controller::Model;
+use drone::{
+    arm::{Arm, Motor, MotorProps, MotorState},
+    Drone,
+};
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
-use state_packet::StatePacket;
 use std::time::Duration;
 
 #[derive(Component)]
@@ -59,18 +56,6 @@ impl SimContext {
     }
 }
 
-fn sim_step(
-    mut query: Query<(&mut Transform, &mut SimContext, &mut Model, &mut Drone)>,
-    timer: Res<Time>,
-) {
-    let (mut transform, mut drone_context, mut model, mut drone) = query.single_mut();
-    drone_context.time_accu += timer.delta();
-    while drone_context.step_context() {
-        drone.update_gyro(drone_context.dt.as_secs_f64());
-        drone.update_physics(drone_context.dt.as_secs_f64(), drone_context.ambient_temp);
-    }
-}
-
 #[derive(Resource, Clone)]
 pub struct DroneAssets(Handle<Gltf>);
 
@@ -78,7 +63,7 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Add a directional light to simulate the sun
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            color: Color::rgb(1.0, 1.0, 0.9), // Slightly warm sunlight
+            color: Color::srgb(1.0, 1.0, 0.9), // Slightly warm sunlight
             illuminance: 100000.0, // Intensity of the light, tweak this based on your scene
             shadows_enabled: true, // Enable shadows for the sunlight
             ..Default::default()
