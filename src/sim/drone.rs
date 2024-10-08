@@ -99,39 +99,9 @@ pub struct Drone {
 }
 
 impl Drone {
-    pub fn new(
-        prop_harmonic_1_amp: f64,
-        prop_harmonic_2_amp: f64,
-        frame_harmonic_phase_1: f64,
-        frame_harmonic_phase_2: f64,
-        frame_harmonic_1_amp: f64,
-        frame_harmonic_1_freq: f64,
-        frame_harmonic_2_amp: f64,
-        frame_harmonic_2_freq: f64,
-        motor_imbalance: [DVec3; 4],
-        combined_noise: DVec3,
-        motor_noise: DVec3,
-        battery: Battery,
-        arms: [Arm; 4],
-        body: RigidBody,
-        gyro: Gyro,
-    ) -> Self {
-        Self {
-            prop_harmonic_1_amp,
-            prop_harmonic_2_amp,
-            frame_harmonic_phase_1,
-            frame_harmonic_phase_2,
-            frame_harmonic_1_amp,
-            frame_harmonic_1_freq,
-            frame_harmonic_2_amp,
-            frame_harmonic_2_freq,
-            motor_imbalance,
-            combined_noise,
-            motor_noise,
-            battery,
-            arms,
-            rigid_body: body,
-            gyro,
+    pub fn set_motor_pwms(&mut self, pwms: DVec4) {
+        for i in 0..4 {
+            self.arms[i].set_pwm(pwms[i]);
         }
     }
 
@@ -346,6 +316,7 @@ impl Drone {
         self.motor_noise = noise;
     }
 
+    // TODO: I will have to review this
     pub fn update_gyro(&mut self, dt: f64) {
         self.gyro.update_gyro_noise();
         self.update_motor_noise(dt);
@@ -362,7 +333,7 @@ impl Drone {
         angular_velocity[2] =
             self.gyro.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
         self.gyro
-            .set_gyro(xform_inv(self.rigid_body.rotation, angular_velocity));
+            .set_gyro_angular_vel(xform_inv(self.rigid_body.rotation, angular_velocity));
         let gravity_acceleration = DVec3::new(0., -9.81, 0.);
         self.gyro.set_acceleration(xform_inv(
             self.rigid_body.rotation,

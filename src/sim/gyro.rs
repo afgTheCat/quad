@@ -8,7 +8,7 @@ pub struct Gyro {
     low_pass_filter: [LowPassFilter; 3],
     rotation: DVec4,
     acceleration: DVec3,
-    gyro: DVec3,
+    gyro_angular_vel: DVec3,
     gyro_base_noise_amp: f64,
 }
 
@@ -26,7 +26,7 @@ impl Gyro {
             low_pass_filter,
             rotation,
             acceleration,
-            gyro,
+            gyro_angular_vel: gyro,
             gyro_base_noise_amp,
         }
     }
@@ -54,11 +54,23 @@ impl Gyro {
         self.acceleration = acceleration
     }
 
-    pub fn set_gyro(&mut self, gyro: DVec3) {
-        self.gyro = gyro
+    pub fn set_gyro_angular_vel(&mut self, gyro: DVec3) {
+        self.gyro_angular_vel = gyro
+    }
+
+    pub fn angular_vel(&self) -> DVec3 {
+        self.gyro_angular_vel
     }
 
     pub fn set_rotation(&mut self, rotation: DVec4) {
         self.rotation = rotation
+    }
+
+    pub fn rotation(&self) -> DVec4 {
+        self.rotation
+    }
+
+    pub fn acceleration(&self) -> DVec3 {
+        self.acceleration
     }
 }

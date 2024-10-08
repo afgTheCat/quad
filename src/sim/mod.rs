@@ -9,6 +9,7 @@ mod sample_curve;
 pub mod state_packet;
 mod state_update_packet;
 
+use crate::{constants::PROP_BLADE_MESH_NAMES, SimState};
 use arm::{Arm, Motor, MotorProps, MotorState};
 use bevy::{
     asset::{AssetServer, Assets, Handle},
@@ -25,13 +26,11 @@ use bevy::{
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
-use controller::Controller;
+use controller::{FlightController, Model};
 use drone::Drone;
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use state_packet::StatePacket;
 use std::time::Duration;
-
-use crate::{constants::PROP_BLADE_MESH_NAMES, SimState};
 
 #[derive(Component)]
 pub struct SimContext {
@@ -49,16 +48,6 @@ impl Default for SimContext {
             ambient_temp: 25.,
             dialation: 1.,
         }
-    }
-}
-
-#[derive(Component)]
-pub struct Model {}
-
-impl Model {
-    // TODO: we probably need to implement this better
-    fn provide_packet(&mut self) -> StatePacket {
-        todo!()
     }
 }
 
@@ -168,7 +157,7 @@ pub fn setup_drone(
             ..Default::default()
         };
         commands
-            .spawn((drone, SpatialBundle::default(), Controller::default()))
+            .spawn((drone, SpatialBundle::default(), Model::default()))
             .with_children(|parent| {
                 parent.spawn(SceneBundle {
                     scene: gltf.scenes[0].clone(),
@@ -179,7 +168,7 @@ pub fn setup_drone(
 }
 
 pub fn debug_drone(
-    mut drone_query: Query<(&mut Transform, &mut Drone, &mut Controller)>,
+    mut drone_query: Query<(&mut Transform, &mut Drone, &mut Model)>,
     mut context_query: Query<&mut SimContext>,
     timer: Res<Time>,
 ) {
@@ -190,6 +179,8 @@ pub fn debug_drone(
     while sim_context.step_context() {
         drone.update_gyro(sim_context.dt.as_secs_f64());
         drone.update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
+        let pwms = controller.update(&drone);
+        drone.set_motor_pwms(pwms.pwms());
     }
 
     transform.translation = drone.rigid_body.position.as_vec3();

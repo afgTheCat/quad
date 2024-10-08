@@ -211,10 +211,6 @@ pub struct Motor {
 }
 
 impl Motor {
-    fn new(state: MotorState, props: MotorProps) -> Self {
-        Self { state, props }
-    }
-
     fn update_motor_temp(
         &mut self,
         current: f64,
@@ -454,5 +450,9 @@ impl Arm {
 
     pub fn motor_temp(&self) -> f64 {
         self.motor.temp()
+    }
+
+    pub fn set_pwm(&mut self, pwm: f64) {
+        self.motor.state.pwm = pwm;
     }
 }

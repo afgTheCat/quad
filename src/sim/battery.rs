@@ -1,3 +1,5 @@
+use std::f64;
+
 use super::sample_curve::SampleCurve;
 use crate::rng_gen_range;
 
@@ -91,5 +93,21 @@ impl Battery {
 
     pub fn cell_count(&self) -> f64 {
         self.props.quad_bat_cell_count
+    }
+
+    pub fn getBatVoltageSag(&self) -> f64 {
+        self.state.bat_voltage_sag
+    }
+
+    pub fn getBatVoltage(&self) -> f64 {
+        self.state.bat_voltage
+    }
+
+    pub fn amperage(&self) -> f64 {
+        self.state.amperage
+    }
+
+    pub fn m_ah_drawn(&self) -> f64 {
+        self.state.m_ah_drawn
     }
 }
