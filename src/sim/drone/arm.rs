@@ -9,10 +9,6 @@ use crate::{
     perlin_noise,
 };
 
-use super::{rpm_to_hz, shifted_phase};
-
-// use super::drone::{rpm_to_hz, shifted_phase};
-
 #[derive(Debug, Clone)]
 pub struct Propeller {
     prop_max_rpm: f64,
@@ -88,36 +84,13 @@ pub struct MotorState {
     pub p_torque: f64,                      // propeller torque, counter acting motor torque
     pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
     pub phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
-    pub phase_harmonic_1: f64, // phase freq * 2
-    pub phase_harmonic_2: f64, // phase freq * 3
     pub phase_slow: f64, // phase freq * 0.01f
+    #[cfg(feature = "gyro_noise")]
+    pub phase_harmonic_1: f64, // phase freq * 2
+    #[cfg(feature = "gyro_noise")]
+    pub phase_harmonic_2: f64, // phase freq * 3
+                    //
                     // pub burned_out: bool, // is the motor destroyed by over temp
-}
-
-impl MotorState {
-    fn motor_noise(&mut self, dt: f64) -> DMat3 {
-        self.phase = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase);
-        self.phase_harmonic_1 = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_harmonic_1);
-        self.phase_harmonic_2 = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_harmonic_2);
-        self.phase_slow = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_slow);
-
-        let sin_phase = f64::sin(self.phase);
-        let sin_phase_h1 = f64::sin(self.phase_harmonic_1);
-        let sin_phase_h2 = f64::sin(self.phase_harmonic_2);
-
-        let cos_phase = f64::cos(self.phase);
-        let cos_phase_h1 = f64::cos(self.phase_harmonic_1);
-        let cos_phase_h2 = f64::cos(self.phase_harmonic_2);
-        DMat3 {
-            x_axis: DVec3::new(sin_phase, sin_phase_h1, sin_phase_h2),
-            y_axis: DVec3::new(cos_phase, cos_phase_h1, cos_phase_h2),
-            z_axis: DVec3::new(
-                sin_phase + cos_phase,
-                sin_phase_h1 + cos_phase_h1,
-                sin_phase_h2 + cos_phase_h2,
-            ),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Default, Component)]
@@ -208,10 +181,6 @@ impl Motor {
 
     pub fn current(&self) -> f64 {
         self.state.current
-    }
-
-    pub fn motor_noise(&mut self, dt: f64) -> DMat3 {
-        self.state.motor_noise(dt)
     }
 }
 
@@ -304,18 +273,6 @@ impl Arm {
 
     pub fn motor_pos(&self) -> DVec3 {
         self.motor.position()
-    }
-
-    pub fn motor_kv(&self) -> f64 {
-        self.motor.kv()
-    }
-
-    pub fn motor_rpm(&self) -> f64 {
-        self.motor.rpm()
-    }
-
-    pub fn motor_noise(&mut self, dt: f64) -> DMat3 {
-        self.motor.motor_noise(dt)
     }
 
     pub fn set_pwm(&mut self, pwm: f64) {

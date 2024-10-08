@@ -1,24 +1,31 @@
-use super::{shifted_phase, Drone, Gyro};
+use super::{
+    arm::{Arm, Motor, MotorState},
+    shifted_phase, Drone, Gyro,
+};
 use crate::rng_gen_range;
 use crate::sim::drone::DMat3;
 use bevy::math::{DVec3, DVec4};
 
+pub fn rpm_to_hz(rpm: f64) -> f64 {
+    rpm / 60.
+}
+
 impl Drone {
     fn motor_kv(&self) -> DVec4 {
         DVec4::new(
-            self.arms[0].motor_kv(),
-            self.arms[1].motor_kv(),
-            self.arms[2].motor_kv(),
-            self.arms[3].motor_kv(),
+            self.arms[0].motor.kv(),
+            self.arms[1].motor.kv(),
+            self.arms[2].motor.kv(),
+            self.arms[3].motor.kv(),
         )
     }
 
     fn motor_rpm(&self) -> DVec4 {
         DVec4::new(
-            self.arms[0].motor_rpm(),
-            self.arms[1].motor_rpm(),
-            self.arms[2].motor_rpm(),
-            self.arms[3].motor_rpm(),
+            self.arms[0].motor.rpm(),
+            self.arms[1].motor.rpm(),
+            self.arms[2].motor.rpm(),
+            self.arms[3].motor.rpm(),
         )
     }
 
@@ -179,5 +186,43 @@ impl Gyro {
         let white_noise_y = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
         let white_noise_z = rng_gen_range(-1.0..1.) * self.gyro_base_noise_amp;
         DVec3::new(white_noise_x, white_noise_y, white_noise_z)
+    }
+}
+
+impl MotorState {
+    fn motor_noise(&mut self, dt: f64) -> DMat3 {
+        self.phase = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase);
+        self.phase_harmonic_1 = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_harmonic_1);
+        self.phase_harmonic_2 = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_harmonic_2);
+        self.phase_slow = shifted_phase(dt, rpm_to_hz(self.rpm), self.phase_slow);
+
+        let sin_phase = f64::sin(self.phase);
+        let sin_phase_h1 = f64::sin(self.phase_harmonic_1);
+        let sin_phase_h2 = f64::sin(self.phase_harmonic_2);
+
+        let cos_phase = f64::cos(self.phase);
+        let cos_phase_h1 = f64::cos(self.phase_harmonic_1);
+        let cos_phase_h2 = f64::cos(self.phase_harmonic_2);
+        DMat3 {
+            x_axis: DVec3::new(sin_phase, sin_phase_h1, sin_phase_h2),
+            y_axis: DVec3::new(cos_phase, cos_phase_h1, cos_phase_h2),
+            z_axis: DVec3::new(
+                sin_phase + cos_phase,
+                sin_phase_h1 + cos_phase_h1,
+                sin_phase_h2 + cos_phase_h2,
+            ),
+        }
+    }
+}
+
+impl Motor {
+    pub fn motor_noise(&mut self, dt: f64) -> DMat3 {
+        self.state.motor_noise(dt)
+    }
+}
+
+impl Arm {
+    pub fn motor_noise(&mut self, dt: f64) -> DMat3 {
+        self.motor.motor_noise(dt)
     }
 }

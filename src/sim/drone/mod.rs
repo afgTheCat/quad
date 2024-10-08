@@ -137,10 +137,6 @@ pub fn mat3_to_quat(mat3: DMat3) -> DVec4 {
     }
 }
 
-pub fn rpm_to_hz(rpm: f64) -> f64 {
-    rpm / 60.
-}
-
 #[cfg(feature = "gyro_noise")]
 #[derive(Clone, Default)]
 pub struct FrameCharachteristics {
