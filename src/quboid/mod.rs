@@ -1,6 +1,7 @@
 mod rigid_body;
 mod ui;
 
+use bevy::prelude::AppGizmoBuilder;
 use bevy::{
     math::{DMat3, DVec3},
     prelude::*,
@@ -9,7 +10,8 @@ use bevy::{
         render_asset::RenderAssetUsages,
     },
 };
-use bevy_panorbit_camera::PanOrbitCamera;
+use bevy_egui::EguiPlugin;
+use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 pub use rigid_body::quboid_update;
 use rigid_body::{inv_cuboid_inertia_tensor, CubeRigidBody, SimulationContext};
 use ui::UiState;
@@ -109,4 +111,20 @@ pub fn cuboid_setup(
     };
 
     commands.spawn((rigid_body, mesh_bundle, simulation_context, ui_state));
+}
+
+#[derive(Default, Reflect, GizmoConfigGroup)]
+struct MyRoundGizmos {}
+
+pub fn build_app() -> App {
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins)
+        .add_plugins(EguiPlugin)
+        .add_plugins(PanOrbitCameraPlugin)
+        .init_gizmo_group::<MyRoundGizmos>()
+        .add_systems(Startup, cuboid_setup)
+        .add_systems(Update, handle_keyboard_events)
+        .add_systems(Update, quboid_update)
+        .add_systems(Update, update_ui);
+    app
 }

@@ -1,16 +1,22 @@
 mod constants;
 mod low_pass_filter;
-mod quboid;
 mod sample_curve;
-mod sim;
 
-use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
-use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use noise::{NoiseFn, Perlin};
-use quboid::handle_keyboard_events;
 use rand::{rngs::ThreadRng, thread_rng, Rng};
 use std::{cell::RefCell, ops::Range};
+
+#[cfg(feature = "legacy_sim")]
+use quboid::build_app;
+
+#[cfg(feature = "legacy_sim")]
+mod quboid;
+
+#[cfg(not(feature = "legacy_sim"))]
+mod sim;
+
+#[cfg(not(feature = "legacy_sim"))]
+use sim::build_app;
 
 thread_local! {
     static RNG: RefCell<ThreadRng> = RefCell::new(thread_rng());
@@ -25,54 +31,7 @@ pub fn perlin_noise(point: f64) -> f64 {
     PERLIN_NOISE.with(|p| p.get([point]))
 }
 
-#[cfg(feature = "legacy_sim")]
-fn build_app() -> App {
-    use quboid::{cuboid_setup, quboid_update, update_ui};
-
-    let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin)
-        .add_plugins(PanOrbitCameraPlugin)
-        .init_gizmo_group::<MyRoundGizmos>()
-        .add_systems(Startup, cuboid_setup)
-        .add_systems(Update, handle_keyboard_events)
-        .add_systems(Update, quboid_update)
-        .add_systems(Update, update_ui);
-    app
-}
-
-#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-enum SimState {
-    #[default]
-    Loading,
-    Running,
-}
-
-#[cfg(not(feature = "legacy_sim"))]
-fn build_app() -> App {
-    use bevy_infinite_grid::InfiniteGridPlugin;
-    use sim::{base_setup, debug_drone, setup_drone};
-
-    let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin)
-        .add_plugins(PanOrbitCameraPlugin)
-        .insert_state(SimState::Loading)
-        .init_gizmo_group::<MyRoundGizmos>()
-        .add_plugins(InfiniteGridPlugin)
-        .add_systems(Startup, base_setup)
-        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
-        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
-        .add_systems(
-            Update,
-            handle_keyboard_events.run_if(in_state(SimState::Running)),
-        );
-    app
-}
-
 // We can create our own gizmo config group!
-#[derive(Default, Reflect, GizmoConfigGroup)]
-struct MyRoundGizmos {}
 
 fn main() {
     let mut app = build_app();

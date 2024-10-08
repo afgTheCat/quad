@@ -2,22 +2,34 @@ mod controller;
 mod drone;
 mod rigid_body;
 
-use crate::{constants::PROP_BLADE_MESH_NAMES, SimState};
+use crate::constants::PROP_BLADE_MESH_NAMES;
+use bevy::prelude::in_state;
+use bevy::prelude::AppExtStates;
+use bevy::prelude::AppGizmoBuilder;
+use bevy::prelude::IntoSystemConfigs;
+use bevy::prelude::Startup;
+use bevy::prelude::States;
+use bevy::prelude::Update;
 use bevy::{
+    app::App,
     asset::{AssetServer, Assets, Handle},
     color::Color,
     gltf::{Gltf, GltfNode},
     math::{EulerRot, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, BuildChildren, Camera3dBundle, Commands, Component, NextState, Query, Res, ResMut,
-        Resource, SpatialBundle, Transform,
+        default, BuildChildren, Camera3dBundle, Commands, Component, GizmoConfigGroup, NextState,
+        Query, Res, ResMut, Resource, SpatialBundle, Transform,
     },
+    reflect::Reflect,
     scene::SceneBundle,
     time::Time,
+    DefaultPlugins,
 };
+use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::InfiniteGridBundle;
-use bevy_panorbit_camera::PanOrbitCamera;
+use bevy_infinite_grid::InfiniteGridPlugin;
+use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use controller::Model;
 use drone::{
     arm::{Arm, Motor, MotorProps, MotorState},
@@ -25,6 +37,13 @@ use drone::{
 };
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use std::time::Duration;
+
+#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+enum SimState {
+    #[default]
+    Loading,
+    Running,
+}
 
 #[derive(Component)]
 pub struct SimContext {
@@ -167,4 +186,25 @@ pub fn debug_drone(
 
     transform.translation = drone.rigid_body.position.as_vec3();
     transform.rotation = Quat::from_mat3(&drone.rigid_body.rotation.as_mat3());
+}
+
+#[derive(Default, Reflect, GizmoConfigGroup)]
+struct MyRoundGizmos {}
+
+pub fn build_app() -> App {
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins)
+        .add_plugins(EguiPlugin)
+        .add_plugins(PanOrbitCameraPlugin)
+        .insert_state(SimState::Loading)
+        .init_gizmo_group::<MyRoundGizmos>()
+        .add_plugins(InfiniteGridPlugin)
+        .add_systems(Startup, base_setup)
+        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
+        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)));
+    // .add_systems(
+    //     Update,
+    //     handle_keyboard_events.run_if(in_state(SimState::Running)),
+    // );
+    app
 }

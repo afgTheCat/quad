@@ -3,9 +3,9 @@ pub mod arm;
 pub mod noise;
 
 use super::rigid_body::RigidBody;
+use crate::low_pass_filter::LowPassFilter;
 use crate::rng_gen_range;
 use crate::sample_curve::SampleCurve;
-use crate::{constants::M_PI, low_pass_filter::LowPassFilter};
 use arm::Arm;
 use bevy::{
     math::{DMat3, DVec3, DVec4},
@@ -86,17 +86,6 @@ pub fn xform(m: DMat3, v: DVec3) -> DVec3 {
         DVec3::dot(m.y_axis, v),
         DVec3::dot(m.z_axis, v),
     )
-}
-
-pub fn shifted_phase(dt: f64, hz: f64, phase_start: f64) -> f64 {
-    let two_pi = 2. * M_PI;
-    let phase_shift = two_pi * dt * hz;
-    let phase_updated = phase_start + phase_shift;
-    if f64::abs(phase_updated) > two_pi {
-        phase_updated - (two_pi * f64::floor(phase_updated / two_pi))
-    } else {
-        phase_updated
-    }
 }
 
 // This is the implementation that the thing used
