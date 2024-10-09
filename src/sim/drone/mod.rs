@@ -140,7 +140,7 @@ pub struct FrameCharachteristics {
     pub motor_imbalance: [DVec3; 4],
 }
 
-#[derive(Clone, Default, Component)]
+#[derive(Clone, Component)]
 pub struct Drone {
     #[cfg(feature = "gyro_noise")]
     pub frame_charachteristics: FrameCharachteristics,
@@ -150,17 +150,18 @@ pub struct Drone {
     pub gyro: Gyro,
 }
 
-#[derive(Debug, Clone, Default)]
-struct BatteryProps {
-    full_capacity: f64,
-    bat_voltage_curve: SampleCurve,
-    quad_bat_cell_count: f64,
-    quad_bat_capacity_charged: f64,
-    max_voltage_sag: f64,
+// TODO: what is the difference between full_capacity and quad_bat_capacity_charged?
+#[derive(Debug, Clone)]
+pub struct BatteryProps {
+    pub full_capacity: f64, // mAH I guess
+    pub bat_voltage_curve: SampleCurve,
+    pub quad_bat_cell_count: f64,
+    pub quad_bat_capacity_charged: f64,
+    pub max_voltage_sag: f64,
 }
 
 #[derive(Debug, Clone, Default)]
-struct BatteryState {
+pub struct BatteryState {
     capacity: f64,
     bat_voltage: f64,
     bat_voltage_sag: f64,
@@ -168,10 +169,10 @@ struct BatteryState {
     m_ah_drawn: f64,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Battery {
-    props: BatteryProps,
-    state: BatteryState,
+    pub props: BatteryProps,
+    pub state: BatteryState,
 }
 
 impl Battery {

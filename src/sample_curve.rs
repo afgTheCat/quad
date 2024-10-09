@@ -7,8 +7,8 @@ fn interpolate(a: f64, b: f64, i: f64) -> f64 {
 
 #[derive(Debug, Clone)]
 pub struct SamplePoint {
-    i: f64,
-    v: f64,
+    pub i: f64,
+    pub v: f64,
 }
 
 impl SamplePoint {
@@ -17,13 +17,13 @@ impl SamplePoint {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct SampleCurve {
     sample_points: Vec<SamplePoint>,
 }
 
 impl SampleCurve {
-    fn new(sample_points: Vec<SamplePoint>) -> Self {
+    pub fn new(sample_points: Vec<SamplePoint>) -> Self {
         Self { sample_points }
     }
 

@@ -1,8 +1,11 @@
 mod controller;
 mod drone;
 mod rigid_body;
+mod ui;
 
 use crate::constants::PROP_BLADE_MESH_NAMES;
+use crate::sample_curve::SampleCurve;
+use crate::sample_curve::SamplePoint;
 use bevy::prelude::in_state;
 use bevy::prelude::AppExtStates;
 use bevy::prelude::AppGizmoBuilder;
@@ -31,15 +34,20 @@ use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use controller::Model;
+use drone::Battery;
+use drone::BatteryProps;
+use drone::BatteryState;
+use drone::Gyro;
 use drone::{
     arm::{Arm, Motor, MotorProps, MotorState},
     Drone,
 };
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use std::time::Duration;
+use ui::update_ui;
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-enum SimState {
+pub enum SimState {
     #[default]
     Loading,
     Running,
@@ -155,7 +163,29 @@ pub fn setup_drone(
                 mass: 0.2,
                 ..Default::default()
             },
-            ..Default::default()
+            gyro: Gyro::default(),
+            battery: Battery {
+                state: BatteryState::default(),
+                props: BatteryProps {
+                    full_capacity: 10000.,
+                    bat_voltage_curve: SampleCurve::new(vec![
+                        SamplePoint { i: -0.06, v: 4.4 },
+                        SamplePoint { i: 0.0, v: 4.2 },
+                        SamplePoint { i: 0.01, v: 4.05 },
+                        SamplePoint { i: 0.04, v: 3.97 },
+                        SamplePoint { i: 0.30, v: 3.82 },
+                        SamplePoint { i: 0.40, v: 3.7 },
+                        SamplePoint { i: 1.0, v: 3.49 },
+                        SamplePoint { i: 1.01, v: 3.4 },
+                        SamplePoint { i: 1.03, v: 3.3 },
+                        SamplePoint { i: 1.06, v: 3.0 },
+                        SamplePoint { i: 1.08, v: 0.0 },
+                    ]),
+                    quad_bat_cell_count: 6.,
+                    quad_bat_capacity_charged: 10000.,
+                    max_voltage_sag: 0.,
+                },
+            }, // ..Default::default()
         };
         commands
             .spawn((drone, SpatialBundle::default(), Model::default()))
@@ -202,9 +232,6 @@ pub fn build_app() -> App {
         .add_systems(Startup, base_setup)
         .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
         .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)));
-    // .add_systems(
-    //     Update,
-    //     handle_keyboard_events.run_if(in_state(SimState::Running)),
-    // );
+    // .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
 }
