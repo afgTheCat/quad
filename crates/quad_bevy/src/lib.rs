@@ -21,6 +21,8 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
+#[cfg(feature = "noise")]
+use quad_sim::FrameCharachteristics;
 use quad_sim::{
     arm::{Arm, MotorProps, MotorState},
     controller::Model,
