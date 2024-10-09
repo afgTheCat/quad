@@ -1,0 +1,16 @@
+[package]
+name = "quad_bevy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+quad_sim.workspace = true 
+bevy.workspace = true 
+bevy_egui.workspace = true
+bevy_panorbit_camera.workspace = true 
+bevy_infinite_grid.workspace = true
+egui_extras.workspace = true
+
+[features]
+default = []
+noise = []

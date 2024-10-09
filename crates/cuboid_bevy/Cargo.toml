@@ -1,13 +1,9 @@
 [package]
-name = "quad-sim"
+name = "cuboid_bevy"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 bevy = { version = "0.14.2", features = ["dynamic_linking"] }
-rand_xoshiro = "0.6.0"
-rand = "0.8.5"
-
-[features]
-default = []
-noise = []
+bevy_egui = "0.30.0"
+bevy_panorbit_camera = "0.19.3"

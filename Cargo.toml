@@ -1,9 +1,14 @@
-[package]
-name = "quad"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+members = ["crates/*"]
+resolver = "2"
 
-[dependencies]
+[workspace.dependencies]
+# internal
+cuboid_bevy = { path = "crates/cuboid_bevy" }
+quad_bevy = { path = "crates/quad_bevy" }
+quad_sim = { path = "crates/quad_sim" }
+
+# external
 bevy = { version = "0.14.2", features = ["dynamic_linking"] }
 bevy_asset_loader = "0.21.0"
 bevy_egui = "0.30.0"
@@ -14,20 +19,3 @@ itertools = "0.13.0"
 noise = "0.9.0"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
-
-[build-dependencies]
-bindgen = "0.70.1"
-
-# Enable a small amount of optimization in the dev profile.
-[profile.dev]
-opt-level = 1
-
-# Enable a large amount of optimization in the dev profile for dependencies.
-[profile.dev.package."*"]
-opt-level = 3
-
-[features]
-default = []
-legacy_sim = []
-betaflight = []
-noise = []

@@ -1,0 +1,15 @@
+[package]
+name = "sim"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+bevy.workspace = true 
+quad_bevy.workspace = true
+quad_sim.workspace = true
+
+[features]
+default = []
+legacy_sim = []
+noise = []

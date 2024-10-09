@@ -1,0 +1,13 @@
+[package]
+name = "quad_sim"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy.workspace = true
+rand_xoshiro.workspace = true
+rand.workspace = true
+
+[features]
+default = []
+noise = []

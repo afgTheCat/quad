@@ -1,14 +1,15 @@
-mod arm;
+pub mod arm;
 mod constants;
-mod controller;
+pub mod controller;
 mod low_pass_filter;
 mod math;
 #[cfg(feature = "noise")]
 pub mod noise;
-mod rigid_body;
-mod sample_curve;
+pub mod rigid_body;
+pub mod sample_curve;
 
 use arm::Arm;
+pub use arm::Motor;
 use bevy::{
     math::{DMat3, DVec3, DVec4},
     prelude::Component,
