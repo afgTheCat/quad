@@ -30,4 +30,4 @@ opt-level = 3
 default = []
 legacy_sim = []
 betaflight = []
-gyro_noise = []
+noise = []

@@ -6,7 +6,6 @@ use bevy::{
 use crate::{
     constants::{MAX_EFFECT_SPEED, MAX_SPEED_PROP_COOLING, M_PI},
     low_pass_filter::LowPassFilter,
-    simplex1d::simplex_1d_noise,
 };
 
 #[derive(Debug, Clone)]
@@ -84,12 +83,13 @@ pub struct MotorState {
     pub thrust: f64,                        // thrust output of motor / propeller combo
     pub m_torque: f64,                      // motor torque
     pub p_torque: f64,                      // propeller torque, counter acting motor torque
+    #[cfg(feature = "noise")]
     pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
     pub phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
     pub phase_slow: f64, // phase freq * 0.01f
-    #[cfg(feature = "gyro_noise")]
+    #[cfg(feature = "gnoise")]
     pub phase_harmonic_1: f64, // phase freq * 2
-    #[cfg(feature = "gyro_noise")]
+    #[cfg(feature = "noise")]
     pub phase_harmonic_2: f64, // phase freq * 3
                     //
                     // pub burned_out: bool, // is the motor destroyed by over temp
@@ -163,15 +163,6 @@ impl Motor {
         current * nm_per_a
     }
 
-    pub fn prop_wash_noise(&mut self, dt: f64) -> f64 {
-        let motor_phase_compressed = (self.state.phase_slow * 3.0).floor() / 3.0;
-        self.state.prop_wash_low_pass_filter.update(
-            f64::max(0.0, 0.5 * simplex_1d_noise(motor_phase_compressed) + 1.0),
-            dt,
-            120.,
-        )
-    }
-
     pub fn kv(&self) -> f64 {
         self.props.motor_kv
     }
@@ -197,7 +188,7 @@ pub struct Arm {
 
 impl Arm {
     #[inline(never)]
-    fn motor_thrust(&mut self, dt: f64, rpm: f64, rotation: DMat3, linear_velocity: DVec3) -> f64 {
+    fn motor_thrust(&mut self, rpm: f64, rotation: DMat3, linear_velocity: DVec3) -> f64 {
         let up = rotation.x_axis;
         let vel_up = DVec3::dot(linear_velocity, up);
         let speed = linear_velocity.length();
@@ -211,15 +202,16 @@ impl Arm {
         );
         reverse_thrust = f64::max(0.0, reverse_thrust - 0.5) * 2.;
         reverse_thrust = reverse_thrust * reverse_thrust;
-        let prop_wash_noise = self.motor.prop_wash_noise(dt);
-        let prop_wash_effect = 1.0 - (speed_factor * prop_wash_noise * reverse_thrust * 0.95);
 
-        let prop_damage_effect = 1.0
-            - (f64::max(
-                0.0,
-                0.5 * (simplex_1d_noise(self.motor.phase() * speed) + 1.0),
-            ));
-        self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect * prop_damage_effect
+        #[cfg(feature = "noise")]
+        let prop_wash_noise = self.motor.prop_wash_noise(dt);
+
+        // NOTE: no noise is applied
+        #[cfg(not(feature = "noise"))]
+        let prop_wash_noise = 1.;
+
+        let prop_wash_effect = 1.0 - (speed_factor * prop_wash_noise * reverse_thrust * 0.95);
+        self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect
     }
 
     #[inline(never)]
@@ -244,7 +236,7 @@ impl Arm {
         let maxdrpm = f64::abs(volts * self.motor.kv() - self.motor.rpm());
         let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.kv() / 8.3;
-        let thrust = self.motor_thrust(dt, rpm, rotation, linear_velocity);
+        let thrust = self.motor_thrust(rpm, rotation, linear_velocity);
 
         self.motor
             .update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);

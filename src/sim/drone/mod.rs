@@ -1,5 +1,5 @@
 pub mod arm;
-#[cfg(feature = "gyro_noise")]
+#[cfg(feature = "noise")]
 pub mod noise;
 
 use super::rigid_body::RigidBody;
@@ -18,7 +18,7 @@ pub struct Gyro {
     rotation: DVec4,
     acceleration: DVec3,
     gyro_angular_vel: DVec3,
-    #[cfg(feature = "gyro_noise")]
+    #[cfg(feature = "noise")]
     gyro_base_noise_amp: f64,
 }
 
@@ -28,11 +28,11 @@ impl Gyro {
         rotation: DMat3,
         angular_velocity: DVec3,
         dt: f64,
-        #[cfg(feature = "gyro_noise")] combined_noise: DVec3,
+        #[cfg(feature = "noise")] combined_noise: DVec3,
     ) {
-        #[cfg(feature = "gyro_noise")]
+        #[cfg(feature = "noise")]
         let mut angular_velocity = angular_velocity + combined_noise;
-        #[cfg(not(feature = "gyro_noise"))]
+        #[cfg(not(feature = "noise"))]
         let mut angular_velocity = angular_velocity;
 
         let cutoff_freq = 300.;
@@ -126,7 +126,7 @@ pub fn mat3_to_quat(mat3: DMat3) -> DVec4 {
     }
 }
 
-#[cfg(feature = "gyro_noise")]
+#[cfg(feature = "noise")]
 #[derive(Clone, Default)]
 pub struct FrameCharachteristics {
     pub prop_harmonic_1_amp: f64,
@@ -142,7 +142,7 @@ pub struct FrameCharachteristics {
 
 #[derive(Clone, Component)]
 pub struct Drone {
-    #[cfg(feature = "gyro_noise")]
+    #[cfg(feature = "noise")]
     pub frame_charachteristics: FrameCharachteristics,
     pub battery: Battery,
     pub arms: [Arm; 4],
@@ -280,7 +280,7 @@ impl Drone {
     }
 
     pub fn update_gyro(&mut self, dt: f64) {
-        #[cfg(feature = "gyro_noise")]
+        #[cfg(feature = "noise")]
         let combined_noise = self.calculate_combined_noise(dt);
 
         // sets attitude
@@ -291,7 +291,7 @@ impl Drone {
             self.rigid_body.rotation,
             self.rigid_body.angular_velocity,
             dt,
-            #[cfg(feature = "gyro_noise")]
+            #[cfg(feature = "noise")]
             combined_noise,
         );
 

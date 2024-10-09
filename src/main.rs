@@ -1,7 +1,6 @@
 mod constants;
 mod low_pass_filter;
 mod sample_curve;
-mod simplex1d;
 
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
