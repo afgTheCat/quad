@@ -48,7 +48,6 @@ use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use std::time::Duration;
 use ui::update_ui;
 use ui::UiSimulationInfo;
-// use ui::update_ui;
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 pub enum SimState {
