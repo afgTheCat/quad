@@ -6,7 +6,7 @@ use bevy::{
 use crate::{
     constants::{MAX_EFFECT_SPEED, MAX_SPEED_PROP_COOLING, M_PI},
     low_pass_filter::LowPassFilter,
-    perlin_noise,
+    simplex1d::simplex_1d_noise,
 };
 
 #[derive(Debug, Clone)]
@@ -32,6 +32,7 @@ impl Default for Propeller {
 
 impl Propeller {
     // the thrust a propeller does
+    #[inline(never)]
     pub fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
         let prop_f = f64::max(
             0.0,
@@ -46,6 +47,7 @@ impl Propeller {
         f64::max(result, 0.0)
     }
 
+    #[inline(never)]
     pub fn prop_torque(&self, vel_up: f64, rpm: f64) -> f64 {
         self.prop_thrust(vel_up, rpm) * self.prop_torque_factor
     }
@@ -67,7 +69,7 @@ pub struct MotorProps {
     pub motor_rth: f64,  // thermal resistance (deg C per Watt)
     pub motor_cth: f64,  // thermal heat capacity (joules per deg C)
     pub motor_dir: f64,
-    pub motor_max_t: f64,
+    // pub motor_max_t: f64,
 }
 
 // TODO: defualt here is has to be manually implemeted
@@ -100,6 +102,7 @@ pub struct Motor {
 }
 
 impl Motor {
+    #[inline(never)]
     pub fn update_motor_temp(
         &mut self,
         current: f64,
@@ -130,6 +133,7 @@ impl Motor {
     }
 
     // Effective volts calculated by running it through the low pass filter
+    #[inline(never)]
     pub fn volts(&mut self, dt: f64, vbat: f64) -> f64 {
         self.state
             .pwm_low_pass_filter
@@ -145,6 +149,7 @@ impl Motor {
         self.props.position
     }
 
+    #[inline(never)]
     pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
         let back_emf_v = self.state.rpm / f64::max(kv, 0.0001);
@@ -161,7 +166,7 @@ impl Motor {
     pub fn prop_wash_noise(&mut self, dt: f64) -> f64 {
         let motor_phase_compressed = (self.state.phase_slow * 3.0).floor() / 3.0;
         self.state.prop_wash_low_pass_filter.update(
-            f64::max(0.0, 0.5 * perlin_noise(motor_phase_compressed) + 1.0),
+            f64::max(0.0, 0.5 * simplex_1d_noise(motor_phase_compressed) + 1.0),
             dt,
             120.,
         )
@@ -191,15 +196,8 @@ pub struct Arm {
 }
 
 impl Arm {
-    fn motor_thrust(
-        &mut self,
-        dt: f64,
-        rpm: f64,
-        rotation: DMat3,
-        linear_velocity: DVec3,
-        // ground_effect: f64,
-    ) -> f64 {
-        // TODO: verify
+    #[inline(never)]
+    fn motor_thrust(&mut self, dt: f64, rpm: f64, rotation: DMat3, linear_velocity: DVec3) -> f64 {
         let up = rotation.x_axis;
         let vel_up = DVec3::dot(linear_velocity, up);
         let speed = linear_velocity.length();
@@ -216,25 +214,24 @@ impl Arm {
         let prop_wash_noise = self.motor.prop_wash_noise(dt);
         let prop_wash_effect = 1.0 - (speed_factor * prop_wash_noise * reverse_thrust * 0.95);
 
-        let prop_damage_effect =
-            1.0 - (f64::max(0.0, 0.5 * (perlin_noise(self.motor.phase() * speed) + 1.0)));
-        self.propeller.prop_thrust(vel_up, rpm)
-            // * ground_effect
-            * prop_wash_effect
-            * prop_damage_effect
+        let prop_damage_effect = 1.0
+            - (f64::max(
+                0.0,
+                0.5 * (simplex_1d_noise(self.motor.phase() * speed) + 1.0),
+            ));
+        self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect * prop_damage_effect
     }
 
+    #[inline(never)]
     pub fn calculate_arm_m_torque(
         &mut self,
-        // ground_effect: f64,
         dt: f64,
         vbat: f64,
         ambient_temp: f64,
         rotation: DMat3,
         linear_velocity: DVec3,
     ) -> f64 {
-        let up = rotation.x_axis;
-        let vel_up = DVec3::dot(linear_velocity, up);
+        let vel_up = DVec3::dot(linear_velocity, rotation.x_axis);
         let speed = linear_velocity.length();
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);

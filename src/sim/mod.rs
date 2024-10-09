@@ -44,7 +44,7 @@ use drone::{
 };
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use std::time::Duration;
-use ui::update_ui;
+// use ui::update_ui;
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 pub enum SimState {
@@ -167,19 +167,19 @@ pub fn setup_drone(
             battery: Battery {
                 state: BatteryState::default(),
                 props: BatteryProps {
-                    full_capacity: 10000.,
+                    full_capacity: 1.,
                     bat_voltage_curve: SampleCurve::new(vec![
-                        SamplePoint { i: -0.06, v: 4.4 },
-                        SamplePoint { i: 0.0, v: 4.2 },
-                        SamplePoint { i: 0.01, v: 4.05 },
-                        SamplePoint { i: 0.04, v: 3.97 },
-                        SamplePoint { i: 0.30, v: 3.82 },
-                        SamplePoint { i: 0.40, v: 3.7 },
-                        SamplePoint { i: 1.0, v: 3.49 },
-                        SamplePoint { i: 1.01, v: 3.4 },
-                        SamplePoint { i: 1.03, v: 3.3 },
-                        SamplePoint { i: 1.06, v: 3.0 },
-                        SamplePoint { i: 1.08, v: 0.0 },
+                        SamplePoint::new(-0.06, 4.4),
+                        SamplePoint::new(0.0, 4.2),
+                        SamplePoint::new(0.01, 4.05),
+                        SamplePoint::new(0.04, 3.97),
+                        SamplePoint::new(0.30, 3.82),
+                        SamplePoint::new(0.40, 3.7),
+                        SamplePoint::new(1.0, 3.49),
+                        SamplePoint::new(1.01, 3.4),
+                        SamplePoint::new(1.03, 3.3),
+                        SamplePoint::new(1.06, 3.0),
+                        SamplePoint::new(1.08, 0.0),
                     ]),
                     quad_bat_cell_count: 6.,
                     quad_bat_capacity_charged: 10000.,

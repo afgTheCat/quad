@@ -176,6 +176,7 @@ pub struct Battery {
 }
 
 impl Battery {
+    #[inline(never)]
     pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
         let bat_capacity_full = f64::max(self.props.full_capacity, 1.0);
         let bat_charge = self.state.capacity / bat_capacity_full;
@@ -238,7 +239,8 @@ impl Drone {
     }
 
     // Step first, we have to test this!
-    pub fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
+    #[inline(never)]
+    fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
         let sum_arm_forces = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
             acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
@@ -254,24 +256,18 @@ impl Drone {
             .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
     }
 
-    pub fn calculate_motors(
-        &mut self,
-        // state_packet: &StatePacket,
-        dt: f64,
-        ambient_temp: f64,
-    ) -> f64 {
-        let mut res_prop_torque: f64 = 0.;
+    #[inline(never)]
+    fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {
         let vbat = self.battery.vbat_sagged(); // is this what we want?
-        for i in 0..4 {
-            res_prop_torque += self.arms[i].calculate_arm_m_torque(
+        (0..4).fold(0., |acc, i| {
+            acc + self.arms[i].calculate_arm_m_torque(
                 dt,
                 vbat,
                 ambient_temp,
                 self.rigid_body.rotation,
                 self.rigid_body.linear_velocity,
-            );
-        }
-        res_prop_torque
+            )
+        })
     }
 
     pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {

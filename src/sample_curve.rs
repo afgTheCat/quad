@@ -1,56 +1,63 @@
-use itertools::Itertools;
-use std::cmp::Ordering;
-
 fn interpolate(a: f64, b: f64, i: f64) -> f64 {
     a + ((b - a) * i)
 }
 
 #[derive(Debug, Clone)]
 pub struct SamplePoint {
-    pub i: f64,
-    pub v: f64,
+    pub discharge: f64,
+    pub voltage: f64,
 }
 
 impl SamplePoint {
-    fn new(i: f64, v: f64) -> Self {
-        Self { i, v }
+    pub fn new(capacity: f64, voltage: f64) -> Self {
+        Self {
+            discharge: capacity,
+            voltage,
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct SampleCurve {
     sample_points: Vec<SamplePoint>,
+    min_discharge_point: SamplePoint,
+    max_discharge_point: SamplePoint,
 }
 
 impl SampleCurve {
     pub fn new(sample_points: Vec<SamplePoint>) -> Self {
-        Self { sample_points }
+        let min_discharge_point = sample_points.first().unwrap().clone();
+        let max_discharge_point = sample_points.last().unwrap().clone();
+        Self {
+            sample_points,
+            min_discharge_point,
+            max_discharge_point,
+        }
     }
 
-    pub fn sample(&self, i: f64) -> f64 {
-        let last = self.sample_points.last().unwrap();
-        let first = self.sample_points.first().unwrap();
-        if i > last.i {
-            last.v
-        } else if i < first.i {
-            first.v
+    // this is slow for no reason at all
+    pub fn sample(&self, discharge_level: f64) -> f64 {
+        if discharge_level > self.max_discharge_point.discharge {
+            self.max_discharge_point.voltage
+        } else if discharge_level < self.min_discharge_point.discharge {
+            self.min_discharge_point.discharge
         } else {
-            let (first_sample, second_sample) = self
-                .sample_points
+            self.sample_points
                 .iter()
-                .tuple_windows()
-                .find_map(|(sample, next_sample)| {
-                    match (sample.i.total_cmp(&i), next_sample.i.total_cmp(&i)) {
-                        (Ordering::Less, Ordering::Less) => None,
-                        (Ordering::Less, Ordering::Equal | Ordering::Greater) => {
-                            Some((sample, next_sample))
-                        }
-                        _ => unreachable!(),
+                .enumerate()
+                .find_map(|(index, sample)| {
+                    let next_sample = &self.sample_points[index + 1];
+                    if sample.discharge <= discharge_level
+                        && next_sample.discharge > discharge_level
+                    {
+                        let factor = (discharge_level - sample.discharge)
+                            / (next_sample.discharge - sample.discharge);
+                        Some(interpolate(sample.discharge, next_sample.discharge, factor))
+                    } else {
+                        None
                     }
                 })
-                .unwrap();
-            let factor = (i - first_sample.i) / (second_sample.i - first_sample.i);
-            interpolate(first_sample.v, second_sample.v, factor)
+                .unwrap()
         }
     }
 }

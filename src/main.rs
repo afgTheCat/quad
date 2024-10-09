@@ -1,9 +1,10 @@
 mod constants;
 mod low_pass_filter;
 mod sample_curve;
+mod simplex1d;
 
-use noise::{NoiseFn, Perlin};
-use rand::{rngs::ThreadRng, thread_rng, Rng};
+use rand::{Rng, SeedableRng};
+use rand_xoshiro::Xoshiro256PlusPlus;
 use std::{cell::RefCell, ops::Range};
 
 #[cfg(feature = "legacy_sim")]
@@ -19,16 +20,11 @@ mod sim;
 use sim::build_app;
 
 thread_local! {
-    static RNG: RefCell<ThreadRng> = RefCell::new(thread_rng());
-    static PERLIN_NOISE: Perlin = Perlin::new(0);
+    static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
 }
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
-}
-
-pub fn perlin_noise(point: f64) -> f64 {
-    PERLIN_NOISE.with(|p| p.get([point]))
 }
 
 // We can create our own gizmo config group!
