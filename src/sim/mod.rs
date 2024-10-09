@@ -37,6 +37,8 @@ use controller::Model;
 use drone::Battery;
 use drone::BatteryProps;
 use drone::BatteryState;
+#[cfg(feature = "noise")]
+use drone::FrameCharachteristics;
 use drone::Gyro;
 use drone::{
     arm::{Arm, Motor, MotorProps, MotorState},
@@ -185,7 +187,9 @@ pub fn setup_drone(
                     quad_bat_capacity_charged: 10000.,
                     max_voltage_sag: 0.,
                 },
-            }, // ..Default::default()
+            },
+            #[cfg(feature = "noise")]
+            frame_charachteristics: FrameCharachteristics::default(),
         };
         commands
             .spawn((drone, SpatialBundle::default(), Model::default()))

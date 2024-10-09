@@ -85,14 +85,16 @@ pub struct MotorState {
     pub p_torque: f64,                      // propeller torque, counter acting motor torque
     #[cfg(feature = "noise")]
     pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
+    #[cfg(feature = "noise")]
     pub phase: f64, // sinusoidal phase of the motor rotation used for noise simulation
+    #[cfg(feature = "noise")]
     pub phase_slow: f64, // phase freq * 0.01f
-    #[cfg(feature = "gnoise")]
+    #[cfg(feature = "noise")]
     pub phase_harmonic_1: f64, // phase freq * 2
     #[cfg(feature = "noise")]
     pub phase_harmonic_2: f64, // phase freq * 3
-                    //
-                    // pub burned_out: bool, // is the motor destroyed by over temp
+                                            //
+                                            // pub burned_out: bool, // is the motor destroyed by over temp
 }
 
 #[derive(Debug, Clone, Default, Component)]
@@ -126,10 +128,6 @@ impl Motor {
 impl Motor {
     pub fn rpm(&self) -> f64 {
         self.state.rpm
-    }
-
-    pub fn phase(&self) -> f64 {
-        self.state.phase
     }
 
     // Effective volts calculated by running it through the low pass filter
@@ -188,7 +186,13 @@ pub struct Arm {
 
 impl Arm {
     #[inline(never)]
-    fn motor_thrust(&mut self, rpm: f64, rotation: DMat3, linear_velocity: DVec3) -> f64 {
+    fn motor_thrust(
+        &mut self,
+        rpm: f64,
+        rotation: DMat3,
+        linear_velocity: DVec3,
+        #[cfg(feature = "noise")] dt: f64,
+    ) -> f64 {
         let up = rotation.x_axis;
         let vel_up = DVec3::dot(linear_velocity, up);
         let speed = linear_velocity.length();
@@ -236,7 +240,13 @@ impl Arm {
         let maxdrpm = f64::abs(volts * self.motor.kv() - self.motor.rpm());
         let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.kv() / 8.3;
-        let thrust = self.motor_thrust(rpm, rotation, linear_velocity);
+        let thrust = self.motor_thrust(
+            rpm,
+            rotation,
+            linear_velocity,
+            #[cfg(feature = "noise")]
+            dt,
+        );
 
         self.motor
             .update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);

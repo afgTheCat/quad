@@ -281,6 +281,10 @@ impl Motor {
         self.state.motor_noise(dt)
     }
 
+    pub fn phase(&self) -> f64 {
+        self.state.phase
+    }
+
     pub fn prop_wash_noise(&mut self, dt: f64) -> f64 {
         let motor_phase_compressed = (self.state.phase_slow * 3.0).floor() / 3.0;
         self.state.prop_wash_low_pass_filter.update(
