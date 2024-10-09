@@ -46,6 +46,8 @@ use drone::{
 };
 use rigid_body::{inv_cuboid_inertia_tensor, RigidBody};
 use std::time::Duration;
+use ui::update_ui;
+use ui::UiSimulationInfo;
 // use ui::update_ui;
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
@@ -66,7 +68,7 @@ pub struct SimContext {
 impl Default for SimContext {
     fn default() -> Self {
         Self {
-            dt: Duration::from_nanos(100),
+            dt: Duration::from_nanos(1000),
             time_accu: Duration::default(),
             ambient_temp: 25.,
             dialation: 1.,
@@ -192,7 +194,12 @@ pub fn setup_drone(
             frame_charachteristics: FrameCharachteristics::default(),
         };
         commands
-            .spawn((drone, SpatialBundle::default(), Model::default()))
+            .spawn((
+                drone,
+                SpatialBundle::default(),
+                Model::default(),
+                UiSimulationInfo::default(),
+            ))
             .with_children(|parent| {
                 parent.spawn(SceneBundle {
                     scene: gltf.scenes[0].clone(),
@@ -203,11 +210,17 @@ pub fn setup_drone(
 }
 
 pub fn debug_drone(
-    mut drone_query: Query<(&mut Transform, &mut Drone, &mut Model)>,
+    mut drone_query: Query<(
+        &mut Transform,
+        &mut Drone,
+        &mut Model,
+        &mut UiSimulationInfo,
+    )>,
     mut context_query: Query<&mut SimContext>,
     timer: Res<Time>,
 ) {
-    let (mut transform, mut drone, mut controller) = drone_query.single_mut();
+    let (mut transform, mut drone, mut controller, mut ui_simulation_info) =
+        drone_query.single_mut();
     let mut sim_context = context_query.single_mut();
 
     sim_context.time_accu += timer.delta();
@@ -220,6 +233,12 @@ pub fn debug_drone(
 
     transform.translation = drone.rigid_body.position.as_vec3();
     transform.rotation = Quat::from_mat3(&drone.rigid_body.rotation.as_mat3());
+    ui_simulation_info.update_state(
+        drone.rigid_body.rotation,
+        drone.rigid_body.position,
+        drone.rigid_body.linear_velocity,
+        drone.rigid_body.acceleration,
+    );
 }
 
 #[derive(Default, Reflect, GizmoConfigGroup)]
@@ -235,7 +254,7 @@ pub fn build_app() -> App {
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, base_setup)
         .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
-        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)));
-    // .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
+        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
+        .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
 }
