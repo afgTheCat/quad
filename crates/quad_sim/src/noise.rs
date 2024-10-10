@@ -36,7 +36,6 @@ fn grad(hash: i32, x: f64) -> f64 {
     grad * x
 }
 
-#[inline(never)]
 pub fn simplex_1d_noise(x: f64) -> f64 {
     let i0 = x.floor();
     let i1 = i0 + 1.;

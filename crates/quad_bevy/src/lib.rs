@@ -6,7 +6,7 @@ use bevy::{
     color::Color,
     gizmos::AppGizmoBuilder,
     gltf::{Gltf, GltfNode},
-    math::{EulerRot, Quat, Vec3},
+    math::{DVec3, EulerRot, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, BuildChildren, Camera3dBundle, Commands, Component,
@@ -59,7 +59,7 @@ pub struct SimContext {
 impl Default for SimContext {
     fn default() -> Self {
         Self {
-            dt: Duration::from_nanos(1000),
+            dt: Duration::from_nanos(100),
             time_accu: Duration::default(),
             ambient_temp: 25.,
             dialation: 1.,
@@ -155,6 +155,7 @@ pub fn setup_drone(
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
                 inv_tensor: inv_cuboid_inertia_tensor(Vec3::new(0.1, 0.1, 0.1)),
+                angular_velocity: DVec3::new(1., 0., 0.),
                 mass: 0.2,
                 ..Default::default()
             },

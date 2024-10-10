@@ -1,11 +1,5 @@
+use crate::constants::AIR_RHO;
 use bevy::math::{DMat3, DVec3, Vec3};
-
-use crate::{
-    constants::AIR_RHO,
-    math::{xform, xform_inv},
-};
-
-// use super::drone::{xform, xform_inv};
 
 fn inertia_cuboid_diag(sides: Vec3) -> DVec3 {
     let DVec3 { x, y, z } = sides.into();
@@ -25,10 +19,19 @@ pub fn inv_cuboid_inertia_tensor(sides: Vec3) -> DMat3 {
     DMat3::from_diagonal(diag)
 }
 
+fn cross_product_matrix(v: DVec3) -> DMat3 {
+    DMat3 {
+        x_axis: DVec3::new(0., -v[2], v[1]),
+        y_axis: DVec3::new(v[2], 0., -v[0]),
+        z_axis: DVec3::new(-v[1], v[0], 0.),
+    }
+}
+
 // TODO: this is kinda stupid as we are not planning to store the location
 #[derive(Debug, Clone, Default)]
 pub struct RigidBody {
     pub linear_velocity: DVec3,
+    pub linear_velocity_dir: DVec3,
     pub position: DVec3,
     pub angular_velocity: DVec3,
     pub mass: f64,
@@ -41,55 +44,21 @@ pub struct RigidBody {
 
 // we are concerned with 3 things: linear velocity,
 impl RigidBody {
-    fn gravity_force(&self) -> DVec3 {
-        DVec3::new(0., -9.81 * self.mass, 0.)
-    }
-
-    fn drag_dir(&self) -> DVec3 {
-        let vel2 = self.linear_velocity.length().powi(2);
-        let dir = self.linear_velocity.normalize();
-        dir * 0.5 * AIR_RHO * vel2 * self.frame_drag_constant
-    }
-
-    fn drag_linear(&self) -> DVec3 {
-        if self.linear_velocity == DVec3::ZERO {
-            return DVec3::ZERO;
-        }
-        let dir = self.linear_velocity.normalize();
-        let local_dir = xform_inv(self.rotation, dir);
+    fn drag_linear(&self, drag_dir: DVec3) -> DVec3 {
+        let local_dir = self.rotation.transpose() * self.linear_velocity_dir;
         let area_linear = DVec3::dot(self.frame_drag_area, local_dir.abs());
-        let drag_dir = self.drag_dir();
         drag_dir * area_linear
     }
 
     // TODO: fix this
-    fn drag_angular(&self) -> DVec3 {
-        if self.linear_velocity == DVec3::ZERO {
-            return DVec3::ZERO;
-        }
-        let dir = self.linear_velocity.normalize();
-        let drag_dir = self.drag_dir();
-        let local_dir = xform_inv(self.rotation, dir);
+    fn drag_angular(&self, drag_dir: DVec3) -> DVec3 {
+        let local_dir = self.rotation.transpose() * self.linear_velocity_dir;
         let area_angular = DVec3::dot(self.frame_drag_area, local_dir);
         DVec3::clamp(
-            xform_inv(self.rotation, drag_dir * area_angular) * 0.001,
+            self.rotation.transpose() * (drag_dir * area_angular) * 0.001,
             DVec3::new(-0.9, -0.9, -0.9),
             DVec3::new(0.9, 0.9, 0.9),
         )
-    }
-
-    fn angular_acc(&self, moment: DVec3) -> DVec3 {
-        xform(self.rotation * self.inv_tensor * self.rotation, moment)
-    }
-
-    fn rotation(&self, angular_velocity: DVec3, dt: f64) -> DMat3 {
-        let w = angular_velocity * dt;
-        let W = DMat3 {
-            x_axis: DVec3::new(1., -w[2], w[1]),
-            y_axis: DVec3::new(w[2], 1., -w[0]),
-            z_axis: DVec3::new(-w[1], w[0], 1.),
-        };
-        W * self.rotation
     }
 
     pub fn integrate(
@@ -99,10 +68,14 @@ impl RigidBody {
         sum_prop_torques: DVec3,
         dt: f64,
     ) {
-        let gravity_force = self.gravity_force();
-        let drag_linear = self.drag_linear();
-        let drag_angular = self.drag_angular();
-        let total_force = gravity_force - drag_linear + sum_arm_forces;
+        let drag_dir = self.linear_velocity.length().powi(2)
+            * self.linear_velocity_dir
+            * 0.5
+            * AIR_RHO
+            * self.frame_drag_constant;
+        let drag_linear = self.drag_linear(drag_dir);
+        let drag_angular = self.drag_angular(drag_dir);
+        let total_force = DVec3::new(0., -9.81 * self.mass, 0.) - drag_linear + sum_arm_forces;
         let acceleration = total_force / self.mass;
 
         let total_moment = self.rotation.y_axis * motor_torque
@@ -110,17 +83,55 @@ impl RigidBody {
             + self.rotation.y_axis * drag_angular[0]
             + self.rotation.z_axis * drag_angular[2]
             + sum_prop_torques;
-        let angular_acc = self.angular_acc(total_moment);
+        let angular_acc =
+            self.rotation * self.inv_tensor * self.rotation.transpose() * total_moment;
+
+        // We probably don't need to clamp here
         let angular_velocity = (self.angular_velocity + angular_acc * dt).clamp(
             DVec3::new(-100., -100., -100.),
             DVec3::new(100., 100., 100.),
         );
-        let rotation = self.rotation(angular_velocity, dt);
 
         // update things
         self.acceleration = acceleration;
         self.position += dt * self.linear_velocity + (acceleration * dt.powi(2)) / 2.;
-        self.rotation = rotation;
         self.angular_velocity = angular_velocity;
+        self.linear_velocity += acceleration * dt;
+        self.rotation += dt * cross_product_matrix(angular_acc) * self.rotation;
+        self.linear_velocity_dir = self.linear_velocity.normalize()
+    }
+
+    pub fn integrate_two(&mut self, dt: f64) {
+        let drag_dir = self.linear_velocity.length().powi(2)
+            * self.linear_velocity_dir
+            * 0.5
+            * AIR_RHO
+            * self.frame_drag_constant;
+
+        let drag_linear = self.drag_linear(drag_dir);
+        let drag_angular = self.drag_angular(drag_dir);
+
+        let total_force = DVec3::new(0., -9.81 * self.mass, 0.) - drag_linear;
+        let acceleration = total_force / self.mass;
+        let total_moment = self.rotation.x_axis * drag_angular[1]
+            + self.rotation.y_axis * drag_angular[0]
+            + self.rotation.z_axis * drag_angular[2];
+
+        let angular_acc =
+            self.rotation * self.inv_tensor * self.rotation.transpose() * total_moment;
+
+        // We probably don't need to clamp here
+        let angular_velocity = (self.angular_velocity + angular_acc * dt).clamp(
+            DVec3::new(-100., -100., -100.),
+            DVec3::new(100., 100., 100.),
+        );
+
+        // update things
+        self.acceleration = acceleration;
+        self.position += dt * self.linear_velocity + (acceleration * dt.powi(2)) / 2.;
+        self.angular_velocity = angular_velocity;
+        self.linear_velocity += acceleration * dt;
+        self.rotation += dt * cross_product_matrix(angular_acc) * self.rotation;
+        self.linear_velocity_dir = self.linear_velocity.normalize()
     }
 }

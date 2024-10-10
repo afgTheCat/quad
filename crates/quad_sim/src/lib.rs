@@ -2,7 +2,6 @@ pub mod arm;
 mod constants;
 pub mod controller;
 mod low_pass_filter;
-mod math;
 #[cfg(feature = "noise")]
 pub mod noise;
 pub mod rigid_body;
@@ -12,8 +11,10 @@ use arm::Arm;
 pub use arm::Motor;
 use bevy::{
     math::{DMat3, DVec3, DVec4},
+    pbr::AmbientLight,
     prelude::Component,
 };
+use constants::MAX_EFFECT_SPEED;
 use low_pass_filter::LowPassFilter;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
@@ -51,12 +52,12 @@ impl Gyro {
             self.low_pass_filter()[1].update(angular_velocity[0], dt, cutoff_freq);
         angular_velocity[2] =
             self.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
-        self.gyro_angular_vel = xform_inv(rotation, angular_velocity);
+        self.gyro_angular_vel = rotation.transpose() * angular_velocity;
     }
 
     pub fn set_acceleration(&mut self, rotation: DMat3, acceleration: DVec3) {
         let gravity_acceleration = DVec3::new(0., -9.81, 0.);
-        self.acceleration = xform_inv(rotation, acceleration + gravity_acceleration)
+        self.acceleration = rotation.transpose() * (acceleration + gravity_acceleration)
     }
 
     pub fn low_pass_filter(&mut self) -> &mut [LowPassFilter; 3] {
@@ -78,23 +79,6 @@ impl Gyro {
     pub fn acceleration(&self) -> DVec3 {
         self.acceleration
     }
-}
-
-pub fn xform_inv(m: DMat3, v: DVec3) -> DVec3 {
-    DVec3::new(
-        (m.x_axis[0] * v[0]) + (m.y_axis[0] * v[1]) + (m.z_axis[0] * v[2]),
-        (m.x_axis[1] * v[0]) + (m.y_axis[1] * v[1]) + (m.z_axis[1] * v[2]),
-        (m.x_axis[2] * v[0]) + (m.y_axis[2] * v[1]) + (m.z_axis[2] * v[2]),
-    )
-}
-
-// rotates a position according to the rotation matrix
-pub fn xform(m: DMat3, v: DVec3) -> DVec3 {
-    DVec3::new(
-        DVec3::dot(m.x_axis, v),
-        DVec3::dot(m.y_axis, v),
-        DVec3::dot(m.z_axis, v),
-    )
 }
 
 // This is the implementation that the thing used
@@ -185,7 +169,6 @@ pub struct Battery {
 }
 
 impl Battery {
-    #[inline(never)]
     pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
         let bat_capacity_full = f64::max(self.props.full_capacity, 1.0);
         let bat_charge = self.state.capacity / bat_capacity_full;
@@ -248,26 +231,30 @@ impl Drone {
     }
 
     // Step first, we have to test this!
-    #[inline(never)]
     fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
         let sum_arm_forces = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-            acc + xform(rotation, DVec3::new(0., arm.thrust(), 0.))
+            acc + rotation * DVec3::new(0., arm.thrust(), 0.)
         });
         let sum_prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
             // calculates the force that is the downwards compared to the drone
-            let force = xform(rotation, DVec3::new(0., arm.thrust(), 0.));
+            let force = rotation * DVec3::new(0., arm.thrust(), 0.);
             // calculates the motor position relative to the body frame
-            let rad = xform(rotation, arm.motor_pos());
+            let rad = rotation * arm.motor_pos();
             acc + DVec3::cross(rad, force)
         });
         self.rigid_body
             .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
     }
 
-    #[inline(never)]
     fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {
         let vbat = self.battery.vbat_sagged(); // is this what we want?
+        let speed = self.rigid_body.linear_velocity.length();
+        let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
+        let vel_up = DVec3::dot(
+            self.rigid_body.linear_velocity,
+            self.rigid_body.rotation.x_axis,
+        );
         (0..4).fold(0., |acc, i| {
             acc + self.arms[i].calculate_arm_m_torque(
                 dt,
@@ -275,9 +262,16 @@ impl Drone {
                 ambient_temp,
                 self.rigid_body.rotation,
                 self.rigid_body.linear_velocity,
+                speed,
+                speed_factor,
+                vel_up,
             )
         })
     }
+
+    // pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
+    //     self.rigid_body.integrate_two(dt);
+    // }
 
     pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
         let motor_torque = self.calculate_motors(dt, ambient_temp);

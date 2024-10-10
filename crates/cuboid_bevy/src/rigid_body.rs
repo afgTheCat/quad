@@ -97,11 +97,11 @@ impl CubeRigidBody {
         let dt_f64 = dt.as_secs_f64() * dialation;
         // transform.translation += self.linear_velocity * dt_f32;
 
-        let angular_velocity_world = self.rotation
+        let angular_acc = self.rotation
             * self.inv_inertia_tensor
             * self.rotation.transpose()
             * self.angular_momentum;
-        self.rotation += dt_f64 * cross_product_matrix(angular_velocity_world) * self.rotation;
+        self.rotation += dt_f64 * cross_product_matrix(angular_acc) * self.rotation;
     }
 }
 

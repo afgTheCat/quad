@@ -1,10 +1,14 @@
+use core::f64;
+
 use bevy::{
     math::{DMat3, DVec3},
     prelude::Component,
 };
+use fast_math::exp;
+// use libm::exp;
 
 use crate::{
-    constants::{MAX_EFFECT_SPEED, MAX_SPEED_PROP_COOLING, M_PI},
+    constants::{MAX_SPEED_PROP_COOLING, M_PI},
     low_pass_filter::LowPassFilter,
 };
 
@@ -31,7 +35,6 @@ impl Default for Propeller {
 
 impl Propeller {
     // the thrust a propeller does
-    #[inline(never)]
     pub fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
         let prop_f = f64::max(
             0.0,
@@ -46,7 +49,6 @@ impl Propeller {
         f64::max(result, 0.0)
     }
 
-    #[inline(never)]
     pub fn prop_torque(&self, vel_up: f64, rpm: f64) -> f64 {
         self.prop_thrust(vel_up, rpm) * self.prop_torque_factor
     }
@@ -104,7 +106,6 @@ pub struct Motor {
 }
 
 impl Motor {
-    #[inline(never)]
     pub fn update_motor_temp(
         &mut self,
         current: f64,
@@ -115,7 +116,7 @@ impl Motor {
         ambient_temp: f64,
     ) {
         let power_draw = f64::abs(current) * vbat;
-        let cooling = (1. - f64::exp(-speed * 0.2)) * 100.
+        let cooling = (1. - exp((-speed * 0.2) as f32) as f64) * 100.
             + (f64::min(MAX_SPEED_PROP_COOLING, speed) / MAX_SPEED_PROP_COOLING) * thrust * 4.;
 
         self.state.temp += ((f64::max(0.0, power_draw - cooling))
@@ -131,7 +132,6 @@ impl Motor {
     }
 
     // Effective volts calculated by running it through the low pass filter
-    #[inline(never)]
     pub fn volts(&mut self, dt: f64, vbat: f64) -> f64 {
         self.state
             .pwm_low_pass_filter
@@ -147,7 +147,6 @@ impl Motor {
         self.props.position
     }
 
-    #[inline(never)]
     pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
         let back_emf_v = self.state.rpm / f64::max(kv, 0.0001);
@@ -185,18 +184,16 @@ pub struct Arm {
 }
 
 impl Arm {
-    #[inline(never)]
     fn motor_thrust(
         &mut self,
         rpm: f64,
         rotation: DMat3,
         linear_velocity: DVec3,
+        speed_factor: f64,
         #[cfg(feature = "noise")] dt: f64,
     ) -> f64 {
         let up = rotation.x_axis;
         let vel_up = DVec3::dot(linear_velocity, up);
-        let speed = linear_velocity.length();
-        let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
         let mut reverse_thrust = f64::max(
             0.,
             DVec3::dot(
@@ -218,7 +215,6 @@ impl Arm {
         self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect
     }
 
-    #[inline(never)]
     pub fn calculate_arm_m_torque(
         &mut self,
         dt: f64,
@@ -226,9 +222,11 @@ impl Arm {
         ambient_temp: f64,
         rotation: DMat3,
         linear_velocity: DVec3,
+        speed: f64,
+        speed_factor: f64,
+        vel_up: f64,
     ) -> f64 {
-        let vel_up = DVec3::dot(linear_velocity, rotation.x_axis);
-        let speed = linear_velocity.length();
+        // let vel_up = DVec3::dot(linear_velocity, rotation.x_axis);
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);
         let p_torque = self.propeller.prop_torque(vel_up, self.motor.rpm());
@@ -244,6 +242,7 @@ impl Arm {
             rpm,
             rotation,
             linear_velocity,
+            speed_factor,
             #[cfg(feature = "noise")]
             dt,
         );
@@ -278,4 +277,3 @@ impl Arm {
         self.motor.state.pwm = pwm;
     }
 }
-
