@@ -1,5 +1,6 @@
 use crate::constants::M_PI;
-use fast_math::exp;
+use fastapprox::faster::exp;
+// use fast_math::exp;
 // use libm::exp;
 
 #[derive(Debug, Clone, Default)]

@@ -10,6 +10,7 @@ rand.workspace = true
 libm.workspace = true
 fast-math.workspace = true
 nalgebra.workspace = true
+fastapprox.workspace = true
 
 [features]
 default = []

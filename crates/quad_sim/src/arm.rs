@@ -1,21 +1,22 @@
 use core::f64;
 
-use fast_math::exp;
+// use fast_math::exp;
 // use libm::exp;
 
 use crate::{
     constants::{MAX_SPEED_PROP_COOLING, M_PI},
     low_pass_filter::LowPassFilter,
 };
+use fastapprox::faster::exp;
 use nalgebra::{Matrix3, Vector3};
 
 #[derive(Debug, Clone)]
 pub struct Propeller {
-    prop_max_rpm: f64,
-    prop_a_factor: f64,
-    prop_torque_factor: f64,
-    prop_inertia: f64,
-    prop_thrust_factor: Vector3<f64>,
+    pub prop_max_rpm: f64,
+    pub prop_a_factor: f64,
+    pub prop_torque_factor: f64,
+    pub prop_inertia: f64,
+    pub prop_thrust_factor: Vector3<f64>,
 }
 
 impl Default for Propeller {
@@ -39,21 +40,11 @@ impl Propeller {
                 + self.prop_thrust_factor[1] * vel_up
                 + self.prop_thrust_factor[2],
         );
-        let max_rpm = f64::max(self.prop_max_rpm, 0.01);
+        let max_rpm = self.prop_max_rpm;
         let prop_a = self.prop_a_factor;
         let b = (prop_f - prop_a * max_rpm * max_rpm) / max_rpm;
         let result = b * rpm + prop_a * rpm * rpm;
         f64::max(result, 0.0)
-    }
-
-    pub fn prop_torque(&self, vel_up: f64, rpm: f64) -> f64 {
-        self.prop_thrust(vel_up, rpm) * self.prop_torque_factor
-    }
-}
-
-impl Propeller {
-    pub fn inertia(&self) -> f64 {
-        self.prop_inertia
     }
 }
 
@@ -124,7 +115,7 @@ impl Motor {
 }
 
 impl Motor {
-    pub fn rpm(&self) -> f64 {
+    fn rpm(&self) -> f64 {
         self.state.rpm
     }
 
@@ -136,29 +127,22 @@ impl Motor {
             * vbat
     }
 
-    pub fn thrust(&self) -> f64 {
-        self.state.thrust
-    }
-
     pub fn position(&self) -> Vector3<f64> {
         self.props.position
     }
 
+    // TODO: disallow 0 for motor kv and we can get rid of two max calls
     pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
-        let back_emf_v = self.state.rpm / f64::max(kv, 0.0001);
-        let base_current = (volts - back_emf_v) / f64::max(self.props.motor_r, 0.0001);
+        let back_emf_v = self.state.rpm / kv;
+        let base_current = (volts - back_emf_v) / self.props.motor_r;
         let current = if base_current > 0. {
             f64::max(0., base_current - self.props.motor_io)
         } else {
             f64::min(0., base_current + self.props.motor_io)
         };
-        let nm_per_a = 8.3 / f64::max(self.props.motor_kv, 0.0001);
+        let nm_per_a = 8.3 / kv;
         current * nm_per_a
-    }
-
-    pub fn kv(&self) -> f64 {
-        self.props.motor_kv
     }
 
     pub fn dir(&self) -> f64 {
@@ -181,21 +165,19 @@ pub struct Arm {
 }
 
 impl Arm {
+    // TODO: this is slow
     fn motor_thrust(
         &mut self,
         rpm: f64,
-        rotation: Matrix3<f64>,
-        linear_velocity: Vector3<f64>,
+        rotation: &Matrix3<f64>,
+        linear_velocity: &Vector3<f64>,
         speed_factor: f64,
+        vel_up: f64,
         #[cfg(feature = "noise")] dt: f64,
     ) -> f64 {
-        let up = rotation.column(0);
-        let vel_up = Vector3::dot(&linear_velocity, &up);
-        // TODO: check this
-        let thrust_corrected: Vector3<f64> = -(up * self.motor.thrust()).normalize();
-        let mut reverse_thrust = f64::max(
-            0.,
-            Vector3::dot(&linear_velocity.normalize(), &thrust_corrected),
+        let mut reverse_thrust = -Vector3::dot(
+            &linear_velocity.normalize(),
+            &(rotation.column(0) * self.motor.state.thrust).normalize(),
         );
         reverse_thrust = f64::max(0.0, reverse_thrust - 0.5) * 2.;
         reverse_thrust = reverse_thrust * reverse_thrust;
@@ -216,32 +198,32 @@ impl Arm {
         dt: f64,
         vbat: f64,
         ambient_temp: f64,
-        rotation: Matrix3<f64>,
-        linear_velocity: Vector3<f64>,
+        rotation: &Matrix3<f64>,
+        linear_velocity: &Vector3<f64>,
         speed: f64,
         speed_factor: f64,
         vel_up: f64,
     ) -> f64 {
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);
-        let p_torque = self.propeller.prop_torque(vel_up, self.motor.rpm());
+        let p_torque = self.propeller.prop_thrust(vel_up, self.motor.state.rpm)
+            * self.propeller.prop_torque_factor;
         let net_torque = m_torque - p_torque;
-        let domega = net_torque / f64::max(self.propeller.inertia(), 0.00000001);
-
+        let domega = net_torque / self.propeller.prop_inertia;
         // change in rpm
         let drpm = (domega * dt) * 60.0 / (2.0 * M_PI);
-        let maxdrpm = f64::abs(volts * self.motor.kv() - self.motor.rpm());
+        let maxdrpm = f64::abs(volts * self.motor.props.motor_kv - self.motor.state.rpm);
         let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
-        let current = m_torque * self.motor.kv() / 8.3;
+        let current = m_torque * self.motor.props.motor_kv / 8.3;
         let thrust = self.motor_thrust(
             rpm,
-            rotation,
-            linear_velocity,
+            &rotation,
+            &linear_velocity,
             speed_factor,
+            vel_up,
             #[cfg(feature = "noise")]
             dt,
         );
-
         self.motor
             .update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);
         self.motor.state.current = current;
@@ -249,7 +231,7 @@ impl Arm {
         self.motor.state.m_torque = m_torque;
         self.motor.state.thrust = thrust;
         self.motor.state.rpm = rpm;
-        self.motor.dir() * m_torque
+        self.motor.props.motor_dir * m_torque
     }
 
     pub fn pwm(&self) -> f64 {
@@ -261,7 +243,7 @@ impl Arm {
     }
 
     pub fn thrust(&self) -> f64 {
-        self.motor.thrust()
+        self.motor.state.thrust
     }
 
     pub fn motor_pos(&self) -> Vector3<f64> {
@@ -270,5 +252,80 @@ impl Arm {
 
     pub fn set_pwm(&mut self, pwm: f64) {
         self.motor.state.pwm = pwm;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
+        sample_curve::{SampleCurve, SamplePoint},
+        Battery, BatteryProps, BatteryState, Drone, Gyro,
+    };
+
+    use super::{Arm, Motor, MotorProps, MotorState, Propeller};
+    use nalgebra::Vector3;
+
+    #[test]
+    fn motor_thrust_test() {
+        // omega retardation
+        let arms = [0, 0, 0, 0].map(|_| {
+            let motor = Motor {
+                state: MotorState::default(),
+                props: MotorProps {
+                    position: Vector3::new(0., 0., 0.),
+                    motor_kv: 0.0001,
+                    motor_r: 0.0001,
+                    ..Default::default()
+                },
+            };
+            let propeller = Propeller {
+                prop_inertia: 0.00000001,
+                prop_max_rpm: 0.01,
+                ..Default::default()
+            };
+            Arm {
+                motor,
+                propeller,
+                ..Default::default()
+            }
+        });
+
+        let mut drone = Drone {
+            arms,
+            rigid_body: RigidBody {
+                // random cuboid inv inertia tensor
+                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(0.1, 0.1, 0.1)),
+                angular_velocity: Vector3::new(1., 0., 0.),
+                mass: 0.2,
+                ..Default::default()
+            },
+            gyro: Gyro::default(),
+            battery: Battery {
+                state: BatteryState::default(),
+                props: BatteryProps {
+                    full_capacity: 1.,
+                    bat_voltage_curve: SampleCurve::new(vec![
+                        SamplePoint::new(-0.06, 4.4),
+                        SamplePoint::new(0.0, 4.2),
+                        SamplePoint::new(0.01, 4.05),
+                        SamplePoint::new(0.04, 3.97),
+                        SamplePoint::new(0.30, 3.82),
+                        SamplePoint::new(0.40, 3.7),
+                        SamplePoint::new(1.0, 3.49),
+                        SamplePoint::new(1.01, 3.4),
+                        SamplePoint::new(1.03, 3.3),
+                        SamplePoint::new(1.06, 3.0),
+                        SamplePoint::new(1.08, 0.0),
+                    ]),
+                    quad_bat_cell_count: 6.,
+                    quad_bat_capacity_charged: 10000.,
+                    max_voltage_sag: 0.,
+                },
+            },
+        };
+        for _ in 0..1_000_000_000 {
+            drone.update_physics(0.00001, 0.);
+        }
     }
 }

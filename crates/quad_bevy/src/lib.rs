@@ -6,7 +6,7 @@ use bevy::{
     color::Color,
     gizmos::AppGizmoBuilder,
     gltf::{Gltf, GltfNode},
-    math::{DVec3, EulerRot, Mat3, Quat, Vec3},
+    math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, BuildChildren, Camera3dBundle, Commands, Component,
@@ -26,7 +26,7 @@ use nalgebra::{Matrix3, Vector3};
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
 use quad_sim::{
-    arm::{Arm, MotorProps, MotorState},
+    arm::{Arm, MotorProps, MotorState, Propeller},
     controller::Model,
     rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
     sample_curve::{SampleCurve, SamplePoint},
@@ -36,10 +36,10 @@ use std::time::Duration;
 use ui::{update_ui, UiSimulationInfo};
 
 #[derive(Clone, Component)]
-struct DroneComponent(Drone);
+pub struct DroneComponent(Drone);
 
 #[derive(Clone, Component)]
-struct ModelComponent(Model);
+pub struct ModelComponent(Model);
 
 // names of the propellers in the mesh
 pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [
@@ -179,11 +179,19 @@ pub fn setup_drone(
                 state: MotorState::default(),
                 props: MotorProps {
                     position: Vector3::new(position.x, position.y, position.z),
+                    motor_kv: 0.0001,
+                    motor_r: 0.0001,
                     ..Default::default()
                 },
             };
+            let propeller = Propeller {
+                prop_inertia: 0.00000001,
+                prop_max_rpm: 0.01,
+                ..Default::default()
+            };
             Arm {
                 motor,
+                propeller,
                 ..Default::default()
             }
         });

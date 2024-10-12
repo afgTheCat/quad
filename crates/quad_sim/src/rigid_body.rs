@@ -96,7 +96,6 @@ impl RigidBody {
             + self.rotation.column(1) * drag_angular[0]
             + self.rotation.column(2) * drag_angular[2]
             + sum_prop_torques;
-        // let total_moment: Vector3<f64> = Vector3::zeros();
         let angular_acc: Vector3<f64> =
             self.rotation * self.inv_tensor * self.rotation.transpose() * total_moment;
 

@@ -195,10 +195,6 @@ impl Battery {
         self.state.m_ah_drawn = self.props.quad_bat_capacity_charged - self.state.capacity;
     }
 
-    pub fn vbat_sagged(&self) -> f64 {
-        self.state.bat_voltage_sag
-    }
-
     pub fn cell_count(&self) -> f64 {
         self.props.quad_bat_cell_count
     }
@@ -230,52 +226,53 @@ impl Drone {
     // Step first, we have to test this!
     fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
-        let sum_arm_forces = self.arms.iter().fold(Vector3::new(0., 0., 0.), |acc, arm| {
-            acc + rotation * Vector3::new(0., arm.thrust(), 0.)
-        });
-        let sum_prop_torques = self.arms.iter().fold(Vector3::new(0., 0., 0.), |acc, arm| {
-            // calculates the force that is the downwards compared to the drone
-            let force = rotation * Vector3::new(0., arm.thrust(), 0.);
-            // calculates the motor position relative to the body frame
-            let rad = rotation * arm.motor_pos();
-            acc + Vector3::cross(&rad, &force)
-        });
+        let individual_arm_foces = self
+            .arms
+            .iter()
+            .map(|arm| rotation * Vector3::new(0., arm.thrust(), 0.))
+            .collect::<Vec<_>>();
+        let sum_arm_forces = individual_arm_foces.iter().sum();
+        let sum_prop_torques = individual_arm_foces
+            .iter()
+            .enumerate()
+            .map(|(i, force)| {
+                let rad = rotation * self.arms[i].motor_pos();
+                Vector3::cross(&rad, &force)
+            })
+            .sum();
         self.rigid_body
             .integrate(motor_torque, &sum_arm_forces, &sum_prop_torques, dt);
     }
 
     fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {
-        let vbat = self.battery.vbat_sagged(); // is this what we want?
+        let vbat = self.battery.state.bat_voltage_sag; // is this what we want?
         let speed = self.rigid_body.linear_velocity.norm();
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
         let vel_up = Vector3::dot(
             &self.rigid_body.linear_velocity,
             &self.rigid_body.rotation.column(0),
         );
-        (0..4).fold(0., |acc, i| {
-            acc + self.arms[i].calculate_arm_m_torque(
+        let m_torques = self.arms.iter_mut().map(|arm| {
+            arm.calculate_arm_m_torque(
                 dt,
                 vbat,
                 ambient_temp,
-                self.rigid_body.rotation,
-                self.rigid_body.linear_velocity,
+                &self.rigid_body.rotation,
+                &self.rigid_body.linear_velocity,
                 speed,
                 speed_factor,
                 vel_up,
             )
-        })
+        });
+        m_torques.sum()
     }
-
-    // pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
-    //     self.rigid_body.integrate_two(dt);
-    // }
 
     pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
         let motor_torque = self.calculate_motors(dt, ambient_temp);
         self.calculate_physics(motor_torque, dt);
 
-        let pwm_sum = self.arms.iter().fold(0.0, |pwm, arm| pwm + arm.pwm());
-        let current_sum = self.arms.iter().fold(0., |acc, arm| acc + arm.current());
+        let pwm_sum = self.arms.iter().map(|arm| arm.pwm()).sum();
+        let current_sum = self.arms.iter().map(|arm| arm.current()).sum();
         self.battery.update(dt, pwm_sum, current_sum);
     }
 
