@@ -10,9 +10,9 @@ pub mod sample_curve;
 use arm::Arm;
 pub use arm::Motor;
 // use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
-use constants::MAX_EFFECT_SPEED;
+use constants::{GRAVITY, MAX_EFFECT_SPEED};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Matrix3, Vector3, Vector4};
+use nalgebra::{DVector, Matrix3, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -53,7 +53,7 @@ impl Gyro {
     }
 
     pub fn set_acceleration(&mut self, rotation: Matrix3<f64>, acceleration: Vector3<f64>) {
-        let gravity_acceleration = Vector3::new(0., -9.81, 0.);
+        let gravity_acceleration = Vector3::new(0., -GRAVITY, 0.);
         self.acceleration = rotation.transpose() * (acceleration + gravity_acceleration)
     }
 
@@ -223,6 +223,16 @@ impl Drone {
         }
     }
 
+    pub fn thrusts(&self) -> Vector4<f64> {
+        Vector4::from_row_slice(
+            &self
+                .arms
+                .iter()
+                .map(|arm| arm.thrust())
+                .collect::<Vec<f64>>(),
+        )
+    }
+
     // Step first, we have to test this!
     fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
@@ -256,12 +266,14 @@ impl Drone {
             arm.calculate_arm_m_torque(
                 dt,
                 vbat,
-                ambient_temp,
-                &self.rigid_body.rotation,
-                &self.rigid_body.linear_velocity,
-                speed,
+                self.rigid_body.rotation,
+                self.rigid_body.linear_velocity_dir,
                 speed_factor,
                 vel_up,
+                #[cfg(feature = "temp")]
+                speed,
+                #[cfg(feature = "temp")]
+                ambient_temp,
             )
         });
         m_torques.sum()

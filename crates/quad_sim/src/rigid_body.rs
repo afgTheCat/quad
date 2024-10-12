@@ -1,6 +1,6 @@
 use nalgebra::{Matrix3, Vector3};
 
-use crate::constants::AIR_RHO;
+use crate::constants::{AIR_RHO, GRAVITY};
 
 fn inertia_cuboid_diag(sides: Vector3<f64>) -> Vector3<f64> {
     let x = sides[0];
@@ -39,7 +39,7 @@ fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
 #[derive(Debug, Clone, Default)]
 pub struct RigidBody {
     pub linear_velocity: Vector3<f64>,
-    pub linear_velocity_dir: Vector3<f64>,
+    pub linear_velocity_dir: Option<Vector3<f64>>,
     pub position: Vector3<f64>,
     pub angular_velocity: Vector3<f64>,
     pub mass: f64,
@@ -52,15 +52,23 @@ pub struct RigidBody {
 
 // we are concerned with 3 things: linear velocity,
 impl RigidBody {
-    fn drag_linear(&self, drag_dir: &Vector3<f64>) -> Vector3<f64> {
-        let local_dir = self.rotation.transpose() * self.linear_velocity_dir;
+    fn drag_linear(
+        &self,
+        drag_dir: &Vector3<f64>,
+        linear_velocity_dir: &Vector3<f64>,
+    ) -> Vector3<f64> {
+        let local_dir = self.rotation.transpose() * linear_velocity_dir;
         let area_linear = Vector3::dot(&self.frame_drag_area, &local_dir.abs());
         drag_dir * area_linear
     }
 
     // TODO: fix this
-    fn drag_angular(&self, drag_dir: &Vector3<f64>) -> Vector3<f64> {
-        let local_dir = self.rotation.transpose() * self.linear_velocity_dir;
+    fn drag_angular(
+        &self,
+        drag_dir: &Vector3<f64>,
+        linear_velocity_dir: &Vector3<f64>,
+    ) -> Vector3<f64> {
+        let local_dir = self.rotation.transpose() * linear_velocity_dir;
         let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
         let drag_angular: Vector3<f64> =
             self.rotation.transpose() * (drag_dir * area_angular) * 0.001;
@@ -80,38 +88,43 @@ impl RigidBody {
         sum_prop_torques: &Vector3<f64>,
         dt: f64,
     ) {
-        let drag_dir = self.linear_velocity.norm_squared()
-            * self.linear_velocity_dir
-            * 0.5
-            * AIR_RHO
-            * self.frame_drag_constant;
-        let drag_linear = self.drag_linear(&drag_dir);
-        let drag_angular = self.drag_angular(&drag_dir);
-        let total_force = Vector3::new(0., -9.81 * self.mass, 0.) - drag_linear + sum_arm_forces;
+        let (drag_linear, drag_angular) =
+            if let Some(linear_velocity_dir) = self.linear_velocity_dir {
+                let drag_dir = self.linear_velocity.norm_squared()
+                    * linear_velocity_dir
+                    * 0.5
+                    * AIR_RHO
+                    * self.frame_drag_constant;
+                let drag_linear = self.drag_linear(&drag_dir, &linear_velocity_dir);
+                let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir);
+                (drag_linear, drag_angular)
+            } else {
+                (Vector3::zeros(), Vector3::zeros())
+            };
+        let total_force = Vector3::new(0., -GRAVITY * self.mass, 0.) - drag_linear + sum_arm_forces;
         let acceleration = total_force / self.mass;
 
         // TODO: readd this
-        let total_moment = self.rotation.column(1) * motor_torque
-            + self.rotation.column(0) * drag_angular[1]
-            + self.rotation.column(1) * drag_angular[0]
-            + self.rotation.column(2) * drag_angular[2]
-            + sum_prop_torques;
+        let total_applied_moment = Vector3::zeros();
+        // let total_applied_moment = self.rotation.column(1) * motor_torque
+        //     + self.rotation.column(0) * drag_angular[1]
+        //     + self.rotation.column(1) * drag_angular[0]
+        //     + self.rotation.column(2) * drag_angular[2]
+        //     + sum_prop_torques;
         let angular_acc: Vector3<f64> =
-            self.rotation * self.inv_tensor * self.rotation.transpose() * total_moment;
-
-        let angular_velocity = self.angular_velocity + angular_acc * dt;
-        // TODO: We probably don't need to clamp here
-        //     .clamp(
-        //     Vector3::new(-100., -100., -100.),
-        //     Vector3::new(100., 100., 100.),
-        // );
+            self.rotation * self.inv_tensor * self.rotation.transpose() * total_applied_moment;
 
         // update things
+        self.angular_velocity += angular_acc * dt;
         self.acceleration = acceleration;
         self.position += dt * self.linear_velocity + (acceleration * dt.powi(2)) / 2.;
-        self.angular_velocity = angular_velocity;
         self.linear_velocity += acceleration * dt;
-        self.rotation += dt * cross_product_matrix(angular_acc) * self.rotation;
-        self.linear_velocity_dir = self.linear_velocity.normalize()
+        self.rotation = (Matrix3::identity() + cross_product_matrix(self.angular_velocity * dt))
+            * self.rotation;
+        self.linear_velocity_dir = if self.linear_velocity.lp_norm(1) > 0. {
+            Some(self.linear_velocity.normalize())
+        } else {
+            None
+        };
     }
 }

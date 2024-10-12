@@ -12,8 +12,14 @@ struct Channels {
     yaw: f64,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct MotorInput(Vector4<f64>);
+
+impl Default for MotorInput {
+    fn default() -> Self {
+        Self(Vector4::new(0.1, 0.1, 0.1, 0.1))
+    }
+}
 
 impl MotorInput {
     pub fn pwms(&self) -> Vector4<f64> {

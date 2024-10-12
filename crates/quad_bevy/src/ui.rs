@@ -1,5 +1,5 @@
 use bevy::{
-    math::{DMat3, DVec3},
+    math::{DMat3, DVec3, DVec4},
     prelude::{Component, Query, Transform},
 };
 use bevy_egui::{egui::Window, EguiContexts};
@@ -11,6 +11,8 @@ pub struct UiSimulationInfo {
     position: DVec3,
     velocity: DVec3,
     acceleration: DVec3,
+    angular_velocity: DVec3,
+    motor_thrusts: DVec4,
 }
 
 impl UiSimulationInfo {
@@ -20,11 +22,15 @@ impl UiSimulationInfo {
         position: DVec3,
         velocity: DVec3,
         acceleration: DVec3,
+        angular_velocity: DVec3,
+        motor_thrusts: DVec4,
     ) {
         self.rotation_matrix = rotation_marix;
         self.position = position;
         self.velocity = velocity;
         self.acceleration = acceleration;
+        self.angular_velocity = angular_velocity;
+        self.motor_thrusts = motor_thrusts;
     }
 }
 
@@ -75,6 +81,24 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                         ui.label(format!("{}", ui_sim_info.acceleration));
                     });
                 });
+                body.row(30.0, |mut row| {
+                    row.col(|ui| {
+                        ui.label("Angular velocity");
+                    });
+                    row.col(|ui| {
+                        ui.label(format!("{}", ui_sim_info.angular_velocity));
+                    });
+                });
+                for i in 0..4 {
+                    body.row(30.0, |mut row| {
+                        row.col(|ui| {
+                            ui.label(format!("Motor thrust {i}"));
+                        });
+                        row.col(|ui| {
+                            ui.label(format!("{}", ui_sim_info.motor_thrusts[i]));
+                        });
+                    });
+                }
             });
     });
 }

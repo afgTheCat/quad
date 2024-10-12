@@ -26,7 +26,7 @@ impl Default for Propeller {
             prop_a_factor: 0.,
             prop_torque_factor: 0.,
             prop_inertia: 0.1,
-            prop_thrust_factor: Vector3::zeros(),
+            prop_thrust_factor: Vector3::new(100., 100., 100.),
         }
     }
 }
@@ -94,7 +94,8 @@ pub struct Motor {
 }
 
 impl Motor {
-    pub fn update_motor_temp(
+    #[cfg(feature = "temp")]
+    fn update_motor_temp(
         &mut self,
         current: f64,
         speed: f64,
@@ -112,9 +113,7 @@ impl Motor {
             / self.props.motor_cth
             * dt;
     }
-}
 
-impl Motor {
     fn rpm(&self) -> f64 {
         self.state.rpm
     }
@@ -165,20 +164,23 @@ pub struct Arm {
 }
 
 impl Arm {
-    // TODO: this is slow
     fn motor_thrust(
         &mut self,
         rpm: f64,
-        rotation: &Matrix3<f64>,
-        linear_velocity: &Vector3<f64>,
+        rotation: Matrix3<f64>,
+        linear_velocity_dir: Option<Vector3<f64>>,
         speed_factor: f64,
         vel_up: f64,
         #[cfg(feature = "noise")] dt: f64,
     ) -> f64 {
-        let mut reverse_thrust = -Vector3::dot(
-            &linear_velocity.normalize(),
-            &(rotation.column(0) * self.motor.state.thrust).normalize(),
-        );
+        let mut reverse_thrust = if let Some(linear_velocity_dir) = linear_velocity_dir {
+            -Vector3::dot(
+                &linear_velocity_dir,
+                &(rotation.column(0) * self.motor.state.thrust).normalize(),
+            )
+        } else {
+            0.
+        };
         reverse_thrust = f64::max(0.0, reverse_thrust - 0.5) * 2.;
         reverse_thrust = reverse_thrust * reverse_thrust;
 
@@ -197,12 +199,12 @@ impl Arm {
         &mut self,
         dt: f64,
         vbat: f64,
-        ambient_temp: f64,
-        rotation: &Matrix3<f64>,
-        linear_velocity: &Vector3<f64>,
-        speed: f64,
+        rotation: Matrix3<f64>,
+        linear_velocity_dir: Option<Vector3<f64>>,
         speed_factor: f64,
         vel_up: f64,
+        #[cfg(feature = "temp")] speed: f64,
+        #[cfg(feature = "temp")] ambient_temp: f64,
     ) -> f64 {
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);
@@ -217,13 +219,14 @@ impl Arm {
         let current = m_torque * self.motor.props.motor_kv / 8.3;
         let thrust = self.motor_thrust(
             rpm,
-            &rotation,
-            &linear_velocity,
+            rotation,
+            linear_velocity_dir,
             speed_factor,
             vel_up,
             #[cfg(feature = "noise")]
             dt,
         );
+        #[cfg(feature = "temp")]
         self.motor
             .update_motor_temp(current, speed, thrust, dt, vbat, ambient_temp);
         self.motor.state.current = current;

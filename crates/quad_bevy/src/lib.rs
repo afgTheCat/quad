@@ -6,7 +6,7 @@ use bevy::{
     color::Color,
     gizmos::AppGizmoBuilder,
     gltf::{Gltf, GltfNode},
-    math::{EulerRot, Mat3, Quat, Vec3},
+    math::{DMat3, DVec3, DVec4, EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, BuildChildren, Camera3dBundle, Commands, Component,
@@ -22,7 +22,7 @@ use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::{Matrix3, Vector3, Vector4};
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
 use quad_sim::{
@@ -53,6 +53,14 @@ fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
     Vec3::new(vec[0] as f32, vec[1] as f32, vec[2] as f32)
 }
 
+fn ntb_dvec3(vec: Vector3<f64>) -> DVec3 {
+    DVec3::new(vec[0], vec[1], vec[2])
+}
+
+fn ntb_dvec4(vec: Vector4<f64>) -> DVec4 {
+    DVec4::new(vec[0], vec[1], vec[2], vec[3])
+}
+
 fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
     Mat3::from_cols(
         Vec3::from_slice(
@@ -79,6 +87,14 @@ fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
     )
 }
 
+fn ntb_dmat3(matrix: Matrix3<f64>) -> DMat3 {
+    DMat3::from_cols(
+        DVec3::from_slice(&matrix.column(0).iter().map(|x| *x).collect::<Vec<_>>()),
+        DVec3::from_slice(&matrix.column(1).iter().map(|x| *x).collect::<Vec<_>>()),
+        DVec3::from_slice(&matrix.column(2).iter().map(|x| *x).collect::<Vec<_>>()),
+    )
+}
+
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 pub enum SimState {
     #[default]
@@ -97,7 +113,7 @@ pub struct SimContext {
 impl Default for SimContext {
     fn default() -> Self {
         Self {
-            dt: Duration::from_nanos(100),
+            dt: Duration::from_nanos(500),
             time_accu: Duration::default(),
             ambient_temp: 25.,
             dialation: 1.,
@@ -203,6 +219,7 @@ pub fn setup_drone(
                 inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(0.1, 0.1, 0.1)),
                 angular_velocity: Vector3::new(1., 0., 0.),
                 mass: 0.2,
+                rotation: Matrix3::identity(), // stargin position
                 ..Default::default()
             },
             gyro: Gyro::default(),
@@ -273,12 +290,14 @@ pub fn debug_drone(
 
     transform.translation = ntb_vec3(drone.0.rigid_body.position);
     transform.rotation = Quat::from_mat3(&ntb_mat3(drone.0.rigid_body.rotation));
-    // ui_simulation_info.update_state(
-    //     drone.0.rigid_body.rotation,
-    //     drone.0.rigid_body.position,
-    //     drone.0.rigid_body.linear_velocity,
-    //     drone.0.rigid_body.acceleration,
-    // );
+    ui_simulation_info.update_state(
+        ntb_dmat3(drone.0.rigid_body.rotation),
+        ntb_dvec3(drone.0.rigid_body.position),
+        ntb_dvec3(drone.0.rigid_body.linear_velocity),
+        ntb_dvec3(drone.0.rigid_body.acceleration),
+        ntb_dvec3(drone.0.rigid_body.angular_velocity),
+        ntb_dvec4(drone.0.thrusts()),
+    );
 }
 
 #[derive(Default, Reflect, GizmoConfigGroup)]
