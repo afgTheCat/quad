@@ -164,9 +164,6 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // grid
     commands.spawn(InfiniteGridBundle::default());
 
-    // sim context
-    commands.spawn(SimContext::default());
-
     let drone_scene = asset_server.load("drone.glb");
     let drone_assets = DroneAssets(drone_scene);
     commands.insert_resource(drone_assets.clone());
@@ -254,6 +251,7 @@ pub fn setup_drone(
                 SpatialBundle::default(),
                 ModelComponent(Model::default()),
                 UiSimulationInfo::default(),
+                SimContext::default(),
             ))
             .with_children(|parent| {
                 parent.spawn(SceneBundle {
@@ -270,13 +268,14 @@ pub fn debug_drone(
         &mut DroneComponent,
         &mut ModelComponent,
         &mut UiSimulationInfo,
+        &mut SimContext,
     )>,
-    mut context_query: Query<&mut SimContext>,
+    mut camera_query: Query<&mut PanOrbitCamera>,
     timer: Res<Time>,
 ) {
-    let (mut transform, mut drone, mut controller, mut ui_simulation_info) =
+    let (mut drone_transform, mut drone, mut controller, mut ui_simulation_info, mut sim_context) =
         drone_query.single_mut();
-    let mut sim_context = context_query.single_mut();
+    let mut camera = camera_query.single_mut();
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
@@ -288,8 +287,9 @@ pub fn debug_drone(
         drone.0.set_motor_pwms(pwms.pwms());
     }
 
-    transform.translation = ntb_vec3(drone.0.rigid_body.position);
-    transform.rotation = Quat::from_mat3(&ntb_mat3(drone.0.rigid_body.rotation));
+    let drone_translation = ntb_vec3(drone.0.rigid_body.position);
+    drone_transform.translation = drone_translation;
+    drone_transform.rotation = Quat::from_mat3(&ntb_mat3(drone.0.rigid_body.rotation));
     ui_simulation_info.update_state(
         ntb_dmat3(drone.0.rigid_body.rotation),
         ntb_dvec3(drone.0.rigid_body.position),
@@ -298,6 +298,7 @@ pub fn debug_drone(
         ntb_dvec3(drone.0.rigid_body.angular_velocity),
         ntb_dvec4(drone.0.thrusts()),
     );
+    camera.target_focus = drone_translation;
 }
 
 #[derive(Default, Reflect, GizmoConfigGroup)]
