@@ -1,9 +1,6 @@
 // Done in the style so that BF can be added later on
 
-use bevy::{
-    math::{DQuat, DVec3, DVec4},
-    prelude::Component,
-};
+use nalgebra::{Quaternion, Vector3, Vector4};
 
 use crate::Drone;
 
@@ -16,10 +13,10 @@ struct Channels {
 }
 
 #[derive(Debug, Clone, Copy, Default)]
-pub struct MotorInput(DVec4);
+pub struct MotorInput(Vector4<f64>);
 
 impl MotorInput {
-    pub fn pwms(&self) -> DVec4 {
+    pub fn pwms(&self) -> Vector4<f64> {
         self.0
     }
 }
@@ -49,13 +46,13 @@ struct CurrentMeter {
 // TODO: all these should be i16 I guess
 #[derive(Debug, Clone, Copy, Default)]
 struct Imu {
-    attitude: DQuat,
-    virtual_acceleration: DVec3,
-    virtual_gyro: DVec3,
+    attitude: Quaternion<f64>,
+    virtual_acceleration: Vector3<f64>,
+    virtual_gyro: Vector3<f64>,
 }
 
 // basic PID controller
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FlightController {
     throttle: f64,
     set_points: SetPoints,
@@ -96,7 +93,9 @@ impl FlightController {
         //              -simState.rotation[2],
         //              -simState.rotation[0],
         //              simState.rotation[1]
-        self.imu.attitude = DQuat::from_vec4(drone.gyro.rotation());
+
+        // TODO: readd this
+        // self.imu.attitude = DQuat::from_vec4(drone.gyro.rotation());
         self.imu.virtual_acceleration = drone.gyro.acceleration();
         self.imu.virtual_gyro = drone.gyro.angular_vel();
     }
@@ -113,7 +112,7 @@ impl FlightController {
     }
 }
 
-#[derive(Default, Component)]
+#[derive(Default, Clone)]
 pub struct Model {
     flight_controller: FlightController,
 }

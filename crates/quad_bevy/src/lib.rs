@@ -6,7 +6,7 @@ use bevy::{
     color::Color,
     gizmos::AppGizmoBuilder,
     gltf::{Gltf, GltfNode},
-    math::{DVec3, EulerRot, Quat, Vec3},
+    math::{DVec3, EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, BuildChildren, Camera3dBundle, Commands, Component,
@@ -21,6 +21,8 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
+use core::f64;
+use nalgebra::{Matrix3, Vector3};
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
 use quad_sim::{
@@ -33,6 +35,12 @@ use quad_sim::{
 use std::time::Duration;
 use ui::{update_ui, UiSimulationInfo};
 
+#[derive(Clone, Component)]
+struct DroneComponent(Drone);
+
+#[derive(Clone, Component)]
+struct ModelComponent(Model);
+
 // names of the propellers in the mesh
 pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [
     "prop_blade.001",
@@ -40,6 +48,36 @@ pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [
     "prop_blade.003",
     "prop_blade.004",
 ];
+
+fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
+    Vec3::new(vec[0] as f32, vec[1] as f32, vec[2] as f32)
+}
+
+fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
+    Mat3::from_cols(
+        Vec3::from_slice(
+            &matrix
+                .column(0)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .column(1)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .column(2)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+    )
+}
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 pub enum SimState {
@@ -140,7 +178,7 @@ pub fn setup_drone(
             let motor = Motor {
                 state: MotorState::default(),
                 props: MotorProps {
-                    position,
+                    position: Vector3::new(position.x, position.y, position.z),
                     ..Default::default()
                 },
             };
@@ -150,12 +188,12 @@ pub fn setup_drone(
             }
         });
 
-        let drone = Drone {
+        let drone = DroneComponent(Drone {
             arms,
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
-                inv_tensor: inv_cuboid_inertia_tensor(Vec3::new(0.1, 0.1, 0.1)),
-                angular_velocity: DVec3::new(1., 0., 0.),
+                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(0.1, 0.1, 0.1)),
+                angular_velocity: Vector3::new(1., 0., 0.),
                 mass: 0.2,
                 ..Default::default()
             },
@@ -184,12 +222,12 @@ pub fn setup_drone(
             },
             #[cfg(feature = "noise")]
             frame_charachteristics: FrameCharachteristics::default(),
-        };
+        });
         commands
             .spawn((
                 drone,
                 SpatialBundle::default(),
-                Model::default(),
+                ModelComponent(Model::default()),
                 UiSimulationInfo::default(),
             ))
             .with_children(|parent| {
@@ -204,8 +242,8 @@ pub fn setup_drone(
 pub fn debug_drone(
     mut drone_query: Query<(
         &mut Transform,
-        &mut Drone,
-        &mut Model,
+        &mut DroneComponent,
+        &mut ModelComponent,
         &mut UiSimulationInfo,
     )>,
     mut context_query: Query<&mut SimContext>,
@@ -217,20 +255,22 @@ pub fn debug_drone(
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
-        drone.update_gyro(sim_context.dt.as_secs_f64());
-        drone.update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
-        let pwms = controller.update(&drone);
-        drone.set_motor_pwms(pwms.pwms());
+        drone.0.update_gyro(sim_context.dt.as_secs_f64());
+        drone
+            .0
+            .update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
+        let pwms = controller.0.update(&drone.0);
+        drone.0.set_motor_pwms(pwms.pwms());
     }
 
-    transform.translation = drone.rigid_body.position.as_vec3();
-    transform.rotation = Quat::from_mat3(&drone.rigid_body.rotation.as_mat3());
-    ui_simulation_info.update_state(
-        drone.rigid_body.rotation,
-        drone.rigid_body.position,
-        drone.rigid_body.linear_velocity,
-        drone.rigid_body.acceleration,
-    );
+    transform.translation = ntb_vec3(drone.0.rigid_body.position);
+    transform.rotation = Quat::from_mat3(&ntb_mat3(drone.0.rigid_body.rotation));
+    // ui_simulation_info.update_state(
+    //     drone.0.rigid_body.rotation,
+    //     drone.0.rigid_body.position,
+    //     drone.0.rigid_body.linear_velocity,
+    //     drone.0.rigid_body.acceleration,
+    // );
 }
 
 #[derive(Default, Reflect, GizmoConfigGroup)]

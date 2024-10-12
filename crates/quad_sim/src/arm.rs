@@ -1,9 +1,5 @@
 use core::f64;
 
-use bevy::{
-    math::{DMat3, DVec3},
-    prelude::Component,
-};
 use fast_math::exp;
 // use libm::exp;
 
@@ -11,6 +7,7 @@ use crate::{
     constants::{MAX_SPEED_PROP_COOLING, M_PI},
     low_pass_filter::LowPassFilter,
 };
+use nalgebra::{Matrix3, Vector3};
 
 #[derive(Debug, Clone)]
 pub struct Propeller {
@@ -18,7 +15,7 @@ pub struct Propeller {
     prop_a_factor: f64,
     prop_torque_factor: f64,
     prop_inertia: f64,
-    prop_thrust_factor: DVec3,
+    prop_thrust_factor: Vector3<f64>,
 }
 
 impl Default for Propeller {
@@ -28,7 +25,7 @@ impl Default for Propeller {
             prop_a_factor: 0.,
             prop_torque_factor: 0.,
             prop_inertia: 0.1,
-            prop_thrust_factor: DVec3::ZERO,
+            prop_thrust_factor: Vector3::zeros(),
         }
     }
 }
@@ -63,12 +60,12 @@ impl Propeller {
 // TODO: defualt here is has to be manually implemeted
 #[derive(Debug, Clone, Default)]
 pub struct MotorProps {
-    pub position: DVec3, // position relative to the main body
-    pub motor_kv: f64,   // kv
-    pub motor_r: f64,    // resistence
-    pub motor_io: f64,   // idle current
-    pub motor_rth: f64,  // thermal resistance (deg C per Watt)
-    pub motor_cth: f64,  // thermal heat capacity (joules per deg C)
+    pub position: Vector3<f64>, // position relative to the main body
+    pub motor_kv: f64,          // kv
+    pub motor_r: f64,           // resistence
+    pub motor_io: f64,          // idle current
+    pub motor_rth: f64,         // thermal resistance (deg C per Watt)
+    pub motor_cth: f64,         // thermal heat capacity (joules per deg C)
     pub motor_dir: f64,
     // pub motor_max_t: f64,
 }
@@ -99,7 +96,7 @@ pub struct MotorState {
                                             // pub burned_out: bool, // is the motor destroyed by over temp
 }
 
-#[derive(Debug, Clone, Default, Component)]
+#[derive(Debug, Clone, Default)]
 pub struct Motor {
     pub state: MotorState,
     pub props: MotorProps,
@@ -143,7 +140,7 @@ impl Motor {
         self.state.thrust
     }
 
-    pub fn position(&self) -> DVec3 {
+    pub fn position(&self) -> Vector3<f64> {
         self.props.position
     }
 
@@ -187,19 +184,18 @@ impl Arm {
     fn motor_thrust(
         &mut self,
         rpm: f64,
-        rotation: DMat3,
-        linear_velocity: DVec3,
+        rotation: Matrix3<f64>,
+        linear_velocity: Vector3<f64>,
         speed_factor: f64,
         #[cfg(feature = "noise")] dt: f64,
     ) -> f64 {
-        let up = rotation.x_axis;
-        let vel_up = DVec3::dot(linear_velocity, up);
+        let up = rotation.column(0);
+        let vel_up = Vector3::dot(&linear_velocity, &up);
+        // TODO: check this
+        let thrust_corrected: Vector3<f64> = -(up * self.motor.thrust()).normalize();
         let mut reverse_thrust = f64::max(
             0.,
-            DVec3::dot(
-                linear_velocity.normalize(),
-                (up * self.motor.thrust()).normalize() * -1.,
-            ),
+            Vector3::dot(&linear_velocity.normalize(), &thrust_corrected),
         );
         reverse_thrust = f64::max(0.0, reverse_thrust - 0.5) * 2.;
         reverse_thrust = reverse_thrust * reverse_thrust;
@@ -220,13 +216,12 @@ impl Arm {
         dt: f64,
         vbat: f64,
         ambient_temp: f64,
-        rotation: DMat3,
-        linear_velocity: DVec3,
+        rotation: Matrix3<f64>,
+        linear_velocity: Vector3<f64>,
         speed: f64,
         speed_factor: f64,
         vel_up: f64,
     ) -> f64 {
-        // let vel_up = DVec3::dot(linear_velocity, rotation.x_axis);
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);
         let p_torque = self.propeller.prop_torque(vel_up, self.motor.rpm());
@@ -269,7 +264,7 @@ impl Arm {
         self.motor.thrust()
     }
 
-    pub fn motor_pos(&self) -> DVec3 {
+    pub fn motor_pos(&self) -> Vector3<f64> {
         self.motor.position()
     }
 

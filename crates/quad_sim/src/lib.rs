@@ -9,13 +9,10 @@ pub mod sample_curve;
 
 use arm::Arm;
 pub use arm::Motor;
-use bevy::{
-    math::{DMat3, DVec3, DVec4},
-    pbr::AmbientLight,
-    prelude::Component,
-};
+// use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::MAX_EFFECT_SPEED;
 use low_pass_filter::LowPassFilter;
+use nalgebra::{Matrix3, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -25,9 +22,9 @@ use std::{cell::RefCell, ops::Range};
 #[derive(Debug, Clone, Default)]
 pub struct Gyro {
     low_pass_filter: [LowPassFilter; 3],
-    rotation: DVec4,
-    acceleration: DVec3,
-    gyro_angular_vel: DVec3,
+    rotation: Vector4<f64>,
+    acceleration: Vector3<f64>,
+    gyro_angular_vel: Vector3<f64>,
     #[cfg(feature = "noise")]
     gyro_base_noise_amp: f64,
 }
@@ -35,10 +32,10 @@ pub struct Gyro {
 impl Gyro {
     pub fn set_angular_velocity(
         &mut self,
-        rotation: DMat3,
-        angular_velocity: DVec3,
+        rotation: Matrix3<f64>,
+        angular_velocity: Vector3<f64>,
         dt: f64,
-        #[cfg(feature = "noise")] combined_noise: DVec3,
+        #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
     ) {
         #[cfg(feature = "noise")]
         let mut angular_velocity = angular_velocity + combined_noise;
@@ -55,8 +52,8 @@ impl Gyro {
         self.gyro_angular_vel = rotation.transpose() * angular_velocity;
     }
 
-    pub fn set_acceleration(&mut self, rotation: DMat3, acceleration: DVec3) {
-        let gravity_acceleration = DVec3::new(0., -9.81, 0.);
+    pub fn set_acceleration(&mut self, rotation: Matrix3<f64>, acceleration: Vector3<f64>) {
+        let gravity_acceleration = Vector3::new(0., -9.81, 0.);
         self.acceleration = rotation.transpose() * (acceleration + gravity_acceleration)
     }
 
@@ -64,57 +61,57 @@ impl Gyro {
         &mut self.low_pass_filter
     }
 
-    pub fn angular_vel(&self) -> DVec3 {
+    pub fn angular_vel(&self) -> Vector3<f64> {
         self.gyro_angular_vel
     }
 
-    pub fn set_rotation(&mut self, rotation: DVec4) {
+    pub fn set_rotation(&mut self, rotation: Vector4<f64>) {
         self.rotation = rotation
     }
 
-    pub fn rotation(&self) -> DVec4 {
+    pub fn rotation(&self) -> Vector4<f64> {
         self.rotation
     }
 
-    pub fn acceleration(&self) -> DVec3 {
+    pub fn acceleration(&self) -> Vector3<f64> {
         self.acceleration
     }
 }
 
 // This is the implementation that the thing used
-pub fn mat3_to_quat(mat3: DMat3) -> DVec4 {
-    let trace = mat3.x_axis[0] + mat3.y_axis[1] + mat3.z_axis[2];
+pub fn mat3_to_quat(mat3: Matrix3<f64>) -> Vector4<f64> {
+    let trace = mat3.trace();
 
     if trace > 0.0 {
         let s = f64::sqrt(trace + 1.);
-        DVec4::new(
-            mat3.z_axis[1] - mat3.y_axis[2] * 0.5 / s,
-            mat3.x_axis[2] - mat3.z_axis[0] * 0.5 / s,
-            mat3.y_axis[0] - mat3.x_axis[1] * 0.5 / s,
+        Vector4::new(
+            mat3.column(2)[1] - mat3.column(1)[2] * 0.5 / s,
+            mat3.column(0)[2] - mat3.column(2)[0] * 0.5 / s,
+            mat3.column(1)[0] - mat3.column(0)[1] * 0.5 / s,
             s * 0.5,
         )
     } else {
-        let i = if mat3.x_axis[0] < mat3.y_axis[1] {
-            if mat3.y_axis[1] < mat3.z_axis[2] {
+        let i = if mat3.column(0)[0] < mat3.column(1)[1] {
+            if mat3.column(1)[1] < mat3.column(2)[2] {
                 2
             } else {
                 1
             }
-        } else if mat3.x_axis[0] < mat3.z_axis[2] {
+        } else if mat3[0] < mat3[2 * 3 + 2] {
             2
         } else {
             0
         };
         let j = (i + 1) % 3;
         let k = (i + 2) % 3;
-        let s = f64::sqrt(mat3.col(i)[i] - mat3.col(j)[j] - mat3.col(k)[k] + 1.);
-        let mut quat = DVec4::new(0., 0., 0., 0.);
+        let s = f64::sqrt(mat3[i * 3 + i] - mat3[j * 3 + j] - mat3[k * 3 + k] + 1.);
+        let mut quat = Vector4::new(0., 0., 0., 0.);
 
         quat[i] = s * 0.5;
 
-        quat[3] = (mat3.col(k)[j] - mat3.col(j)[k]) * 0.5 / s;
-        quat[j] = (mat3.col(j)[i] - mat3.col(i)[j]) * 0.5 / s;
-        quat[k] = (mat3.col(k)[i] - mat3.col(i)[k]) * 0.5 / s;
+        quat[3] = (mat3.column(k)[j] - mat3.column(j)[k]) * 0.5 / s;
+        quat[j] = (mat3.column(j)[i] - mat3.column(i)[j]) * 0.5 / s;
+        quat[k] = (mat3.column(k)[i] - mat3.column(i)[k]) * 0.5 / s;
         quat
     }
 }
@@ -130,10 +127,10 @@ pub struct FrameCharachteristics {
     pub frame_harmonic_1_freq: f64,
     pub frame_harmonic_2_amp: f64,
     pub frame_harmonic_2_freq: f64,
-    pub motor_imbalance: [DVec3; 4],
+    pub motor_imbalance: [Vector3<f64>; 4],
 }
 
-#[derive(Clone, Component)]
+#[derive(Clone)]
 pub struct Drone {
     #[cfg(feature = "noise")]
     pub frame_charachteristics: FrameCharachteristics,
@@ -224,7 +221,7 @@ impl Battery {
 }
 
 impl Drone {
-    pub fn set_motor_pwms(&mut self, pwms: DVec4) {
+    pub fn set_motor_pwms(&mut self, pwms: Vector4<f64>) {
         for i in 0..4 {
             self.arms[i].set_pwm(pwms[i]);
         }
@@ -233,27 +230,27 @@ impl Drone {
     // Step first, we have to test this!
     fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
-        let sum_arm_forces = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
-            acc + rotation * DVec3::new(0., arm.thrust(), 0.)
+        let sum_arm_forces = self.arms.iter().fold(Vector3::new(0., 0., 0.), |acc, arm| {
+            acc + rotation * Vector3::new(0., arm.thrust(), 0.)
         });
-        let sum_prop_torques = self.arms.iter().fold(DVec3::new(0., 0., 0.), |acc, arm| {
+        let sum_prop_torques = self.arms.iter().fold(Vector3::new(0., 0., 0.), |acc, arm| {
             // calculates the force that is the downwards compared to the drone
-            let force = rotation * DVec3::new(0., arm.thrust(), 0.);
+            let force = rotation * Vector3::new(0., arm.thrust(), 0.);
             // calculates the motor position relative to the body frame
             let rad = rotation * arm.motor_pos();
-            acc + DVec3::cross(rad, force)
+            acc + Vector3::cross(&rad, &force)
         });
         self.rigid_body
-            .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
+            .integrate(motor_torque, &sum_arm_forces, &sum_prop_torques, dt);
     }
 
     fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {
         let vbat = self.battery.vbat_sagged(); // is this what we want?
-        let speed = self.rigid_body.linear_velocity.length();
+        let speed = self.rigid_body.linear_velocity.norm();
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
-        let vel_up = DVec3::dot(
-            self.rigid_body.linear_velocity,
-            self.rigid_body.rotation.x_axis,
+        let vel_up = Vector3::dot(
+            &self.rigid_body.linear_velocity,
+            &self.rigid_body.rotation.column(0),
         );
         (0..4).fold(0., |acc, i| {
             acc + self.arms[i].calculate_arm_m_torque(

@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy.workspace = true
+# bevy.workspace = true
 rand_xoshiro.workspace = true
 rand.workspace = true
 libm.workspace = true
 fast-math.workspace = true
+nalgebra.workspace = true
 
 [features]
 default = []
