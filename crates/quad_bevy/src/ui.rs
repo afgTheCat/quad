@@ -13,6 +13,7 @@ pub struct UiSimulationInfo {
     acceleration: DVec3,
     angular_velocity: DVec3,
     motor_thrusts: DVec4,
+    motor_rpm: DVec4,
 }
 
 impl UiSimulationInfo {
@@ -24,6 +25,7 @@ impl UiSimulationInfo {
         acceleration: DVec3,
         angular_velocity: DVec3,
         motor_thrusts: DVec4,
+        motor_rpm: DVec4,
     ) {
         self.rotation_matrix = rotation_marix;
         self.position = position;
@@ -31,6 +33,7 @@ impl UiSimulationInfo {
         self.acceleration = acceleration;
         self.angular_velocity = angular_velocity;
         self.motor_thrusts = motor_thrusts;
+        self.motor_rpm = motor_rpm;
     }
 }
 
@@ -96,6 +99,17 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                         });
                         row.col(|ui| {
                             ui.label(format!("{}", ui_sim_info.motor_thrusts[i]));
+                        });
+                    });
+                }
+
+                for i in 0..4 {
+                    body.row(30.0, |mut row| {
+                        row.col(|ui| {
+                            ui.label(format!("Motor rpm {i}"));
+                        });
+                        row.col(|ui| {
+                            ui.label(format!("{}", ui_sim_info.motor_rpm[i]));
                         });
                     });
                 }

@@ -192,14 +192,18 @@ pub fn setup_drone(
                 state: MotorState::default(),
                 props: MotorProps {
                     position: Vector3::new(position.x, position.y, position.z),
-                    motor_kv: 0.0001,
-                    motor_r: 0.0001,
+                    motor_kv: 3200.,
+                    motor_r: 0.13,
+                    motor_io: 0.23,
                     ..Default::default()
                 },
             };
             let propeller = Propeller {
-                prop_inertia: 0.00000001,
-                prop_max_rpm: 0.01,
+                prop_inertia: 3.5e-07,
+                prop_max_rpm: 36000.0,
+                prop_a_factor: 7.43e-10,
+                prop_torque_factor: 0.0056,
+                prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
                 ..Default::default()
             };
             Arm {
@@ -213,10 +217,12 @@ pub fn setup_drone(
             arms,
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
-                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(0.1, 0.1, 0.1)),
-                angular_velocity: Vector3::new(1., 0., 0.),
-                mass: 0.2,
+                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(750., -5150.0, 750.0)),
+                angular_velocity: Vector3::new(0., 0., 0.),
+                mass: 0.2972,
                 rotation: Matrix3::identity(), // stargin position
+                frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
+                frame_drag_constant: 1.45,
                 ..Default::default()
             },
             gyro: Gyro::default(),
@@ -237,9 +243,9 @@ pub fn setup_drone(
                         SamplePoint::new(1.06, 3.0),
                         SamplePoint::new(1.08, 0.0),
                     ]),
-                    quad_bat_cell_count: 6.,
-                    quad_bat_capacity_charged: 10000.,
-                    max_voltage_sag: 0.,
+                    quad_bat_cell_count: 4.,
+                    quad_bat_capacity_charged: 850.,
+                    max_voltage_sag: 1.4,
                 },
             },
             #[cfg(feature = "noise")]
@@ -297,6 +303,7 @@ pub fn debug_drone(
         ntb_dvec3(drone.0.rigid_body.acceleration),
         ntb_dvec3(drone.0.rigid_body.angular_velocity),
         ntb_dvec4(drone.0.thrusts()),
+        ntb_dvec4(drone.0.rpms()),
     );
     camera.target_focus = drone_translation;
 }

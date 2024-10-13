@@ -12,7 +12,7 @@ pub use arm::Motor;
 // use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::{GRAVITY, MAX_EFFECT_SPEED};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{DVector, Matrix3, Vector3, Vector4};
+use nalgebra::{DVector, Matrix3, Vector, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -231,6 +231,10 @@ impl Drone {
                 .map(|arm| arm.thrust())
                 .collect::<Vec<f64>>(),
         )
+    }
+
+    pub fn rpms(&self) -> Vector4<f64> {
+        Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.rpm()).collect::<Vec<f64>>())
     }
 
     // Step first, we have to test this!

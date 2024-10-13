@@ -253,6 +253,10 @@ impl Arm {
         self.motor.position()
     }
 
+    pub fn rpm(&self) -> f64 {
+        self.motor.rpm()
+    }
+
     pub fn set_pwm(&mut self, pwm: f64) {
         self.motor.state.pwm = pwm;
     }
