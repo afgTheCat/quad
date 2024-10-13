@@ -32,14 +32,11 @@ impl Default for Propeller {
 }
 
 impl Propeller {
-    // the thrust a propeller does
+    // Calculates the
     pub fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
-        let prop_f = f64::max(
-            0.0,
-            self.prop_thrust_factor[0] * vel_up * vel_up
-                + self.prop_thrust_factor[1] * vel_up
-                + self.prop_thrust_factor[2],
-        );
+        let prop_f = self.prop_thrust_factor[0] * vel_up * vel_up
+            + self.prop_thrust_factor[1] * vel_up
+            + self.prop_thrust_factor[2];
         let max_rpm = self.prop_max_rpm;
         let prop_a = self.prop_a_factor;
         let b = (prop_f - prop_a * max_rpm * max_rpm) / max_rpm;
@@ -189,7 +186,7 @@ impl Arm {
 
         // NOTE: no noise is applied
         #[cfg(not(feature = "noise"))]
-        let prop_wash_noise = 1.;
+        let prop_wash_noise = 0.;
 
         let prop_wash_effect = 1.0 - (speed_factor * prop_wash_noise * reverse_thrust * 0.95);
         self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect
@@ -264,75 +261,20 @@ impl Arm {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
-        sample_curve::{SampleCurve, SamplePoint},
-        Battery, BatteryProps, BatteryState, Drone, Gyro,
-    };
-
-    use super::{Arm, Motor, MotorProps, MotorState, Propeller};
+    use super::Propeller;
     use nalgebra::Vector3;
 
     #[test]
-    fn motor_thrust_test() {
-        // omega retardation
-        let arms = [0, 0, 0, 0].map(|_| {
-            let motor = Motor {
-                state: MotorState::default(),
-                props: MotorProps {
-                    position: Vector3::new(0., 0., 0.),
-                    motor_kv: 0.0001,
-                    motor_r: 0.0001,
-                    ..Default::default()
-                },
-            };
-            let propeller = Propeller {
-                prop_inertia: 0.00000001,
-                prop_max_rpm: 0.01,
-                ..Default::default()
-            };
-            Arm {
-                motor,
-                propeller,
-                ..Default::default()
-            }
-        });
-
-        let mut drone = Drone {
-            arms,
-            rigid_body: RigidBody {
-                // random cuboid inv inertia tensor
-                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(0.1, 0.1, 0.1)),
-                angular_velocity: Vector3::new(1., 0., 0.),
-                mass: 0.2,
-                ..Default::default()
-            },
-            gyro: Gyro::default(),
-            battery: Battery {
-                state: BatteryState::default(),
-                props: BatteryProps {
-                    full_capacity: 1.,
-                    bat_voltage_curve: SampleCurve::new(vec![
-                        SamplePoint::new(-0.06, 4.4),
-                        SamplePoint::new(0.0, 4.2),
-                        SamplePoint::new(0.01, 4.05),
-                        SamplePoint::new(0.04, 3.97),
-                        SamplePoint::new(0.30, 3.82),
-                        SamplePoint::new(0.40, 3.7),
-                        SamplePoint::new(1.0, 3.49),
-                        SamplePoint::new(1.01, 3.4),
-                        SamplePoint::new(1.03, 3.3),
-                        SamplePoint::new(1.06, 3.0),
-                        SamplePoint::new(1.08, 0.0),
-                    ]),
-                    quad_bat_cell_count: 6.,
-                    quad_bat_capacity_charged: 10000.,
-                    max_voltage_sag: 0.,
-                },
-            },
+    fn prop_thrust() {
+        let propeller = Propeller {
+            prop_inertia: 3.5e-07,
+            prop_max_rpm: 36000.0,
+            prop_a_factor: 7.43e-10,
+            prop_torque_factor: 0.0056,
+            prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
         };
-        for _ in 0..1_000_000_000 {
-            drone.update_physics(0.00001, 0.);
-        }
+
+        let thrust = propeller.prop_thrust(0., 60000.);
+        println!("thrust: {}", thrust); // kinda ok, produces around 9 newton
     }
 }

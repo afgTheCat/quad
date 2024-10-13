@@ -1,7 +1,6 @@
 mod ui;
-
 use bevy::{
-    app::{App, Startup, Update},
+    app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets, Handle},
     color::Color,
     gizmos::AppGizmoBuilder,
@@ -16,6 +15,7 @@ use bevy::{
     reflect::Reflect,
     scene::SceneBundle,
     time::Time,
+    window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
 use bevy_egui::EguiPlugin;
@@ -204,7 +204,6 @@ pub fn setup_drone(
                 prop_a_factor: 7.43e-10,
                 prop_torque_factor: 0.0056,
                 prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
-                ..Default::default()
             };
             Arm {
                 motor,
@@ -227,9 +226,11 @@ pub fn setup_drone(
             },
             gyro: Gyro::default(),
             battery: Battery {
-                state: BatteryState::default(),
+                state: BatteryState {
+                    capacity: 850.,
+                    ..Default::default()
+                },
                 props: BatteryProps {
-                    full_capacity: 1.,
                     bat_voltage_curve: SampleCurve::new(vec![
                         SamplePoint::new(-0.06, 4.4),
                         SamplePoint::new(0.0, 4.2),
@@ -245,6 +246,7 @@ pub fn setup_drone(
                     ]),
                     quad_bat_cell_count: 4.,
                     quad_bat_capacity_charged: 850.,
+                    quad_bat_capacity: 850.,
                     max_voltage_sag: 1.4,
                 },
             },
@@ -304,6 +306,8 @@ pub fn debug_drone(
         ntb_dvec3(drone.0.rigid_body.angular_velocity),
         ntb_dvec4(drone.0.thrusts()),
         ntb_dvec4(drone.0.rpms()),
+        drone.0.battery.state.bat_voltage,
+        drone.0.battery.state.bat_voltage_sag,
     );
     camera.target_focus = drone_translation;
 }
@@ -313,15 +317,33 @@ struct MyRoundGizmos {}
 
 pub fn build_app() -> App {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin)
-        .add_plugins(PanOrbitCameraPlugin)
-        .insert_state(SimState::Loading)
-        .init_gizmo_group::<MyRoundGizmos>()
-        .add_plugins(InfiniteGridPlugin)
-        .add_systems(Startup, base_setup)
-        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
-        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
-        .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "I am a window!".into(),
+            name: Some("bevy.app".into()),
+            resolution: (2560., 1440.).into(),
+            present_mode: PresentMode::AutoVsync,
+            // Tells Wasm to resize the window according to the available canvas
+            fit_canvas_to_parent: true,
+            // Tells Wasm not to override default event handling, like F5, Ctrl+R etc.
+            prevent_default_event_handling: false,
+            window_theme: Some(WindowTheme::Dark),
+            enabled_buttons: bevy::window::EnabledButtons {
+                maximize: false,
+                ..Default::default()
+            },
+            ..default()
+        }),
+        ..default()
+    }))
+    .add_plugins(EguiPlugin)
+    .add_plugins(PanOrbitCameraPlugin)
+    .insert_state(SimState::Loading)
+    .init_gizmo_group::<MyRoundGizmos>()
+    .add_plugins(InfiniteGridPlugin)
+    .add_systems(Startup, base_setup)
+    .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
+    .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
+    .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
 }

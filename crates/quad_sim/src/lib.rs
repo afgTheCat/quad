@@ -11,6 +11,7 @@ use arm::Arm;
 pub use arm::Motor;
 // use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::{GRAVITY, MAX_EFFECT_SPEED};
+use core::f64;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{DVector, Matrix3, Vector, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
@@ -143,20 +144,22 @@ pub struct Drone {
 // TODO: what is the difference between full_capacity and quad_bat_capacity_charged?
 #[derive(Debug, Clone)]
 pub struct BatteryProps {
-    pub full_capacity: f64, // mAH I guess
+    //battery capacacity rating
+    pub quad_bat_capacity: f64, // mAH I guess
     pub bat_voltage_curve: SampleCurve,
     pub quad_bat_cell_count: f64,
+    //charged up capacity, can be lower or higher than quadBatCapacity
     pub quad_bat_capacity_charged: f64,
     pub max_voltage_sag: f64,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct BatteryState {
-    capacity: f64,
-    bat_voltage: f64,
-    bat_voltage_sag: f64,
-    amperage: f64,
-    m_ah_drawn: f64,
+    pub capacity: f64,
+    pub bat_voltage: f64,
+    pub bat_voltage_sag: f64,
+    pub amperage: f64,
+    pub m_ah_drawn: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -167,8 +170,7 @@ pub struct Battery {
 
 impl Battery {
     pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
-        let bat_capacity_full = f64::max(self.props.full_capacity, 1.0);
-        let bat_charge = self.state.capacity / bat_capacity_full;
+        let bat_charge = self.state.capacity / self.props.quad_bat_capacity;
         self.state.bat_voltage = f64::max(
             self.props.bat_voltage_curve.sample(1. - bat_charge) * self.props.quad_bat_cell_count,
             0.1,
@@ -183,7 +185,7 @@ impl Battery {
                 * charge_factor_inv
                 * power_factor_squared);
         self.state.bat_voltage_sag = f64::clamp(
-            self.state.bat_voltage_sag - v_sag - rng_gen_range(-0.01..0.01),
+            self.state.bat_voltage - v_sag - rng_gen_range(-0.01..0.01),
             0.0,
             100.,
         );
@@ -262,9 +264,12 @@ impl Drone {
         let vbat = self.battery.state.bat_voltage_sag; // is this what we want?
         let speed = self.rigid_body.linear_velocity.norm();
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
-        let vel_up = Vector3::dot(
-            &self.rigid_body.linear_velocity,
-            &self.rigid_body.rotation.column(0),
+        let vel_up = f64::max(
+            0.,
+            Vector3::dot(
+                &self.rigid_body.linear_velocity,
+                &self.rigid_body.rotation.column(0),
+            ),
         );
         let m_torques = self.arms.iter_mut().map(|arm| {
             arm.calculate_arm_m_torque(
@@ -320,4 +325,57 @@ thread_local! {
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        sample_curve::{self, SampleCurve, SamplePoint},
+        Battery, BatteryProps, BatteryState,
+    };
+
+    #[test]
+    fn thing() {
+        let sample_curve = SampleCurve::new(vec![
+            SamplePoint::new(-0.06, 4.4),
+            SamplePoint::new(0.0, 4.2),
+            SamplePoint::new(0.01, 4.05),
+            SamplePoint::new(0.04, 3.97),
+            SamplePoint::new(0.30, 3.82),
+            SamplePoint::new(0.40, 3.7),
+            SamplePoint::new(1.0, 3.49),
+            SamplePoint::new(1.01, 3.4),
+            SamplePoint::new(1.03, 3.3),
+            SamplePoint::new(1.06, 3.0),
+            SamplePoint::new(1.08, 0.0),
+        ]);
+
+        let mut bat = Battery {
+            state: BatteryState {
+                capacity: 850.,
+                ..Default::default()
+            },
+            props: BatteryProps {
+                bat_voltage_curve: SampleCurve::new(vec![
+                    SamplePoint::new(-0.06, 4.4),
+                    SamplePoint::new(0.0, 4.2),
+                    SamplePoint::new(0.01, 4.05),
+                    SamplePoint::new(0.04, 3.97),
+                    SamplePoint::new(0.30, 3.82),
+                    SamplePoint::new(0.40, 3.7),
+                    SamplePoint::new(1.0, 3.49),
+                    SamplePoint::new(1.01, 3.4),
+                    SamplePoint::new(1.03, 3.3),
+                    SamplePoint::new(1.06, 3.0),
+                    SamplePoint::new(1.08, 0.0),
+                ]),
+                quad_bat_cell_count: 4.,
+                quad_bat_capacity_charged: 850.,
+                quad_bat_capacity: 850.,
+                max_voltage_sag: 1.4,
+            },
+        };
+        bat.update(0.005, 0., 0.);
+        bat.update(0.005, 0., 0.);
+    }
 }

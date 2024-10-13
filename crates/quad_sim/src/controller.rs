@@ -17,7 +17,7 @@ pub struct MotorInput(Vector4<f64>);
 
 impl Default for MotorInput {
     fn default() -> Self {
-        Self(Vector4::new(0.5, 0.5, 0.5, 0.5))
+        Self(Vector4::new(1., 1., 1., 1.))
     }
 }
 

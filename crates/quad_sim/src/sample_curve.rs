@@ -35,7 +35,6 @@ impl SampleCurve {
         }
     }
 
-    // this is slow for no reason at all
     pub fn sample(&self, discharge_level: f64) -> f64 {
         if discharge_level > self.max_discharge_point.discharge {
             self.max_discharge_point.voltage
@@ -52,7 +51,7 @@ impl SampleCurve {
                     {
                         let factor = (discharge_level - sample.discharge)
                             / (next_sample.discharge - sample.discharge);
-                        Some(interpolate(sample.discharge, next_sample.discharge, factor))
+                        Some(interpolate(sample.voltage, next_sample.voltage, factor))
                     } else {
                         None
                     }
@@ -61,4 +60,3 @@ impl SampleCurve {
         }
     }
 }
-
