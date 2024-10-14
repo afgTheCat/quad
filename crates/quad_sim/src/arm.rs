@@ -52,10 +52,12 @@ pub struct MotorProps {
     pub motor_kv: f64,          // kv
     pub motor_r: f64,           // resistence
     pub motor_io: f64,          // idle current
-    pub motor_rth: f64,         // thermal resistance (deg C per Watt)
-    pub motor_cth: f64,         // thermal heat capacity (joules per deg C)
     pub motor_dir: f64,
-    // pub motor_max_t: f64,
+    #[cfg(feature = "temp")]
+    pub motor_rth: f64, // thermal resistance (deg C per Watt)
+    #[cfg(feature = "temp")]
+    pub motor_cth: f64, // thermal heat capacity (joules per deg C)
+                        // pub motor_max_t: f64,
 }
 
 // TODO: defualt here is has to be manually implemeted
@@ -141,10 +143,6 @@ impl Motor {
         current * nm_per_a
     }
 
-    pub fn dir(&self) -> f64 {
-        self.props.motor_dir
-    }
-
     pub fn pwm(&self) -> f64 {
         self.state.pwm
     }
@@ -192,6 +190,7 @@ impl Arm {
         self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect
     }
 
+    // fix: we are unable to spin this up fully
     pub fn calculate_arm_m_torque(
         &mut self,
         dt: f64,
@@ -212,7 +211,7 @@ impl Arm {
         // change in rpm
         let drpm = (domega * dt) * 60.0 / (2.0 * M_PI);
         let maxdrpm = f64::abs(volts * self.motor.props.motor_kv - self.motor.state.rpm);
-        let rpm = self.motor.rpm() + f64::clamp(drpm, -maxdrpm, maxdrpm);
+        let rpm = self.motor.state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.props.motor_kv / 8.3;
         let thrust = self.motor_thrust(
             rpm,
@@ -261,7 +260,11 @@ impl Arm {
 
 #[cfg(test)]
 mod test {
-    use super::Propeller;
+    use super::{Motor, MotorProps, MotorState, Propeller};
+    use crate::{
+        sample_curve::{SampleCurve, SamplePoint},
+        Battery, BatteryProps, BatteryState,
+    };
     use nalgebra::Vector3;
 
     #[test]
@@ -276,5 +279,36 @@ mod test {
 
         let thrust = propeller.prop_thrust(0., 60000.);
         println!("thrust: {}", thrust); // kinda ok, produces around 9 newton
+    }
+
+    #[test]
+    fn battery_test() {
+        let mut bat = Battery {
+            state: BatteryState {
+                capacity: 850.,
+                ..Default::default()
+            },
+            props: BatteryProps {
+                bat_voltage_curve: SampleCurve::new(vec![
+                    SamplePoint::new(-0.06, 4.4),
+                    SamplePoint::new(0.0, 4.2),
+                    SamplePoint::new(0.01, 4.05),
+                    SamplePoint::new(0.04, 3.97),
+                    SamplePoint::new(0.30, 3.82),
+                    SamplePoint::new(0.40, 3.7),
+                    SamplePoint::new(1.0, 3.49),
+                    SamplePoint::new(1.01, 3.4),
+                    SamplePoint::new(1.03, 3.3),
+                    SamplePoint::new(1.06, 3.0),
+                    SamplePoint::new(1.08, 0.0),
+                ]),
+                quad_bat_cell_count: 4.,
+                quad_bat_capacity_charged: 850.,
+                quad_bat_capacity: 850.,
+                max_voltage_sag: 1.4,
+            },
+        };
+        bat.update(0.005, 0., 0.);
+        bat.update(0.005, 0., 0.);
     }
 }
