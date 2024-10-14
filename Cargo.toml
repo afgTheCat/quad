@@ -18,6 +18,7 @@ resolver = "2"
 cuboid_bevy = { path = "crates/cuboid_bevy" }
 quad_bevy = { path = "crates/quad_bevy" }
 quad_sim = { path = "crates/quad_sim" }
+controller = { path = "crates/controller" }
 
 # external
 bevy = { version = "0.14.2", features = ["dynamic_linking"] }
@@ -34,3 +35,4 @@ libm = "0.2.8"
 fast-math = "0.1.1"
 fastapprox = "0.3.1"
 nalgebra = "0.33.0"
+bindgen = "0.70.1"

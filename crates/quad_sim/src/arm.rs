@@ -260,7 +260,7 @@ impl Arm {
 
 #[cfg(test)]
 mod test {
-    use super::{Motor, MotorProps, MotorState, Propeller};
+    use super::Propeller;
     use crate::{
         sample_curve::{SampleCurve, SamplePoint},
         Battery, BatteryProps, BatteryState,
