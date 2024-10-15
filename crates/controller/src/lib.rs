@@ -33,6 +33,19 @@ struct BatteryUpdate {
     m_ah_drawn: f64,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+struct GyroUpdate {
+    rotation: [f64; 4],
+    acc: [f64; 3],
+    gyro: [f64; 3],
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct FlightControllerUpdate {
+    battery_update: BatteryUpdate,
+    gyro_update: GyroUpdate,
+}
+
 trait FlightController {
     fn set_channels(&mut self, channels: Channels);
     fn update_gyro_acc(
