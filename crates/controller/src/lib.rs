@@ -1,5 +1,5 @@
+mod bindings;
 pub mod controllers;
-mod generated;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Channels {

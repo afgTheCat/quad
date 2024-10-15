@@ -5,7 +5,7 @@ fn main() {
     let libdir_path = PathBuf::from("./betaflight")
         .canonicalize()
         .expect("Could not canonicalize betaflight dir path");
-    let outdir_path = PathBuf::from("./src/generated/")
+    let outdir_path = PathBuf::from("./src/bindings/")
         .canonicalize()
         .expect("Could not canonicalize generated dir");
     let bind_header = libdir_path.join("src/main/bindgen.h");
@@ -39,7 +39,7 @@ fn main() {
         .header(bind_header_str)
         .generate()
         .expect("Unable to generate bindings");
-    let out_path = outdir_path.join("bf_bindings.rs");
+    let out_path = outdir_path.join("bf_bindings_generated.rs");
     bindings
         .write_to_file(out_path)
         .expect("Couldn't write bindings!");
