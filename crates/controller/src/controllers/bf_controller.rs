@@ -3,16 +3,28 @@ use crate::{
         bf_bindings_generated::{
             getCurrentMeter, getVoltageMeter, init, rxFrameState_e_RX_FRAME_COMPLETE,
             rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState, rxRuntimeState_s, rxRuntimeState_t,
-            scheduler,
+            sensors, sensors_e_SENSOR_ACC, virtualGyroDev, virtualGyroSet,
         },
         SIMULATOR_MAX_RC_CHANNELS_U8, SIMULATOR_MAX_RC_CHANNELS_USIZE,
     },
     BatteryUpdate,
 };
-use std::{u16, usize};
 
 // My eyes are hurting
 static mut RC_DATA_CACHE: [u16; 16] = [0; 16];
+const GYRO_SCALE: f64 = 16.4;
+const M_PI: f64 = 3.14159265358979323846264338327950288;
+const RAD2DEG: f64 = 180.0 / M_PI;
+
+fn constarain_i16(val: f64, min: f64, max: f64) -> i16 {
+    if val < min {
+        min as i16
+    } else if val > max {
+        max as i16
+    } else {
+        val as i16
+    }
+}
 
 pub struct BFController;
 
@@ -29,6 +41,12 @@ unsafe extern "C" fn rx_rc_frame_time_us(_: *mut rxRuntimeState_s) -> u8 {
 }
 
 impl BFController {
+    fn init() {
+        unsafe {
+            init();
+        }
+    }
+
     fn reset_rc_data(&mut self) {
         for i in 0..SIMULATOR_MAX_RC_CHANNELS_USIZE {
             unsafe {
@@ -77,9 +95,17 @@ impl BFController {
         }
     }
 
-    fn scheduler() {
+    fn update_gyro_acc(gyro: [f64; 3]) {
         unsafe {
-            scheduler();
+            if sensors(sensors_e_SENSOR_ACC) {
+                println!("snesors acc");
+            } else {
+                println!("no sensors acc");
+            }
+            let x = constarain_i16(-gyro[2] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+            let y = constarain_i16(-gyro[0] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+            let z = constarain_i16(-gyro[1] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+            virtualGyroSet(virtualGyroDev, x, y, z);
         }
     }
 }
@@ -91,6 +117,7 @@ mod test {
 
     #[test]
     fn bf_controller() {
+        BFController::init();
         let battery_update = BatteryUpdate {
             bat_voltage_sag: 1.,
             bat_voltage: 1.,
@@ -98,5 +125,6 @@ mod test {
             m_ah_drawn: 1.,
         };
         BFController::udpate_battery(battery_update);
+        BFController::update_gyro_acc([0., 0., 0.]);
     }
 }
