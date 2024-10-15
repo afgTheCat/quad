@@ -609,6 +609,26 @@ pub const GPS_SV_MAXSATS_M8N: u32 = 32;
 pub const TASK_GPS_RATE: u32 = 100;
 pub const TASK_GPS_RATE_FAST: u32 = 500;
 pub const DEBUG16_VALUE_COUNT: u32 = 8;
+pub const SLOW_VOLTAGE_TASK_FREQ_HZ: u32 = 50;
+pub const FAST_VOLTAGE_TASK_FREQ_HZ: u32 = 200;
+pub const VOLTAGE_STABLE_TICK_MS: u32 = 100;
+pub const VOLTAGE_STABLE_BITS_TOTAL: u32 = 11;
+pub const VOLTAGE_STABLE_BITS_THRESHOLD: u32 = 10;
+pub const VOLTAGE_STABLE_MAX_DELTA: u32 = 10;
+pub const VBAT_SCALE_MIN: u32 = 0;
+pub const VBAT_SCALE_MAX: u32 = 255;
+pub const VBAT_DIVIDER_MIN: u32 = 1;
+pub const VBAT_DIVIDER_MAX: u32 = 255;
+pub const VBAT_MULTIPLIER_MIN: u32 = 1;
+pub const VBAT_MULTIPLIER_MAX: u32 = 255;
+pub const MAX_VOLTAGE_SENSOR_ADC: u32 = 1;
+pub const VOLTAGE_METER_ID_ESC_COUNT: u32 = 12;
+pub const CELL_VOLTAGE_FULL_CV: u32 = 420;
+pub const VBAT_CELL_VOTAGE_RANGE_MIN: u32 = 100;
+pub const VBAT_CELL_VOTAGE_RANGE_MAX: u32 = 500;
+pub const VBAT_CELL_VOLTAGE_DEFAULT_MIN: u32 = 330;
+pub const VBAT_CELL_VOLTAGE_DEFAULT_MAX: u32 = 430;
+pub const MAX_AUTO_DETECT_CELL_COUNT: u32 = 8;
 pub type __u_char = ::std::os::raw::c_uchar;
 pub type __u_short = ::std::os::raw::c_ushort;
 pub type __u_int = ::std::os::raw::c_uint;
@@ -5303,6 +5323,677 @@ extern "C" {
 }
 extern "C" {
     pub fn debugInit();
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct filter_s {
+    _unused: [u8; 0],
+}
+pub type filter_t = filter_s;
+pub type filterApplyFnPtr =
+    ::std::option::Option<unsafe extern "C" fn(filter: *mut filter_t, input: f32) -> f32>;
+pub const lowpassFilterType_e_FILTER_PT1: lowpassFilterType_e = 0;
+pub const lowpassFilterType_e_FILTER_BIQUAD: lowpassFilterType_e = 1;
+pub const lowpassFilterType_e_FILTER_PT2: lowpassFilterType_e = 2;
+pub const lowpassFilterType_e_FILTER_PT3: lowpassFilterType_e = 3;
+pub type lowpassFilterType_e = ::std::os::raw::c_uint;
+pub const biquadFilterType_e_FILTER_LPF: biquadFilterType_e = 0;
+pub const biquadFilterType_e_FILTER_NOTCH: biquadFilterType_e = 1;
+pub const biquadFilterType_e_FILTER_BPF: biquadFilterType_e = 2;
+pub type biquadFilterType_e = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pt1Filter_s {
+    pub state: f32,
+    pub k: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of pt1Filter_s"][::std::mem::size_of::<pt1Filter_s>() - 8usize];
+    ["Alignment of pt1Filter_s"][::std::mem::align_of::<pt1Filter_s>() - 4usize];
+    ["Offset of field: pt1Filter_s::state"][::std::mem::offset_of!(pt1Filter_s, state) - 0usize];
+    ["Offset of field: pt1Filter_s::k"][::std::mem::offset_of!(pt1Filter_s, k) - 4usize];
+};
+pub type pt1Filter_t = pt1Filter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pt2Filter_s {
+    pub state: f32,
+    pub state1: f32,
+    pub k: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of pt2Filter_s"][::std::mem::size_of::<pt2Filter_s>() - 12usize];
+    ["Alignment of pt2Filter_s"][::std::mem::align_of::<pt2Filter_s>() - 4usize];
+    ["Offset of field: pt2Filter_s::state"][::std::mem::offset_of!(pt2Filter_s, state) - 0usize];
+    ["Offset of field: pt2Filter_s::state1"][::std::mem::offset_of!(pt2Filter_s, state1) - 4usize];
+    ["Offset of field: pt2Filter_s::k"][::std::mem::offset_of!(pt2Filter_s, k) - 8usize];
+};
+pub type pt2Filter_t = pt2Filter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct pt3Filter_s {
+    pub state: f32,
+    pub state1: f32,
+    pub state2: f32,
+    pub k: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of pt3Filter_s"][::std::mem::size_of::<pt3Filter_s>() - 16usize];
+    ["Alignment of pt3Filter_s"][::std::mem::align_of::<pt3Filter_s>() - 4usize];
+    ["Offset of field: pt3Filter_s::state"][::std::mem::offset_of!(pt3Filter_s, state) - 0usize];
+    ["Offset of field: pt3Filter_s::state1"][::std::mem::offset_of!(pt3Filter_s, state1) - 4usize];
+    ["Offset of field: pt3Filter_s::state2"][::std::mem::offset_of!(pt3Filter_s, state2) - 8usize];
+    ["Offset of field: pt3Filter_s::k"][::std::mem::offset_of!(pt3Filter_s, k) - 12usize];
+};
+pub type pt3Filter_t = pt3Filter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct biquadFilter_s {
+    pub b0: f32,
+    pub b1: f32,
+    pub b2: f32,
+    pub a1: f32,
+    pub a2: f32,
+    pub x1: f32,
+    pub x2: f32,
+    pub y1: f32,
+    pub y2: f32,
+    pub weight: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of biquadFilter_s"][::std::mem::size_of::<biquadFilter_s>() - 40usize];
+    ["Alignment of biquadFilter_s"][::std::mem::align_of::<biquadFilter_s>() - 4usize];
+    ["Offset of field: biquadFilter_s::b0"][::std::mem::offset_of!(biquadFilter_s, b0) - 0usize];
+    ["Offset of field: biquadFilter_s::b1"][::std::mem::offset_of!(biquadFilter_s, b1) - 4usize];
+    ["Offset of field: biquadFilter_s::b2"][::std::mem::offset_of!(biquadFilter_s, b2) - 8usize];
+    ["Offset of field: biquadFilter_s::a1"][::std::mem::offset_of!(biquadFilter_s, a1) - 12usize];
+    ["Offset of field: biquadFilter_s::a2"][::std::mem::offset_of!(biquadFilter_s, a2) - 16usize];
+    ["Offset of field: biquadFilter_s::x1"][::std::mem::offset_of!(biquadFilter_s, x1) - 20usize];
+    ["Offset of field: biquadFilter_s::x2"][::std::mem::offset_of!(biquadFilter_s, x2) - 24usize];
+    ["Offset of field: biquadFilter_s::y1"][::std::mem::offset_of!(biquadFilter_s, y1) - 28usize];
+    ["Offset of field: biquadFilter_s::y2"][::std::mem::offset_of!(biquadFilter_s, y2) - 32usize];
+    ["Offset of field: biquadFilter_s::weight"]
+        [::std::mem::offset_of!(biquadFilter_s, weight) - 36usize];
+};
+pub type biquadFilter_t = biquadFilter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct phaseComp_s {
+    pub b0: f32,
+    pub b1: f32,
+    pub a1: f32,
+    pub x1: f32,
+    pub y1: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of phaseComp_s"][::std::mem::size_of::<phaseComp_s>() - 20usize];
+    ["Alignment of phaseComp_s"][::std::mem::align_of::<phaseComp_s>() - 4usize];
+    ["Offset of field: phaseComp_s::b0"][::std::mem::offset_of!(phaseComp_s, b0) - 0usize];
+    ["Offset of field: phaseComp_s::b1"][::std::mem::offset_of!(phaseComp_s, b1) - 4usize];
+    ["Offset of field: phaseComp_s::a1"][::std::mem::offset_of!(phaseComp_s, a1) - 8usize];
+    ["Offset of field: phaseComp_s::x1"][::std::mem::offset_of!(phaseComp_s, x1) - 12usize];
+    ["Offset of field: phaseComp_s::y1"][::std::mem::offset_of!(phaseComp_s, y1) - 16usize];
+};
+pub type phaseComp_t = phaseComp_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct slewFilter_s {
+    pub state: f32,
+    pub slewLimit: f32,
+    pub threshold: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of slewFilter_s"][::std::mem::size_of::<slewFilter_s>() - 12usize];
+    ["Alignment of slewFilter_s"][::std::mem::align_of::<slewFilter_s>() - 4usize];
+    ["Offset of field: slewFilter_s::state"][::std::mem::offset_of!(slewFilter_s, state) - 0usize];
+    ["Offset of field: slewFilter_s::slewLimit"]
+        [::std::mem::offset_of!(slewFilter_s, slewLimit) - 4usize];
+    ["Offset of field: slewFilter_s::threshold"]
+        [::std::mem::offset_of!(slewFilter_s, threshold) - 8usize];
+};
+pub type slewFilter_t = slewFilter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct laggedMovingAverage_s {
+    pub movingWindowIndex: u16,
+    pub windowSize: u16,
+    pub movingSum: f32,
+    pub buf: *mut f32,
+    pub primed: bool,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of laggedMovingAverage_s"][::std::mem::size_of::<laggedMovingAverage_s>() - 24usize];
+    ["Alignment of laggedMovingAverage_s"]
+        [::std::mem::align_of::<laggedMovingAverage_s>() - 8usize];
+    ["Offset of field: laggedMovingAverage_s::movingWindowIndex"]
+        [::std::mem::offset_of!(laggedMovingAverage_s, movingWindowIndex) - 0usize];
+    ["Offset of field: laggedMovingAverage_s::windowSize"]
+        [::std::mem::offset_of!(laggedMovingAverage_s, windowSize) - 2usize];
+    ["Offset of field: laggedMovingAverage_s::movingSum"]
+        [::std::mem::offset_of!(laggedMovingAverage_s, movingSum) - 4usize];
+    ["Offset of field: laggedMovingAverage_s::buf"]
+        [::std::mem::offset_of!(laggedMovingAverage_s, buf) - 8usize];
+    ["Offset of field: laggedMovingAverage_s::primed"]
+        [::std::mem::offset_of!(laggedMovingAverage_s, primed) - 16usize];
+};
+pub type laggedMovingAverage_t = laggedMovingAverage_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct simpleLowpassFilter_s {
+    pub fp: i32,
+    pub beta: i32,
+    pub fpShift: i32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of simpleLowpassFilter_s"][::std::mem::size_of::<simpleLowpassFilter_s>() - 12usize];
+    ["Alignment of simpleLowpassFilter_s"]
+        [::std::mem::align_of::<simpleLowpassFilter_s>() - 4usize];
+    ["Offset of field: simpleLowpassFilter_s::fp"]
+        [::std::mem::offset_of!(simpleLowpassFilter_s, fp) - 0usize];
+    ["Offset of field: simpleLowpassFilter_s::beta"]
+        [::std::mem::offset_of!(simpleLowpassFilter_s, beta) - 4usize];
+    ["Offset of field: simpleLowpassFilter_s::fpShift"]
+        [::std::mem::offset_of!(simpleLowpassFilter_s, fpShift) - 8usize];
+};
+pub type simpleLowpassFilter_t = simpleLowpassFilter_s;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct meanAccumulator_s {
+    pub accumulator: i32,
+    pub count: i32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of meanAccumulator_s"][::std::mem::size_of::<meanAccumulator_s>() - 8usize];
+    ["Alignment of meanAccumulator_s"][::std::mem::align_of::<meanAccumulator_s>() - 4usize];
+    ["Offset of field: meanAccumulator_s::accumulator"]
+        [::std::mem::offset_of!(meanAccumulator_s, accumulator) - 0usize];
+    ["Offset of field: meanAccumulator_s::count"]
+        [::std::mem::offset_of!(meanAccumulator_s, count) - 4usize];
+};
+pub type meanAccumulator_t = meanAccumulator_s;
+extern "C" {
+    pub fn nullFilterApply(filter: *mut filter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn pt1FilterGain(f_cut: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt1FilterGainFromDelay(delay: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt1FilterInit(filter: *mut pt1Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt1FilterUpdateCutoff(filter: *mut pt1Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt1FilterApply(filter: *mut pt1Filter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn pt2FilterGain(f_cut: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt2FilterGainFromDelay(delay: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt2FilterInit(filter: *mut pt2Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt2FilterUpdateCutoff(filter: *mut pt2Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt2FilterApply(filter: *mut pt2Filter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn pt3FilterGain(f_cut: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt3FilterGainFromDelay(delay: f32, dT: f32) -> f32;
+}
+extern "C" {
+    pub fn pt3FilterInit(filter: *mut pt3Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt3FilterUpdateCutoff(filter: *mut pt3Filter_t, k: f32);
+}
+extern "C" {
+    pub fn pt3FilterApply(filter: *mut pt3Filter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn filterGetNotchQ(centerFreq: f32, cutoffFreq: f32) -> f32;
+}
+extern "C" {
+    pub fn biquadFilterInitLPF(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32);
+}
+extern "C" {
+    pub fn biquadFilterInit(
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+        Q: f32,
+        filterType: biquadFilterType_e,
+        weight: f32,
+    );
+}
+extern "C" {
+    pub fn biquadFilterUpdate(
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+        Q: f32,
+        filterType: biquadFilterType_e,
+        weight: f32,
+    );
+}
+extern "C" {
+    pub fn biquadFilterUpdateLPF(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32);
+}
+extern "C" {
+    pub fn biquadFilterApplyDF1(filter: *mut biquadFilter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn biquadFilterApplyDF1Weighted(filter: *mut biquadFilter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn biquadFilterApply(filter: *mut biquadFilter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn phaseCompInit(
+        filter: *mut phaseComp_t,
+        centerFreq: f32,
+        centerPhase: f32,
+        looptimeUs: u32,
+    );
+}
+extern "C" {
+    pub fn phaseCompUpdate(
+        filter: *mut phaseComp_t,
+        centerFreq: f32,
+        centerPhase: f32,
+        looptimeUs: u32,
+    );
+}
+extern "C" {
+    pub fn phaseCompApply(filter: *mut phaseComp_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn slewFilterInit(filter: *mut slewFilter_t, slewLimit: f32, threshold: f32);
+}
+extern "C" {
+    pub fn slewFilterApply(filter: *mut slewFilter_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn laggedMovingAverageInit(
+        filter: *mut laggedMovingAverage_t,
+        windowSize: u16,
+        buf: *mut f32,
+    );
+}
+extern "C" {
+    pub fn laggedMovingAverageUpdate(filter: *mut laggedMovingAverage_t, input: f32) -> f32;
+}
+extern "C" {
+    pub fn simpleLPFilterInit(filter: *mut simpleLowpassFilter_t, beta: i32, fpShift: i32);
+}
+extern "C" {
+    pub fn simpleLPFilterUpdate(filter: *mut simpleLowpassFilter_t, newVal: i32) -> i32;
+}
+extern "C" {
+    pub fn meanAccumulatorInit(filter: *mut meanAccumulator_t);
+}
+extern "C" {
+    pub fn meanAccumulatorAdd(filter: *mut meanAccumulator_t, newVal: i8);
+}
+extern "C" {
+    pub fn meanAccumulatorCalc(filter: *mut meanAccumulator_t, defaultValue: i8) -> i8;
+}
+pub const voltageMeterId_e_VOLTAGE_METER_ID_NONE: voltageMeterId_e = 0;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_BATTERY_1: voltageMeterId_e = 10;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_BATTERY_2: voltageMeterId_e = 11;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_BATTERY_10: voltageMeterId_e = 19;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_5V_1: voltageMeterId_e = 20;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_5V_2: voltageMeterId_e = 21;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_5V_10: voltageMeterId_e = 29;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_9V_1: voltageMeterId_e = 30;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_9V_2: voltageMeterId_e = 31;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_9V_10: voltageMeterId_e = 39;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_12V_1: voltageMeterId_e = 40;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_12V_2: voltageMeterId_e = 41;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_12V_10: voltageMeterId_e = 49;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_COMBINED_1: voltageMeterId_e = 50;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_COMBINED_10: voltageMeterId_e = 59;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_1: voltageMeterId_e = 60;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_2: voltageMeterId_e = 61;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_3: voltageMeterId_e = 62;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_4: voltageMeterId_e = 63;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_5: voltageMeterId_e = 64;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_6: voltageMeterId_e = 65;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_7: voltageMeterId_e = 66;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_8: voltageMeterId_e = 67;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_9: voltageMeterId_e = 68;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_10: voltageMeterId_e = 69;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_11: voltageMeterId_e = 70;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_12: voltageMeterId_e = 71;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_ESC_MOTOR_20: voltageMeterId_e = 79;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_CELL_1: voltageMeterId_e = 80;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_CELL_2: voltageMeterId_e = 81;
+pub const voltageMeterId_e_VOLTAGE_METER_ID_CELL_40: voltageMeterId_e = 119;
+pub type voltageMeterId_e = ::std::os::raw::c_uint;
+pub const voltageMeterSource_e_VOLTAGE_METER_NONE: voltageMeterSource_e = 0;
+pub const voltageMeterSource_e_VOLTAGE_METER_ADC: voltageMeterSource_e = 1;
+pub const voltageMeterSource_e_VOLTAGE_METER_ESC: voltageMeterSource_e = 2;
+pub const voltageMeterSource_e_VOLTAGE_METER_COUNT: voltageMeterSource_e = 3;
+pub type voltageMeterSource_e = ::std::os::raw::c_uint;
+extern "C" {
+    pub static voltageMeterSourceNames: [*const ::std::os::raw::c_char; 3usize];
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct voltageMeter_s {
+    pub displayFiltered: u16,
+    pub voltageStablePrevFiltered: u16,
+    pub voltageStableLastUpdate: timeMs_t,
+    pub voltageStableBits: u16,
+    pub unfiltered: u16,
+    pub sagFiltered: u16,
+    pub lowVoltageCutoff: bool,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of voltageMeter_s"][::std::mem::size_of::<voltageMeter_s>() - 16usize];
+    ["Alignment of voltageMeter_s"][::std::mem::align_of::<voltageMeter_s>() - 4usize];
+    ["Offset of field: voltageMeter_s::displayFiltered"]
+        [::std::mem::offset_of!(voltageMeter_s, displayFiltered) - 0usize];
+    ["Offset of field: voltageMeter_s::voltageStablePrevFiltered"]
+        [::std::mem::offset_of!(voltageMeter_s, voltageStablePrevFiltered) - 2usize];
+    ["Offset of field: voltageMeter_s::voltageStableLastUpdate"]
+        [::std::mem::offset_of!(voltageMeter_s, voltageStableLastUpdate) - 4usize];
+    ["Offset of field: voltageMeter_s::voltageStableBits"]
+        [::std::mem::offset_of!(voltageMeter_s, voltageStableBits) - 8usize];
+    ["Offset of field: voltageMeter_s::unfiltered"]
+        [::std::mem::offset_of!(voltageMeter_s, unfiltered) - 10usize];
+    ["Offset of field: voltageMeter_s::sagFiltered"]
+        [::std::mem::offset_of!(voltageMeter_s, sagFiltered) - 12usize];
+    ["Offset of field: voltageMeter_s::lowVoltageCutoff"]
+        [::std::mem::offset_of!(voltageMeter_s, lowVoltageCutoff) - 14usize];
+};
+pub type voltageMeter_t = voltageMeter_s;
+pub const voltageSensorType_e_VOLTAGE_SENSOR_TYPE_ADC_RESISTOR_DIVIDER: voltageSensorType_e = 0;
+pub const voltageSensorType_e_VOLTAGE_SENSOR_TYPE_ESC: voltageSensorType_e = 1;
+pub type voltageSensorType_e = ::std::os::raw::c_uint;
+pub const voltageSensorADC_e_VOLTAGE_SENSOR_ADC_VBAT: voltageSensorADC_e = 0;
+pub const voltageSensorADC_e_VOLTAGE_SENSOR_ADC_12V: voltageSensorADC_e = 1;
+pub const voltageSensorADC_e_VOLTAGE_SENSOR_ADC_9V: voltageSensorADC_e = 2;
+pub const voltageSensorADC_e_VOLTAGE_SENSOR_ADC_5V: voltageSensorADC_e = 3;
+pub type voltageSensorADC_e = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct voltageSensorADCConfig_s {
+    pub vbatscale: u8,
+    pub vbatresdivval: u8,
+    pub vbatresdivmultiplier: u8,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of voltageSensorADCConfig_s"]
+        [::std::mem::size_of::<voltageSensorADCConfig_s>() - 3usize];
+    ["Alignment of voltageSensorADCConfig_s"]
+        [::std::mem::align_of::<voltageSensorADCConfig_s>() - 1usize];
+    ["Offset of field: voltageSensorADCConfig_s::vbatscale"]
+        [::std::mem::offset_of!(voltageSensorADCConfig_s, vbatscale) - 0usize];
+    ["Offset of field: voltageSensorADCConfig_s::vbatresdivval"]
+        [::std::mem::offset_of!(voltageSensorADCConfig_s, vbatresdivval) - 1usize];
+    ["Offset of field: voltageSensorADCConfig_s::vbatresdivmultiplier"]
+        [::std::mem::offset_of!(voltageSensorADCConfig_s, vbatresdivmultiplier) - 2usize];
+};
+pub type voltageSensorADCConfig_t = voltageSensorADCConfig_s;
+extern "C" {
+    pub static mut voltageSensorADCConfig_SystemArray: [voltageSensorADCConfig_t; 1usize];
+}
+extern "C" {
+    pub static mut voltageSensorADCConfig_CopyArray: [voltageSensorADCConfig_t; 1usize];
+}
+extern "C" {
+    pub fn voltageMeterReset(voltageMeter: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn voltageMeterGenericInit();
+}
+extern "C" {
+    pub fn voltageMeterADCInit();
+}
+extern "C" {
+    pub fn voltageMeterADCRefresh();
+}
+extern "C" {
+    pub fn voltageMeterADCRead(adcChannel: voltageSensorADC_e, voltageMeter: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn voltageMeterESCInit();
+}
+extern "C" {
+    pub fn voltageMeterESCRefresh();
+}
+extern "C" {
+    pub fn voltageMeterESCReadCombined(voltageMeter: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn voltageMeterESCReadMotor(motor: u8, voltageMeter: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn voltageStableUpdate(vm: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn voltageIsStable(vm: *mut voltageMeter_t) -> bool;
+}
+extern "C" {
+    pub static voltageMeterADCtoIDMap: [u8; 1usize];
+}
+extern "C" {
+    pub static supportedVoltageMeterCount: u8;
+}
+extern "C" {
+    pub static voltageMeterIds: [u8; 0usize];
+}
+extern "C" {
+    pub fn voltageMeterRead(id: voltageMeterId_e, voltageMeter: *mut voltageMeter_t);
+}
+extern "C" {
+    pub fn isSagCompensationConfigured() -> bool;
+}
+pub const AUTO_PROFILE_CELL_COUNT_STAY: _bindgen_ty_1 = 0;
+pub const AUTO_PROFILE_CELL_COUNT_CHANGE: _bindgen_ty_1 = -1;
+pub type _bindgen_ty_1 = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct batteryConfig_s {
+    pub vbatmaxcellvoltage: u16,
+    pub vbatmincellvoltage: u16,
+    pub vbatwarningcellvoltage: u16,
+    pub vbatnotpresentcellvoltage: u16,
+    pub lvcPercentage: u8,
+    pub voltageMeterSource: voltageMeterSource_e,
+    pub currentMeterSource: currentMeterSource_e,
+    pub batteryCapacity: u16,
+    pub useVBatAlerts: bool,
+    pub useConsumptionAlerts: bool,
+    pub consumptionWarningPercentage: u8,
+    pub vbathysteresis: u8,
+    pub vbatfullcellvoltage: u16,
+    pub forceBatteryCellCount: u8,
+    pub vbatDisplayLpfPeriod: u8,
+    pub ibatLpfPeriod: u8,
+    pub vbatDurationForWarning: u8,
+    pub vbatDurationForCritical: u8,
+    pub vbatSagLpfPeriod: u8,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of batteryConfig_s"][::std::mem::size_of::<batteryConfig_s>() - 36usize];
+    ["Alignment of batteryConfig_s"][::std::mem::align_of::<batteryConfig_s>() - 4usize];
+    ["Offset of field: batteryConfig_s::vbatmaxcellvoltage"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatmaxcellvoltage) - 0usize];
+    ["Offset of field: batteryConfig_s::vbatmincellvoltage"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatmincellvoltage) - 2usize];
+    ["Offset of field: batteryConfig_s::vbatwarningcellvoltage"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatwarningcellvoltage) - 4usize];
+    ["Offset of field: batteryConfig_s::vbatnotpresentcellvoltage"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatnotpresentcellvoltage) - 6usize];
+    ["Offset of field: batteryConfig_s::lvcPercentage"]
+        [::std::mem::offset_of!(batteryConfig_s, lvcPercentage) - 8usize];
+    ["Offset of field: batteryConfig_s::voltageMeterSource"]
+        [::std::mem::offset_of!(batteryConfig_s, voltageMeterSource) - 12usize];
+    ["Offset of field: batteryConfig_s::currentMeterSource"]
+        [::std::mem::offset_of!(batteryConfig_s, currentMeterSource) - 16usize];
+    ["Offset of field: batteryConfig_s::batteryCapacity"]
+        [::std::mem::offset_of!(batteryConfig_s, batteryCapacity) - 20usize];
+    ["Offset of field: batteryConfig_s::useVBatAlerts"]
+        [::std::mem::offset_of!(batteryConfig_s, useVBatAlerts) - 22usize];
+    ["Offset of field: batteryConfig_s::useConsumptionAlerts"]
+        [::std::mem::offset_of!(batteryConfig_s, useConsumptionAlerts) - 23usize];
+    ["Offset of field: batteryConfig_s::consumptionWarningPercentage"]
+        [::std::mem::offset_of!(batteryConfig_s, consumptionWarningPercentage) - 24usize];
+    ["Offset of field: batteryConfig_s::vbathysteresis"]
+        [::std::mem::offset_of!(batteryConfig_s, vbathysteresis) - 25usize];
+    ["Offset of field: batteryConfig_s::vbatfullcellvoltage"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatfullcellvoltage) - 26usize];
+    ["Offset of field: batteryConfig_s::forceBatteryCellCount"]
+        [::std::mem::offset_of!(batteryConfig_s, forceBatteryCellCount) - 28usize];
+    ["Offset of field: batteryConfig_s::vbatDisplayLpfPeriod"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatDisplayLpfPeriod) - 29usize];
+    ["Offset of field: batteryConfig_s::ibatLpfPeriod"]
+        [::std::mem::offset_of!(batteryConfig_s, ibatLpfPeriod) - 30usize];
+    ["Offset of field: batteryConfig_s::vbatDurationForWarning"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatDurationForWarning) - 31usize];
+    ["Offset of field: batteryConfig_s::vbatDurationForCritical"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatDurationForCritical) - 32usize];
+    ["Offset of field: batteryConfig_s::vbatSagLpfPeriod"]
+        [::std::mem::offset_of!(batteryConfig_s, vbatSagLpfPeriod) - 33usize];
+};
+pub type batteryConfig_t = batteryConfig_s;
+extern "C" {
+    pub static mut batteryConfig_System: batteryConfig_t;
+}
+extern "C" {
+    pub static mut batteryConfig_Copy: batteryConfig_t;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct lowVoltageCutoff_s {
+    pub enabled: bool,
+    pub percentage: u8,
+    pub startTime: timeUs_t,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of lowVoltageCutoff_s"][::std::mem::size_of::<lowVoltageCutoff_s>() - 8usize];
+    ["Alignment of lowVoltageCutoff_s"][::std::mem::align_of::<lowVoltageCutoff_s>() - 4usize];
+    ["Offset of field: lowVoltageCutoff_s::enabled"]
+        [::std::mem::offset_of!(lowVoltageCutoff_s, enabled) - 0usize];
+    ["Offset of field: lowVoltageCutoff_s::percentage"]
+        [::std::mem::offset_of!(lowVoltageCutoff_s, percentage) - 1usize];
+    ["Offset of field: lowVoltageCutoff_s::startTime"]
+        [::std::mem::offset_of!(lowVoltageCutoff_s, startTime) - 4usize];
+};
+pub type lowVoltageCutoff_t = lowVoltageCutoff_s;
+pub const batteryState_e_BATTERY_OK: batteryState_e = 0;
+pub const batteryState_e_BATTERY_WARNING: batteryState_e = 1;
+pub const batteryState_e_BATTERY_CRITICAL: batteryState_e = 2;
+pub const batteryState_e_BATTERY_NOT_PRESENT: batteryState_e = 3;
+pub const batteryState_e_BATTERY_INIT: batteryState_e = 4;
+pub type batteryState_e = ::std::os::raw::c_uint;
+extern "C" {
+    pub fn batteryInit();
+}
+extern "C" {
+    pub fn batteryUpdateVoltage(currentTimeUs: timeUs_t);
+}
+extern "C" {
+    pub fn batteryUpdatePresence();
+}
+extern "C" {
+    pub fn isVoltageFromBattery() -> bool;
+}
+extern "C" {
+    pub fn getBatteryState() -> batteryState_e;
+}
+extern "C" {
+    pub fn getVoltageState() -> batteryState_e;
+}
+extern "C" {
+    pub fn getConsumptionState() -> batteryState_e;
+}
+extern "C" {
+    pub fn getBatteryStateString() -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn batteryUpdateStates(currentTimeUs: timeUs_t);
+}
+extern "C" {
+    pub fn batteryUpdateAlarms();
+}
+extern "C" {
+    pub fn calculateBatteryPercentageRemaining() -> u8;
+}
+extern "C" {
+    pub fn isBatteryVoltageConfigured() -> bool;
+}
+extern "C" {
+    pub fn getBatteryVoltage() -> u16;
+}
+extern "C" {
+    pub fn getLegacyBatteryVoltage() -> u16;
+}
+extern "C" {
+    pub fn getBatteryVoltageLatest() -> u16;
+}
+extern "C" {
+    pub fn getBatteryCellCount() -> u8;
+}
+extern "C" {
+    pub fn getBatteryAverageCellVoltage() -> u16;
+}
+extern "C" {
+    pub fn getBatterySagCellVoltage() -> u16;
+}
+extern "C" {
+    pub fn isAmperageConfigured() -> bool;
+}
+extern "C" {
+    pub fn getAmperage() -> i32;
+}
+extern "C" {
+    pub fn getAmperageLatest() -> i32;
+}
+extern "C" {
+    pub fn getMAhDrawn() -> i32;
+}
+extern "C" {
+    pub fn getWhDrawn() -> f32;
+}
+extern "C" {
+    pub fn batteryUpdateCurrentMeter(currentTimeUs: timeUs_t);
+}
+extern "C" {
+    pub fn getLowVoltageCutoff() -> *const lowVoltageCutoff_t;
+}
+extern "C" {
+    pub fn getCurrentMeter() -> *mut currentMeter_t;
+}
+extern "C" {
+    pub fn getVoltageMeter() -> *mut voltageMeter_t;
+}
+extern "C" {
+    pub fn setCellCount(count: u8);
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

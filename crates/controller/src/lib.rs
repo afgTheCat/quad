@@ -25,6 +25,14 @@ struct SetPoints {
     yaw: f64,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+struct BatteryUpdate {
+    bat_voltage_sag: f64,
+    bat_voltage: f64,
+    amperage: f64,
+    m_ah_drawn: f64,
+}
+
 trait FlightController {
     fn set_channels(&mut self, channels: Channels);
     fn update_gyro_acc(
