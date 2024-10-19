@@ -1,11 +1,11 @@
 use crate::{
     bindings::{
         bf_bindings_generated::{
-            armingFlag_e_ARMED, armingFlags, getArmingDisableFlags, getCurrentMeter,
-            getVoltageMeter, imuSetAttitudeQuat, init, rxFrameState_e_RX_FRAME_COMPLETE,
-            rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState, rxRuntimeState_s, rxRuntimeState_t,
-            scheduler, sensors, sensors_e_SENSOR_ACC, virtualAccDev, virtualAccSet, virtualGyroDev,
-            virtualGyroSet,
+            armingFlag_e_ARMED, armingFlags, enableFlightMode, flightModeFlags_e_ANGLE_MODE,
+            getArmingDisableFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
+            rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
+            rxRuntimeState_s, rxRuntimeState_t, scheduler, sensors, sensors_e_SENSOR_ACC,
+            virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
         },
         motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8, SIMULATOR_MAX_RC_CHANNELS_USIZE,
     },
@@ -55,7 +55,7 @@ impl BFController {
         }
     }
 
-    unsafe fn set_rc_data(&mut self, data: [f32; 8]) {
+    unsafe fn set_rc_data(data: [f32; 8]) {
         for i in 0..8 {
             RC_DATA_CACHE[i] = (1500. + data[i] * 500.) as u16;
         }
@@ -112,6 +112,15 @@ impl BFController {
         todo!()
     }
 
+    // cuz fuck it, why not
+    unsafe fn set_armed() {
+        armingFlags |= 1 << 0
+    }
+
+    unsafe fn enable_angle_mode() {
+        enableFlightMode(flightModeFlags_e_ANGLE_MODE);
+    }
+
     unsafe fn update(update: FlightControllerUpdate) -> MotorInput {
         let mut scheduler_executed = false;
         Self::update_battery(update.battery_update);
@@ -126,6 +135,8 @@ impl BFController {
         //   schedulerExecuted = true;
         // }
         // TODO: what should we do with this?
+
+        scheduler();
         let armed = armingFlags & armingFlag_e_ARMED as u8 == armingFlag_e_ARMED as u8;
         let motor_input_1 = motorsPwm[0] as f64 / 1000.;
         let motor_input_2 = motorsPwm[1] as f64 / 1000.;
@@ -143,6 +154,9 @@ mod test {
     #[test]
     fn bf_controller() {
         unsafe { BFController::init() };
+        unsafe { BFController::set_armed() };
+        unsafe { BFController::enable_angle_mode() };
+        unsafe { BFController::set_rc_data([0.5; 8]) };
         let battery_update = BatteryUpdate {
             bat_voltage_sag: 1.,
             bat_voltage: 1.,
@@ -158,6 +172,10 @@ mod test {
             battery_update,
             gyro_update,
         };
-        unsafe { BFController::update(flight_controller_update) };
+        unsafe {
+            loop {
+                BFController::update(flight_controller_update);
+            }
+        }
     }
 }
