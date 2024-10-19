@@ -61,7 +61,6 @@ pub const _SYS_CDEFS_H: u32 = 1;
 pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: u32 = 0;
 pub const __HAVE_GENERIC_SELECTION: u32 = 1;
-pub const __USE_EXTERN_INLINES: u32 = 1;
 pub const __GLIBC_USE_LIB_EXT2: u32 = 1;
 pub const __GLIBC_USE_IEC_60559_BFP_EXT: u32 = 1;
 pub const __GLIBC_USE_IEC_60559_BFP_EXT_C2X: u32 = 1;
@@ -172,13 +171,16 @@ pub const SCHEDULER_DELAY_LIMIT: u32 = 1;
 pub const USABLE_TIMER_CHANNEL_COUNT: u32 = 0;
 pub const SERIAL_PORT_COUNT: u32 = 8;
 pub const TARGET_FLASH_SIZE: u32 = 2048;
+pub const LED_STRIP_TIMER: u32 = 1;
+pub const SOFTSERIAL_1_TIMER: u32 = 2;
+pub const SOFTSERIAL_2_TIMER: u32 = 3;
 pub const FLASH_PAGE_SIZE: u32 = 1024;
 pub const SIMULATOR_MAX_RC_CHANNELS: u32 = 16;
 pub const SIMULATOR_MAX_PWM_CHANNELS: u32 = 16;
 pub const FC_FIRMWARE_NAME: &[u8; 11] = b"Betaflight\0";
 pub const FC_FIRMWARE_IDENTIFIER: &[u8; 5] = b"BTFL\0";
 pub const FC_VERSION_MAJOR: u32 = 4;
-pub const FC_VERSION_MINOR: u32 = 6;
+pub const FC_VERSION_MINOR: u32 = 5;
 pub const FC_VERSION_PATCH_LEVEL: u32 = 0;
 pub const GIT_SHORT_REVISION_LENGTH: u32 = 7;
 pub const GIT_SHORT_CONFIG_REVISION_LENGTH: u32 = 7;
@@ -200,10 +202,6 @@ pub const RX_MAX_USEC: u32 = 2115;
 pub const RX_MID_USEC: u32 = 1500;
 pub const MAX_SUPPORTED_MOTORS: u32 = 8;
 pub const MAX_SUPPORTED_SERVOS: u32 = 8;
-pub const BOX_USER1_NAME: &[u8; 6] = b"USER1\0";
-pub const BOX_USER2_NAME: &[u8; 6] = b"USER2\0";
-pub const BOX_USER3_NAME: &[u8; 6] = b"USER3\0";
-pub const BOX_USER4_NAME: &[u8; 6] = b"USER4\0";
 pub const TIMEUS_MAX: u32 = 4294967295;
 pub const TIMEZONE_OFFSET_MINUTES_MIN: i32 = -780;
 pub const TIMEZONE_OFFSET_MINUTES_MAX: u32 = 780;
@@ -463,8 +461,6 @@ pub const PG_GPS_RESCUE: u32 = 55;
 pub const PG_POSITION: u32 = 56;
 pub const PG_VTX_IO_CONFIG: u32 = 57;
 pub const PG_GPS_LAP_TIMER: u32 = 58;
-pub const PG_ALTHOLD_CONFIG: u32 = 59;
-pub const PG_POSITION_CONTROL: u32 = 60;
 pub const PG_DRIVER_PWM_RX_CONFIG: u32 = 100;
 pub const PG_DRIVER_FLASHCHIP_CONFIG: u32 = 101;
 pub const PG_CURRENT_SENSOR_ADC_CONFIG: u32 = 256;
@@ -606,15 +602,13 @@ pub const GPS_Y: u32 = 0;
 pub const GPS_MIN_SAT_COUNT: u32 = 4;
 pub const GPS_SV_MAXSATS_LEGACY: u32 = 16;
 pub const GPS_SV_MAXSATS_M8N: u32 = 32;
+pub const GPS_SV_MAXSATS_M9N: u32 = 42;
 pub const TASK_GPS_RATE: u32 = 100;
 pub const TASK_GPS_RATE_FAST: u32 = 500;
 pub const DEBUG16_VALUE_COUNT: u32 = 8;
 pub const SLOW_VOLTAGE_TASK_FREQ_HZ: u32 = 50;
 pub const FAST_VOLTAGE_TASK_FREQ_HZ: u32 = 200;
-pub const VOLTAGE_STABLE_TICK_MS: u32 = 100;
-pub const VOLTAGE_STABLE_BITS_TOTAL: u32 = 11;
-pub const VOLTAGE_STABLE_BITS_THRESHOLD: u32 = 10;
-pub const VOLTAGE_STABLE_MAX_DELTA: u32 = 10;
+pub const PREV_DISPLAY_FILTERED_TIME_DIFF: u32 = 500;
 pub const VBAT_SCALE_MIN: u32 = 0;
 pub const VBAT_SCALE_MAX: u32 = 255;
 pub const VBAT_DIVIDER_MIN: u32 = 1;
@@ -1482,7 +1476,6 @@ pub const mcuTypeId_e_MCU_TYPE_H723_725: mcuTypeId_e = 14;
 pub const mcuTypeId_e_MCU_TYPE_G474: mcuTypeId_e = 15;
 pub const mcuTypeId_e_MCU_TYPE_H730: mcuTypeId_e = 16;
 pub const mcuTypeId_e_MCU_TYPE_AT32: mcuTypeId_e = 17;
-pub const mcuTypeId_e_MCU_TYPE_APM32F40X: mcuTypeId_e = 18;
 pub const mcuTypeId_e_MCU_TYPE_UNKNOWN: mcuTypeId_e = 255;
 pub type mcuTypeId_e = ::std::os::raw::c_uint;
 extern "C" {
@@ -1619,10 +1612,10 @@ extern "C" {
     pub fn rtcTimeMake(secs: i32, millis: u16) -> rtcTime_t;
 }
 extern "C" {
-    pub fn rtcTimeGetSeconds(t: *const rtcTime_t) -> i32;
+    pub fn rtcTimeGetSeconds(t: *mut rtcTime_t) -> i32;
 }
 extern "C" {
-    pub fn rtcTimeGetMillis(t: *const rtcTime_t) -> u16;
+    pub fn rtcTimeGetMillis(t: *mut rtcTime_t) -> u16;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -1676,7 +1669,7 @@ extern "C" {
     pub fn rtcGet(t: *mut rtcTime_t) -> bool;
 }
 extern "C" {
-    pub fn rtcSet(t: *const rtcTime_t) -> bool;
+    pub fn rtcSet(t: *mut rtcTime_t) -> bool;
 }
 extern "C" {
     pub fn rtcGetDateTime(dt: *mut dateTime_t) -> bool;
@@ -2193,7 +2186,7 @@ extern "C" {
     );
 }
 extern "C" {
-    pub fn timerClock(tim: *const TIM_TypeDef) -> u32;
+    pub fn timerClock(tim: *mut TIM_TypeDef) -> u32;
 }
 extern "C" {
     pub fn configTimeBase(tim: *mut TIM_TypeDef, period: u16, hz: u32);
@@ -2202,10 +2195,10 @@ extern "C" {
     pub fn timerReconfigureTimeBase(tim: *mut TIM_TypeDef, period: u16, hz: u32);
 }
 extern "C" {
-    pub fn timerRCC(tim: *const TIM_TypeDef) -> rccPeriphTag_t;
+    pub fn timerRCC(tim: *mut TIM_TypeDef) -> rccPeriphTag_t;
 }
 extern "C" {
-    pub fn timerInputIrq(tim: *const TIM_TypeDef) -> u8;
+    pub fn timerInputIrq(tim: *mut TIM_TypeDef) -> u8;
 }
 extern "C" {
     pub fn timerGetConfiguredByTag(ioTag: ioTag_t) -> *const timerHardware_t;
@@ -2341,7 +2334,8 @@ pub type motorDevConfig_t = motorDevConfig_s;
 #[derive(Debug, Copy, Clone)]
 pub struct motorConfig_s {
     pub dev: motorDevConfig_t,
-    pub motorIdle: u16,
+    pub digitalIdleOffsetValue: u16,
+    pub minthrottle: u16,
     pub maxthrottle: u16,
     pub mincommand: u16,
     pub kv: u16,
@@ -2349,18 +2343,20 @@ pub struct motorConfig_s {
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of motorConfig_s"][::std::mem::size_of::<motorConfig_s>() - 38usize];
+    ["Size of motorConfig_s"][::std::mem::size_of::<motorConfig_s>() - 40usize];
     ["Alignment of motorConfig_s"][::std::mem::align_of::<motorConfig_s>() - 2usize];
     ["Offset of field: motorConfig_s::dev"][::std::mem::offset_of!(motorConfig_s, dev) - 0usize];
-    ["Offset of field: motorConfig_s::motorIdle"]
-        [::std::mem::offset_of!(motorConfig_s, motorIdle) - 28usize];
+    ["Offset of field: motorConfig_s::digitalIdleOffsetValue"]
+        [::std::mem::offset_of!(motorConfig_s, digitalIdleOffsetValue) - 28usize];
+    ["Offset of field: motorConfig_s::minthrottle"]
+        [::std::mem::offset_of!(motorConfig_s, minthrottle) - 30usize];
     ["Offset of field: motorConfig_s::maxthrottle"]
-        [::std::mem::offset_of!(motorConfig_s, maxthrottle) - 30usize];
+        [::std::mem::offset_of!(motorConfig_s, maxthrottle) - 32usize];
     ["Offset of field: motorConfig_s::mincommand"]
-        [::std::mem::offset_of!(motorConfig_s, mincommand) - 32usize];
-    ["Offset of field: motorConfig_s::kv"][::std::mem::offset_of!(motorConfig_s, kv) - 34usize];
+        [::std::mem::offset_of!(motorConfig_s, mincommand) - 34usize];
+    ["Offset of field: motorConfig_s::kv"][::std::mem::offset_of!(motorConfig_s, kv) - 36usize];
     ["Offset of field: motorConfig_s::motorPoleCount"]
-        [::std::mem::offset_of!(motorConfig_s, motorPoleCount) - 36usize];
+        [::std::mem::offset_of!(motorConfig_s, motorPoleCount) - 38usize];
 };
 pub type motorConfig_t = motorConfig_s;
 extern "C" {
@@ -2536,6 +2532,9 @@ extern "C" {
 extern "C" {
     pub fn motorShutdown();
 }
+extern "C" {
+    pub fn getDigitalIdleOffset(motorConfig: *const motorConfig_t) -> f32;
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct timerChannel_t {
@@ -2694,11 +2693,10 @@ pub const armingDisableFlags_e_ARMING_DISABLED_REBOOT_REQUIRED: armingDisableFla
 pub const armingDisableFlags_e_ARMING_DISABLED_DSHOT_BITBANG: armingDisableFlags_e = 4194304;
 pub const armingDisableFlags_e_ARMING_DISABLED_ACC_CALIBRATION: armingDisableFlags_e = 8388608;
 pub const armingDisableFlags_e_ARMING_DISABLED_MOTOR_PROTOCOL: armingDisableFlags_e = 16777216;
-pub const armingDisableFlags_e_ARMING_DISABLED_CRASHFLIP: armingDisableFlags_e = 33554432;
-pub const armingDisableFlags_e_ARMING_DISABLED_ARM_SWITCH: armingDisableFlags_e = 67108864;
+pub const armingDisableFlags_e_ARMING_DISABLED_ARM_SWITCH: armingDisableFlags_e = 33554432;
 pub type armingDisableFlags_e = ::std::os::raw::c_uint;
 extern "C" {
-    pub static mut armingDisableFlagNames: [*const ::std::os::raw::c_char; 27usize];
+    pub static mut armingDisableFlagNames: [*const ::std::os::raw::c_char; 26usize];
 }
 extern "C" {
     pub fn setArmingDisabled(flag: armingDisableFlags_e);
@@ -2715,7 +2713,6 @@ extern "C" {
 pub const flightModeFlags_e_ANGLE_MODE: flightModeFlags_e = 1;
 pub const flightModeFlags_e_HORIZON_MODE: flightModeFlags_e = 2;
 pub const flightModeFlags_e_MAG_MODE: flightModeFlags_e = 4;
-pub const flightModeFlags_e_ALT_HOLD_MODE: flightModeFlags_e = 8;
 pub const flightModeFlags_e_HEADFREE_MODE: flightModeFlags_e = 64;
 pub const flightModeFlags_e_PASSTHRU_MODE: flightModeFlags_e = 256;
 pub const flightModeFlags_e_FAILSAFE_MODE: flightModeFlags_e = 1024;
@@ -2748,6 +2745,9 @@ extern "C" {
 }
 extern "C" {
     pub fn sensorsMask() -> u32;
+}
+extern "C" {
+    pub fn mwDisarm();
 }
 pub const configurationState_e_CONFIGURATION_STATE_UNCONFIGURED: configurationState_e = 0;
 pub const configurationState_e_CONFIGURATION_STATE_CONFIGURED: configurationState_e = 1;
@@ -2880,6 +2880,9 @@ extern "C" {
     pub fn canSoftwareSerialBeUsed() -> bool;
 }
 extern "C" {
+    pub fn getCurrentMinthrottle() -> u16;
+}
+extern "C" {
     pub fn resetConfig();
 }
 extern "C" {
@@ -2906,11 +2909,10 @@ pub struct schedulerConfig_s {
     pub rxRelaxDeterminism: u16,
     pub osdRelaxDeterminism: u16,
     pub cpuLatePercentageLimit: u16,
-    pub debugTask: u8,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of schedulerConfig_s"][::std::mem::size_of::<schedulerConfig_s>() - 8usize];
+    ["Size of schedulerConfig_s"][::std::mem::size_of::<schedulerConfig_s>() - 6usize];
     ["Alignment of schedulerConfig_s"][::std::mem::align_of::<schedulerConfig_s>() - 2usize];
     ["Offset of field: schedulerConfig_s::rxRelaxDeterminism"]
         [::std::mem::offset_of!(schedulerConfig_s, rxRelaxDeterminism) - 0usize];
@@ -2918,8 +2920,6 @@ const _: () = {
         [::std::mem::offset_of!(schedulerConfig_s, osdRelaxDeterminism) - 2usize];
     ["Offset of field: schedulerConfig_s::cpuLatePercentageLimit"]
         [::std::mem::offset_of!(schedulerConfig_s, cpuLatePercentageLimit) - 4usize];
-    ["Offset of field: schedulerConfig_s::debugTask"]
-        [::std::mem::offset_of!(schedulerConfig_s, debugTask) - 6usize];
 };
 pub type schedulerConfig_t = schedulerConfig_s;
 extern "C" {
@@ -3211,6 +3211,36 @@ const _: () = {
 pub type stdev_t = stdev_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct fp_vector {
+    pub X: f32,
+    pub Y: f32,
+    pub Z: f32,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of fp_vector"][::std::mem::size_of::<fp_vector>() - 12usize];
+    ["Alignment of fp_vector"][::std::mem::align_of::<fp_vector>() - 4usize];
+    ["Offset of field: fp_vector::X"][::std::mem::offset_of!(fp_vector, X) - 0usize];
+    ["Offset of field: fp_vector::Y"][::std::mem::offset_of!(fp_vector, Y) - 4usize];
+    ["Offset of field: fp_vector::Z"][::std::mem::offset_of!(fp_vector, Z) - 8usize];
+};
+pub type t_fp_vector_def = fp_vector;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union u_fp_vector {
+    pub A: [f32; 3usize],
+    pub V: t_fp_vector_def,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of u_fp_vector"][::std::mem::size_of::<u_fp_vector>() - 12usize];
+    ["Alignment of u_fp_vector"][::std::mem::align_of::<u_fp_vector>() - 4usize];
+    ["Offset of field: u_fp_vector::A"][::std::mem::offset_of!(u_fp_vector, A) - 0usize];
+    ["Offset of field: u_fp_vector::V"][::std::mem::offset_of!(u_fp_vector, V) - 0usize];
+};
+pub type t_fp_vector = u_fp_vector;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct fp_angles {
     pub roll: f32,
     pub pitch: f32,
@@ -3238,6 +3268,19 @@ const _: () = {
     ["Offset of field: fp_angles_t::raw"][::std::mem::offset_of!(fp_angles_t, raw) - 0usize];
     ["Offset of field: fp_angles_t::angles"][::std::mem::offset_of!(fp_angles_t, angles) - 0usize];
 };
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fp_rotationMatrix_s {
+    pub m: [[f32; 3usize]; 3usize],
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of fp_rotationMatrix_s"][::std::mem::size_of::<fp_rotationMatrix_s>() - 36usize];
+    ["Alignment of fp_rotationMatrix_s"][::std::mem::align_of::<fp_rotationMatrix_s>() - 4usize];
+    ["Offset of field: fp_rotationMatrix_s::m"]
+        [::std::mem::offset_of!(fp_rotationMatrix_s, m) - 0usize];
+};
+pub type fp_rotationMatrix_t = fp_rotationMatrix_s;
 extern "C" {
     pub fn gcd(num: ::std::os::raw::c_int, denom: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
 }
@@ -3275,28 +3318,34 @@ extern "C" {
     pub fn scaleRangef(x: f32, srcFrom: f32, srcTo: f32, destFrom: f32, destTo: f32) -> f32;
 }
 extern "C" {
-    pub fn quickMedianFilter3(v: *const i32) -> i32;
+    pub fn buildRotationMatrix(delta: *mut fp_angles_t, rotation: *mut fp_rotationMatrix_t);
 }
 extern "C" {
-    pub fn quickMedianFilter5(v: *const i32) -> i32;
+    pub fn applyMatrixRotation(v: *mut f32, rotationMatrix: *mut fp_rotationMatrix_t);
 }
 extern "C" {
-    pub fn quickMedianFilter7(v: *const i32) -> i32;
+    pub fn quickMedianFilter3(v: *mut i32) -> i32;
 }
 extern "C" {
-    pub fn quickMedianFilter9(v: *const i32) -> i32;
+    pub fn quickMedianFilter5(v: *mut i32) -> i32;
 }
 extern "C" {
-    pub fn quickMedianFilter3f(v: *const f32) -> f32;
+    pub fn quickMedianFilter7(v: *mut i32) -> i32;
 }
 extern "C" {
-    pub fn quickMedianFilter5f(v: *const f32) -> f32;
+    pub fn quickMedianFilter9(v: *mut i32) -> i32;
 }
 extern "C" {
-    pub fn quickMedianFilter7f(v: *const f32) -> f32;
+    pub fn quickMedianFilter3f(v: *mut f32) -> f32;
 }
 extern "C" {
-    pub fn quickMedianFilter9f(v: *const f32) -> f32;
+    pub fn quickMedianFilter5f(v: *mut f32) -> f32;
+}
+extern "C" {
+    pub fn quickMedianFilter7f(v: *mut f32) -> f32;
+}
+extern "C" {
+    pub fn quickMedianFilter9f(v: *mut f32) -> f32;
 }
 extern "C" {
     pub fn sin_approx(x: f32) -> f32;
@@ -3311,9 +3360,6 @@ extern "C" {
     pub fn acos_approx(x: f32) -> f32;
 }
 extern "C" {
-    pub fn asin_approx(x: f32) -> f32;
-}
-extern "C" {
     pub fn exp_approx(val: f32) -> f32;
 }
 extern "C" {
@@ -3325,8 +3371,8 @@ extern "C" {
 extern "C" {
     pub fn arraySubInt32(
         dest: *mut i32,
-        array1: *const i32,
-        array2: *const i32,
+        array1: *mut i32,
+        array2: *mut i32,
         count: ::std::os::raw::c_int,
     );
 }
@@ -3338,151 +3384,6 @@ extern "C" {
 }
 extern "C" {
     pub fn qConstruct(num: i16, den: i16) -> fix12_t;
-}
-extern "C" {
-    pub fn smoothStepUpTransition(x: f32, center: f32, width: f32) -> f32;
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union vector2_u {
-    pub v: [f32; 2usize],
-    pub __bindgen_anon_1: vector2_u__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct vector2_u__bindgen_ty_1 {
-    pub x: f32,
-    pub y: f32,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of vector2_u__bindgen_ty_1"][::std::mem::size_of::<vector2_u__bindgen_ty_1>() - 8usize];
-    ["Alignment of vector2_u__bindgen_ty_1"]
-        [::std::mem::align_of::<vector2_u__bindgen_ty_1>() - 4usize];
-    ["Offset of field: vector2_u__bindgen_ty_1::x"]
-        [::std::mem::offset_of!(vector2_u__bindgen_ty_1, x) - 0usize];
-    ["Offset of field: vector2_u__bindgen_ty_1::y"]
-        [::std::mem::offset_of!(vector2_u__bindgen_ty_1, y) - 4usize];
-};
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of vector2_u"][::std::mem::size_of::<vector2_u>() - 8usize];
-    ["Alignment of vector2_u"][::std::mem::align_of::<vector2_u>() - 4usize];
-    ["Offset of field: vector2_u::v"][::std::mem::offset_of!(vector2_u, v) - 0usize];
-};
-pub type vector2_t = vector2_u;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union vector3_u {
-    pub v: [f32; 3usize],
-    pub __bindgen_anon_1: vector3_u__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct vector3_u__bindgen_ty_1 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of vector3_u__bindgen_ty_1"][::std::mem::size_of::<vector3_u__bindgen_ty_1>() - 12usize];
-    ["Alignment of vector3_u__bindgen_ty_1"]
-        [::std::mem::align_of::<vector3_u__bindgen_ty_1>() - 4usize];
-    ["Offset of field: vector3_u__bindgen_ty_1::x"]
-        [::std::mem::offset_of!(vector3_u__bindgen_ty_1, x) - 0usize];
-    ["Offset of field: vector3_u__bindgen_ty_1::y"]
-        [::std::mem::offset_of!(vector3_u__bindgen_ty_1, y) - 4usize];
-    ["Offset of field: vector3_u__bindgen_ty_1::z"]
-        [::std::mem::offset_of!(vector3_u__bindgen_ty_1, z) - 8usize];
-};
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of vector3_u"][::std::mem::size_of::<vector3_u>() - 12usize];
-    ["Alignment of vector3_u"][::std::mem::align_of::<vector3_u>() - 4usize];
-    ["Offset of field: vector3_u::v"][::std::mem::offset_of!(vector3_u, v) - 0usize];
-};
-pub type vector3_t = vector3_u;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct matrix33_s {
-    pub m: [[f32; 3usize]; 3usize],
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of matrix33_s"][::std::mem::size_of::<matrix33_s>() - 36usize];
-    ["Alignment of matrix33_s"][::std::mem::align_of::<matrix33_s>() - 4usize];
-    ["Offset of field: matrix33_s::m"][::std::mem::offset_of!(matrix33_s, m) - 0usize];
-};
-pub type matrix33_t = matrix33_s;
-extern "C" {
-    pub fn vector2Equal(a: *const vector2_t, b: *const vector2_t) -> bool;
-}
-extern "C" {
-    pub fn vector2Zero(v: *mut vector2_t);
-}
-extern "C" {
-    pub fn vector2Add(result: *mut vector2_t, a: *const vector2_t, b: *const vector2_t);
-}
-extern "C" {
-    pub fn vector2Scale(result: *mut vector2_t, v: *const vector2_t, k: f32);
-}
-extern "C" {
-    pub fn vector2Dot(a: *const vector2_t, b: *const vector2_t) -> f32;
-}
-extern "C" {
-    pub fn vector2Cross(a: *const vector2_t, b: *const vector2_t) -> f32;
-}
-extern "C" {
-    pub fn vector2NormSq(v: *const vector2_t) -> f32;
-}
-extern "C" {
-    pub fn vector2Norm(v: *const vector2_t) -> f32;
-}
-extern "C" {
-    pub fn vector2Normalize(result: *mut vector2_t, v: *const vector2_t);
-}
-extern "C" {
-    pub fn vector3Equal(a: *const vector3_t, b: *const vector3_t) -> bool;
-}
-extern "C" {
-    pub fn vector3Zero(v: *mut vector3_t);
-}
-extern "C" {
-    pub fn vector3Add(result: *mut vector3_t, a: *const vector3_t, b: *const vector3_t);
-}
-extern "C" {
-    pub fn vector3Scale(result: *mut vector3_t, v: *const vector3_t, k: f32);
-}
-extern "C" {
-    pub fn vector3Dot(a: *const vector3_t, b: *const vector3_t) -> f32;
-}
-extern "C" {
-    pub fn vector3Cross(result: *mut vector3_t, a: *const vector3_t, b: *const vector3_t);
-}
-extern "C" {
-    pub fn vector3NormSq(v: *const vector3_t) -> f32;
-}
-extern "C" {
-    pub fn vector3Norm(v: *const vector3_t) -> f32;
-}
-extern "C" {
-    pub fn vector3Normalize(result: *mut vector3_t, v: *const vector3_t);
-}
-extern "C" {
-    pub fn matrixVectorMul(result: *mut vector3_t, mat: *const matrix33_t, v: *const vector3_t);
-}
-extern "C" {
-    pub fn matrixTrnVectorMul(result: *mut vector3_t, mat: *const matrix33_t, v: *const vector3_t);
-}
-extern "C" {
-    pub fn buildRotationMatrix(result: *mut matrix33_t, rpy: *const fp_angles_t);
-}
-extern "C" {
-    pub fn applyRotationMatrix(v: *mut vector3_t, rotationMatrix: *const matrix33_t);
-}
-extern "C" {
-    pub fn yawToRotationMatrixZ(result: *mut matrix33_t, yaw: f32);
 }
 extern "C" {
     pub static mut canUseGPSHeading: bool;
@@ -3583,7 +3484,7 @@ extern "C" {
     pub static mut attitude: attitudeEulerAngles_t;
 }
 extern "C" {
-    pub static mut rMat: matrix33_t;
+    pub static mut rMat: [[f32; 3usize]; 3usize];
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3636,9 +3537,6 @@ extern "C" {
     pub fn imuConfigure(throttle_correction_angle: u16, throttle_correction_value: u8);
 }
 extern "C" {
-    pub fn getSinPitchAngle() -> f32;
-}
-extern "C" {
     pub fn getCosTiltAngle() -> f32;
 }
 extern "C" {
@@ -3660,7 +3558,7 @@ extern "C" {
     pub fn imuQuaternionHeadfreeOffsetSet() -> bool;
 }
 extern "C" {
-    pub fn imuQuaternionHeadfreeTransformVectorEarthToBody(v: *mut vector3_t);
+    pub fn imuQuaternionHeadfreeTransformVectorEarthToBody(v: *mut t_fp_vector_def);
 }
 extern "C" {
     pub fn shouldInitializeGPSHeading() -> bool;
@@ -4226,13 +4124,14 @@ pub struct rxRuntimeState_s {
     pub rcReadRawFn: rcReadRawDataFnPtr,
     pub rcFrameStatusFn: rcFrameStatusFnPtr,
     pub rcProcessFrameFn: rcProcessFrameFnPtr,
+    pub rcFrameTimeUsFn: rcGetFrameTimeUsFn,
     pub channelData: *mut u16,
     pub frameData: *mut ::std::os::raw::c_void,
     pub lastRcFrameTimeUs: timeUs_t,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
-    ["Size of rxRuntimeState_s"][::std::mem::size_of::<rxRuntimeState_s>() - 64usize];
+    ["Size of rxRuntimeState_s"][::std::mem::size_of::<rxRuntimeState_s>() - 72usize];
     ["Alignment of rxRuntimeState_s"][::std::mem::align_of::<rxRuntimeState_s>() - 8usize];
     ["Offset of field: rxRuntimeState_s::rxProvider"]
         [::std::mem::offset_of!(rxRuntimeState_s, rxProvider) - 0usize];
@@ -4246,12 +4145,14 @@ const _: () = {
         [::std::mem::offset_of!(rxRuntimeState_s, rcFrameStatusFn) - 24usize];
     ["Offset of field: rxRuntimeState_s::rcProcessFrameFn"]
         [::std::mem::offset_of!(rxRuntimeState_s, rcProcessFrameFn) - 32usize];
+    ["Offset of field: rxRuntimeState_s::rcFrameTimeUsFn"]
+        [::std::mem::offset_of!(rxRuntimeState_s, rcFrameTimeUsFn) - 40usize];
     ["Offset of field: rxRuntimeState_s::channelData"]
-        [::std::mem::offset_of!(rxRuntimeState_s, channelData) - 40usize];
+        [::std::mem::offset_of!(rxRuntimeState_s, channelData) - 48usize];
     ["Offset of field: rxRuntimeState_s::frameData"]
-        [::std::mem::offset_of!(rxRuntimeState_s, frameData) - 48usize];
+        [::std::mem::offset_of!(rxRuntimeState_s, frameData) - 56usize];
     ["Offset of field: rxRuntimeState_s::lastRcFrameTimeUs"]
-        [::std::mem::offset_of!(rxRuntimeState_s, lastRcFrameTimeUs) - 56usize];
+        [::std::mem::offset_of!(rxRuntimeState_s, lastRcFrameTimeUs) - 64usize];
 };
 pub type rxRuntimeState_t = rxRuntimeState_s;
 pub const rssiSource_e_RSSI_SOURCE_NONE: rssiSource_e = 0;
@@ -4289,7 +4190,7 @@ extern "C" {
     pub fn rxFrameCheck(currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t);
 }
 extern "C" {
-    pub fn isRxReceivingSignal() -> bool;
+    pub fn rxIsReceivingSignal() -> bool;
 }
 extern "C" {
     pub fn rxAreFlightChannelsValid() -> bool;
@@ -4361,22 +4262,10 @@ extern "C" {
     pub fn resumeRxSignal();
 }
 extern "C" {
-    pub fn rxGetFrameDelta() -> timeDelta_t;
+    pub fn rxGetFrameDelta(frameAgeUs: *mut timeDelta_t) -> timeDelta_t;
 }
 extern "C" {
     pub fn rxFrameTimeUs() -> timeUs_t;
-}
-extern "C" {
-    pub fn rxMspReadRawRC(rxRuntimeState: *const rxRuntimeState_t, chan: u8) -> f32;
-}
-extern "C" {
-    pub fn rxMspInit(rxConfig: *const rxConfig_s, rxRuntimeState: *mut rxRuntimeState_s);
-}
-extern "C" {
-    pub fn rxMspFrameReceive(frame: *const u16, channelCount: ::std::os::raw::c_int);
-}
-extern "C" {
-    pub fn rxMspOverrideFrameStatus() -> u8;
 }
 pub const portMode_e_MODE_RX: portMode_e = 1;
 pub const portMode_e_MODE_TX: portMode_e = 2;
@@ -5132,7 +5021,7 @@ const _: () = {
 };
 pub type gpsData_t = gpsData_s;
 extern "C" {
-    pub static mut GPS_home_llh: gpsLocation_t;
+    pub static mut GPS_home: [i32; 2usize];
 }
 extern "C" {
     pub static mut GPS_distanceToHome: u16;
@@ -5145,6 +5034,12 @@ extern "C" {
 }
 extern "C" {
     pub static mut GPS_distanceFlownInCm: u32;
+}
+extern "C" {
+    pub static mut GPS_angle: [i16; 2usize];
+}
+extern "C" {
+    pub static mut GPS_scaleLonDown: f32;
 }
 pub const gpsUpdateToggle_e_GPS_DIRECT_TICK: gpsUpdateToggle_e = 1;
 pub const gpsUpdateToggle_e_GPS_MSP_UPDATE: gpsUpdateToggle_e = 2;
@@ -5186,7 +5081,7 @@ extern "C" {
     pub fn gpsIsHealthy() -> bool;
 }
 extern "C" {
-    pub fn gpsPassthrough(gpsPassthroughPort: *mut serialPort_s) -> bool;
+    pub fn gpsEnablePassthrough(gpsPassthroughPort: *mut serialPort_s);
 }
 extern "C" {
     pub fn onGpsNewData();
@@ -5199,9 +5094,10 @@ extern "C" {
 }
 extern "C" {
     pub fn GPS_distance_cm_bearing(
-        from: *const gpsLocation_t,
-        to: *const gpsLocation_t,
-        dist3d: bool,
+        currentLat1: *mut i32,
+        currentLon1: *mut i32,
+        destinationLat2: *mut i32,
+        destinationLon2: *mut i32,
         dist: *mut u32,
         bearing: *mut i32,
     );
@@ -5268,7 +5164,7 @@ pub const debugType_e_DEBUG_DYN_LPF: debugType_e = 43;
 pub const debugType_e_DEBUG_RX_SPEKTRUM_SPI: debugType_e = 44;
 pub const debugType_e_DEBUG_DSHOT_RPM_TELEMETRY: debugType_e = 45;
 pub const debugType_e_DEBUG_RPM_FILTER: debugType_e = 46;
-pub const debugType_e_DEBUG_D_MAX: debugType_e = 47;
+pub const debugType_e_DEBUG_D_MIN: debugType_e = 47;
 pub const debugType_e_DEBUG_AC_CORRECTION: debugType_e = 48;
 pub const debugType_e_DEBUG_AC_ERROR: debugType_e = 49;
 pub const debugType_e_DEBUG_DUAL_GYRO_SCALED: debugType_e = 50;
@@ -5311,15 +5207,10 @@ pub const debugType_e_DEBUG_RC_STATS: debugType_e = 86;
 pub const debugType_e_DEBUG_MAG_CALIB: debugType_e = 87;
 pub const debugType_e_DEBUG_MAG_TASK_RATE: debugType_e = 88;
 pub const debugType_e_DEBUG_EZLANDING: debugType_e = 89;
-pub const debugType_e_DEBUG_TPA: debugType_e = 90;
-pub const debugType_e_DEBUG_S_TERM: debugType_e = 91;
-pub const debugType_e_DEBUG_SPA: debugType_e = 92;
-pub const debugType_e_DEBUG_TASK: debugType_e = 93;
-pub const debugType_e_DEBUG_ALTHOLD: debugType_e = 94;
-pub const debugType_e_DEBUG_COUNT: debugType_e = 95;
+pub const debugType_e_DEBUG_COUNT: debugType_e = 90;
 pub type debugType_e = ::std::os::raw::c_uint;
 extern "C" {
-    pub static debugModeNames: [*const ::std::os::raw::c_char; 95usize];
+    pub static debugModeNames: [*const ::std::os::raw::c_char; 90usize];
 }
 extern "C" {
     pub fn debugInit();
@@ -5527,9 +5418,6 @@ extern "C" {
     pub fn pt1FilterGain(f_cut: f32, dT: f32) -> f32;
 }
 extern "C" {
-    pub fn pt1FilterGainFromDelay(delay: f32, dT: f32) -> f32;
-}
-extern "C" {
     pub fn pt1FilterInit(filter: *mut pt1Filter_t, k: f32);
 }
 extern "C" {
@@ -5542,9 +5430,6 @@ extern "C" {
     pub fn pt2FilterGain(f_cut: f32, dT: f32) -> f32;
 }
 extern "C" {
-    pub fn pt2FilterGainFromDelay(delay: f32, dT: f32) -> f32;
-}
-extern "C" {
     pub fn pt2FilterInit(filter: *mut pt2Filter_t, k: f32);
 }
 extern "C" {
@@ -5555,9 +5440,6 @@ extern "C" {
 }
 extern "C" {
     pub fn pt3FilterGain(f_cut: f32, dT: f32) -> f32;
-}
-extern "C" {
-    pub fn pt3FilterGainFromDelay(delay: f32, dT: f32) -> f32;
 }
 extern "C" {
     pub fn pt3FilterInit(filter: *mut pt3Filter_t, k: f32);
@@ -5700,9 +5582,9 @@ extern "C" {
 #[derive(Debug, Copy, Clone)]
 pub struct voltageMeter_s {
     pub displayFiltered: u16,
-    pub voltageStablePrevFiltered: u16,
-    pub voltageStableLastUpdate: timeMs_t,
-    pub voltageStableBits: u16,
+    pub prevDisplayFiltered: u16,
+    pub prevDisplayFilteredTime: timeMs_t,
+    pub isVoltageStable: bool,
     pub unfiltered: u16,
     pub sagFiltered: u16,
     pub lowVoltageCutoff: bool,
@@ -5713,12 +5595,12 @@ const _: () = {
     ["Alignment of voltageMeter_s"][::std::mem::align_of::<voltageMeter_s>() - 4usize];
     ["Offset of field: voltageMeter_s::displayFiltered"]
         [::std::mem::offset_of!(voltageMeter_s, displayFiltered) - 0usize];
-    ["Offset of field: voltageMeter_s::voltageStablePrevFiltered"]
-        [::std::mem::offset_of!(voltageMeter_s, voltageStablePrevFiltered) - 2usize];
-    ["Offset of field: voltageMeter_s::voltageStableLastUpdate"]
-        [::std::mem::offset_of!(voltageMeter_s, voltageStableLastUpdate) - 4usize];
-    ["Offset of field: voltageMeter_s::voltageStableBits"]
-        [::std::mem::offset_of!(voltageMeter_s, voltageStableBits) - 8usize];
+    ["Offset of field: voltageMeter_s::prevDisplayFiltered"]
+        [::std::mem::offset_of!(voltageMeter_s, prevDisplayFiltered) - 2usize];
+    ["Offset of field: voltageMeter_s::prevDisplayFilteredTime"]
+        [::std::mem::offset_of!(voltageMeter_s, prevDisplayFilteredTime) - 4usize];
+    ["Offset of field: voltageMeter_s::isVoltageStable"]
+        [::std::mem::offset_of!(voltageMeter_s, isVoltageStable) - 8usize];
     ["Offset of field: voltageMeter_s::unfiltered"]
         [::std::mem::offset_of!(voltageMeter_s, unfiltered) - 10usize];
     ["Offset of field: voltageMeter_s::sagFiltered"]
@@ -5788,12 +5670,6 @@ extern "C" {
 }
 extern "C" {
     pub fn voltageMeterESCReadMotor(motor: u8, voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn voltageStableUpdate(vm: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn voltageIsStable(vm: *mut voltageMeter_t) -> bool;
 }
 extern "C" {
     pub static voltageMeterADCtoIDMap: [u8; 1usize];

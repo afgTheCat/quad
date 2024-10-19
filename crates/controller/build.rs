@@ -17,11 +17,22 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .clang_args(vec![
             &format!("-I{libdir_path_str}/src/main"),
-            &format!("-I{libdir_path_str}/src/platform/SITL"),
+            &format!("-I{libdir_path_str}/src/main/target"),
+            &format!("-I{libdir_path_str}/src/main/startup"),
             &format!("-I{libdir_path_str}/lib/main/dyad"),
             &format!("-I{libdir_path_str}/lib/main/MAVLink"),
-            &format!("-I{libdir_path_str}/src/platform/SITL/target/SITL"),
+            &format!("-I{libdir_path_str}/src/main/target/SITL"),
             &format!("-I{libdir_path_str}/lib/main/google/olc"),
+            "-std=gnu17",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-Wpedantic",
+            "-Wdouble-promotion",
+            "-Wold-style-definition",
+            "-ffunction-sections",
+            "-fdata-sections",
+            "-fno-common",
             "-DTARGET_FLASH_SIZE=2048",
             "-DHSE_VALUE=8000000",
             "-D_GNU_SOURCE",
@@ -30,11 +41,16 @@ fn main() {
             "-DSIMULATOR_BUILD",
             "-DSITL",
             "-DSITL",
-            "-DSITL",
             "-D__FORKNAME__=\"betaflight\"",
             "-D__TARGET__=\"SITL\"",
             "-D__REVISION__=\"norevision\"",
-            "-Ofast",
+            "-pipe",
+            "-fPIC",
+            "-g",
+            "-flto",
+            "-ffast-math",
+            "-fmerge-all-constants",
+            "-Os",
         ])
         .header(bind_header_str)
         .generate()
@@ -44,30 +60,30 @@ fn main() {
         .write_to_file(out_path)
         .expect("Couldn't write bindings!");
 
-    // Linker flags
-    let betaflight_lib_include = format!("cargo:rustc-link-search={libdir_path_str}/lib");
-    println!("{}", betaflight_lib_include); // -L./lib
-    println!("cargo:rustc-link-lib=static=betaflight"); // -lbetaflight
-    println!("cargo:rustc-link-lib=m"); // -lm
-    println!("cargo:rustc-link-lib=pthread"); // -lpthread
-    println!("cargo:rustc-link-lib=c"); // -lc
-    println!("cargo:rustc-link-lib=rt"); // -lrt
-
-    // Additional linker options
-    println!("cargo:rustc-link-arg=-flto=auto");
-    println!("cargo:rustc-link-arg=-fuse-linker-plugin");
-    println!("cargo:rustc-link-arg=-ffast-math");
-    println!("cargo:rustc-link-arg=-fmerge-all-constants");
-    println!("cargo:rustc-link-arg=-Ofast");
-    println!("cargo:rustc-link-arg=-Wl,-gc-sections");
-    let betaflight_sitl_map_include =
-        format!("cargo:rustc-link-arg=-Wl,-Map,{libdir_path_str}/obj/main/betaflight_SITL.map");
-    println!("{}", betaflight_sitl_map_include);
-    let betaflight_link_include =
-        format!("cargo:rustc-link-arg=-Wl,-L{libdir_path_str}/src/platform/SITL/link");
-    println!("{}", betaflight_link_include);
-    println!("cargo:rustc-link-arg=-Wl,--cref");
-    let betaflight_ld_include =
-        format!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/platform/SITL/link/sitl.ld");
-    println!("{}", betaflight_ld_include);
+    // // Linker flags
+    // let betaflight_lib_include = format!("cargo:rustc-link-search={libdir_path_str}/lib");
+    // println!("{}", betaflight_lib_include); // -L./lib
+    // println!("cargo:rustc-link-lib=static=betaflight"); // -lbetaflight
+    // println!("cargo:rustc-link-lib=m"); // -lm
+    // println!("cargo:rustc-link-lib=pthread"); // -lpthread
+    // println!("cargo:rustc-link-lib=c"); // -lc
+    // println!("cargo:rustc-link-lib=rt"); // -lrt
+    //
+    // // Additional linker options
+    // println!("cargo:rustc-link-arg=-flto=auto");
+    // println!("cargo:rustc-link-arg=-fuse-linker-plugin");
+    // println!("cargo:rustc-link-arg=-ffast-math");
+    // println!("cargo:rustc-link-arg=-fmerge-all-constants");
+    // println!("cargo:rustc-link-arg=-Ofast");
+    // println!("cargo:rustc-link-arg=-Wl,-gc-sections");
+    // let betaflight_sitl_map_include =
+    //     format!("cargo:rustc-link-arg=-Wl,-Map,{libdir_path_str}/obj/main/betaflight_SITL.map");
+    // println!("{}", betaflight_sitl_map_include);
+    // let betaflight_link_include =
+    //     format!("cargo:rustc-link-arg=-Wl,-L{libdir_path_str}/src/platform/SITL/link");
+    // println!("{}", betaflight_link_include);
+    // println!("cargo:rustc-link-arg=-Wl,--cref");
+    // let betaflight_ld_include =
+    //     format!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/platform/SITL/link/sitl.ld");
+    // println!("{}", betaflight_ld_include);
 }
