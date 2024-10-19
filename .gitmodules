@@ -1,3 +1,4 @@
 [submodule "crates/controller/betaflight"]
 	path = crates/controller/betaflight
-	url = git@gitlab.com:ascent-simulator/betaflight.git
+  url = git@gitlab.com:ascent-simulator/betaflight.git
+  branch = old-with-fixes
