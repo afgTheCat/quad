@@ -11,7 +11,7 @@ libm.workspace = true
 fast-math.workspace = true
 nalgebra.workspace = true
 fastapprox.workspace = true
-controller.workspace = true
+flight_controller.workspace = true
 
 [features]
 default = []

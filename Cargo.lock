@@ -1511,13 +1511,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "controller"
-version = "0.1.0"
-dependencies = [
- "bindgen",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1951,6 +1944,13 @@ checksum = "a1b589b4dc103969ad3cf85c950899926ec64300a1a46d76c03a6072957036f0"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
+]
+
+[[package]]
+name = "flight_controller"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
 ]
 
 [[package]]
@@ -3391,8 +3391,8 @@ dependencies = [
  "bevy_egui",
  "bevy_infinite_grid",
  "bevy_panorbit_camera",
- "controller",
  "egui_extras",
+ "flight_controller",
  "nalgebra",
  "quad_sim",
 ]
@@ -3401,9 +3401,9 @@ dependencies = [
 name = "quad_sim"
 version = "0.1.0"
 dependencies = [
- "controller",
  "fast-math",
  "fastapprox",
+ "flight_controller",
  "libm",
  "nalgebra",
  "rand",

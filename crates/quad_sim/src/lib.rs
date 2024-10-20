@@ -1,6 +1,5 @@
 pub mod arm;
 mod constants;
-// pub mod controller;
 mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
@@ -11,8 +10,8 @@ use arm::Arm;
 pub use arm::Motor;
 // use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::{GRAVITY, MAX_EFFECT_SPEED};
-use controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use core::f64;
+use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
 use nalgebra::{DVector, Matrix3, Vector, Vector3, Vector4};
 use rand::{Rng, SeedableRng};

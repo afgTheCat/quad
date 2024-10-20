@@ -21,11 +21,11 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
-use controller::{
+use core::f64;
+use flight_controller::{
     controllers::bf_controller::BFController, BatteryUpdate, Channels, FlightController,
     FlightControllerUpdate, GyroUpdate, MotorInput,
 };
-use core::f64;
 use nalgebra::{Matrix3, Vector3, Vector4};
 
 #[cfg(feature = "noise")]

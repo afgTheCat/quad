@@ -18,7 +18,7 @@ resolver = "2"
 cuboid_bevy = { path = "crates/cuboid_bevy" }
 quad_bevy = { path = "crates/quad_bevy" }
 quad_sim = { path = "crates/quad_sim" }
-controller = { path = "crates/controller" }
+flight_controller = { path = "crates/flight_controller" }
 
 # external
 bevy = { version = "0.14.2", features = ["dynamic_linking"] }
