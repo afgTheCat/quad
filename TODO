@@ -1,7 +1,8 @@
 TODO for tomorrow:
   - Simulate a rotating drone [DONE]
-  - Improve perf [Done for now]
+  - Improve perf [Done]
   - Add better logging, maybe trace logger? [TODO]
-  - Add betaflight as a flight controller [IN PROGRESS]
+  - Add betaflight as a flight controller [DONE]
   - Add controller input [TODO]
   - Investigate why scheduling needed to be reworked [TODO]
+  - Reintroduce scheduling in betaflight + some thread safety maybe

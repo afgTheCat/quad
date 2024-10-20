@@ -1,6 +1,6 @@
 pub mod arm;
 mod constants;
-pub mod controller;
+// pub mod controller;
 mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
@@ -11,6 +11,7 @@ use arm::Arm;
 pub use arm::Motor;
 // use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::{GRAVITY, MAX_EFFECT_SPEED};
+use controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use core::f64;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{DVector, Matrix3, Vector, Vector3, Vector4};
@@ -76,6 +77,14 @@ impl Gyro {
 
     pub fn acceleration(&self) -> Vector3<f64> {
         self.acceleration
+    }
+
+    pub fn gyro_update(&self) -> GyroUpdate {
+        GyroUpdate {
+            rotation: self.rotation.data.0[0],
+            acc: self.acceleration.data.0[0],
+            gyro: self.gyro_angular_vel.data.0[0],
+        }
     }
 }
 
@@ -147,7 +156,7 @@ pub struct BatteryProps {
     //battery capacacity rating
     pub quad_bat_capacity: f64, // mAH I guess
     pub bat_voltage_curve: SampleCurve,
-    pub quad_bat_cell_count: f64,
+    pub quad_bat_cell_count: u8,
     //charged up capacity, can be lower or higher than quadBatCapacity
     pub quad_bat_capacity_charged: f64,
     pub max_voltage_sag: f64,
@@ -172,7 +181,8 @@ impl Battery {
     pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
         let bat_charge = self.state.capacity / self.props.quad_bat_capacity;
         self.state.bat_voltage = f64::max(
-            self.props.bat_voltage_curve.sample(1. - bat_charge) * self.props.quad_bat_cell_count,
+            self.props.bat_voltage_curve.sample(1. - bat_charge)
+                * self.props.quad_bat_cell_count as f64,
             0.1,
         );
         let power_factor_squared = f64::max(0., pwm_sum / 4.).powi(2);
@@ -197,9 +207,9 @@ impl Battery {
         self.state.m_ah_drawn = self.props.quad_bat_capacity_charged - self.state.capacity;
     }
 
-    pub fn cell_count(&self) -> f64 {
-        self.props.quad_bat_cell_count
-    }
+    // pub fn cell_count(&self) -> u8 {
+    //     self.props.quad_bat_cell_count
+    // }
 
     pub fn get_bat_voltage_sag(&self) -> f64 {
         self.state.bat_voltage_sag
@@ -216,10 +226,20 @@ impl Battery {
     pub fn m_ah_drawn(&self) -> f64 {
         self.state.m_ah_drawn
     }
+
+    pub fn battery_update(&self) -> BatteryUpdate {
+        BatteryUpdate {
+            cell_count: self.props.quad_bat_cell_count,
+            bat_voltage_sag: self.state.bat_voltage_sag,
+            bat_voltage: self.state.bat_voltage,
+            amperage: self.state.amperage,
+            m_ah_drawn: self.state.m_ah_drawn,
+        }
+    }
 }
 
 impl Drone {
-    pub fn set_motor_pwms(&mut self, pwms: Vector4<f64>) {
+    pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
         for i in 0..4 {
             self.arms[i].set_pwm(pwms[i]);
         }

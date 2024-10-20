@@ -11,6 +11,8 @@ bevy_panorbit_camera.workspace = true
 bevy_infinite_grid.workspace = true
 egui_extras.workspace = true
 nalgebra.workspace = true
+controller.workspace = true
+
 
 [features]
 default = []

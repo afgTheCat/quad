@@ -3391,6 +3391,7 @@ dependencies = [
  "bevy_egui",
  "bevy_infinite_grid",
  "bevy_panorbit_camera",
+ "controller",
  "egui_extras",
  "nalgebra",
  "quad_sim",
@@ -3400,6 +3401,7 @@ dependencies = [
 name = "quad_sim"
 version = "0.1.0"
 dependencies = [
+ "controller",
  "fast-math",
  "fastapprox",
  "libm",

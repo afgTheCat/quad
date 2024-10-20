@@ -21,25 +21,69 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
+use controller::{
+    controllers::bf_controller::BFController, BatteryUpdate, Channels, FlightController,
+    FlightControllerUpdate, GyroUpdate, MotorInput,
+};
 use core::f64;
 use nalgebra::{Matrix3, Vector3, Vector4};
+
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
 use quad_sim::{
     arm::{Arm, MotorProps, MotorState, Propeller},
-    controller::Model,
+    // controller::Model,
     rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
     sample_curve::{SampleCurve, SamplePoint},
-    Battery, BatteryProps, BatteryState, Drone, Gyro, Motor,
+    Battery,
+    BatteryProps,
+    BatteryState,
+    Drone,
+    Gyro,
+    Motor,
 };
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use ui::{update_ui, UiSimulationInfo};
 
 #[derive(Clone, Component)]
 pub struct DroneComponent(Drone);
 
-#[derive(Clone, Component)]
-pub struct ModelComponent(Model);
+impl DroneComponent {
+    fn set_motor_pwms(&mut self, input: MotorInput) {
+        self.0.set_motor_pwms(input)
+    }
+
+    fn update_gyro(&mut self, dt: f64) {
+        self.0.update_gyro(dt)
+    }
+
+    fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
+        self.0.update_physics(dt, ambient_temp)
+    }
+
+    fn battery_update(&self) -> BatteryUpdate {
+        self.0.battery.battery_update()
+    }
+
+    fn gyro_update(&self) -> GyroUpdate {
+        self.0.gyro.gyro_update()
+    }
+}
+
+#[derive(Component)]
+pub struct FlightControllerComponent {
+    fc: Arc<dyn FlightController>,
+}
+
+impl FlightControllerComponent {
+    fn init(&self) {
+        self.fc.init()
+    }
+
+    fn update(&self, update: FlightControllerUpdate) -> MotorInput {
+        self.fc.update(update)
+    }
+}
 
 // names of the propellers in the mesh
 pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [
@@ -244,7 +288,7 @@ pub fn setup_drone(
                         SamplePoint::new(1.06, 3.0),
                         SamplePoint::new(1.08, 0.0),
                     ]),
-                    quad_bat_cell_count: 4.,
+                    quad_bat_cell_count: 4,
                     quad_bat_capacity_charged: 850.,
                     quad_bat_capacity: 850.,
                     max_voltage_sag: 1.4,
@@ -257,7 +301,9 @@ pub fn setup_drone(
             .spawn((
                 drone,
                 SpatialBundle::default(),
-                ModelComponent(Model::default()),
+                FlightControllerComponent {
+                    fc: Arc::new(BFController),
+                },
                 UiSimulationInfo::default(),
                 SimContext::default(),
             ))
@@ -270,11 +316,12 @@ pub fn setup_drone(
     }
 }
 
+// The thing is, I don't want this to be a generic thing
 pub fn debug_drone(
     mut drone_query: Query<(
         &mut Transform,
         &mut DroneComponent,
-        &mut ModelComponent,
+        &mut FlightControllerComponent,
         &mut UiSimulationInfo,
         &mut SimContext,
     )>,
@@ -287,12 +334,22 @@ pub fn debug_drone(
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
-        drone.0.update_gyro(sim_context.dt.as_secs_f64());
-        drone
-            .0
-            .update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
-        let pwms = controller.0.update(&drone.0);
-        drone.0.set_motor_pwms(pwms.pwms());
+        drone.update_gyro(sim_context.dt.as_secs_f64());
+        drone.update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
+        let battery_update = drone.battery_update();
+        let gyro_update = drone.gyro_update();
+        let fc_input = FlightControllerUpdate {
+            gyro_update,
+            battery_update,
+            channels: Channels {
+                throttle: 0.5,
+                yaw: 0.5,
+                pitch: 0.5,
+                roll: 0.5,
+            },
+        };
+        let pwms = controller.update(fc_input);
+        drone.set_motor_pwms(pwms);
     }
 
     let drone_translation = ntb_vec3(drone.0.rigid_body.position);
@@ -319,7 +376,7 @@ pub fn build_app() -> App {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "I am a window!".into(),
+            title: "Sim".into(),
             name: Some("bevy.app".into()),
             resolution: (2560., 1440.).into(),
             present_mode: PresentMode::AutoVsync,
