@@ -53,6 +53,8 @@ fn main() {
             "-Os",
         ])
         .header(bind_header_str)
+        .generate_inline_functions(true) // Make all bindings public
+        .generate_comments(true)
         .generate()
         .expect("Unable to generate bindings");
     let out_path = outdir_path.join("bf_bindings_generated.rs");
@@ -63,7 +65,7 @@ fn main() {
     // Linker flags
     let betaflight_lib_include = format!("cargo:rustc-link-search={libdir_path_str}/lib");
     println!("{}", betaflight_lib_include); // -L./lib
-    println!("cargo:rustc-link-lib=static=betaflight"); // -lbetaflight
+    println!("cargo:rustc-link-lib=dylib=betaflight"); // -lbetaflight
     println!("cargo:rustc-link-lib=m"); // -lm
     println!("cargo:rustc-link-lib=pthread"); // -lpthread
     println!("cargo:rustc-link-lib=c"); // -lc

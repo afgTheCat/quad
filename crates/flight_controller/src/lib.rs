@@ -65,10 +65,56 @@ pub struct FlightControllerUpdate {
 pub trait FlightController: Send + Sync + 'static {
     fn init(&self);
     fn update(&self, update: FlightControllerUpdate) -> MotorInput;
+    fn set_armed(&self);
 }
 
 impl Default for MotorInput {
     fn default() -> Self {
         Self([1.; 4])
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        controllers::bf_controller::BFController, BatteryUpdate, Channels, FlightController,
+        FlightControllerUpdate, GyroUpdate,
+    };
+
+    #[test]
+    fn _bf_controller() {
+        let controller = BFController;
+        controller.init();
+        controller.set_armed();
+
+        let battery_update = BatteryUpdate {
+            bat_voltage_sag: 1.,
+            bat_voltage: 1.,
+            amperage: 1.,
+            m_ah_drawn: 1.,
+            cell_count: 4,
+        };
+
+        let gyro_update = GyroUpdate {
+            rotation: [0., 0., 0., 0.],
+            acc: [0., 0., 0.],
+            gyro: [0., 0., 0.],
+        };
+
+        let channels = Channels {
+            throttle: 0.5,
+            yaw: 0.5,
+            pitch: 0.5,
+            roll: 0.5,
+        };
+
+        for _ in 0..10 {
+            let flight_controller_update = FlightControllerUpdate {
+                battery_update,
+                gyro_update,
+                channels,
+            };
+            controller.update(flight_controller_update);
+        }
     }
 }

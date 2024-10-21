@@ -166,16 +166,21 @@ impl FlightController for BFController {
     fn update(&self, update: FlightControllerUpdate) -> MotorInput {
         unsafe { BFController::update(update) }
     }
+
+    fn set_armed(&self) {
+        unsafe {
+            BFController::set_armed();
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::BFController;
     use crate::{bindings::motorsPwm, BatteryUpdate, Channels, FlightControllerUpdate, GyroUpdate};
 
-    use super::BFController;
-
     #[test]
-    fn bf_controller() {
+    fn asd() {
         unsafe { BFController::init() };
         unsafe { BFController::set_armed() };
 
@@ -200,7 +205,19 @@ mod test {
             roll: 0.5,
         };
 
-        for _ in 0..10 {
+        // loop {
+        //     unsafe {
+        //         let flight_controller_update = FlightControllerUpdate {
+        //             battery_update,
+        //             gyro_update,
+        //             channels,
+        //         };
+        //         BFController::update(flight_controller_update);
+        //         // println!("motor pwms {:?}", motorsPwm[0]);
+        //     }
+        // }
+
+        for _ in 0..1000 {
             unsafe {
                 let flight_controller_update = FlightControllerUpdate {
                     battery_update,

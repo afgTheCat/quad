@@ -399,3 +399,14 @@ pub fn build_app() -> App {
     .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
 }
+
+#[cfg(test)]
+mod test {
+    use crate::build_app;
+
+    #[test]
+    fn test_asd() {
+        let mut app = build_app();
+        app.run();
+    }
+}
