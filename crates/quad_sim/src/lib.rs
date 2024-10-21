@@ -13,7 +13,7 @@ use constants::{GRAVITY, MAX_EFFECT_SPEED};
 use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{DVector, Matrix3, Vector, Vector3, Vector4};
+use nalgebra::{Matrix3, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -314,6 +314,10 @@ impl Drone {
         let pwm_sum = self.arms.iter().map(|arm| arm.pwm()).sum();
         let current_sum = self.arms.iter().map(|arm| arm.current()).sum();
         self.battery.update(dt, pwm_sum, current_sum);
+    }
+
+    pub fn motor_pwms(&self) -> Vector4<f64> {
+        Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>())
     }
 
     pub fn update_gyro(&mut self, dt: f64) {

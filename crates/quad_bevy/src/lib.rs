@@ -152,7 +152,7 @@ pub struct SimContext {
 impl Default for SimContext {
     fn default() -> Self {
         Self {
-            dt: Duration::from_nanos(500),
+            dt: Duration::from_nanos(50000), // TODO: update this
             time_accu: Duration::default(),
             ambient_temp: 25.,
             dialation: 1.,
@@ -217,8 +217,9 @@ pub fn setup_drone(
 ) {
     // Wait until the scene is loaded
     if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
-        next_state.set(SimState::Running);
-
+        let controller = BFController;
+        controller.init();
+        controller.set_armed();
         // get the motor positions
         let motor_positions = PROP_BLADE_MESH_NAMES.map(|name| {
             let node_id = gltf.named_nodes[name].id();
@@ -292,12 +293,13 @@ pub fn setup_drone(
             #[cfg(feature = "noise")]
             frame_charachteristics: FrameCharachteristics::default(),
         });
+
         commands
             .spawn((
                 drone,
                 SpatialBundle::default(),
                 FlightControllerComponent {
-                    fc: Arc::new(BFController),
+                    fc: Arc::new(controller),
                 },
                 UiSimulationInfo::default(),
                 SimContext::default(),
@@ -308,6 +310,8 @@ pub fn setup_drone(
                     ..Default::default()
                 });
             });
+
+        next_state.set(SimState::Running);
     }
 }
 
@@ -323,7 +327,7 @@ pub fn debug_drone(
     mut camera_query: Query<&mut PanOrbitCamera>,
     timer: Res<Time>,
 ) {
-    let (mut drone_transform, mut drone, mut controller, mut ui_simulation_info, mut sim_context) =
+    let (mut drone_transform, mut drone, controller, mut ui_simulation_info, mut sim_context) =
         drone_query.single_mut();
     let mut camera = camera_query.single_mut();
 
@@ -358,6 +362,7 @@ pub fn debug_drone(
         ntb_dvec3(drone.0.rigid_body.angular_velocity),
         ntb_dvec4(drone.0.thrusts()),
         ntb_dvec4(drone.0.rpms()),
+        ntb_dvec4(drone.0.motor_pwms()),
         drone.0.battery.state.bat_voltage,
         drone.0.battery.state.bat_voltage_sag,
     );

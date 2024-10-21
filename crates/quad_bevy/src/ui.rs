@@ -1,6 +1,6 @@
 use bevy::{
     math::{DMat3, DVec3, DVec4},
-    prelude::{Component, Query, Transform},
+    prelude::{Component, Query},
 };
 use bevy_egui::{egui::Window, EguiContexts};
 use egui_extras::{Column, TableBuilder};
@@ -14,6 +14,7 @@ pub struct UiSimulationInfo {
     angular_velocity: DVec3,
     motor_thrusts: DVec4,
     motor_rpm: DVec4,
+    motor_pwm: DVec4,
     bat_voltage: f64,
     bat_voltage_sag: f64,
 }
@@ -28,6 +29,7 @@ impl UiSimulationInfo {
         angular_velocity: DVec3,
         motor_thrusts: DVec4,
         motor_rpm: DVec4,
+        motor_pwm: DVec4,
         bat_voltage: f64,
         bat_voltage_sag: f64,
     ) {
@@ -40,6 +42,7 @@ impl UiSimulationInfo {
         self.motor_rpm = motor_rpm;
         self.bat_voltage = bat_voltage;
         self.bat_voltage_sag = bat_voltage_sag;
+        self.motor_pwm = motor_pwm;
     }
 }
 
@@ -99,22 +102,6 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                         ui.label(format!("{}", ui_sim_info.angular_velocity));
                     });
                 });
-            });
-    });
-
-    Window::new("Motor info").show(ctx.ctx_mut(), |ui| {
-        TableBuilder::new(ui)
-            .column(Column::auto().resizable(true))
-            .column(Column::remainder())
-            .header(20.0, |mut header| {
-                header.col(|ui| {
-                    ui.heading("Name");
-                });
-                header.col(|ui| {
-                    ui.heading("Data");
-                });
-            })
-            .body(|mut body| {
                 for i in 0..4 {
                     body.row(30.0, |mut row| {
                         row.col(|ui| {
@@ -135,22 +122,16 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                         });
                     });
                 }
-            });
-    });
-
-    Window::new("Bat voltage").show(ctx.ctx_mut(), |ui| {
-        TableBuilder::new(ui)
-            .column(Column::auto().resizable(true))
-            .column(Column::remainder())
-            .header(20.0, |mut header| {
-                header.col(|ui| {
-                    ui.heading("Name");
-                });
-                header.col(|ui| {
-                    ui.heading("Data");
-                });
-            })
-            .body(|mut body| {
+                for i in 0..4 {
+                    body.row(30.0, |mut row| {
+                        row.col(|ui| {
+                            ui.label(format!("Motor pwm {i}"));
+                        });
+                        row.col(|ui| {
+                            ui.label(format!("{}", ui_sim_info.motor_pwm[i]));
+                        });
+                    });
+                }
                 body.row(30.0, |mut row| {
                     row.col(|ui| {
                         ui.label("Bat voltage");
@@ -166,20 +147,6 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                     row.col(|ui| {
                         ui.label(format!("{}", ui_sim_info.bat_voltage_sag));
                     });
-                });
-            });
-    });
-
-    Window::new("Controller input").show(ctx.ctx_mut(), |ui| {
-        TableBuilder::new(ui)
-            .column(Column::auto().resizable(true))
-            .column(Column::remainder())
-            .header(20.0, |mut header| {
-                header.col(|ui| {
-                    ui.heading("Name");
-                });
-                header.col(|ui| {
-                    ui.heading("Data");
                 });
             });
     });
