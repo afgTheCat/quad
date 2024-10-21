@@ -3723,6 +3723,7 @@ name = "sim"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "flight_controller",
  "quad_bevy",
  "quad_sim",
 ]

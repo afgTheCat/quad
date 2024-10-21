@@ -302,7 +302,7 @@ mod test {
                     SamplePoint::new(1.06, 3.0),
                     SamplePoint::new(1.08, 0.0),
                 ]),
-                quad_bat_cell_count: 4.,
+                quad_bat_cell_count: 4,
                 quad_bat_capacity_charged: 850.,
                 quad_bat_capacity: 850.,
                 max_voltage_sag: 1.4,

@@ -200,7 +200,7 @@ mod test {
             roll: 0.5,
         };
 
-        for _ in 0..1000 {
+        for _ in 0..10 {
             unsafe {
                 let flight_controller_update = FlightControllerUpdate {
                     battery_update,

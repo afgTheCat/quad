@@ -169,4 +169,18 @@ pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
                 });
             });
     });
+
+    Window::new("Controller input").show(ctx.ctx_mut(), |ui| {
+        TableBuilder::new(ui)
+            .column(Column::auto().resizable(true))
+            .column(Column::remainder())
+            .header(20.0, |mut header| {
+                header.col(|ui| {
+                    ui.heading("Name");
+                });
+                header.col(|ui| {
+                    ui.heading("Data");
+                });
+            });
+    });
 }

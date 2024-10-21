@@ -1,6 +1,6 @@
 use std::{f64, ops::Index};
 
-mod bindings;
+pub mod bindings;
 pub mod controllers;
 
 #[derive(Debug, Clone, Copy)]

@@ -1,4 +1,6 @@
+mod controller;
 mod ui;
+
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets, Handle},
@@ -27,20 +29,13 @@ use flight_controller::{
     FlightControllerUpdate, GyroUpdate, MotorInput,
 };
 use nalgebra::{Matrix3, Vector3, Vector4};
-
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
 use quad_sim::{
     arm::{Arm, MotorProps, MotorState, Propeller},
-    // controller::Model,
     rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
     sample_curve::{SampleCurve, SamplePoint},
-    Battery,
-    BatteryProps,
-    BatteryState,
-    Drone,
-    Gyro,
-    Motor,
+    Battery, BatteryProps, BatteryState, Drone, Gyro, Motor,
 };
 use std::{sync::Arc, time::Duration};
 use ui::{update_ui, UiSimulationInfo};
