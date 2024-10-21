@@ -121,7 +121,7 @@ impl BFController {
 
     // This is something more than just what we have
     unsafe fn set_armed() {
-        armingFlags |= 1 << 0;
+        armingFlags |= 1;
         rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
         rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
         rxRuntimeState.rcFrameStatusFn = Some(rx_rc_frame_status);
@@ -176,11 +176,13 @@ impl FlightController for BFController {
 #[cfg(test)]
 mod test {
     use super::BFController;
-    use crate::{BatteryUpdate, Channels, FlightController, FlightControllerUpdate, GyroUpdate};
+    use crate::{
+        bindings::bf_bindings_generated::armingFlags, BatteryUpdate, Channels, FlightController,
+        FlightControllerUpdate, GyroUpdate,
+    };
 
     #[test]
     fn controller_bf_controller() {
-        // let mut inputs = vec![];
         let controller = BFController;
         controller.init();
         controller.set_armed();
@@ -206,16 +208,6 @@ mod test {
             roll: 0.,
         };
 
-        // for _ in 0..100 {
-        //     let flight_controller_update = FlightControllerUpdate {
-        //         battery_update,
-        //         gyro_update,
-        //         channels,
-        //     };
-        //     let motor_input = controller.update(flight_controller_update);
-        //     inputs.push(motor_input);
-        // }
-
         let mut counter: u64 = 0;
 
         loop {
@@ -226,13 +218,14 @@ mod test {
             };
             let motor_input = controller.update(flight_controller_update);
             if counter == 100000 {
-                println!("motor_input: {motor_input:?}");
+                // println!("motor_input: {motor_input:?}");
+                // let armed = unsafe { armingFlags };
+                // println!("arming flags: {armed}");
+                // let armed = unsafe {};
                 counter = 0;
             } else {
                 counter += 1;
             }
         }
-
-        // println!("{inputs:?}");
     }
 }
