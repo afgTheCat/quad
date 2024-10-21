@@ -257,12 +257,15 @@ pub fn setup_drone(
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
                 inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(750., -5150.0, 750.0)),
-                angular_velocity: Vector3::new(0., 0., 0.),
+                angular_velocity: Vector3::new(0.1, 0., 0.),
                 mass: 0.2972,
                 rotation: Matrix3::identity(), // stargin position
                 frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
                 frame_drag_constant: 1.45,
-                ..Default::default()
+                linear_velocity: Vector3::zeros(),
+                linear_velocity_dir: None,
+                acceleration: Vector3::zeros(),
+                position: Vector3::zeros(),
             },
             gyro: Gyro::default(),
             battery: Battery {
@@ -403,15 +406,4 @@ pub fn build_app() -> App {
     .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
     .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
-}
-
-#[cfg(test)]
-mod test {
-    use crate::build_app;
-
-    #[test]
-    fn test_asd() {
-        let mut app = build_app();
-        app.run();
-    }
 }

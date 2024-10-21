@@ -65,10 +65,6 @@ impl BFController {
             RC_DATA_CACHE[i] = (1500. + data[i] * 500.) as u16;
         }
         // rcDataReceptionTimeUs = timeUs; // I don't think it's used for anything
-        rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
-        rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
-        rxRuntimeState.rcFrameStatusFn = Some(rx_rc_frame_status);
-        rxRuntimeState.rxProvider = rxProvider_t_RX_PROVIDER_UDP;
         // rxRuntimeState.lastRcFrameTimeUs = 0; // TODO: not sure if we need to handle this?
         // rxRuntimeState.rcFrameTimeUsFn = Some(rx_rc_frame_time_us); // TODO do we need this?
     }
@@ -123,9 +119,13 @@ impl BFController {
         // TODO: finish this, I refuse for now
     }
 
-    // cuz fuck it, why not
+    // This is something more than just what we have
     unsafe fn set_armed() {
-        armingFlags |= 1 << 0
+        armingFlags |= 1 << 0;
+        rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
+        rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
+        rxRuntimeState.rcFrameStatusFn = Some(rx_rc_frame_status);
+        rxRuntimeState.rxProvider = rxProvider_t_RX_PROVIDER_UDP;
     }
 
     unsafe fn enable_angle_mode() {

@@ -8,12 +8,11 @@ pub mod sample_curve;
 
 use arm::Arm;
 pub use arm::Motor;
-// use bevy::math::{Matrix3<f64>, Vector3<f64>, DVec4};
 use constants::{GRAVITY, MAX_EFFECT_SPEED};
 use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Matrix3, Vector3, Vector4};
+use nalgebra::{Matrix3, UnitQuaternion, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -23,6 +22,7 @@ use std::{cell::RefCell, ops::Range};
 #[derive(Debug, Clone, Default)]
 pub struct Gyro {
     low_pass_filter: [LowPassFilter; 3],
+    previous_rotation: UnitQuaternion<f64>,
     rotation: Vector4<f64>,
     acceleration: Vector3<f64>,
     gyro_angular_vel: Vector3<f64>,
@@ -84,6 +84,28 @@ impl Gyro {
             acc: self.acceleration.data.0[0],
             gyro: self.gyro_angular_vel.data.0[0],
         }
+    }
+
+    pub fn update(
+        &mut self,
+        dt: f64,
+        rotation: Matrix3<f64>,
+        angular_velocity: Vector3<f64>,
+        acceleration: Vector3<f64>,
+        #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
+    ) {
+        let new_rotation =
+            UnitQuaternion::from_matrix_eps(&rotation, 0.1, 10, self.previous_rotation);
+        self.previous_rotation = new_rotation;
+        self.set_rotation(new_rotation.coords);
+        self.set_angular_velocity(
+            rotation,
+            angular_velocity,
+            dt,
+            #[cfg(feature = "noise")]
+            combined_noise,
+        );
+        self.set_acceleration(rotation, acceleration);
     }
 }
 
@@ -324,21 +346,14 @@ impl Drone {
         #[cfg(feature = "noise")]
         let combined_noise = self.calculate_combined_noise(dt);
 
-        // sets attitude
-        self.gyro
-            .set_rotation(mat3_to_quat(self.rigid_body.rotation));
-
-        self.gyro.set_angular_velocity(
+        self.gyro.update(
+            dt,
             self.rigid_body.rotation,
             self.rigid_body.angular_velocity,
-            dt,
+            self.rigid_body.acceleration,
             #[cfg(feature = "noise")]
             combined_noise,
         );
-
-        // sets acceleration
-        self.gyro
-            .set_acceleration(self.rigid_body.rotation, self.rigid_body.acceleration);
     }
 }
 
