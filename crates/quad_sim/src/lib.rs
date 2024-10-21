@@ -373,7 +373,8 @@ mod test {
     };
 
     #[test]
-    fn bf_controller() {
+    fn quad_sim_bf_controller() {
+        let mut inputs = vec![];
         let controller = BFController;
         controller.init();
         controller.set_armed();
@@ -399,13 +400,16 @@ mod test {
             roll: 0.5,
         };
 
-        for _ in 0..10 {
+        for _ in 0..100 {
             let flight_controller_update = FlightControllerUpdate {
                 battery_update,
                 gyro_update,
                 channels,
             };
-            controller.update(flight_controller_update);
+            let motor_input = controller.update(flight_controller_update);
+            inputs.push(motor_input);
         }
+
+        println!("{inputs:?}");
     }
 }

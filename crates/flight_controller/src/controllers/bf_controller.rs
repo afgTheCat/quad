@@ -149,7 +149,6 @@ impl BFController {
         // TODO: what should we do with this?
 
         scheduler();
-        // let armed = armingFlags & armingFlag_e_ARMED as u8 == armingFlag_e_ARMED as u8;
         let motor_input_1 = motorsPwm[0] as f64 / 1000.;
         let motor_input_2 = motorsPwm[1] as f64 / 1000.;
         let motor_input_3 = motorsPwm[2] as f64 / 1000.;
@@ -177,12 +176,14 @@ impl FlightController for BFController {
 #[cfg(test)]
 mod test {
     use super::BFController;
-    use crate::{bindings::motorsPwm, BatteryUpdate, Channels, FlightControllerUpdate, GyroUpdate};
+    use crate::{BatteryUpdate, Channels, FlightController, FlightControllerUpdate, GyroUpdate};
 
     #[test]
-    fn asd() {
-        unsafe { BFController::init() };
-        unsafe { BFController::set_armed() };
+    fn controller_bf_controller() {
+        // let mut inputs = vec![];
+        let controller = BFController;
+        controller.init();
+        controller.set_armed();
 
         let battery_update = BatteryUpdate {
             bat_voltage_sag: 1.,
@@ -193,40 +194,45 @@ mod test {
         };
 
         let gyro_update = GyroUpdate {
-            rotation: [0., 0., 0., 0.],
+            rotation: [1., 0., 0., 0.],
             acc: [0., 0., 0.],
             gyro: [0., 0., 0.],
         };
 
         let channels = Channels {
             throttle: 0.5,
-            yaw: 0.5,
-            pitch: 0.5,
-            roll: 0.5,
+            yaw: 0.,
+            pitch: 0.,
+            roll: 0.,
         };
 
-        // loop {
-        //     unsafe {
-        //         let flight_controller_update = FlightControllerUpdate {
-        //             battery_update,
-        //             gyro_update,
-        //             channels,
-        //         };
-        //         BFController::update(flight_controller_update);
-        //         // println!("motor pwms {:?}", motorsPwm[0]);
-        //     }
+        // for _ in 0..100 {
+        //     let flight_controller_update = FlightControllerUpdate {
+        //         battery_update,
+        //         gyro_update,
+        //         channels,
+        //     };
+        //     let motor_input = controller.update(flight_controller_update);
+        //     inputs.push(motor_input);
         // }
 
-        for _ in 0..1000 {
-            unsafe {
-                let flight_controller_update = FlightControllerUpdate {
-                    battery_update,
-                    gyro_update,
-                    channels,
-                };
-                BFController::update(flight_controller_update);
-                println!("motor pwms {:?}", motorsPwm[0]);
+        let mut counter: u64 = 0;
+
+        loop {
+            let flight_controller_update = FlightControllerUpdate {
+                battery_update,
+                gyro_update,
+                channels,
+            };
+            let motor_input = controller.update(flight_controller_update);
+            if counter == 100000 {
+                println!("motor_input: {motor_input:?}");
+                counter = 0;
+            } else {
+                counter += 1;
             }
         }
+
+        // println!("{inputs:?}");
     }
 }

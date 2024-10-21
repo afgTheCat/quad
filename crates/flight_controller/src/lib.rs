@@ -43,9 +43,9 @@ impl Channels {
     // TODO: verify this!
     pub fn to_bf_channels(&self) -> [f32; 8] {
         [
-            self.throttle as f32,
             self.roll as f32,
             self.pitch as f32,
+            self.throttle as f32,
             self.yaw as f32,
             0.,
             0.,
