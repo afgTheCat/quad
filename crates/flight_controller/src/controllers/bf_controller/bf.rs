@@ -1,5 +1,8 @@
 use std::{
-    sync::mpsc::{Receiver, Sender},
+    sync::{
+        mpsc::{Receiver, Sender},
+        Arc, Mutex,
+    },
     thread,
     time::Duration,
 };
@@ -9,13 +12,15 @@ use crate::{
         bf_bindings_generated::{
             armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
             rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
-            rxRuntimeState_s, scheduler, sensors, sensors_e_SENSOR_ACC, setCellCount, timeUs_t,
-            virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
+            rxRuntimeState_s, rxRuntimeState_t, scheduler, sensors, sensors_e_SENSOR_ACC,
+            setCellCount, timeUs_t, virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
         },
         motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
     },
     BatteryUpdate, FlightControllerUpdate, GyroUpdate, MotorInput,
 };
+
+use super::FCMutex;
 
 fn constarain_i16(val: f64, min: f64, max: f64) -> i16 {
     if val < min {
@@ -47,6 +52,7 @@ unsafe extern "C" fn rx_rc_frame_time_us() -> timeUs_t {
 pub struct BFWorker {
     pub rx: Receiver<FlightControllerUpdate>,
     pub tx: Sender<MotorInput>,
+    pub fc_mutex: Arc<Mutex<FCMutex>>,
 }
 
 impl BFWorker {
@@ -82,7 +88,12 @@ impl BFWorker {
 
     pub unsafe fn init(&self) {
         init();
-        scheduler(); // maybe we need this quick?
+        // why the fuck do we need this?
+        // for _ in 0..1000 {
+        //     scheduler();
+        //     thread::sleep(Duration::from_micros(50));
+        // }
+
         armingFlags |= 1;
         rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
         rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
@@ -116,7 +127,6 @@ impl BFWorker {
             self.set_rc_data(update.channels.to_bf_channels());
             self.update_battery(update.battery_update);
             self.update_gyro_acc(update.gyro_update);
-            // self.update_gps(); // TODO: not sure if we need this
             scheduler();
             MotorInput([
                 motorsPwm[0] as f64 / 1000.,
@@ -130,7 +140,36 @@ impl BFWorker {
         thread::sleep(Duration::from_micros(50));
     }
 
-    pub fn update2(&self, update: FlightControllerUpdate) {
+    pub fn update2(&self) {
+        let mut fc_mutex = self.fc_mutex.lock().unwrap();
+        if let Some(update) = fc_mutex.update {
+            let motor_input = unsafe {
+                self.set_rc_data(update.channels.to_bf_channels());
+                self.update_battery(update.battery_update);
+                self.update_gyro_acc(update.gyro_update);
+                scheduler();
+                MotorInput([
+                    motorsPwm[0] as f64 / 1000.,
+                    motorsPwm[1] as f64 / 1000.,
+                    motorsPwm[2] as f64 / 1000.,
+                    motorsPwm[3] as f64 / 1000.,
+                ])
+            };
+            fc_mutex.update = None;
+            fc_mutex.motor_input = Some(motor_input);
+        } else {
+            unsafe { scheduler() }
+        }
+        thread::sleep(Duration::from_micros(50));
+    }
+
+    pub fn work2(&self) {
+        loop {
+            self.update2();
+        }
+    }
+
+    pub fn brrr(&self, update: FlightControllerUpdate) {
         unsafe {
             self.init();
             loop {
