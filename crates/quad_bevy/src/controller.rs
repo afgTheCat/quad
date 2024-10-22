@@ -1,23 +1,30 @@
-use bevy::{input::gamepad::GamepadEvent, prelude::EventReader};
+use bevy::{
+    input::gamepad::GamepadEvent,
+    prelude::{EventReader, GamepadAxisType, Query},
+};
 
-fn gamepad_input_events(mut evr_gamepad: EventReader<GamepadEvent>) {
+use crate::Controller;
+
+pub fn gamepad_input_events(
+    mut evr_gamepad: EventReader<GamepadEvent>,
+    mut controller: Query<&mut Controller>,
+) {
+    let mut controller = controller.single_mut();
     for ev in evr_gamepad.read() {
-        match ev {
-            GamepadEvent::Axis(ev_axis) => {
-                println!(
-                    "Axis {:?} on gamepad {:?} is now at {:?}",
-                    ev_axis.axis_type, ev_axis.gamepad, ev_axis.value
-                );
-            }
-            GamepadEvent::Button(ev_button) => {
-                println!(
-                    "Button {:?} on gamepad {:?} is now at {:?}",
-                    ev_button.button_type, ev_button.gamepad, ev_button.value
-                );
-            }
-            _ => {
-                // we don't care about other events here (connect/disconnect)
-            }
+        println!("ev: {ev:?}");
+
+        let &GamepadEvent::Axis(ax) = &ev else {
+            continue;
+        };
+
+        let ax_val = ax.value as f64;
+
+        match ax.axis_type {
+            GamepadAxisType::LeftZ => controller.set_throttle(ax_val),
+            // GamepadAxisType::RightStickX => controller.set_yaw(ax_val),
+            // GamepadAxisType::LeftStickX => controller.set_roll(ax_val),
+            // GamepadAxisType::LeftStickY => controller.set_pitch(ax_val),
+            _ => {}
         }
     }
 }

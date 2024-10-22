@@ -17,6 +17,7 @@ use bevy::{
 use bevy_egui::EguiPlugin;
 use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
+use controller::gamepad_input_events;
 use core::f64;
 use flight_controller::{
     controllers::bf_controller::BFController, BatteryUpdate, Channels, FlightController,
@@ -120,6 +121,22 @@ impl Controller {
     pub fn channels(&self) -> Channels {
         self.0
     }
+
+    pub fn set_throttle(&mut self, throttle: f64) {
+        self.0.throttle = throttle
+    }
+
+    pub fn set_yaw(&mut self, yaw: f64) {
+        self.0.yaw = yaw
+    }
+
+    pub fn set_pitch(&mut self, pitch: f64) {
+        self.0.pitch = pitch
+    }
+
+    pub fn set_roll(&mut self, roll: f64) {
+        self.0.roll = roll
+    }
 }
 
 #[derive(Default, Reflect, GizmoConfigGroup)]
@@ -154,6 +171,11 @@ pub fn build_app() -> App {
     .add_systems(Startup, base_setup)
     .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
     .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
+    .add_systems(
+        Update,
+        gamepad_input_events.run_if(in_state(SimState::Running)),
+    )
+    // .add_systems(Update, gamepad_system.run_if(in_state(SimState::Running)))
     .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
 }

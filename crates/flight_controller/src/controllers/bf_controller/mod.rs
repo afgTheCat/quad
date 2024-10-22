@@ -23,6 +23,21 @@ impl BFController {
         let fc_mutex = Arc::new(Mutex::new(FCMutex::default()));
         Self { fc_mutex }
     }
+
+    pub fn only_scheduler(&self) {
+        let mutex_clone = self.fc_mutex.clone();
+
+        let thread = move || {
+            let worker = BFWorker {
+                fc_mutex: mutex_clone,
+            };
+            unsafe { worker.init() };
+            worker.work();
+        };
+
+        let handler = thread::spawn(thread);
+        handler.join().unwrap();
+    }
 }
 
 impl FlightController for BFController {
@@ -33,7 +48,7 @@ impl FlightController for BFController {
             let worker = BFWorker {
                 fc_mutex: mutex_clone,
             };
-            unsafe { worker.init() };
+            unsafe { worker.init_arm() };
             worker.work();
         };
         thread::spawn(thread);
@@ -69,7 +84,7 @@ mod test {
         };
 
         let channels = Channels {
-            throttle: 1.,
+            throttle: -1.,
             yaw: 0.,
             pitch: 0.,
             roll: 0.,
@@ -81,12 +96,18 @@ mod test {
             channels,
         };
 
-        let mut controller = BFController::default();
+        let controller = BFController::default();
         controller.init();
 
         loop {
             controller.update(flight_controller_update);
             thread::sleep(Duration::from_micros(10));
         }
+    }
+
+    #[test]
+    fn only_scheduler() {
+        let controller = BFController::default();
+        controller.only_scheduler();
     }
 }

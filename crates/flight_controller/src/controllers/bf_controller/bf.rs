@@ -77,7 +77,7 @@ impl BFWorker {
         }
     }
 
-    pub unsafe fn init(&self) {
+    pub unsafe fn init_arm(&self) {
         init();
         armingFlags |= 1;
         rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
@@ -133,5 +133,16 @@ impl BFWorker {
             self.update();
             thread::sleep(Duration::from_micros(50));
         }
+    }
+
+    pub fn only_scheduler(&self) {
+        loop {
+            unsafe { scheduler() };
+            thread::sleep(Duration::from_micros(50));
+        }
+    }
+
+    pub fn init(&self) {
+        unsafe { init() }
     }
 }
