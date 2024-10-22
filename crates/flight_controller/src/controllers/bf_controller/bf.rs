@@ -52,13 +52,9 @@ pub struct BFWorker {
 
 impl BFWorker {
     unsafe fn set_rc_data(&self, data: [f32; 8]) {
-        // uint32_t timeUs = BF::micros_passed & 0xFFFFFFFF; // sets the timeUs to the micros (?)
         for i in 0..8 {
             RC_DATA_CACHE[i] = (1500. + data[i] * 500.) as u16;
         }
-        // rcDataReceptionTimeUs = timeUs; // I don't think it's used for anything
-        // rxRuntimeState.lastRcFrameTimeUs = 0; // TODO: not sure if we need to handle this?
-        // rxRuntimeState.rcFrameTimeUsFn = Some(rx_rc_frame_time_us); // TODO do we need this?
     }
 
     unsafe fn update_battery(&self, update: BatteryUpdate) {
@@ -130,12 +126,12 @@ impl BFWorker {
         } else {
             unsafe { scheduler() }
         }
-        thread::sleep(Duration::from_micros(50));
     }
 
     pub fn work(&self) {
         loop {
             self.update();
+            thread::sleep(Duration::from_micros(50));
         }
     }
 }

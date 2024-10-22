@@ -71,11 +71,18 @@ pub struct FlightControllerComponent {
 }
 
 impl FlightControllerComponent {
+    fn new() -> Self {
+        Self {
+            fc: Arc::new(BFController::new()),
+        }
+    }
+
     fn init(&self) {
         self.fc.init()
     }
 
     fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput> {
+        println!("UPDATE");
         self.fc.update(update)
     }
 }
@@ -217,7 +224,7 @@ pub fn setup_drone(
 ) {
     // Wait until the scene is loaded
     if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
-        let controller = BFController::new();
+        let controller = FlightControllerComponent::new();
         controller.init();
         // get the motor positions
         let motor_positions = PROP_BLADE_MESH_NAMES.map(|name| {
@@ -300,9 +307,7 @@ pub fn setup_drone(
             .spawn((
                 drone,
                 SpatialBundle::default(),
-                FlightControllerComponent {
-                    fc: Arc::new(controller),
-                },
+                controller,
                 UiSimulationInfo::default(),
                 SimContext::default(),
             ))
