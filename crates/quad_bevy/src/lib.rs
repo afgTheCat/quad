@@ -75,7 +75,7 @@ impl FlightControllerComponent {
         self.fc.init()
     }
 
-    fn update(&mut self, update: FlightControllerUpdate) -> MotorInput {
+    fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput> {
         self.fc.update(update)
     }
 }
@@ -217,9 +217,8 @@ pub fn setup_drone(
 ) {
     // Wait until the scene is loaded
     if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
-        let controller = BFController;
+        let controller = BFController::new();
         controller.init();
-        controller.set_armed();
         // get the motor positions
         let motor_positions = PROP_BLADE_MESH_NAMES.map(|name| {
             let node_id = gltf.named_nodes[name].id();
@@ -351,7 +350,9 @@ pub fn debug_drone(
             },
         };
         let pwms = controller.update(fc_input);
-        drone.set_motor_pwms(pwms);
+        if let Some(pwms) = pwms {
+            drone.set_motor_pwms(pwms);
+        }
     }
 
     let drone_translation = ntb_vec3(drone.0.rigid_body.position);

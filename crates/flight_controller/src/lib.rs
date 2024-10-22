@@ -62,10 +62,9 @@ pub struct FlightControllerUpdate {
     pub channels: Channels,
 }
 
-pub trait FlightController: Send + 'static {
-    fn init(&mut self);
+pub trait FlightController: Send + Sync + 'static {
+    fn init(&self);
     fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput>;
-    fn set_armed(&self);
 }
 
 impl Default for MotorInput {
