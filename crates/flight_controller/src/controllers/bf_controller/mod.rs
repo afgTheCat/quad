@@ -79,8 +79,8 @@ mod test {
 
         let gyro_update = GyroUpdate {
             rotation: [1., 0., 0., 0.],
-            acc: [0., 0., 0.],
-            gyro: [0., 0., 0.],
+            linear_acc: [0., 0., 0.],
+            angular_velocity: [0., 0., 0.],
         };
 
         let channels = Channels {

@@ -8,7 +8,7 @@ use crate::{
     low_pass_filter::LowPassFilter,
 };
 use fastapprox::faster::exp;
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::{Matrix3, Rotation, Rotation3, Vector3};
 
 #[derive(Debug, Clone)]
 pub struct Propeller {
@@ -162,7 +162,7 @@ impl Arm {
     fn motor_thrust(
         &mut self,
         rpm: f64,
-        rotation: Matrix3<f64>,
+        rotation: Rotation3<f64>,
         linear_velocity_dir: Option<Vector3<f64>>,
         speed_factor: f64,
         vel_up: f64,
@@ -171,7 +171,7 @@ impl Arm {
         let mut reverse_thrust = if let Some(linear_velocity_dir) = linear_velocity_dir {
             -Vector3::dot(
                 &linear_velocity_dir,
-                &(rotation.column(0) * self.motor.state.thrust).normalize(),
+                &(rotation.matrix().column(0) * self.motor.state.thrust).normalize(),
             )
         } else {
             0.
@@ -195,7 +195,7 @@ impl Arm {
         &mut self,
         dt: f64,
         vbat: f64,
-        rotation: Matrix3<f64>,
+        rotation: Rotation3<f64>,
         linear_velocity_dir: Option<Vector3<f64>>,
         speed_factor: f64,
         vel_up: f64,

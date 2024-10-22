@@ -12,7 +12,7 @@ use constants::{GRAVITY, MAX_EFFECT_SPEED};
 use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Matrix3, UnitQuaternion, Vector3, Vector4};
+use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -33,7 +33,7 @@ pub struct Gyro {
 impl Gyro {
     pub fn set_angular_velocity(
         &mut self,
-        rotation: Matrix3<f64>,
+        rotation: Rotation3<f64>,
         angular_velocity: Vector3<f64>,
         dt: f64,
         #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
@@ -53,7 +53,7 @@ impl Gyro {
         self.gyro_angular_vel = rotation.transpose() * angular_velocity;
     }
 
-    pub fn set_acceleration(&mut self, rotation: Matrix3<f64>, acceleration: Vector3<f64>) {
+    pub fn set_acceleration(&mut self, rotation: Rotation3<f64>, acceleration: Vector3<f64>) {
         let gravity_acceleration = Vector3::new(0., -GRAVITY, 0.);
         self.acceleration = rotation.transpose() * (acceleration + gravity_acceleration)
     }
@@ -81,21 +81,20 @@ impl Gyro {
     pub fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
             rotation: self.rotation.data.0[0],
-            acc: self.acceleration.data.0[0],
-            gyro: self.gyro_angular_vel.data.0[0],
+            linear_acc: self.acceleration.data.0[0],
+            angular_velocity: self.gyro_angular_vel.data.0[0],
         }
     }
 
     pub fn update(
         &mut self,
         dt: f64,
-        rotation: Matrix3<f64>,
+        rotation: Rotation3<f64>,
         angular_velocity: Vector3<f64>,
         acceleration: Vector3<f64>,
         #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
     ) {
-        let new_rotation =
-            UnitQuaternion::from_matrix_eps(&rotation, 0.001, 10, self.previous_rotation);
+        let new_rotation = UnitQuaternion::from(rotation);
         self.previous_rotation = new_rotation;
         // BF expects the order to be w, x, y, z
         self.set_rotation(Vector4::new(
@@ -315,7 +314,7 @@ impl Drone {
             0.,
             Vector3::dot(
                 &self.rigid_body.linear_velocity,
-                &self.rigid_body.rotation.column(0),
+                &self.rigid_body.rotation.matrix().column(0),
             ),
         );
         let m_torques = self.arms.iter_mut().map(|arm| {

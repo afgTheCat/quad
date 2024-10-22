@@ -12,7 +12,7 @@ use bevy::{
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::{Matrix3, Rotation3, Vector3};
 use quad_sim::{
     arm::{Arm, MotorProps, MotorState, Propeller},
     rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
@@ -119,9 +119,9 @@ pub fn setup_drone(
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
                 inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(750., -5150.0, 750.0)),
-                angular_velocity: Vector3::new(0.2, 0., 0.),
+                angular_velocity: Vector3::new(0.0, 0., 0.),
                 mass: 0.2972,
-                rotation: Matrix3::identity(), // stargin position
+                rotation: Rotation3::identity(), // stargin position
                 frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
                 frame_drag_constant: 1.45,
                 linear_velocity: Vector3::zeros(),

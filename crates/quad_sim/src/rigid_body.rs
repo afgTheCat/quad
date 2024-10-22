@@ -1,4 +1,4 @@
-use nalgebra::{Matrix3, Vector3};
+use nalgebra::{Matrix3, Rotation, Rotation3, Vector3};
 
 use crate::constants::{AIR_RHO, GRAVITY};
 
@@ -46,7 +46,7 @@ pub struct RigidBody {
     pub frame_drag_area: Vector3<f64>,
     pub frame_drag_constant: f64,
     pub inv_tensor: Matrix3<f64>,
-    pub rotation: Matrix3<f64>,
+    pub rotation: Rotation3<f64>,
     pub acceleration: Vector3<f64>,
 }
 
@@ -119,8 +119,15 @@ impl RigidBody {
         self.acceleration = acceleration;
         self.position += dt * self.linear_velocity + (acceleration * dt.powi(2)) / 2.;
         self.linear_velocity += acceleration * dt;
-        self.rotation = (Matrix3::identity() + cross_product_matrix(self.angular_velocity * dt))
-            * self.rotation;
+
+        // TODO:: There might be a better way to do this
+        self.rotation = Rotation3::from_matrix_eps(
+            &((Matrix3::identity() + cross_product_matrix(self.angular_velocity * dt))
+                * self.rotation.matrix()),
+            0.0000000001,
+            100,
+            self.rotation,
+        );
         self.linear_velocity_dir = if self.linear_velocity.lp_norm(1) > 0. {
             Some(self.linear_velocity.normalize())
         } else {

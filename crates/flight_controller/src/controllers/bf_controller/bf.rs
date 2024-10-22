@@ -7,10 +7,10 @@ use std::{
 use crate::{
     bindings::{
         bf_bindings_generated::{
-            armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
-            rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
-            rxRuntimeState_s, scheduler, sensors, sensors_e_SENSOR_ACC, setCellCount, timeUs_t,
-            virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
+            armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, imuUpdateAttitude,
+            init, micros64, rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP,
+            rxRuntimeState, rxRuntimeState_s, scheduler, sensors, sensors_e_SENSOR_ACC,
+            setCellCount, timeUs_t, virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
         },
         motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
     },
@@ -87,23 +87,34 @@ impl BFWorker {
     }
 
     unsafe fn update_gyro_acc(&self, update: GyroUpdate) {
-        if sensors(sensors_e_SENSOR_ACC) {
-            imuSetAttitudeQuat(
-                update.rotation[0] as f32,
-                update.rotation[1] as f32,
-                update.rotation[2] as f32,
-                update.rotation[3] as f32,
-            );
-            // TODO: I guess it would make sense to import this from bf
-            let x = constarain_i16(-update.acc[2] * ACC_SCALE, -32767., 32767.);
-            let y = constarain_i16(update.acc[0] * ACC_SCALE, -32767., 32767.);
-            let z = constarain_i16(update.acc[1] * ACC_SCALE, -32767., 32767.);
-            virtualAccSet(virtualAccDev, x, y, z);
-        }
-        let x = constarain_i16(-update.gyro[2] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
-        let y = constarain_i16(update.gyro[0] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
-        let z = constarain_i16(-update.gyro[1] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+        // TODO: I guess it would make sense to import this from bf
+        let x = constarain_i16(-update.linear_acc[2] * ACC_SCALE, -32767., 32767.);
+        let y = constarain_i16(update.linear_acc[0] * ACC_SCALE, -32767., 32767.);
+        let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
+        virtualAccSet(virtualAccDev, x, y, z);
+
+        let x = constarain_i16(
+            -update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,
+            -32767.,
+            32767.,
+        );
+        let y = constarain_i16(
+            update.angular_velocity[0] * GYRO_SCALE * RAD2DEG,
+            -32767.,
+            32767.,
+        );
+        let z = constarain_i16(
+            -update.angular_velocity[1] * GYRO_SCALE * RAD2DEG,
+            -32767.,
+            32767.,
+        );
         virtualGyroSet(virtualGyroDev, x, y, z);
+        imuSetAttitudeQuat(
+            update.rotation[0] as f32,
+            update.rotation[1] as f32,
+            update.rotation[2] as f32,
+            update.rotation[3] as f32,
+        );
     }
 
     pub fn update(&self) {

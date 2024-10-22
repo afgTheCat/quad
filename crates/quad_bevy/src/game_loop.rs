@@ -5,7 +5,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{Channels, FlightControllerUpdate};
-use nalgebra::{Matrix3, Vector3, Vector4};
+use nalgebra::{Matrix3, Rotation3, Vector3, Vector4};
 
 use crate::{
     ui::UiSimulationInfo, Controller, DroneComponent, FlightControllerComponent, SimContext,
@@ -23,10 +23,11 @@ fn ntb_dvec4(vec: Vector4<f64>) -> DVec4 {
     DVec4::new(vec[0], vec[1], vec[2], vec[3])
 }
 
-fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
+fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
     Mat3::from_cols(
         Vec3::from_slice(
             &matrix
+                .matrix()
                 .column(0)
                 .iter()
                 .map(|x| *x as f32)
@@ -34,6 +35,7 @@ fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
         ),
         Vec3::from_slice(
             &matrix
+                .matrix()
                 .column(1)
                 .iter()
                 .map(|x| *x as f32)
@@ -41,6 +43,7 @@ fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
         ),
         Vec3::from_slice(
             &matrix
+                .matrix()
                 .column(2)
                 .iter()
                 .map(|x| *x as f32)
@@ -49,11 +52,32 @@ fn ntb_mat3(matrix: Matrix3<f64>) -> Mat3 {
     )
 }
 
-fn ntb_dmat3(matrix: Matrix3<f64>) -> DMat3 {
+fn ntb_dmat3(matrix: Rotation3<f64>) -> DMat3 {
     DMat3::from_cols(
-        DVec3::from_slice(&matrix.column(0).iter().map(|x| *x).collect::<Vec<_>>()),
-        DVec3::from_slice(&matrix.column(1).iter().map(|x| *x).collect::<Vec<_>>()),
-        DVec3::from_slice(&matrix.column(2).iter().map(|x| *x).collect::<Vec<_>>()),
+        DVec3::from_slice(
+            &matrix
+                .matrix()
+                .column(0)
+                .iter()
+                .map(|x| *x)
+                .collect::<Vec<_>>(),
+        ),
+        DVec3::from_slice(
+            &matrix
+                .matrix()
+                .column(1)
+                .iter()
+                .map(|x| *x)
+                .collect::<Vec<_>>(),
+        ),
+        DVec3::from_slice(
+            &matrix
+                .matrix()
+                .column(2)
+                .iter()
+                .map(|x| *x)
+                .collect::<Vec<_>>(),
+        ),
     )
 }
 
@@ -93,7 +117,7 @@ pub fn debug_drone(
         };
         let pwms = flight_controller.update(fc_input);
         if let Some(pwms) = pwms {
-            // drone.set_motor_pwms(pwms);
+            drone.set_motor_pwms(pwms);
         }
     }
 

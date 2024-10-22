@@ -5,7 +5,7 @@ pub const AIR_RHO: f64 = 1.225;
 pub const FREQUENCY: i64 = 8000;
 pub const DELTA: i64 = 125;
 // pub const GRAVITY: f64 = 9.81;
-pub const GRAVITY: f64 = 0.;
+pub const GRAVITY: f64 = 0.0;
 
 // names of the propellers in the mesh
 pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [

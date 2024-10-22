@@ -11,8 +11,6 @@ pub fn gamepad_input_events(
 ) {
     let mut controller = controller.single_mut();
     for ev in evr_gamepad.read() {
-        println!("ev: {ev:?}");
-
         let &GamepadEvent::Axis(ax) = &ev else {
             continue;
         };
@@ -23,7 +21,7 @@ pub fn gamepad_input_events(
             GamepadAxisType::LeftZ => controller.set_throttle(ax_val),
             // GamepadAxisType::RightStickX => controller.set_yaw(ax_val),
             // GamepadAxisType::LeftStickX => controller.set_roll(ax_val),
-            // GamepadAxisType::LeftStickY => controller.set_pitch(ax_val),
+            GamepadAxisType::LeftStickY => controller.set_pitch(ax_val),
             _ => {}
         }
     }
