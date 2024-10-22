@@ -46,7 +46,7 @@ impl UiSimulationInfo {
     }
 }
 
-pub fn update_ui(mut ctx: EguiContexts, mut query: Query<&UiSimulationInfo>) {
+pub fn update_ui(mut ctx: EguiContexts, query: Query<&UiSimulationInfo>) {
     let ui_sim_info = query.single();
 
     Window::new("Simulation info").show(ctx.ctx_mut(), |ui| {

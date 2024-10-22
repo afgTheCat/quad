@@ -1,10 +1,4 @@
-use bevy::{
-    input::gamepad::GamepadEvent,
-    prelude::{Component, EventReader},
-};
-
-#[derive(Component)]
-struct Controller {}
+use bevy::{input::gamepad::GamepadEvent, prelude::EventReader};
 
 fn gamepad_input_events(mut evr_gamepad: EventReader<GamepadEvent>) {
     for ev in evr_gamepad.read() {
@@ -16,9 +10,6 @@ fn gamepad_input_events(mut evr_gamepad: EventReader<GamepadEvent>) {
                 );
             }
             GamepadEvent::Button(ev_button) => {
-                // The "value" of a button is typically `0.0` or `1.0`, but it
-                // is a `f32` because some gamepads may have buttons that are
-                // pressure-sensitive or otherwise analog somehow.
                 println!(
                     "Button {:?} on gamepad {:?} is now at {:?}",
                     ev_button.button_type, ev_button.gamepad, ev_button.value

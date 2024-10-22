@@ -31,12 +31,23 @@ pub struct GyroUpdate {
 }
 
 // each channel between -1 and 1
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 pub struct Channels {
     pub throttle: f64,
     pub roll: f64,
     pub pitch: f64,
     pub yaw: f64,
+}
+
+impl Default for Channels {
+    fn default() -> Self {
+        Self {
+            throttle: -1.,
+            roll: 0.,
+            pitch: 0.,
+            yaw: 0.,
+        }
+    }
 }
 
 impl Channels {
