@@ -89,10 +89,10 @@ impl BFWorker {
     unsafe fn update_gyro_acc(&self, update: GyroUpdate) {
         if sensors(sensors_e_SENSOR_ACC) {
             imuSetAttitudeQuat(
-                update.rotation[3] as f32,
-                -update.rotation[2] as f32,
-                -update.rotation[0] as f32,
+                update.rotation[0] as f32,
                 update.rotation[1] as f32,
+                update.rotation[2] as f32,
+                update.rotation[3] as f32,
             );
             // TODO: I guess it would make sense to import this from bf
             let x = constarain_i16(-update.acc[2] * ACC_SCALE, -32767., 32767.);

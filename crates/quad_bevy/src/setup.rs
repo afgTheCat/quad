@@ -119,7 +119,7 @@ pub fn setup_drone(
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
                 inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(750., -5150.0, 750.0)),
-                angular_velocity: Vector3::new(0., 0., 0.),
+                angular_velocity: Vector3::new(0.2, 0., 0.),
                 mass: 0.2972,
                 rotation: Matrix3::identity(), // stargin position
                 frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),

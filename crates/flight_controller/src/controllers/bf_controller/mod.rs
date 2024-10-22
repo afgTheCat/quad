@@ -24,7 +24,7 @@ impl BFController {
         Self { fc_mutex }
     }
 
-    pub fn only_scheduler(&self) {
+    pub fn only_telemetry(&self) {
         let mutex_clone = self.fc_mutex.clone();
 
         let thread = move || {
@@ -108,6 +108,6 @@ mod test {
     #[test]
     fn only_scheduler() {
         let controller = BFController::default();
-        controller.only_scheduler();
+        controller.only_telemetry();
     }
 }

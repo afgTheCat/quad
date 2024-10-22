@@ -95,9 +95,15 @@ impl Gyro {
         #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
     ) {
         let new_rotation =
-            UnitQuaternion::from_matrix_eps(&rotation, 0.1, 10, self.previous_rotation);
+            UnitQuaternion::from_matrix_eps(&rotation, 0.001, 10, self.previous_rotation);
         self.previous_rotation = new_rotation;
-        self.set_rotation(new_rotation.coords);
+        // BF expects the order to be w, x, y, z
+        self.set_rotation(Vector4::new(
+            new_rotation.w,
+            new_rotation.i,
+            new_rotation.j,
+            new_rotation.k,
+        ));
         self.set_angular_velocity(
             rotation,
             angular_velocity,

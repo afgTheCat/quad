@@ -93,7 +93,7 @@ pub fn debug_drone(
         };
         let pwms = flight_controller.update(fc_input);
         if let Some(pwms) = pwms {
-            drone.set_motor_pwms(pwms);
+            // drone.set_motor_pwms(pwms);
         }
     }
 

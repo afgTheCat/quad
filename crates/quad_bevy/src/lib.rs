@@ -95,7 +95,7 @@ pub struct SimContext {
 impl Default for SimContext {
     fn default() -> Self {
         Self {
-            dt: Duration::from_nanos(50000), // TODO: update this
+            dt: Duration::from_nanos(5000), // TODO: update this
             time_accu: Duration::default(),
             ambient_temp: 25.,
             dialation: 1.,
@@ -150,9 +150,7 @@ pub fn build_app() -> App {
             name: Some("bevy.app".into()),
             resolution: (2560., 1440.).into(),
             present_mode: PresentMode::AutoVsync,
-            // Tells Wasm to resize the window according to the available canvas
             fit_canvas_to_parent: true,
-            // Tells Wasm not to override default event handling, like F5, Ctrl+R etc.
             prevent_default_event_handling: false,
             window_theme: Some(WindowTheme::Dark),
             enabled_buttons: bevy::window::EnabledButtons {
