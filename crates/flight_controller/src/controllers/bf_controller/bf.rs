@@ -1,0 +1,152 @@
+use std::{
+    sync::mpsc::{Receiver, Sender},
+    thread,
+    time::Duration,
+};
+
+use crate::{
+    bindings::{
+        bf_bindings_generated::{
+            armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
+            rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
+            rxRuntimeState_s, scheduler, sensors, sensors_e_SENSOR_ACC, setCellCount, timeUs_t,
+            virtualAccDev, virtualAccSet, virtualGyroDev, virtualGyroSet,
+        },
+        motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
+    },
+    BatteryUpdate, FlightControllerUpdate, GyroUpdate, MotorInput,
+};
+
+fn constarain_i16(val: f64, min: f64, max: f64) -> i16 {
+    if val < min {
+        min as i16
+    } else if val > max {
+        max as i16
+    } else {
+        val as i16
+    }
+}
+
+static mut RC_DATA_CACHE: [u16; 16] = [1500; 16];
+const ACC_SCALE: f64 = 256. / 9.80665;
+const GYRO_SCALE: f64 = 16.4;
+const RAD2DEG: f64 = 180.0 / 3.14159265358979323846264338327950288;
+
+unsafe extern "C" fn rx_rc_read_data(_: *const rxRuntimeState_s, channel: u8) -> f32 {
+    RC_DATA_CACHE[channel as usize] as f32
+}
+
+unsafe extern "C" fn rx_rc_frame_status(_: *mut rxRuntimeState_s) -> u8 {
+    rxFrameState_e_RX_FRAME_COMPLETE as u8
+}
+
+unsafe extern "C" fn rx_rc_frame_time_us() -> timeUs_t {
+    todo!()
+}
+
+pub struct BFWorker {
+    pub rx: Receiver<FlightControllerUpdate>,
+    pub tx: Sender<MotorInput>,
+}
+
+impl BFWorker {
+    unsafe fn set_rc_data(&self, data: [f32; 8]) {
+        // uint32_t timeUs = BF::micros_passed & 0xFFFFFFFF; // sets the timeUs to the micros (?)
+        for i in 0..8 {
+            RC_DATA_CACHE[i] = (1500. + data[i] * 500.) as u16;
+        }
+        // rcDataReceptionTimeUs = timeUs; // I don't think it's used for anything
+        // rxRuntimeState.lastRcFrameTimeUs = 0; // TODO: not sure if we need to handle this?
+        // rxRuntimeState.rcFrameTimeUsFn = Some(rx_rc_frame_time_us); // TODO do we need this?
+    }
+
+    unsafe fn update_battery(&self, update: BatteryUpdate) {
+        setCellCount(update.cell_count);
+        let voltage_meter = getVoltageMeter();
+        if !voltage_meter.is_null() {
+            (*voltage_meter).unfiltered = (update.bat_voltage_sag * 1e2) as u16;
+            (*voltage_meter).displayFiltered = (update.bat_voltage_sag * 1e2) as u16;
+            (*voltage_meter).sagFiltered = (update.bat_voltage * 1e2) as u16;
+        } else {
+            println!("Voltage meter not found");
+        }
+        let current_meter = getCurrentMeter();
+        if !current_meter.is_null() {
+            (*current_meter).amperage = (update.amperage * 1e2) as i32;
+            (*current_meter).amperageLatest = (update.amperage * 1e2) as i32;
+            (*current_meter).mAhDrawn = (update.m_ah_drawn) as i32;
+        } else {
+            println!("Current meter not found");
+        }
+    }
+
+    pub unsafe fn init(&self) {
+        init();
+        scheduler(); // maybe we need this quick?
+        armingFlags |= 1;
+        rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
+        rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
+        rxRuntimeState.rcFrameStatusFn = Some(rx_rc_frame_status);
+        rxRuntimeState.rxProvider = rxProvider_t_RX_PROVIDER_UDP;
+    }
+
+    unsafe fn update_gyro_acc(&self, update: GyroUpdate) {
+        if sensors(sensors_e_SENSOR_ACC) {
+            imuSetAttitudeQuat(
+                update.rotation[3] as f32,
+                -update.rotation[2] as f32,
+                -update.rotation[0] as f32,
+                update.rotation[1] as f32,
+            );
+            // TODO: I guess it would make sense to import this from bf
+            let x = constarain_i16(-update.acc[2] * ACC_SCALE, -32767., 32767.);
+            let y = constarain_i16(update.acc[0] * ACC_SCALE, -32767., 32767.);
+            let z = constarain_i16(update.acc[1] * ACC_SCALE, -32767., 32767.);
+            virtualAccSet(virtualAccDev, x, y, z);
+        }
+        let x = constarain_i16(-update.gyro[2] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+        let y = constarain_i16(update.gyro[0] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+        let z = constarain_i16(-update.gyro[1] * GYRO_SCALE * RAD2DEG, -32767., 32767.);
+        virtualGyroSet(virtualGyroDev, x, y, z);
+    }
+
+    fn update(&self) {
+        let update = self.rx.recv().unwrap();
+        let motor_input = unsafe {
+            self.set_rc_data(update.channels.to_bf_channels());
+            self.update_battery(update.battery_update);
+            self.update_gyro_acc(update.gyro_update);
+            // self.update_gps(); // TODO: not sure if we need this
+            scheduler();
+            MotorInput([
+                motorsPwm[0] as f64 / 1000.,
+                motorsPwm[1] as f64 / 1000.,
+                motorsPwm[2] as f64 / 1000.,
+                motorsPwm[3] as f64 / 1000.,
+            ])
+        };
+
+        self.tx.send(motor_input).unwrap();
+        thread::sleep(Duration::from_micros(50));
+    }
+
+    pub fn update2(&self, update: FlightControllerUpdate) {
+        unsafe {
+            self.init();
+            loop {
+                self.set_rc_data(update.channels.to_bf_channels());
+                self.update_battery(update.battery_update);
+                self.update_gyro_acc(update.gyro_update);
+                // self.update_gps(); // TODO: not sure if we need this
+                scheduler();
+            }
+        };
+    }
+
+    // guess it is good enough for now
+    pub fn work(&self) {
+        loop {
+            self.update();
+        }
+    }
+}
