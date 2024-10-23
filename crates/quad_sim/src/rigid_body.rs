@@ -1,4 +1,4 @@
-use nalgebra::{Matrix3, Rotation, Rotation3, Vector3};
+use nalgebra::{Matrix3, Rotation3, Vector3};
 
 use crate::constants::{AIR_RHO, GRAVITY};
 
@@ -84,8 +84,8 @@ impl RigidBody {
     pub fn integrate(
         &mut self,
         motor_torque: f64,
-        sum_arm_forces: &Vector3<f64>,
-        sum_prop_torques: &Vector3<f64>,
+        sum_arm_forces: Vector3<f64>,
+        sum_prop_torques: Vector3<f64>,
         dt: f64,
     ) {
         let (drag_linear, drag_angular) =
@@ -105,14 +105,26 @@ impl RigidBody {
         let acceleration = total_force / self.mass;
 
         // TODO: readd this
-        let total_applied_moment = Vector3::zeros();
+        // let total_applied_moment = Vector3::zeros();
+        // println!("sum prop torques: {:?}", sum_prop_torques);
+        let total_applied_moment =
+            self.rotation.matrix().column(1) * motor_torque + sum_prop_torques;
+
         // let total_applied_moment = self.rotation.column(1) * motor_torque
         //     + self.rotation.column(0) * drag_angular[1]
         //     + self.rotation.column(1) * drag_angular[0]
         //     + self.rotation.column(2) * drag_angular[2]
         //     + sum_prop_torques;
+
         let angular_acc: Vector3<f64> =
             self.rotation * self.inv_tensor * self.rotation.transpose() * total_applied_moment;
+
+        // println!("angular acc: {:?}", angular_acc);
+        //
+        // println!(
+        //     "angular velocity: {:?}",
+        //     self.angular_velocity + angular_acc * dt
+        // );
 
         // update things
         self.angular_velocity += angular_acc * dt;
@@ -133,5 +145,18 @@ impl RigidBody {
         } else {
             None
         };
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use nalgebra::{Rotation3, Vector3};
+
+    #[test]
+    fn rigid_body_test() {
+        let sum_prop_torques = Vector3::new(-1.312636677497592e-13, 0.0, 0.0);
+        let rotation = Rotation3::<f64>::identity();
+
+        // let angular_acc = rotation *
     }
 }

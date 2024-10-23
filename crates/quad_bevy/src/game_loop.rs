@@ -1,11 +1,12 @@
 use bevy::{
-    math::{DMat3, DVec3, DVec4, Mat3, Quat, Vec3},
-    prelude::{Query, Res, Transform},
+    color::palettes::css::RED,
+    math::{DMat3, DVec3, DVec4, Mat3, Quat, Vec3, VectorSpace},
+    prelude::{Gizmos, Query, Res, Transform},
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{Channels, FlightControllerUpdate};
-use nalgebra::{Matrix3, Rotation3, Vector3, Vector4};
+use nalgebra::{Matrix3, Rotation2, Rotation3, Vector1, Vector2, Vector3, Vector4};
 
 use crate::{
     ui::UiSimulationInfo, Controller, DroneComponent, FlightControllerComponent, SimContext,
@@ -21,6 +22,35 @@ fn ntb_dvec3(vec: Vector3<f64>) -> DVec3 {
 
 fn ntb_dvec4(vec: Vector4<f64>) -> DVec4 {
     DVec4::new(vec[0], vec[1], vec[2], vec[3])
+}
+
+fn mntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
+    Mat3::from_cols(
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(0)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(1)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(2)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+    )
 }
 
 fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
@@ -82,6 +112,7 @@ fn ntb_dmat3(matrix: Rotation3<f64>) -> DMat3 {
 }
 
 pub fn debug_drone(
+    mut gizmos: Gizmos,
     mut drone_query: Query<(
         &mut Transform,
         &mut DroneComponent,
@@ -136,5 +167,38 @@ pub fn debug_drone(
         drone.0.battery.state.bat_voltage,
         drone.0.battery.state.bat_voltage_sag,
     );
+
+    let down_dir = drone.0.rigid_body.rotation * Vector3::new(0., -1., -0.);
+
+    let motor0pos =
+        drone_translation + ntb_vec3(drone.0.rigid_body.rotation * drone.0.arms[0].motor_pos());
+    let motor1pos =
+        drone_translation + ntb_vec3(drone.0.rigid_body.rotation * drone.0.arms[1].motor_pos());
+    let motor2pos =
+        drone_translation + ntb_vec3(drone.0.rigid_body.rotation * drone.0.arms[2].motor_pos());
+    let motor3pos =
+        drone_translation + ntb_vec3(drone.0.rigid_body.rotation * drone.0.arms[3].motor_pos());
+
+    gizmos.arrow(
+        motor0pos,
+        motor0pos + ntb_vec3(down_dir * drone.0.arms[0].thrust()),
+        RED,
+    );
+    gizmos.arrow(
+        motor1pos,
+        motor1pos + ntb_vec3(down_dir * drone.0.arms[1].thrust()),
+        RED,
+    );
+    gizmos.arrow(
+        motor2pos,
+        motor2pos + ntb_vec3(down_dir * drone.0.arms[2].thrust()),
+        RED,
+    );
+    gizmos.arrow(
+        motor3pos,
+        motor3pos + ntb_vec3(down_dir * drone.0.arms[3].thrust()),
+        RED,
+    );
+
     camera.target_focus = drone_translation;
 }

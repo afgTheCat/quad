@@ -154,3 +154,17 @@ pub fn quboid_update(
     gizmos.arrow(Vec3::ZERO, rotation.y_axis * 1.5, RED);
     gizmos.arrow(Vec3::ZERO, rotation.z_axis * 1.5, YELLOW);
 }
+//
+// #[cfg(test)]
+// mod test {
+//     use bevy::math::Vec3;
+//
+//     use super::inv_cuboid_inertia_tensor;
+//
+//     #[test]
+//     fn inv_inertia_tensor() {
+//         let sides = Vec3::new(0.30, 0.30, 0.10);
+//         let inv_inertia_tensor = inv_cuboid_inertia_tensor(sides);
+//         println!("inv_inertia_tensor: {:?}", inv_inertia_tensor)
+//     }
+// }

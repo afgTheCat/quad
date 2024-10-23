@@ -288,13 +288,13 @@ impl Drone {
     // Step first, we have to test this!
     fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
         let rotation = self.rigid_body.rotation;
-        let individual_arm_foces = self
+        let individual_arm_forces = self
             .arms
             .iter()
             .map(|arm| rotation * Vector3::new(0., arm.thrust(), 0.))
             .collect::<Vec<_>>();
-        let sum_arm_forces = individual_arm_foces.iter().sum();
-        let sum_prop_torques = individual_arm_foces
+        let sum_arm_forces = individual_arm_forces.iter().sum();
+        let sum_prop_torques = individual_arm_forces
             .iter()
             .enumerate()
             .map(|(i, force)| {
@@ -303,7 +303,7 @@ impl Drone {
             })
             .sum();
         self.rigid_body
-            .integrate(motor_torque, &sum_arm_forces, &sum_prop_torques, dt);
+            .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
     }
 
     fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {

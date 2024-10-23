@@ -1,3 +1,5 @@
+use std::f32::consts::TAU;
+
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::Color,
@@ -56,16 +58,23 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
+            // transform: Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
+            transform: Transform {
+                translation: Vec3::new(0.0, 1.5, 5.0),
+                ..Transform::IDENTITY
+            },
             ..default()
         },
-        PanOrbitCamera::default(),
+        PanOrbitCamera {
+            yaw: Some(-TAU / 4.),
+            ..Default::default()
+        },
     ));
 
     // grid
     commands.spawn(InfiniteGridBundle::default());
 
-    let drone_scene = asset_server.load("drone.glb");
+    let drone_scene = asset_server.load("drone2.glb");
     let drone_assets = DroneAssets(drone_scene);
     commands.insert_resource(drone_assets.clone());
 }
@@ -118,7 +127,7 @@ pub fn setup_drone(
             arms,
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
-                inv_tensor: inv_cuboid_inertia_tensor(Vector3::new(750., -5150.0, 750.0)),
+                inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
                 angular_velocity: Vector3::new(0.0, 0., 0.),
                 mass: 0.2972,
                 rotation: Rotation3::identity(), // stargin position

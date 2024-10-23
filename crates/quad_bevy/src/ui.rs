@@ -46,9 +46,8 @@ impl UiSimulationInfo {
     }
 }
 
-pub fn update_ui(mut ctx: EguiContexts, query: Query<&UiSimulationInfo>) {
-    let ui_sim_info = query.single();
-
+pub fn update_ui(mut ctx: EguiContexts, sim_info: Query<&UiSimulationInfo>) {
+    let ui_sim_info = sim_info.single();
     Window::new("Simulation info").show(ctx.ctx_mut(), |ui| {
         TableBuilder::new(ui)
             .column(Column::auto().resizable(true))
