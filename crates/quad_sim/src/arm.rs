@@ -1,14 +1,7 @@
+use crate::low_pass_filter::LowPassFilter;
 use core::f64;
-
-// use fast_math::exp;
-// use libm::exp;
-
-use crate::{
-    constants::{MAX_SPEED_PROP_COOLING, M_PI},
-    low_pass_filter::LowPassFilter,
-};
-use fastapprox::faster::exp;
-use nalgebra::{Matrix3, Rotation, Rotation3, Vector3};
+use nalgebra::{Rotation3, Vector3};
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone)]
 pub struct Propeller {
@@ -207,7 +200,7 @@ impl Arm {
         let net_torque = m_torque - p_torque;
         let domega = net_torque / self.propeller.prop_inertia;
         // change in rpm
-        let drpm = (domega * dt) * 60.0 / (2.0 * M_PI);
+        let drpm = (domega * dt) * 60.0 / (2.0 * PI);
         let maxdrpm = f64::abs(volts * self.motor.props.motor_kv - self.motor.state.rpm);
         let rpm = self.motor.state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.props.motor_kv / 8.3;

@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -48,6 +49,7 @@ unsafe extern "C" fn rx_rc_frame_time_us() -> timeUs_t {
 
 pub struct BFWorker {
     pub fc_mutex: Arc<Mutex<FCMutex>>,
+    // pub counter: RefCell<u64>,
 }
 
 impl BFWorker {
@@ -96,23 +98,28 @@ impl BFWorker {
             -update.rotation[2] as f32,
         );
 
-        let x = constarain_i16(-update.linear_acc[2] * ACC_SCALE, -32767., 32767.);
-        let y = constarain_i16(update.linear_acc[0] * ACC_SCALE, -32767., 32767.);
-        let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
-        virtualAccSet(virtualAccDev, x, y, z);
+        // let x = constarain_i16(-update.linear_acc[2] * ACC_SCALE, -32767., 32767.);
+        // let y = constarain_i16(update.linear_acc[0] * ACC_SCALE, -32767., 32767.);
+        // let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
+        // virtualAccSet(virtualAccDev, x, y, z);
+
+        // println!(
+        //     "{}, {}, {}",
+        //     update.angular_velocity[2], update.angular_velocity[0], update.angular_velocity[1]
+        // );
 
         let x = constarain_i16(
-            -update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,
+            update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,
             -32767.,
             32767.,
         );
         let y = constarain_i16(
-            update.angular_velocity[0] * GYRO_SCALE * RAD2DEG,
+            -update.angular_velocity[0] * GYRO_SCALE * RAD2DEG,
             -32767.,
             32767.,
         );
         let z = constarain_i16(
-            -update.angular_velocity[1] * GYRO_SCALE * RAD2DEG,
+            update.angular_velocity[1] * GYRO_SCALE * RAD2DEG,
             -32767.,
             32767.,
         );
