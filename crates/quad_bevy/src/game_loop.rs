@@ -1,5 +1,5 @@
 use bevy::{
-    color::palettes::css::RED,
+    color::palettes::css::{ORANGE, PINK, RED},
     math::{DMat3, DVec3, DVec4, Mat3, Quat, Vec3, VectorSpace},
     prelude::{Gizmos, Query, Res, Transform},
     time::Time,
@@ -136,10 +136,11 @@ pub fn debug_drone(
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
-        drone.update_gyro(sim_context.dt.as_secs_f64());
         drone.update_physics(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
+        // drone.apply_sim_angular(sim_context.dt.as_secs_f64());
+
         let battery_update = drone.battery_update();
-        let gyro_update = drone.gyro_update();
+        let gyro_update = drone.update_gyro(sim_context.dt.as_secs_f64());
         let channels = controller.channels();
         let fc_input = FlightControllerUpdate {
             gyro_update,
@@ -199,6 +200,9 @@ pub fn debug_drone(
         motor3pos + ntb_vec3(down_dir * drone.0.arms[3].thrust()),
         RED,
     );
+
+    gizmos.arrow(Vec3::ZERO, Vec3::new(1., 0., 0.), ORANGE);
+    gizmos.arrow(Vec3::ZERO, Vec3::new(0., 0., 1.), PINK);
 
     camera.target_focus = drone_translation;
 }

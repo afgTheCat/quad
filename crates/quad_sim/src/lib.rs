@@ -23,7 +23,7 @@ use std::{cell::RefCell, ops::Range};
 pub struct Gyro {
     low_pass_filter: [LowPassFilter; 3],
     previous_rotation: UnitQuaternion<f64>,
-    rotation: Vector4<f64>,
+    rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
     acceleration: Vector3<f64>,
     gyro_angular_vel: Vector3<f64>,
     #[cfg(feature = "noise")]
@@ -41,14 +41,14 @@ impl Gyro {
         #[cfg(feature = "noise")]
         let mut angular_velocity = angular_velocity + combined_noise;
         #[cfg(not(feature = "noise"))]
-        let mut angular_velocity = angular_velocity;
+        let mut gyro_angular_velocity = angular_velocity;
 
         let cutoff_freq = 300.;
-        angular_velocity[0] =
+        gyro_angular_velocity[0] =
             self.low_pass_filter()[0].update(angular_velocity[0], dt, cutoff_freq);
-        angular_velocity[1] =
+        gyro_angular_velocity[1] =
             self.low_pass_filter()[1].update(angular_velocity[0], dt, cutoff_freq);
-        angular_velocity[2] =
+        gyro_angular_velocity[2] =
             self.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
         self.gyro_angular_vel = rotation.transpose() * angular_velocity;
     }
@@ -66,12 +66,8 @@ impl Gyro {
         self.gyro_angular_vel
     }
 
-    pub fn set_rotation(&mut self, rotation: Vector4<f64>) {
+    pub fn set_rotation(&mut self, rotation: UnitQuaternion<f64>) {
         self.rotation = rotation
-    }
-
-    pub fn rotation(&self) -> Vector4<f64> {
-        self.rotation
     }
 
     pub fn acceleration(&self) -> Vector3<f64> {
@@ -80,7 +76,12 @@ impl Gyro {
 
     pub fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
-            rotation: self.rotation.data.0[0],
+            rotation: [
+                self.rotation.w,
+                self.rotation.i,
+                self.rotation.j,
+                self.rotation.k,
+            ],
             linear_acc: self.acceleration.data.0[0],
             angular_velocity: self.gyro_angular_vel.data.0[0],
         }
@@ -93,16 +94,11 @@ impl Gyro {
         angular_velocity: Vector3<f64>,
         acceleration: Vector3<f64>,
         #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
-    ) {
+    ) -> GyroUpdate {
         let new_rotation = UnitQuaternion::from(rotation);
         self.previous_rotation = new_rotation;
         // BF expects the order to be w, x, y, z
-        self.set_rotation(Vector4::new(
-            new_rotation.w,
-            new_rotation.i,
-            new_rotation.j,
-            new_rotation.k,
-        ));
+        self.set_rotation(new_rotation);
         self.set_angular_velocity(
             rotation,
             angular_velocity,
@@ -111,6 +107,7 @@ impl Gyro {
             combined_noise,
         );
         self.set_acceleration(rotation, acceleration);
+        self.gyro_update()
     }
 }
 
@@ -286,7 +283,12 @@ impl Drone {
     }
 
     // Step first, we have to test this!
-    fn calculate_physics(&mut self, motor_torque: f64, dt: f64) {
+    fn calculate_physics(&mut self, dt: f64) {
+        let motor_torque = self
+            .arms
+            .iter()
+            .map(|arm| arm.motor.state.m_torque * arm.motor.props.motor_dir)
+            .sum();
         let rotation = self.rigid_body.rotation;
         let individual_arm_forces = self
             .arms
@@ -306,7 +308,7 @@ impl Drone {
             .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
     }
 
-    fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) -> f64 {
+    fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) {
         let vbat = self.battery.state.bat_voltage_sag; // is this what we want?
         let speed = self.rigid_body.linear_velocity.norm();
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
@@ -317,8 +319,8 @@ impl Drone {
                 &self.rigid_body.rotation.matrix().column(0),
             ),
         );
-        let m_torques = self.arms.iter_mut().map(|arm| {
-            arm.calculate_arm_m_torque(
+        for i in 0..4 {
+            self.arms[i].calculate_arm_m_torque(
                 dt,
                 vbat,
                 self.rigid_body.rotation,
@@ -330,13 +332,12 @@ impl Drone {
                 #[cfg(feature = "temp")]
                 ambient_temp,
             )
-        });
-        m_torques.sum()
+        }
     }
 
     pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
-        let motor_torque = self.calculate_motors(dt, ambient_temp);
-        self.calculate_physics(motor_torque, dt);
+        self.calculate_motors(dt, ambient_temp);
+        self.calculate_physics(dt);
 
         let pwm_sum = self.arms.iter().map(|arm| arm.pwm()).sum();
         let current_sum = self.arms.iter().map(|arm| arm.current()).sum();
@@ -347,7 +348,7 @@ impl Drone {
         Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>())
     }
 
-    pub fn update_gyro(&mut self, dt: f64) {
+    pub fn update_gyro(&mut self, dt: f64) -> GyroUpdate {
         #[cfg(feature = "noise")]
         let combined_noise = self.calculate_combined_noise(dt);
 
@@ -358,7 +359,7 @@ impl Drone {
             self.rigid_body.acceleration,
             #[cfg(feature = "noise")]
             combined_noise,
-        );
+        )
     }
 }
 

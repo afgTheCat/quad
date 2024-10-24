@@ -1,3 +1,8 @@
+use std::{
+    f64::{self},
+    u64,
+};
+
 use nalgebra::{Matrix3, Rotation3, Vector3};
 
 use crate::constants::{AIR_RHO, GRAVITY};
@@ -109,6 +114,9 @@ impl RigidBody {
         // println!("sum prop torques: {:?}", sum_prop_torques);
         let total_applied_moment =
             self.rotation.matrix().column(1) * motor_torque + sum_prop_torques;
+        // + self.rotation.matrix().column(0) * drag_angular[1]
+        // + self.rotation.matrix().column(1) * drag_angular[0]
+        // + self.rotation.matrix().column(2) * drag_angular[2];
 
         // let total_applied_moment = self.rotation.column(1) * motor_torque
         //     + self.rotation.column(0) * drag_angular[1]

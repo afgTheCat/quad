@@ -25,7 +25,7 @@ pub struct BatteryUpdate {
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GyroUpdate {
-    pub rotation: [f64; 4],
+    pub rotation: [f64; 4], // so far it was w, i, j, k
     pub linear_acc: [f64; 3],
     pub angular_velocity: [f64; 3],
 }

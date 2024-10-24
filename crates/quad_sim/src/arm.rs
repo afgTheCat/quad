@@ -129,7 +129,6 @@ impl Motor {
         self.props.position
     }
 
-    // TODO: disallow 0 for motor kv and we can get rid of two max calls
     pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
         let back_emf_v = self.state.rpm / kv;
@@ -190,7 +189,6 @@ impl Arm {
         self.propeller.prop_thrust(vel_up, rpm) * prop_wash_effect
     }
 
-    // fix: we are unable to spin this up fully
     pub fn calculate_arm_m_torque(
         &mut self,
         dt: f64,
@@ -201,7 +199,7 @@ impl Arm {
         vel_up: f64,
         #[cfg(feature = "temp")] speed: f64,
         #[cfg(feature = "temp")] ambient_temp: f64,
-    ) -> f64 {
+    ) {
         let volts = self.motor.volts(dt, vbat);
         let m_torque = self.motor.motor_torque(volts);
         let p_torque = self.propeller.prop_thrust(vel_up, self.motor.state.rpm)
@@ -230,7 +228,6 @@ impl Arm {
         self.motor.state.m_torque = m_torque;
         self.motor.state.thrust = thrust;
         self.motor.state.rpm = rpm;
-        self.motor.props.motor_dir * m_torque
     }
 
     pub fn pwm(&self) -> f64 {

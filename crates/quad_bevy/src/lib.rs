@@ -39,7 +39,7 @@ impl DroneComponent {
         self.0.set_motor_pwms(input)
     }
 
-    fn update_gyro(&mut self, dt: f64) {
+    fn update_gyro(&mut self, dt: f64) -> GyroUpdate {
         self.0.update_gyro(dt)
     }
 

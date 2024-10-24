@@ -28,11 +28,11 @@ use crate::{
 };
 
 // names of the propellers in the mesh
-pub const PROP_BLADE_MESH_NAMES: [&str; 4] = [
-    "prop_blade.001",
-    "prop_blade.002",
-    "prop_blade.003",
-    "prop_blade.004",
+pub const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [
+    ("prop_blade.001", -1.),
+    ("prop_blade.002", 1.),
+    ("prop_blade.003", 1.),
+    ("prop_blade.004", -1.),
 ];
 
 #[derive(Resource, Clone)]
@@ -66,7 +66,6 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
         PanOrbitCamera {
-            yaw: Some(-TAU / 4.),
             ..Default::default()
         },
     ));
@@ -74,7 +73,7 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // grid
     commands.spawn(InfiniteGridBundle::default());
 
-    let drone_scene = asset_server.load("drone2.glb");
+    let drone_scene = asset_server.load("drone5.glb");
     let drone_assets = DroneAssets(drone_scene);
     commands.insert_resource(drone_assets.clone());
 }
@@ -91,14 +90,11 @@ pub fn setup_drone(
         let flight_controller = FlightControllerComponent::new();
         flight_controller.init();
         let controller = Controller::default();
-        // get the motor positions
-        let motor_positions = PROP_BLADE_MESH_NAMES.map(|name| {
+        // arms
+        let arms = PROP_BLADE_MESH_NAMES.map(|(name, motor_dir)| {
             let node_id = gltf.named_nodes[name].id();
             let prop_asset_node = gltf_node_assets.get(node_id).unwrap().clone();
-            prop_asset_node.transform.translation.as_dvec3()
-        });
-
-        let arms = motor_positions.map(|position| {
+            let position = prop_asset_node.transform.translation.as_dvec3();
             let motor = Motor {
                 state: MotorState::default(),
                 props: MotorProps {
@@ -106,7 +102,7 @@ pub fn setup_drone(
                     motor_kv: 3200.,
                     motor_r: 0.13,
                     motor_io: 0.23,
-                    ..Default::default()
+                    motor_dir,
                 },
             };
             let propeller = Propeller {
@@ -128,7 +124,7 @@ pub fn setup_drone(
             rigid_body: RigidBody {
                 // random cuboid inv inertia tensor
                 inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
-                angular_velocity: Vector3::new(0.0, 0., 0.),
+                angular_velocity: Vector3::new(0., 0., 0.),
                 mass: 0.2972,
                 rotation: Rotation3::identity(), // stargin position
                 frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
@@ -137,6 +133,7 @@ pub fn setup_drone(
                 linear_velocity_dir: None,
                 acceleration: Vector3::zeros(),
                 position: Vector3::zeros(),
+                ..Default::default()
             },
             gyro: Gyro::default(),
             battery: Battery {
