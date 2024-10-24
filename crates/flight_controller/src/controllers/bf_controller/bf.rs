@@ -103,13 +103,8 @@ impl BFWorker {
         // let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
         // virtualAccSet(virtualAccDev, x, y, z);
 
-        // println!(
-        //     "{}, {}, {}",
-        //     update.angular_velocity[2], update.angular_velocity[0], update.angular_velocity[1]
-        // );
-
         let x = constarain_i16(
-            update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,
+            -update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,
             -32767.,
             32767.,
         );
@@ -119,7 +114,7 @@ impl BFWorker {
             32767.,
         );
         let z = constarain_i16(
-            update.angular_velocity[1] * GYRO_SCALE * RAD2DEG,
+            -update.angular_velocity[1] * GYRO_SCALE * RAD2DEG,
             -32767.,
             32767.,
         );

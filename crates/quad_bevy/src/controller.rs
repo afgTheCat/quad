@@ -19,8 +19,8 @@ pub fn gamepad_input_events(
 
         match ax.axis_type {
             GamepadAxisType::LeftZ => controller.set_throttle(ax_val),
-            // GamepadAxisType::RightStickX => controller.set_yaw(ax_val),
-            // GamepadAxisType::LeftStickX => controller.set_roll(ax_val),
+            GamepadAxisType::RightStickX => controller.set_yaw(ax_val),
+            GamepadAxisType::LeftStickX => controller.set_roll(ax_val),
             GamepadAxisType::LeftStickY => controller.set_pitch(-ax_val),
             _ => {}
         }
