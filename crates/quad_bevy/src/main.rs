@@ -7,8 +7,7 @@ use bevy::{
     app::{App, PluginGroup, Startup, Update},
     gizmos::AppGizmoBuilder,
     prelude::{
-        default, in_state, AppExtStates, Component, GizmoConfigGroup, IntoSystemConfigs, Query,
-        States,
+        default, in_state, AppExtStates, Component, GizmoConfigGroup, IntoSystemConfigs, States,
     },
     reflect::Reflect,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
@@ -49,10 +48,6 @@ impl DroneComponent {
 
     fn battery_update(&self) -> BatteryUpdate {
         self.0.battery.battery_update()
-    }
-
-    fn gyro_update(&self) -> GyroUpdate {
-        self.0.gyro.gyro_update()
     }
 }
 
@@ -144,7 +139,7 @@ struct MyRoundGizmos {}
 
 pub fn build_app() -> App {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+    DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "Sim".into(),
             name: Some("bevy.app".into()),
@@ -160,20 +155,26 @@ pub fn build_app() -> App {
             ..default()
         }),
         ..default()
-    }))
-    .add_plugins(EguiPlugin)
-    .add_plugins(PanOrbitCameraPlugin)
-    .insert_state(SimState::Loading)
-    .init_gizmo_group::<MyRoundGizmos>()
-    .add_plugins(InfiniteGridPlugin)
-    .add_systems(Startup, base_setup)
-    .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
-    .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
-    .add_systems(
-        Update,
-        gamepad_input_events.run_if(in_state(SimState::Running)),
-    )
-    // .add_systems(Update, gamepad_system.run_if(in_state(SimState::Running)))
-    .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
+    });
+    app.add_plugins(DefaultPlugins)
+        .add_plugins(EguiPlugin)
+        .add_plugins(PanOrbitCameraPlugin)
+        .insert_state(SimState::Loading)
+        .init_gizmo_group::<MyRoundGizmos>()
+        .add_plugins(InfiniteGridPlugin)
+        .add_systems(Startup, base_setup)
+        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
+        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
+        .add_systems(
+            Update,
+            gamepad_input_events.run_if(in_state(SimState::Running)),
+        )
+        // .add_systems(Update, gamepad_system.run_if(in_state(SimState::Running)))
+        .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
     app
+}
+
+fn main() {
+    let mut app = build_app();
+    app.run();
 }

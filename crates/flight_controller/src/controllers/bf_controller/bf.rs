@@ -1,5 +1,4 @@
 use std::{
-    cell::RefCell,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -88,7 +87,6 @@ impl BFWorker {
         rxRuntimeState.rxProvider = rxProvider_t_RX_PROVIDER_UDP;
     }
 
-    // TODO: this may need to be adjusted
     unsafe fn update_gyro_acc(&self, update: GyroUpdate) {
         // rotation is w, i, j, k
         imuSetAttitudeQuat(
@@ -98,10 +96,10 @@ impl BFWorker {
             -update.rotation[2] as f32,
         );
 
-        // let x = constarain_i16(-update.linear_acc[2] * ACC_SCALE, -32767., 32767.);
-        // let y = constarain_i16(update.linear_acc[0] * ACC_SCALE, -32767., 32767.);
-        // let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
-        // virtualAccSet(virtualAccDev, x, y, z);
+        let x = constarain_i16(update.linear_acc[2] * ACC_SCALE, -32767., 32767.); // TODO: sign
+        let y = constarain_i16(update.linear_acc[0] * ACC_SCALE, -32767., 32767.); // TODO: sign
+        let z = constarain_i16(update.linear_acc[1] * ACC_SCALE, -32767., 32767.);
+        virtualAccSet(virtualAccDev, x, y, z);
 
         let x = constarain_i16(
             -update.angular_velocity[2] * GYRO_SCALE * RAD2DEG,

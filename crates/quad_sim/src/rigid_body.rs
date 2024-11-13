@@ -109,9 +109,6 @@ impl RigidBody {
         let total_force = Vector3::new(0., -GRAVITY * self.mass, 0.) - drag_linear + sum_arm_forces;
         let acceleration = total_force / self.mass;
 
-        // TODO: readd this
-        // let total_applied_moment = Vector3::zeros();
-        // println!("sum prop torques: {:?}", sum_prop_torques);
         let total_applied_moment =
             self.rotation.matrix().column(1) * motor_torque + sum_prop_torques;
         // + self.rotation.matrix().column(0) * drag_angular[1]

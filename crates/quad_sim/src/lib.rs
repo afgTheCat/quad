@@ -8,11 +8,11 @@ pub mod sample_curve;
 
 use arm::Arm;
 pub use arm::Motor;
-use constants::{GRAVITY, MAX_EFFECT_SPEED};
+use constants::MAX_EFFECT_SPEED;
 use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
+use nalgebra::{Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
@@ -54,8 +54,7 @@ impl Gyro {
     }
 
     pub fn set_acceleration(&mut self, rotation: Rotation3<f64>, acceleration: Vector3<f64>) {
-        let gravity_acceleration = Vector3::new(0., -GRAVITY, 0.);
-        self.acceleration = rotation.transpose() * (acceleration + gravity_acceleration)
+        self.acceleration = rotation.transpose() * acceleration
     }
 
     pub fn low_pass_filter(&mut self) -> &mut [LowPassFilter; 3] {
@@ -72,19 +71,6 @@ impl Gyro {
 
     pub fn acceleration(&self) -> Vector3<f64> {
         self.acceleration
-    }
-
-    pub fn gyro_update(&self) -> GyroUpdate {
-        GyroUpdate {
-            rotation: [
-                self.rotation.w,
-                self.rotation.i,
-                self.rotation.j,
-                self.rotation.k,
-            ],
-            linear_acc: self.acceleration.data.0[0],
-            angular_velocity: self.gyro_angular_vel.data.0[0],
-        }
     }
 
     pub fn update(
@@ -107,45 +93,17 @@ impl Gyro {
             combined_noise,
         );
         self.set_acceleration(rotation, acceleration);
-        self.gyro_update()
-    }
-}
 
-// This is the implementation that the thing used
-pub fn mat3_to_quat(mat3: Matrix3<f64>) -> Vector4<f64> {
-    let trace = mat3.trace();
-
-    if trace > 0.0 {
-        let s = f64::sqrt(trace + 1.);
-        Vector4::new(
-            mat3.column(2)[1] - mat3.column(1)[2] * 0.5 / s,
-            mat3.column(0)[2] - mat3.column(2)[0] * 0.5 / s,
-            mat3.column(1)[0] - mat3.column(0)[1] * 0.5 / s,
-            s * 0.5,
-        )
-    } else {
-        let i = if mat3.column(0)[0] < mat3.column(1)[1] {
-            if mat3.column(1)[1] < mat3.column(2)[2] {
-                2
-            } else {
-                1
-            }
-        } else if mat3[0] < mat3[2 * 3 + 2] {
-            2
-        } else {
-            0
-        };
-        let j = (i + 1) % 3;
-        let k = (i + 2) % 3;
-        let s = f64::sqrt(mat3[i * 3 + i] - mat3[j * 3 + j] - mat3[k * 3 + k] + 1.);
-        let mut quat = Vector4::new(0., 0., 0., 0.);
-
-        quat[i] = s * 0.5;
-
-        quat[3] = (mat3.column(k)[j] - mat3.column(j)[k]) * 0.5 / s;
-        quat[j] = (mat3.column(j)[i] - mat3.column(i)[j]) * 0.5 / s;
-        quat[k] = (mat3.column(k)[i] - mat3.column(i)[k]) * 0.5 / s;
-        quat
+        GyroUpdate {
+            rotation: [
+                self.rotation.w,
+                self.rotation.i,
+                self.rotation.j,
+                self.rotation.k,
+            ],
+            linear_acc: self.acceleration.data.0[0],
+            angular_velocity: self.gyro_angular_vel.data.0[0],
+        }
     }
 }
 
