@@ -19,13 +19,13 @@ use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use controller::gamepad_input_events;
 use core::f64;
 use flight_controller::{
-    controllers::bf_controller::BFController, BatteryUpdate, Channels, FlightController,
-    FlightControllerUpdate, GyroUpdate, MotorInput,
+    controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
+    MotorInput,
 };
 use game_loop::debug_drone;
-use quad_sim::Drone;
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
+use quad_sim::{DebugInfo, Drone, DroneUpdate};
 use setup::{base_setup, setup_drone};
 use std::{sync::Arc, time::Duration};
 use ui::update_ui;
@@ -38,16 +38,12 @@ impl DroneComponent {
         self.0.set_motor_pwms(input)
     }
 
-    fn update_gyro(&mut self, dt: f64) -> GyroUpdate {
-        self.0.update_gyro(dt)
+    fn step(&mut self, dt: f64, ambient_temp: f64) -> DroneUpdate {
+        self.0.update(dt, ambient_temp)
     }
 
-    fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
-        self.0.update_physics(dt, ambient_temp)
-    }
-
-    fn battery_update(&self) -> BatteryUpdate {
-        self.0.battery.battery_update()
+    fn debug_info(&self) -> DebugInfo {
+        self.0.debug_info()
     }
 }
 

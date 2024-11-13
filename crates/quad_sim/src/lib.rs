@@ -12,12 +12,13 @@ use constants::MAX_EFFECT_SPEED;
 use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Rotation3, UnitQuaternion, Vector3, Vector4};
+use nalgebra::{Rotation, Rotation3, UnitQuaternion, Vector3, Vector4};
+use pyo3::prelude::*;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
 use sample_curve::SampleCurve;
-use std::{cell::RefCell, ops::Range};
+use std::{cell::RefCell, f64, ops::Range};
 
 #[derive(Debug, Clone, Default)]
 pub struct Gyro {
@@ -73,14 +74,14 @@ impl Gyro {
         self.acceleration
     }
 
-    pub fn update(
+    fn update(
         &mut self,
         dt: f64,
         rotation: Rotation3<f64>,
         angular_velocity: Vector3<f64>,
         acceleration: Vector3<f64>,
         #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
-    ) -> GyroUpdate {
+    ) {
         let new_rotation = UnitQuaternion::from(rotation);
         self.previous_rotation = new_rotation;
         // BF expects the order to be w, x, y, z
@@ -94,6 +95,19 @@ impl Gyro {
         );
         self.set_acceleration(rotation, acceleration);
 
+        // GyroUpdate {
+        //     rotation: [
+        //         self.rotation.w,
+        //         self.rotation.i,
+        //         self.rotation.j,
+        //         self.rotation.k,
+        //     ],
+        //     linear_acc: self.acceleration.data.0[0],
+        //     angular_velocity: self.gyro_angular_vel.data.0[0],
+        // }
+    }
+
+    fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
             rotation: [
                 self.rotation.w,
@@ -121,7 +135,22 @@ pub struct FrameCharachteristics {
     pub motor_imbalance: [Vector3<f64>; 4],
 }
 
+#[derive(Debug)]
+pub struct DebugInfo {
+    pub rotation: Rotation3<f64>,
+    pub position: Vector3<f64>,
+    pub linear_velocity: Vector3<f64>,
+    pub acceleration: Vector3<f64>,
+    pub angular_velocity: Vector3<f64>,
+    pub thrusts: Vector4<f64>,
+    pub rpms: Vector4<f64>,
+    pub pwms: Vector4<f64>,
+    pub bat_voltage: f64,
+    pub bat_voltage_sag: f64,
+}
+
 #[derive(Clone)]
+#[pyclass]
 pub struct Drone {
     #[cfg(feature = "noise")]
     pub frame_charachteristics: FrameCharachteristics,
@@ -158,6 +187,14 @@ pub struct Battery {
     pub state: BatteryState,
 }
 
+#[derive(Debug, Clone)]
+#[pyclass]
+pub struct DroneUpdate {
+    // TODO: rename this to imu
+    pub gyro_update: GyroUpdate,
+    pub battery_update: BatteryUpdate,
+}
+
 impl Battery {
     pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
         let bat_charge = self.state.capacity / self.props.quad_bat_capacity;
@@ -188,14 +225,6 @@ impl Battery {
         self.state.m_ah_drawn = self.props.quad_bat_capacity_charged - self.state.capacity;
     }
 
-    // pub fn cell_count(&self) -> u8 {
-    //     self.props.quad_bat_cell_count
-    // }
-
-    pub fn get_bat_voltage_sag(&self) -> f64 {
-        self.state.bat_voltage_sag
-    }
-
     pub fn get_bat_voltage(&self) -> f64 {
         self.state.bat_voltage
     }
@@ -220,26 +249,6 @@ impl Battery {
 }
 
 impl Drone {
-    pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
-        for i in 0..4 {
-            self.arms[i].set_pwm(pwms[i]);
-        }
-    }
-
-    pub fn thrusts(&self) -> Vector4<f64> {
-        Vector4::from_row_slice(
-            &self
-                .arms
-                .iter()
-                .map(|arm| arm.thrust())
-                .collect::<Vec<f64>>(),
-        )
-    }
-
-    pub fn rpms(&self) -> Vector4<f64> {
-        Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.rpm()).collect::<Vec<f64>>())
-    }
-
     // Step first, we have to test this!
     fn calculate_physics(&mut self, dt: f64) {
         let motor_torque = self
@@ -293,20 +302,15 @@ impl Drone {
         }
     }
 
-    pub fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
+    fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
         self.calculate_motors(dt, ambient_temp);
         self.calculate_physics(dt);
-
         let pwm_sum = self.arms.iter().map(|arm| arm.pwm()).sum();
         let current_sum = self.arms.iter().map(|arm| arm.current()).sum();
         self.battery.update(dt, pwm_sum, current_sum);
     }
 
-    pub fn motor_pwms(&self) -> Vector4<f64> {
-        Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>())
-    }
-
-    pub fn update_gyro(&mut self, dt: f64) -> GyroUpdate {
+    fn update_gyro(&mut self, dt: f64) {
         #[cfg(feature = "noise")]
         let combined_noise = self.calculate_combined_noise(dt);
 
@@ -319,6 +323,49 @@ impl Drone {
             combined_noise,
         )
     }
+
+    pub fn update(&mut self, dt: f64, ambient_temp: f64) -> DroneUpdate {
+        self.update_physics(dt, ambient_temp);
+        self.update_gyro(dt);
+
+        DroneUpdate {
+            gyro_update: self.gyro.gyro_update(),
+            battery_update: self.battery.battery_update(),
+        }
+    }
+
+    pub fn debug_info(&self) -> DebugInfo {
+        let thrusts = Vector4::from_row_slice(
+            &self
+                .arms
+                .iter()
+                .map(|arm| arm.thrust())
+                .collect::<Vec<f64>>(),
+        );
+        let rpms =
+            Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.rpm()).collect::<Vec<f64>>());
+        let pwms =
+            Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>());
+
+        DebugInfo {
+            rotation: self.rigid_body.rotation,
+            position: self.rigid_body.position,
+            linear_velocity: self.rigid_body.linear_velocity,
+            acceleration: self.rigid_body.acceleration,
+            angular_velocity: self.rigid_body.angular_velocity,
+            thrusts,
+            rpms,
+            pwms,
+            bat_voltage: self.battery.state.bat_voltage,
+            bat_voltage_sag: self.battery.state.bat_voltage_sag,
+        }
+    }
+
+    pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
+        for i in 0..4 {
+            self.arms[i].set_pwm(pwms[i]);
+        }
+    }
 }
 
 thread_local! {
@@ -327,4 +374,10 @@ thread_local! {
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
+}
+
+#[pymodule]
+fn quad_sim(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    pyo3_log::init();
+    Ok(())
 }

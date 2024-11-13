@@ -1,25 +1,5 @@
-use std::{
-    f64::{self},
-    u64,
-};
-
-use nalgebra::{Matrix3, Rotation3, Vector3};
-
 use crate::constants::{AIR_RHO, GRAVITY};
-
-fn inertia_cuboid_diag(sides: Vector3<f64>) -> Vector3<f64> {
-    let x = sides[0];
-    let y = sides[1];
-    let z = sides[2];
-    let v = x * y * z;
-    (1. / 12.)
-        * v
-        * Vector3::new(
-            y.powi(2) + z.powi(2),
-            x.powi(2) + z.powi(2),
-            x.powi(2) + y.powi(2),
-        )
-}
+use nalgebra::{Matrix3, Rotation3, Vector3};
 
 pub fn inv_cuboid_inertia_tensor(sides: Vector3<f64>) -> Matrix3<f64> {
     let x = sides[0];
@@ -124,13 +104,6 @@ impl RigidBody {
         let angular_acc: Vector3<f64> =
             self.rotation * self.inv_tensor * self.rotation.transpose() * total_applied_moment;
 
-        // println!("angular acc: {:?}", angular_acc);
-        //
-        // println!(
-        //     "angular velocity: {:?}",
-        //     self.angular_velocity + angular_acc * dt
-        // );
-
         // update things
         self.angular_velocity += angular_acc * dt;
         self.acceleration = acceleration;
@@ -150,18 +123,5 @@ impl RigidBody {
         } else {
             None
         };
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use nalgebra::{Rotation3, Vector3};
-
-    #[test]
-    fn rigid_body_test() {
-        let sum_prop_torques = Vector3::new(-1.312636677497592e-13, 0.0, 0.0);
-        let rotation = Rotation3::<f64>::identity();
-
-        // let angular_acc = rotation *
     }
 }
