@@ -23,6 +23,7 @@ bevy_infinite_grid.workspace = true
 egui_extras.workspace = true
 nalgebra.workspace = true
 flight_controller.workspace = true
+toml.workspace = true
 
 
 [features]
