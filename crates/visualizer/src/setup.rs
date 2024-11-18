@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::Color,
@@ -12,6 +14,7 @@ use bevy::{
 };
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
+use flight_controller::controllers::bf_controller::BFController;
 use nalgebra::{Matrix3, Rotation3, Vector3};
 use simulator::{
     arm::{Arm, MotorProps, MotorState, Propeller},
@@ -87,8 +90,8 @@ pub fn setup_drone(
 ) {
     // Wait until the scene is loaded
     if let Some(gltf) = gltf_assets.get(&drone_assets.0) {
-        let flight_controller = FlightControllerComponent::new();
-        flight_controller.init();
+        let flight_controller = FlightControllerComponent::new(Arc::new(BFController::new()));
+        flight_controller.as_ref().init();
         let controller = Controller::default();
         // arms
         let arms = PROP_BLADE_MESH_NAMES.map(|(name, motor_dir)| {

@@ -7,7 +7,8 @@ use bevy::{
     app::{App, PluginGroup, Startup, Update},
     gizmos::AppGizmoBuilder,
     prelude::{
-        default, in_state, AppExtStates, Component, GizmoConfigGroup, IntoSystemConfigs, States,
+        default, in_state, AppExtStates, Component, Deref, DerefMut, GizmoConfigGroup,
+        IntoSystemConfigs, States,
     },
     reflect::Reflect,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
@@ -18,53 +19,24 @@ use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use controller::gamepad_input_events;
 use core::f64;
-use flight_controller::{
-    controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
-    MotorInput,
-};
+use flight_controller::{Channels, FlightController};
 use game_loop::debug_drone;
 use setup::{base_setup, setup_drone};
+use simulator::Drone;
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
-use simulator::{Drone, DroneUpdate, SimulationDebugInfo};
 use std::{sync::Arc, time::Duration};
 use ui::update_ui;
 
-#[derive(Clone, Component)]
-pub struct DroneComponent(Drone);
+#[derive(Clone, Component, Deref, DerefMut)]
+struct DroneComponent(Drone);
 
-impl DroneComponent {
-    fn set_motor_pwms(&mut self, input: MotorInput) {
-        self.0.set_motor_pwms(input)
-    }
-
-    fn step(&mut self, dt: f64, ambient_temp: f64) -> DroneUpdate {
-        self.0.update(dt, ambient_temp)
-    }
-
-    fn debug_info(&self) -> SimulationDebugInfo {
-        self.0.debug_info()
-    }
-}
-
-#[derive(Component)]
-pub struct FlightControllerComponent {
-    fc: Arc<dyn FlightController>,
-}
+#[derive(Component, Deref, DerefMut)]
+struct FlightControllerComponent(Arc<dyn FlightController>);
 
 impl FlightControllerComponent {
-    fn new() -> Self {
-        Self {
-            fc: Arc::new(BFController::new()),
-        }
-    }
-
-    fn init(&self) {
-        self.fc.init()
-    }
-
-    fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput> {
-        self.fc.update(update)
+    fn new(fc: Arc<dyn FlightController>) -> Self {
+        Self(fc)
     }
 }
 
@@ -105,28 +77,12 @@ impl SimContext {
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Deref, DerefMut)]
 struct Controller(Channels);
 
 impl Controller {
-    pub fn channels(&self) -> Channels {
+    pub fn to_channels(&self) -> Channels {
         self.0
-    }
-
-    pub fn set_throttle(&mut self, throttle: f64) {
-        self.0.throttle = throttle
-    }
-
-    pub fn set_yaw(&mut self, yaw: f64) {
-        self.0.yaw = yaw
-    }
-
-    pub fn set_pitch(&mut self, pitch: f64) {
-        self.0.pitch = pitch
-    }
-
-    pub fn set_roll(&mut self, roll: f64) {
-        self.0.roll = roll
     }
 }
 

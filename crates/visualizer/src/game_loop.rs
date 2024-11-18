@@ -104,11 +104,11 @@ pub fn debug_drone(
 
     sim_context.time_accu += timer.delta();
     while sim_context.step_context() {
-        let drone_state = drone.step(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
+        let drone_state = drone.update(sim_context.dt.as_secs_f64(), sim_context.ambient_temp);
         let pwms = flight_controller.update(FlightControllerUpdate {
             battery_update: drone_state.battery_update,
             gyro_update: drone_state.gyro_update,
-            channels: controller.channels(),
+            channels: controller.to_channels(),
         });
         if let Some(pwms) = pwms {
             drone.set_motor_pwms(pwms);
