@@ -704,9 +704,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_infinite_grid"
-version = "0.13.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52907a3b5085f3adda4c0ec848142402156e7df249eac15ea03473e205218b71"
+checksum = "7fa1a168616e9ef02cca4e3a5d4393f18648b3abed2fbb3ea61869c2148fe553"
 dependencies = [
  "bevy",
 ]

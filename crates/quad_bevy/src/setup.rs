@@ -1,5 +1,3 @@
-use std::f32::consts::TAU;
-
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::Color,
@@ -17,14 +15,13 @@ use bevy_panorbit_camera::PanOrbitCamera;
 use nalgebra::{Matrix3, Rotation3, Vector3};
 use quad_sim::{
     arm::{Arm, MotorProps, MotorState, Propeller},
-    rigid_body::{inv_cuboid_inertia_tensor, RigidBody},
+    rigid_body::RigidBody,
     sample_curve::{SampleCurve, SamplePoint},
     Battery, BatteryProps, BatteryState, Drone, Gyro, Motor,
 };
 
 use crate::{
-    ui::UiSimulationInfo, Controller, DroneComponent, FlightControllerComponent, SimContext,
-    SimState,
+    ui::UiInfo, Controller, DroneComponent, FlightControllerComponent, SimContext, SimState,
 };
 
 // names of the propellers in the mesh
@@ -78,6 +75,9 @@ pub fn base_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(drone_assets.clone());
 }
 
+// TODO: let's not do this this way!
+// We will also need some configuration language
+// What I really want is to have the configuration stored in the simulation
 pub fn setup_drone(
     mut commands: Commands,
     drone_assets: Res<DroneAssets>,
@@ -170,7 +170,7 @@ pub fn setup_drone(
                 drone,
                 SpatialBundle::default(),
                 flight_controller,
-                UiSimulationInfo::default(),
+                UiInfo::default(),
                 SimContext::default(),
                 controller,
             ))

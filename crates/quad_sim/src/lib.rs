@@ -9,16 +9,15 @@ pub mod sample_curve;
 use arm::Arm;
 pub use arm::Motor;
 use constants::MAX_EFFECT_SPEED;
-use core::f64;
 use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Rotation, Rotation3, UnitQuaternion, Vector3, Vector4};
+use nalgebra::{Rotation3, UnitQuaternion, Vector3, Vector4};
 use pyo3::prelude::*;
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
 use sample_curve::SampleCurve;
-use std::{cell::RefCell, f64, ops::Range};
+use std::{cell::RefCell, ops::Range};
 
 #[derive(Debug, Clone, Default)]
 pub struct Gyro {
@@ -94,17 +93,6 @@ impl Gyro {
             combined_noise,
         );
         self.set_acceleration(rotation, acceleration);
-
-        // GyroUpdate {
-        //     rotation: [
-        //         self.rotation.w,
-        //         self.rotation.i,
-        //         self.rotation.j,
-        //         self.rotation.k,
-        //     ],
-        //     linear_acc: self.acceleration.data.0[0],
-        //     angular_velocity: self.gyro_angular_vel.data.0[0],
-        // }
     }
 
     fn gyro_update(&self) -> GyroUpdate {
@@ -135,8 +123,8 @@ pub struct FrameCharachteristics {
     pub motor_imbalance: [Vector3<f64>; 4],
 }
 
-#[derive(Debug)]
-pub struct DebugInfo {
+#[derive(Debug, Default)]
+pub struct SimulationDebugInfo {
     pub rotation: Rotation3<f64>,
     pub position: Vector3<f64>,
     pub linear_velocity: Vector3<f64>,
@@ -149,6 +137,12 @@ pub struct DebugInfo {
     pub bat_voltage_sag: f64,
 }
 
+/// Represnets a quadrotor. The drone contains the precise information about it's state and
+/// also provides an interface to supply noisy data for post processing.
+/// # Example
+/// ```
+///
+/// ```
 #[derive(Clone)]
 #[pyclass]
 pub struct Drone {
@@ -310,7 +304,7 @@ impl Drone {
         self.battery.update(dt, pwm_sum, current_sum);
     }
 
-    fn update_gyro(&mut self, dt: f64) {
+    fn update_imu(&mut self, dt: f64) {
         #[cfg(feature = "noise")]
         let combined_noise = self.calculate_combined_noise(dt);
 
@@ -326,7 +320,7 @@ impl Drone {
 
     pub fn update(&mut self, dt: f64, ambient_temp: f64) -> DroneUpdate {
         self.update_physics(dt, ambient_temp);
-        self.update_gyro(dt);
+        self.update_imu(dt);
 
         DroneUpdate {
             gyro_update: self.gyro.gyro_update(),
@@ -334,7 +328,7 @@ impl Drone {
         }
     }
 
-    pub fn debug_info(&self) -> DebugInfo {
+    pub fn debug_info(&self) -> SimulationDebugInfo {
         let thrusts = Vector4::from_row_slice(
             &self
                 .arms
@@ -347,7 +341,7 @@ impl Drone {
         let pwms =
             Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>());
 
-        DebugInfo {
+        SimulationDebugInfo {
             rotation: self.rigid_body.rotation,
             position: self.rigid_body.position,
             linear_velocity: self.rigid_body.linear_velocity,
@@ -380,4 +374,10 @@ pub fn rng_gen_range(range: Range<f64>) -> f64 {
 fn quad_sim(m: &Bound<'_, PyModule>) -> PyResult<()> {
     pyo3_log::init();
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn thing() {}
 }

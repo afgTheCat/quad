@@ -1,52 +1,28 @@
-use bevy::{
-    math::{DMat3, DVec3, DVec4},
-    prelude::{Component, Query},
-};
+use std::ops::{Deref, DerefMut};
+
+use bevy::prelude::{Component, Query};
 use bevy_egui::{egui::Window, EguiContexts};
 use egui_extras::{Column, TableBuilder};
+use quad_sim::SimulationDebugInfo;
 
 #[derive(Component, Default)]
-pub struct UiSimulationInfo {
-    rotation_matrix: DMat3,
-    position: DVec3,
-    velocity: DVec3,
-    acceleration: DVec3,
-    angular_velocity: DVec3,
-    motor_thrusts: DVec4,
-    motor_rpm: DVec4,
-    motor_pwm: DVec4,
-    bat_voltage: f64,
-    bat_voltage_sag: f64,
-}
+pub struct UiInfo(pub SimulationDebugInfo);
 
-impl UiSimulationInfo {
-    pub fn update_state(
-        &mut self,
-        rotation_marix: DMat3,
-        position: DVec3,
-        velocity: DVec3,
-        acceleration: DVec3,
-        angular_velocity: DVec3,
-        motor_thrusts: DVec4,
-        motor_rpm: DVec4,
-        motor_pwm: DVec4,
-        bat_voltage: f64,
-        bat_voltage_sag: f64,
-    ) {
-        self.rotation_matrix = rotation_marix;
-        self.position = position;
-        self.velocity = velocity;
-        self.acceleration = acceleration;
-        self.angular_velocity = angular_velocity;
-        self.motor_thrusts = motor_thrusts;
-        self.motor_rpm = motor_rpm;
-        self.bat_voltage = bat_voltage;
-        self.bat_voltage_sag = bat_voltage_sag;
-        self.motor_pwm = motor_pwm;
+impl Deref for UiInfo {
+    type Target = SimulationDebugInfo;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
-pub fn update_ui(mut ctx: EguiContexts, sim_info: Query<&UiSimulationInfo>) {
+impl DerefMut for UiInfo {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+// Displays all the debug information we need during the simulation
+pub fn update_ui(mut ctx: EguiContexts, sim_info: Query<&UiInfo>) {
     let ui_sim_info = sim_info.single();
     Window::new("Simulation info").show(ctx.ctx_mut(), |ui| {
         TableBuilder::new(ui)
@@ -61,92 +37,39 @@ pub fn update_ui(mut ctx: EguiContexts, sim_info: Query<&UiSimulationInfo>) {
                 });
             })
             .body(|mut body| {
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Determinant");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.rotation_matrix.determinant()));
-                    });
-                });
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Rotation matrix");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.rotation_matrix));
-                    });
-                });
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Velocity");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.velocity));
-                    });
-                });
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Acceleration");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.acceleration));
-                    });
-                });
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Angular velocity");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.angular_velocity));
-                    });
-                });
-                for i in 0..4 {
-                    body.row(30.0, |mut row| {
-                        row.col(|ui| {
-                            ui.label(format!("Motor thrust {i}"));
+                // Rust macros are hygenic, so we need to declare the macro in the scope where body
+                // is already defined
+                macro_rules! display_debug_data {
+                    ($column_template:literal, $column_value:expr, $column_data_length:literal) => {
+                        for i in 0..$column_data_length {
+                            let column_name = format!($column_template, i);
+                            display_debug_data!(column_name, $column_value[i]);
+                        }
+                    };
+
+                    ($column_name:expr, $column_value:expr) => {
+                        body.row(30.0, |mut row| {
+                            row.col(|ui| {
+                                ui.label($column_name);
+                            });
+                            row.col(|ui| {
+                                ui.label(format!("{}", $column_value));
+                            });
                         });
-                        row.col(|ui| {
-                            ui.label(format!("{}", ui_sim_info.motor_thrusts[i]));
-                        });
-                    });
+                    };
                 }
-                for i in 0..4 {
-                    body.row(30.0, |mut row| {
-                        row.col(|ui| {
-                            ui.label(format!("Motor rpm {i}"));
-                        });
-                        row.col(|ui| {
-                            ui.label(format!("{}", ui_sim_info.motor_rpm[i]));
-                        });
-                    });
-                }
-                for i in 0..4 {
-                    body.row(30.0, |mut row| {
-                        row.col(|ui| {
-                            ui.label(format!("Motor pwm {i}"));
-                        });
-                        row.col(|ui| {
-                            ui.label(format!("{}", ui_sim_info.motor_pwm[i]));
-                        });
-                    });
-                }
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Bat voltage");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.bat_voltage));
-                    });
-                });
-                body.row(30.0, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Bat voltage sag");
-                    });
-                    row.col(|ui| {
-                        ui.label(format!("{}", ui_sim_info.bat_voltage_sag));
-                    });
-                });
+                // Display all the data that we want to show
+                // TODO: maybe readd this
+                // display_debug_data!("Determinant", ui_sim_info.rotation.determinant());
+                display_debug_data!("Rotation matrix", ui_sim_info.rotation);
+                display_debug_data!("Velocity", ui_sim_info.linear_velocity);
+                display_debug_data!("Acceleration", ui_sim_info.acceleration);
+                display_debug_data!("Angular velocity", ui_sim_info.angular_velocity);
+                display_debug_data!("Motor thrust {}", ui_sim_info.angular_velocity, 4);
+                display_debug_data!("Motor rpm {}", ui_sim_info.rpms, 4);
+                display_debug_data!("Motor pwm {}", ui_sim_info.pwms, 4);
+                display_debug_data!("Bat voltage", ui_sim_info.bat_voltage);
+                display_debug_data!("Bat voltage sag", ui_sim_info.bat_voltage_sag);
             });
     });
 }

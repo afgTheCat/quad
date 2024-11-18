@@ -25,7 +25,7 @@ use flight_controller::{
 use game_loop::debug_drone;
 #[cfg(feature = "noise")]
 use quad_sim::FrameCharachteristics;
-use quad_sim::{DebugInfo, Drone, DroneUpdate};
+use quad_sim::{Drone, DroneUpdate, SimulationDebugInfo};
 use setup::{base_setup, setup_drone};
 use std::{sync::Arc, time::Duration};
 use ui::update_ui;
@@ -42,7 +42,7 @@ impl DroneComponent {
         self.0.update(dt, ambient_temp)
     }
 
-    fn debug_info(&self) -> DebugInfo {
+    fn debug_info(&self) -> SimulationDebugInfo {
         self.0.debug_info()
     }
 }
@@ -133,9 +133,9 @@ impl Controller {
 #[derive(Default, Reflect, GizmoConfigGroup)]
 struct MyRoundGizmos {}
 
-pub fn build_app() -> App {
+fn build_app() -> App {
     let mut app = App::new();
-    DefaultPlugins.set(WindowPlugin {
+    let default_plugin = DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "Sim".into(),
             name: Some("bevy.app".into()),
@@ -152,7 +152,7 @@ pub fn build_app() -> App {
         }),
         ..default()
     });
-    app.add_plugins(DefaultPlugins)
+    app.add_plugins(default_plugin)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_state(SimState::Loading)
