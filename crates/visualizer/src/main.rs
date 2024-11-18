@@ -23,10 +23,10 @@ use flight_controller::{
     MotorInput,
 };
 use game_loop::debug_drone;
-#[cfg(feature = "noise")]
-use quad_sim::FrameCharachteristics;
-use quad_sim::{Drone, DroneUpdate, SimulationDebugInfo};
 use setup::{base_setup, setup_drone};
+#[cfg(feature = "noise")]
+use simulator::FrameCharachteristics;
+use simulator::{Drone, DroneUpdate, SimulationDebugInfo};
 use std::{sync::Arc, time::Duration};
 use ui::update_ui;
 

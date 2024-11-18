@@ -371,7 +371,7 @@ pub fn rng_gen_range(range: Range<f64>) -> f64 {
 }
 
 #[pymodule]
-fn quad_sim(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn simulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
     pyo3_log::init();
     Ok(())
 }

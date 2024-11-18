@@ -1,5 +1,5 @@
 [package]
-name = "quad_bevy"
+name = "visualizer"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,7 +15,7 @@ debug = 1
 opt-level = 3
 
 [dependencies]
-quad_sim.workspace = true 
+simulator.workspace = true 
 bevy.workspace = true 
 bevy_egui.workspace = true
 bevy_panorbit_camera.workspace = true 

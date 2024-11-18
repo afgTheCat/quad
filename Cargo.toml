@@ -4,8 +4,8 @@ resolver = "2"
 
 [workspace.dependencies]
 # internal
-quad_bevy = { path = "crates/quad_bevy" }
-quad_sim = { path = "crates/quad_sim" }
+visualizer = { path = "crates/visualizer" }
+simulator = { path = "crates/simulator" }
 flight_controller = { path = "crates/flight_controller" }
 
 # external

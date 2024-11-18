@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use bevy::prelude::{Component, Query};
 use bevy_egui::{egui::Window, EguiContexts};
 use egui_extras::{Column, TableBuilder};
-use quad_sim::SimulationDebugInfo;
+use simulator::SimulationDebugInfo;
 
 #[derive(Component, Default)]
 pub struct UiInfo(pub SimulationDebugInfo);

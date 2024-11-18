@@ -13,7 +13,7 @@ use bevy::{
 use bevy_infinite_grid::InfiniteGridBundle;
 use bevy_panorbit_camera::PanOrbitCamera;
 use nalgebra::{Matrix3, Rotation3, Vector3};
-use quad_sim::{
+use simulator::{
     arm::{Arm, MotorProps, MotorState, Propeller},
     rigid_body::RigidBody,
     sample_curve::{SampleCurve, SamplePoint},
