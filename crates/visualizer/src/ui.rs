@@ -65,7 +65,7 @@ pub fn update_ui(mut ctx: EguiContexts, sim_info: Query<&UiInfo>) {
                 display_debug_data!("Velocity", ui_sim_info.linear_velocity);
                 display_debug_data!("Acceleration", ui_sim_info.acceleration);
                 display_debug_data!("Angular velocity", ui_sim_info.angular_velocity);
-                display_debug_data!("Motor thrust {}", ui_sim_info.angular_velocity, 4);
+                display_debug_data!("Motor thrust {}", ui_sim_info.thrusts, 4);
                 display_debug_data!("Motor rpm {}", ui_sim_info.rpms, 4);
                 display_debug_data!("Motor pwm {}", ui_sim_info.pwms, 4);
                 display_debug_data!("Bat voltage", ui_sim_info.bat_voltage);
