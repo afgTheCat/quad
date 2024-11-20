@@ -1,23 +1,20 @@
-mod controller;
-mod game_loop;
-mod setup;
-mod ui;
-
+//! The `simulation` crate provides a small bevy application that can be used to test how different
+//! contfigurations may affect the drone and it's behaviour. This software is super early in
+//! development, expect a lot of changes, including to how configurations are stored, what drone
+//! meshes we want to use etc.
 use bevy::{
     app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets, Handle},
     color::{palettes::css::RED, Color},
-    ecs::query,
-    gizmos::AppGizmoBuilder,
     gltf::{Gltf, GltfNode},
-    math::{EulerRot, Quat, Vec3},
+    input::gamepad::GamepadEvent,
+    math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, in_state, AppExtStates, Bundle, Camera3dBundle, Commands, Component, Deref,
-        DerefMut, Entity, GizmoConfigGroup, Gizmos, IntoSystemConfigs, NextState, Query, Res,
-        ResMut, Resource, SpatialBundle, States, Transform, With,
+        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, EventReader,
+        GamepadAxisType, Gizmos, IntoSystemConfigs, NextState, Query, Res, ResMut, Resource,
+        States, Transform,
     },
-    reflect::Reflect,
     scene::{Scene, SceneBundle},
     time::Time,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
@@ -26,15 +23,12 @@ use bevy::{
 use bevy_egui::{egui::Window as EguiWindow, EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
-use controller::{gamepad_input_events, gamepad_input_events_two};
 use core::f64;
 use egui_extras::{Column, TableBuilder};
 use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
 };
-use game_loop::{debug_drone, ntb_mat3, ntb_vec3};
 use nalgebra::{Matrix3, Rotation3, Vector3};
-use setup::{base_setup, setup_drone, PROP_BLADE_MESH_NAMES};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
@@ -44,77 +38,98 @@ use simulator::{
     Battery, BatteryProps, BatteryState, Drone, Gyro, Motor, SimulationDebugInfo,
 };
 use std::{sync::Arc, time::Duration};
-use ui::update_ui;
 
-#[derive(Clone, Component, Deref, DerefMut)]
-struct DroneComponent(Drone);
+// TODO: we should not rely on the mesh names for the simulation
+const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [
+    ("prop_blade.001", -1.),
+    ("prop_blade.002", 1.),
+    ("prop_blade.003", 1.),
+    ("prop_blade.004", -1.),
+];
 
-#[derive(Component, Deref, DerefMut)]
-struct FlightControllerComponent(Arc<dyn FlightController>);
-
-impl FlightControllerComponent {
-    fn new(fc: Arc<dyn FlightController>) -> Self {
-        Self(fc)
-    }
-}
-
+/// The simulation has two states: when the drone mesh is loading, and when the simulation is
+/// running. In the future we would like to implement a stopped state as well in order to enable
+/// simulation resetting
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-pub enum SimState {
+enum SimState {
     #[default]
     Loading,
     Running,
 }
 
-#[derive(Component)]
-pub struct SimContext {
-    pub dt: Duration,
-    pub time_accu: Duration, // the accumulated time between two steps + the correction from the
-    pub ambient_temp: f64,
-    pub dialation: f64,
+/// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
+fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
+    Vec3::new(vec[0] as f32, vec[1] as f32, vec[2] as f32)
 }
 
-impl Default for SimContext {
-    fn default() -> Self {
-        Self {
-            dt: Duration::from_nanos(5000), // TODO: update this
-            time_accu: Duration::default(),
-            ambient_temp: 25.,
-            dialation: 1.,
+/// A helper function to transform an nalgebra::Rotation3 to a Mat3 used by bevy
+fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
+    Mat3::from_cols(
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(0)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(1)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+        Vec3::from_slice(
+            &matrix
+                .matrix()
+                .column(2)
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<_>>(),
+        ),
+    )
+}
+
+/// Stores controller inputs in the `PlayerControllerInput` resource. This is input to the simulation
+/// as the setpoints for the controller. We need to store it as it is not guaranteed that a controller
+/// input will be sent on each frame.
+fn store_controller_input(
+    mut evr_gamepad: EventReader<GamepadEvent>,
+    mut controller_input: ResMut<PlayerControllerInput>,
+) {
+    for ev in evr_gamepad.read() {
+        let &GamepadEvent::Axis(ax) = &ev else {
+            continue;
+        };
+
+        let ax_val = ax.value as f64;
+
+        match ax.axis_type {
+            GamepadAxisType::LeftZ => controller_input.throttle = ax_val,
+            GamepadAxisType::RightStickX => {
+                controller_input.yaw = if ax_val > -0.96 { ax_val } else { -1. }
+            }
+            GamepadAxisType::LeftStickX => controller_input.roll = ax_val,
+            GamepadAxisType::LeftStickY => controller_input.pitch = -ax_val,
+            _ => {}
         }
     }
 }
 
-impl SimContext {
-    fn step_context(&mut self) -> bool {
-        if self.time_accu > self.dt {
-            self.time_accu -= self.dt;
-            true
-        } else {
-            false
-        }
-    }
-}
-
-#[derive(Component, Default, Deref, DerefMut)]
-struct Controller(Channels);
-
-impl Controller {
-    pub fn to_channels(&self) -> Channels {
-        self.0
-    }
-}
-
+/// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
+/// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
+/// each frame.
+/// TODO: do we even need this? I assume that betaflight will handle storing the inputs.
 #[derive(Resource, Deref, DerefMut, Default)]
-struct ControllerInput(Channels);
+struct PlayerControllerInput(Channels);
 
-impl ControllerInput {
-    pub fn to_channels(&self) -> Channels {
+impl PlayerControllerInput {
+    fn to_channels(&self) -> Channels {
         self.0
     }
 }
-
-#[derive(Default, Reflect, GizmoConfigGroup)]
-struct MyRoundGizmos {}
 
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
@@ -130,6 +145,8 @@ struct Simulation {
 }
 
 impl Simulation {
+    /// Given a duration (typically 100ms between frames), runs the simulation until the time
+    /// accumlator is less then the simulation's dt.
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
@@ -148,15 +165,17 @@ impl Simulation {
     }
 }
 
-#[derive(Resource, Component, Clone)]
-pub struct DroneAsset(Handle<Gltf>);
+/// Holds all the relevant data that the we wish to show.
+#[derive(Resource, Deref, Default)]
+struct DebugUiContent(SimulationDebugInfo);
 
-#[derive(Component, Clone)]
-pub struct DroneComponentTwo;
+/// The drone asset wrapper. It is used to query for the drone asset within the gltf assets.
+#[derive(Resource, Clone, Deref)]
+struct DroneAsset(Handle<Gltf>);
 
-// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
-// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
-// initialize the flight controller and start the simulation
+/// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
+/// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
+/// initialize the flight controller and start the simulation
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -188,21 +207,21 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.spawn(InfiniteGridBundle::default());
     let drone_scene = asset_server.load("drone5.glb");
-    let drone_assets = DroneAsset(drone_scene);
-    commands.insert_resource(drone_assets.clone());
+    let drone_asset = DroneAsset(drone_scene);
+    commands.insert_resource(drone_asset.clone());
 }
 
-#[derive(Debug, Component)]
-struct MarkerComponent;
-
-fn setup_drone_two(
+/// When the drone asset is loaded, sets up the `Simulation` and sets the new `SimState` to
+/// `SimState::Running`. It will also handle setting up the `DebugUiContent`, the
+/// `PlayerControllerInput` and the spawns the scene.
+fn setup_drone(
     mut commands: Commands,
-    drone_assets: Res<DroneAsset>,
+    drone_asset: Res<DroneAsset>,
     gltf_assets: Res<Assets<Gltf>>,
     gltf_node_assets: Res<Assets<GltfNode>>,
     mut next_state: ResMut<NextState<SimState>>,
 ) {
-    let Some(gltf) = gltf_assets.get(&drone_assets.0) else {
+    let Some(gltf) = gltf_assets.get(&drone_asset.0) else {
         return;
     };
     let flight_controller = Arc::new(BFController::new());
@@ -292,41 +311,31 @@ fn setup_drone_two(
     });
 
     // Insert the simulation debug info
-    commands.insert_resource(DebugUiInfo::default());
+    commands.insert_resource(DebugUiContent::default());
 
-    // Insert the controller input
-    commands.insert_resource(ControllerInput::default());
+    // Insert the player controller input
+    commands.insert_resource(PlayerControllerInput::default());
 
     // Insert the scene bundle
-    commands.spawn((
-        SceneBundle {
-            scene: gltf.scenes[0].clone(),
-            ..Default::default()
-        },
-        MarkerComponent,
-    ));
+    commands.spawn(SceneBundle {
+        scene: gltf.scenes[0].clone(),
+        ..Default::default()
+    });
 
     // Set next state
     next_state.set(SimState::Running);
 }
 
-#[derive(Resource, Deref, Default)]
-struct DebugUiInfo(pub SimulationDebugInfo);
-
+/// The simulation loop.
 fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut ui_info: ResMut<DebugUiInfo>,
+    mut ui_info: ResMut<DebugUiContent>,
     mut simulation: ResMut<Simulation>,
-    controller_input: Res<ControllerInput>,
+    controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
-    query: Query<Entity, With<MarkerComponent>>,
 ) {
-    match query.iter().next() {
-        Some(entity) => println!("Entity {:?} still exists!", entity),
-        _ => println!("Entitiy does not exists"),
-    }
     let (mut tranform, _) = scene_query.single_mut();
     let mut camera = camera_query.single_mut();
     let debug_info = simulation.simulate_delta(timer.delta(), controller_input.to_channels());
@@ -347,11 +356,12 @@ fn sim_loop(
         );
     }
 
-    *ui_info = DebugUiInfo(debug_info);
+    *ui_info = DebugUiContent(debug_info);
     camera.target_focus = drone_translation;
 }
 
-fn update_ui_two(mut ctx: EguiContexts, ui_sim_info: Res<DebugUiInfo>) {
+/// The debug ui.
+fn update_debug_ui(mut ctx: EguiContexts, ui_sim_info: Res<DebugUiContent>) {
     EguiWindow::new("Simulation info").show(ctx.ctx_mut(), |ui| {
         TableBuilder::new(ui)
             .column(Column::auto().resizable(true))
@@ -402,8 +412,7 @@ fn update_ui_two(mut ctx: EguiContexts, ui_sim_info: Res<DebugUiInfo>) {
     });
 }
 
-fn build_app_two() -> App {
-    let mut app = App::new();
+fn main() {
     let default_plugin = DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "Sim".into(),
@@ -421,60 +430,19 @@ fn build_app_two() -> App {
         }),
         ..default()
     });
-    app.add_plugins(default_plugin)
+    App::new()
+        .add_plugins(default_plugin)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_state(SimState::Loading)
-        .init_gizmo_group::<MyRoundGizmos>()
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, setup_drone_two.run_if(in_state(SimState::Loading)))
+        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
         .add_systems(Update, sim_loop.run_if(in_state(SimState::Running)))
         .add_systems(
             Update,
-            gamepad_input_events_two.run_if(in_state(SimState::Running)),
+            store_controller_input.run_if(in_state(SimState::Running)),
         )
-        .add_systems(Update, update_ui_two.run_if(in_state(SimState::Running)));
-    app
-}
-
-fn build_app() -> App {
-    let mut app = App::new();
-    let default_plugin = DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Sim".into(),
-            name: Some("bevy.app".into()),
-            resolution: (2560., 1440.).into(),
-            present_mode: PresentMode::AutoVsync,
-            fit_canvas_to_parent: true,
-            prevent_default_event_handling: false,
-            window_theme: Some(WindowTheme::Dark),
-            enabled_buttons: bevy::window::EnabledButtons {
-                maximize: false,
-                ..Default::default()
-            },
-            ..default()
-        }),
-        ..default()
-    });
-    app.add_plugins(default_plugin)
-        .add_plugins(EguiPlugin)
-        .add_plugins(PanOrbitCameraPlugin)
-        .insert_state(SimState::Loading)
-        .init_gizmo_group::<MyRoundGizmos>()
-        .add_plugins(InfiniteGridPlugin)
-        .add_systems(Startup, base_setup)
-        .add_systems(Update, setup_drone.run_if(in_state(SimState::Loading)))
-        .add_systems(Update, debug_drone.run_if(in_state(SimState::Running)))
-        .add_systems(
-            Update,
-            gamepad_input_events.run_if(in_state(SimState::Running)),
-        )
-        .add_systems(Update, update_ui.run_if(in_state(SimState::Running)));
-    app
-}
-
-fn main() {
-    let mut app = build_app_two();
-    app.run();
+        .add_systems(Update, update_debug_ui.run_if(in_state(SimState::Running)))
+        .run();
 }
