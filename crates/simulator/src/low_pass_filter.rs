@@ -1,4 +1,3 @@
-use libm::exp;
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Default)]
@@ -13,7 +12,7 @@ impl LowPassFilter {
     }
 
     pub fn update(&mut self, input: f64, delta_time: f64, cutoff_frequency: f64) -> f64 {
-        self.e_pow = 1.0 - exp(-delta_time * 2.0 * PI * cutoff_frequency);
+        self.e_pow = 1.0 - f64::exp(-delta_time * 2.0 * PI * cutoff_frequency);
         self.output += (input - self.output) * self.e_pow;
         self.output
     }

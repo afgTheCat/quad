@@ -110,7 +110,8 @@ impl Motor {
         self.state.rpm
     }
 
-    // Effective volts calculated by running it through the low pass filter
+    // Calculates the effective voltage that the motor recieves
+    // It is done by running the battery voltage through a low pass filter
     pub fn volts(&mut self, dt: f64, vbat: f64) -> f64 {
         self.state
             .pwm_low_pass_filter
@@ -122,17 +123,18 @@ impl Motor {
         self.props.position
     }
 
+    // https://en.wikipedia.org/wiki/Motor_constants#Motor_torque_constant
     pub fn motor_torque(&self, volts: f64) -> f64 {
         let kv = self.props.motor_kv;
         let back_emf_v = self.state.rpm / kv;
         let base_current = (volts - back_emf_v) / self.props.motor_r;
-        let current = if base_current > 0. {
+        let armature_current = if base_current > 0. {
             f64::max(0., base_current - self.props.motor_io)
         } else {
             f64::min(0., base_current + self.props.motor_io)
         };
-        let nm_per_a = 8.3 / kv;
-        current * nm_per_a
+        let torque_constant = 8.3 / kv; // why do we need to calculate this?
+        armature_current * torque_constant
     }
 
     pub fn pwm(&self) -> f64 {
@@ -193,10 +195,13 @@ impl Arm {
         #[cfg(feature = "temp")] speed: f64,
         #[cfg(feature = "temp")] ambient_temp: f64,
     ) {
+        // this value is internal to the motor
         let volts = self.motor.volts(dt, vbat);
+        // this value is internal to the motor
         let m_torque = self.motor.motor_torque(volts);
         let p_torque = self.propeller.prop_thrust(vel_up, self.motor.state.rpm)
             * self.propeller.prop_torque_factor;
+        // net torque that is exerted to the propeller
         let net_torque = m_torque - p_torque;
         let domega = net_torque / self.propeller.prop_inertia;
         // change in rpm

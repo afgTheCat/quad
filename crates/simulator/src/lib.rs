@@ -1,4 +1,7 @@
+#![feature(associated_type_defaults)]
+
 pub mod arm;
+pub mod components;
 mod constants;
 mod low_pass_filter;
 #[cfg(feature = "noise")]
