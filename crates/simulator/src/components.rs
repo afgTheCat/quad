@@ -34,10 +34,12 @@ trait Component {
     // calculates the new state based on the component udpate. Then new state can be used later on
     // during the integration
     fn update(&mut self, update: Self::ComponentUpdate) -> Self::ComponentState;
+
     // Sets the new state of the component
     fn set_state(&mut self, state: Self::ComponentState);
 }
 
+/// A drone component is the main component of the drone
 struct DroneComponent<Model: ComponentModel> {
     model: Model,
     state: Model::ComponentState,
@@ -120,14 +122,13 @@ impl ComponentModel for BatteryModel {
 type Battery = DroneComponent<BatteryModel>;
 
 struct RotorState {
-    pub pwm: f64, // pwm signal in percent [0,1]. Thiw will be
-    // updated by BF
-    pub temp: f64,     // motor core temp in deg C
-    pub current: f64,  // current running through motor in Amps
-    pub rpm: f64,      // motor revolutions per minute
-    pub thrust: f64,   // thrust output of motor / propeller combo
-    pub m_torque: f64, // motor torque
-    pub p_torque: f64, // propeller torque, counter acting motor torque
+    pub pwm: f64,            // pwm signal in percent [0,1]. Thiw will be
+    pub temp: f64,           // motor core temp in deg C
+    pub current: f64,        // current running through motor in Amps
+    pub rpm: f64,            // motor revolutions per minute
+    pub exerted_thrust: f64, // thrust output of motor / propeller combo
+    pub m_torque: f64,       // motor torque
+    pub p_torque: f64,       // propeller torque, counter acting motor torque
 }
 
 #[derive(Debug, Clone)]
@@ -146,6 +147,7 @@ struct RotorModel {
 }
 
 impl RotorModel {
+    // The exserted thrust
     fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
         let prop_f = self.prop_thrust_factor[0] * vel_up * vel_up
             + self.prop_thrust_factor[1] * vel_up
@@ -158,7 +160,7 @@ impl RotorModel {
         f64::max(result, 0.0)
     }
 
-    // calculate the motor torque based on the motor torque constant
+    // Calculates the motor torque based on the motor torque constant.
     // https://en.wikipedia.org/wiki/Motor_constants#Motor_torque_constant
     fn motor_torque(&self, armature_volts: f64, rpm: f64) -> f64 {
         let kv = self.motor_kv;
@@ -187,6 +189,9 @@ impl ComponentModel for RotorModel {
     type ComponentState = RotorState;
     type ComponentUpdate = RotorUpdate;
 
+    /// Updates the rotor component. First we calculate the armature volts by feeding the pwm
+    /// signal through a low pass filter. We will pretty much think this as an instant update.
+    /// https://en.wikipedia.org/wiki/Motor_constants#Motor_torque_constant
     fn get_new_state(
         &mut self,
         state: &Self::ComponentState,
@@ -195,11 +200,14 @@ impl ComponentModel for RotorModel {
         let armature_volts =
             self.pwm_low_pass_filter.update(state.pwm, update.dt, 120.0) * update.vbat;
         let motor_torque = self.motor_torque(armature_volts, state.rpm);
+
         // This is the initial propeller thrust
-        let propeller_thrust = self.prop_thrust(update.vel_up, state.rpm);
-        let propeller_torque = propeller_thrust * self.prop_torque_factor;
+        let exerted_thrust = self.prop_thrust(update.vel_up, state.rpm);
+        let propeller_torque = exerted_thrust * self.prop_torque_factor;
         let domega = (motor_torque - propeller_torque) / self.prop_inertia;
         let drpm = (domega * update.dt) * 60.0 / (2.0 * PI);
+        let maxdrpm = f64::abs(armature_volts * self.motor_kv - state.rpm);
+        let rpm = state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
 
         todo!()
     }

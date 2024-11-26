@@ -196,9 +196,9 @@ impl Arm {
         #[cfg(feature = "temp")] ambient_temp: f64,
     ) {
         // this value is internal to the motor
-        let volts = self.motor.volts(dt, vbat);
+        let armature_volts = self.motor.volts(dt, vbat);
         // this value is internal to the motor
-        let m_torque = self.motor.motor_torque(volts);
+        let m_torque = self.motor.motor_torque(armature_volts);
         let p_torque = self.propeller.prop_thrust(vel_up, self.motor.state.rpm)
             * self.propeller.prop_torque_factor;
         // net torque that is exerted to the propeller
@@ -206,7 +206,7 @@ impl Arm {
         let domega = net_torque / self.propeller.prop_inertia;
         // change in rpm
         let drpm = (domega * dt) * 60.0 / (2.0 * PI);
-        let maxdrpm = f64::abs(volts * self.motor.props.motor_kv - self.motor.state.rpm);
+        let maxdrpm = f64::abs(armature_volts * self.motor.props.motor_kv - self.motor.state.rpm);
         let rpm = self.motor.state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.props.motor_kv / 8.3;
         let thrust = self.motor_thrust(
