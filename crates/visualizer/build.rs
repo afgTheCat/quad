@@ -9,7 +9,7 @@ fn main() {
     // Linker flags
     let betaflight_lib_include = format!("cargo:rustc-link-search={libdir_path_str}/lib");
     println!("{}", betaflight_lib_include); // -L./lib
-    println!("cargo:rustc-link-lib=dylib=betaflight"); // -lbetaflight
+    println!("cargo:rustc-link-lib=static=betaflight"); // -lbetaflight
     println!("cargo:rustc-link-lib=m"); // -lm
     println!("cargo:rustc-link-lib=pthread"); // -lpthread
     println!("cargo:rustc-link-lib=c"); // -lc

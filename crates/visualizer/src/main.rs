@@ -7,13 +7,13 @@ use bevy::{
     asset::{AssetServer, Assets, Handle},
     color::{palettes::css::RED, Color},
     gltf::{Gltf, GltfNode},
-    input::gamepad::GamepadEvent,
+    input::{gamepad::GamepadEvent, keyboard::KeyboardInput, ButtonState},
     math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, EventReader,
-        GamepadAxisType, Gizmos, IntoSystemConfigs, NextState, Query, Res, ResMut, Resource,
-        States, Transform,
+        GamepadAxisType, Gizmos, IntoSystemConfigs, KeyCode, NextState, Query, Res, ResMut,
+        Resource, States, Transform,
     },
     scene::{Scene, SceneBundle},
     time::Time,
@@ -97,6 +97,7 @@ fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 /// input will be sent on each frame.
 fn store_controller_input(
     mut evr_gamepad: EventReader<GamepadEvent>,
+    mut evr_kbd: EventReader<KeyboardInput>, // TODO: just for debugging
     mut controller_input: ResMut<PlayerControllerInput>,
 ) {
     for ev in evr_gamepad.read() {
@@ -114,6 +115,24 @@ fn store_controller_input(
             GamepadAxisType::LeftStickX => controller_input.roll = ax_val,
             GamepadAxisType::LeftStickY => controller_input.pitch = -ax_val,
             _ => {}
+        }
+    }
+
+    for ev in evr_kbd.read() {
+        if let (KeyCode::Space, ButtonState::Pressed) = (ev.key_code, ev.state) {
+            controller_input.throttle = 1.;
+        }
+
+        if let (KeyCode::Space, ButtonState::Released) = (ev.key_code, ev.state) {
+            controller_input.throttle = -1.;
+        }
+
+        if let (KeyCode::ArrowLeft, ButtonState::Pressed) = (ev.key_code, ev.state) {
+            controller_input.yaw -= 0.01;
+        }
+
+        if let (KeyCode::ArrowRight, ButtonState::Pressed) = (ev.key_code, ev.state) {
+            controller_input.yaw += 0.01;
         }
     }
 }
