@@ -25,6 +25,10 @@ bevy_egui = "0.30.0"
 bevy_infinite_grid = "0.13.1"
 bevy_panorbit_camera = "0.19.3"
 egui_extras = "0.29.1"
+cc = "1.0"
+
+[build-dependencies]
+cc = "1.0"
 
 [features]
 default = []
