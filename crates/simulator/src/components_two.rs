@@ -1,14 +1,13 @@
 // This is a more or less faithful implementation of the original simitl cpp simulator
 
 use crate::{
-    constants::{AIR_RHO, MAX_EFFECT_SPEED},
+    constants::{AIR_RHO, GRAVITY, MAX_EFFECT_SPEED},
     low_pass_filter::LowPassFilter,
     rng_gen_range,
     sample_curve::SampleCurve,
 };
-use core::f64;
 use derive_more::derive::{Deref, DerefMut};
-use nalgebra::{ComplexField, Matrix3, Normed, Rotation3, Vector3};
+use nalgebra::{Matrix3, Rotation3, Vector3};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Default)]
@@ -37,7 +36,6 @@ struct DroneFrameState {
     position: Vector3<f64>,
     rotation: Rotation3<f64>,
     linear_velocity: Vector3<f64>,
-    velocity_direction: Option<Vector3<f64>>,
     angular_velocity: Vector3<f64>,
 }
 
@@ -47,7 +45,7 @@ struct SimulationFrame {
     drone_state: DroneFrameState,
 }
 
-trait FrameComponet {
+trait FrameComponent {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -65,7 +63,7 @@ pub struct BatteryModel {
     pub max_voltage_sag: f64,
 }
 
-impl FrameComponet for BatteryModel {
+impl FrameComponent for BatteryModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -146,7 +144,7 @@ impl RotorModel {
     }
 }
 
-impl FrameComponet for RotorModel {
+impl FrameComponent for RotorModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -204,6 +202,7 @@ struct DroneModel {
     motor_positions: [Vector3<f64>; 4],
     motor_dir: [f64; 4],
     mass: f64,
+    inv_tensor: Matrix3<f64>,
 }
 
 impl DroneModel {
@@ -231,16 +230,20 @@ impl DroneModel {
     }
 }
 
+fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
+    Matrix3::new(0., -v[2], v[1], v[2], 0., -v[0], -v[1], v[0], 0.)
+}
+
 // TODO: this is majorly bad
-impl FrameComponet for DroneModel {
+impl FrameComponent for DroneModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
         next_frame: &mut SimulationFrame,
         dt: f64,
     ) {
+        let mut sum_force = Vector3::new(0., -GRAVITY * self.mass, 0.);
         let mut sum_torque = Vector3::zeros();
-        // let mut sum_force = Vector3::zeros();
 
         let rotation = current_frame.drone_state.rotation;
         let (linear_velocity_dir, speed) =
@@ -254,7 +257,7 @@ impl FrameComponet for DroneModel {
         let drag_dir =
             speed.powi(2) * linear_velocity_dir * 0.5 * AIR_RHO * self.frame_drag_constant;
 
-        let mut sum_force = -self.drag_linear(&drag_dir, &linear_velocity_dir, rotation);
+        sum_force -= self.drag_linear(&drag_dir, &linear_velocity_dir, rotation);
         // TODO: once testing is done, readd this to the moments
         let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir, rotation);
 
@@ -278,5 +281,51 @@ impl FrameComponet for DroneModel {
             sum_torque += Vector3::cross(&rad, &actual_thrust);
             sum_force += actual_thrust;
         }
+
+        let acceleration = sum_force / self.mass;
+        let position = current_frame.drone_state.position
+            + dt * current_frame.drone_state.linear_velocity
+            + (acceleration * dt.powi(2)) / 2.;
+        let linear_velocity = current_frame.drone_state.linear_velocity + acceleration * dt;
+
+        let angular_acc: Vector3<f64> =
+            rotation * self.inv_tensor * rotation.transpose() * sum_torque;
+        let angular_velocity = current_frame.drone_state.angular_velocity + angular_acc * dt;
+        let rotation = Rotation3::from_matrix_eps(
+            &((Matrix3::identity() + cross_product_matrix(angular_velocity * dt))
+                * rotation.matrix()),
+            0.0000000001,
+            100,
+            rotation,
+        );
+
+        next_frame.drone_state = DroneFrameState {
+            position,
+            rotation,
+            linear_velocity,
+            angular_velocity,
+        };
+    }
+}
+
+struct Simulation {
+    // data
+    current_frame: SimulationFrame,
+    next_frame: SimulationFrame,
+
+    // models
+    battery_model: BatteryModel,
+    rotor_model: RotorModel,
+    drone_model: DroneModel,
+}
+
+impl Simulation {
+    fn update(&mut self) {
+        self.battery_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
+        self.rotor_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
+        self.drone_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
     }
 }
