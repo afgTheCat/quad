@@ -12,7 +12,7 @@ use crate::{low_pass_filter::LowPassFilter, rng_gen_range, sample_curve::SampleC
 
 /// This describes how a component works. Given a component state it calculates the next state that
 /// of the drone component
-trait ComponentModel {
+pub trait ComponentModel {
     type ComponentState; // The state of the model
     type ComponentUpdate; // The update that a component receives
 
@@ -40,7 +40,7 @@ trait Component {
 }
 
 /// A drone component is the main component of the drone
-struct DroneComponent<Model: ComponentModel> {
+pub struct DroneComponent<Model: ComponentModel> {
     model: Model,
     state: Model::ComponentState,
 }
@@ -208,10 +208,21 @@ impl ComponentModel for RotorModel {
         let drpm = (domega * update.dt) * 60.0 / (2.0 * PI);
         let maxdrpm = f64::abs(armature_volts * self.motor_kv - state.rpm);
         let rpm = state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
+        let current = motor_torque * self.motor_kv / 8.3;
 
         todo!()
     }
 }
+
+type Rotor = DroneComponent<RotorModel>;
+
+// proof of concept
+struct Drone {
+    battery: Battery,
+    rotos: [Rotor; 4],
+}
+
+impl Drone {}
 
 // // TODO: what is the difference between full_capacity and quad_bat_capacity_charged?
 // #[derive(Debug, Clone)]

@@ -15,11 +15,11 @@ debug = 1
 opt-level = 3
 
 [dependencies]
-simulator.workspace = true 
+simulator.workspace = true
 nalgebra.workspace = true
 flight_controller.workspace = true
 toml.workspace = true
-bevy = { version = "0.14.2", features = ["dynamic_linking"] }
+bevy = { version = "0.14.2" }
 bevy_asset_loader = "0.21.0"
 bevy_egui = "0.30.0"
 bevy_infinite_grid = "0.13.1"
@@ -28,6 +28,7 @@ egui_extras = "0.29.1"
 cc = "1.0"
 
 [build-dependencies]
+bevy = { version = "0.14.2", features = ["dynamic_linking"] }
 cc = "1.0"
 
 [features]

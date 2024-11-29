@@ -209,6 +209,7 @@ impl Arm {
         let maxdrpm = f64::abs(armature_volts * self.motor.props.motor_kv - self.motor.state.rpm);
         let rpm = self.motor.state.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
         let current = m_torque * self.motor.props.motor_kv / 8.3;
+        // this uses rpm
         let thrust = self.motor_thrust(
             rpm,
             rotation,

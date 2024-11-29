@@ -22,15 +22,9 @@ fn main() {
     println!("cargo:rustc-link-arg=-fmerge-all-constants");
     println!("cargo:rustc-link-arg=-Ofast");
     println!("cargo:rustc-link-arg=-Wl,-gc-sections");
-    let betaflight_sitl_map_include =
-        format!("cargo:rustc-link-arg=-Wl,-Map,{libdir_path_str}/obj/main/betaflight_SITL.map");
-    println!("{}", betaflight_sitl_map_include);
-    let betaflight_link_include =
-        format!("cargo:rustc-link-arg=-Wl,-L{libdir_path_str}/src/platform/SITL/link");
-    println!("{}", betaflight_link_include);
+    println!("cargo:rustc-link-arg=-Wl,-Map,{libdir_path_str}/obj/main/betaflight_SITL.map");
+    println!("cargo:rustc-link-arg=-Wl,-L{libdir_path_str}/src/platform/SITL/link");
     println!("cargo:rustc-link-arg=-Wl,--cref");
-    let betaflight_ld_include =
-        format!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/main/target/SITL/pg.ld");
-    println!("{}", betaflight_ld_include);
+    println!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/main/target/SITL/pg.ld");
     println!("cargo:rustc-link-arg=-fuse-ld=bfd");
 }
