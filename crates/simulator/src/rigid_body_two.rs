@@ -1,7 +1,7 @@
 use nalgebra::{Matrix3, Rotation3, Vector3};
 
 use crate::{
-    components::{ComponentModel, DroneComponent},
+    components::{ComponentModel, DroneComponent, Rotor},
     constants::{AIR_RHO, GRAVITY},
 };
 
@@ -135,13 +135,6 @@ impl FrameComponentModel {
     }
 }
 
-// nothing really
-struct FrameComponentState {
-    linear_drag: Vector3<f64>,
-    angular_drag: Vector3<f64>,
-    motor_positions: [Vector3<f64>; 4],
-}
-
 struct FrameComponentUpdate {
     thrusts: [f64; 4], // The thrust that is created by the quad
     torques: [f64; 4], // The motor torques
@@ -151,7 +144,7 @@ struct FrameComponentUpdate {
 }
 
 impl ComponentModel for FrameComponentModel {
-    type ComponentState = FrameComponentState;
+    type ComponentState = RigidBodyUpdate;
     type ComponentUpdate = FrameComponentUpdate;
 
     fn get_new_state(
@@ -203,6 +196,15 @@ impl ComponentModel for FrameComponentModel {
     }
 }
 
-// things we need for the physics update:
-// motor torques
-// motor forces (thrust)
+type Frame = DroneComponent<FrameComponentModel>;
+
+// // proof of concept
+// struct Drone {
+//     battery: Battery,
+//     rotos: [Rotor; 4],
+//     frame: Frame,
+// }
+//
+// impl Drone {
+//     fn update() {}
+// }

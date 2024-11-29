@@ -2,6 +2,7 @@
 
 pub mod arm;
 pub mod components;
+pub mod components_two;
 mod constants;
 mod low_pass_filter;
 #[cfg(feature = "noise")]
@@ -378,10 +379,4 @@ pub fn rng_gen_range(range: Range<f64>) -> f64 {
 fn simulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
     pyo3_log::init();
     Ok(())
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn thing() {}
 }

@@ -65,6 +65,7 @@ pub struct MotorState {
     pub thrust: f64,                        // thrust output of motor / propeller combo
     pub m_torque: f64,                      // motor torque
     pub p_torque: f64,                      // propeller torque, counter acting motor torque
+    // TODO: not used
     #[cfg(feature = "noise")]
     pub prop_wash_low_pass_filter: LowPassFilter, // low pass filtered prop wash
     #[cfg(feature = "noise")]
@@ -75,8 +76,8 @@ pub struct MotorState {
     pub phase_harmonic_1: f64, // phase freq * 2
     #[cfg(feature = "noise")]
     pub phase_harmonic_2: f64, // phase freq * 3
-                                            //
-                                            // pub burned_out: bool, // is the motor destroyed by over temp
+                               //
+                               // pub burned_out: bool, // is the motor destroyed by over temp
 }
 
 #[derive(Debug, Clone, Default)]
@@ -164,7 +165,7 @@ impl Arm {
     ) -> f64 {
         let mut reverse_thrust = if let Some(linear_velocity_dir) = linear_velocity_dir {
             -Vector3::dot(
-                &linear_velocity_dir,
+                &linear_velocity_dir, // already normalized
                 &(rotation.matrix().column(0) * self.motor.state.thrust).normalize(),
             )
         } else {

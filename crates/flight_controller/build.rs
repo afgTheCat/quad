@@ -88,4 +88,5 @@ fn main() {
     let betaflight_ld_include =
         format!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/main/target/SITL/pg.ld");
     println!("{}", betaflight_ld_include);
+    println!("cargo:rustc-link-arg=-fuse-ld=bfd");
 }

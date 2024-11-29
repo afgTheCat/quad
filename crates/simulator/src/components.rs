@@ -8,7 +8,7 @@ use nalgebra::{Rotation3, Vector3};
 /// working is described by a model which iteract with a state to generate a new state. This new
 /// state can be later used when calculating the rigid body of the drone. Also new and improved
 /// models are welcome, since the current one is derived via heristics.
-use crate::{low_pass_filter::LowPassFilter, rng_gen_range, sample_curve::SampleCurve};
+use crate::low_pass_filter::LowPassFilter;
 
 /// This describes how a component works. Given a component state it calculates the next state that
 /// of the drone component
@@ -57,71 +57,7 @@ impl<Model: ComponentModel> Component for DroneComponent<Model> {
     }
 }
 
-#[derive(Debug, Clone)]
-struct BatteryModel {
-    pub quad_bat_capacity: f64, // mAH I guess
-    pub bat_voltage_curve: SampleCurve,
-    pub quad_bat_cell_count: u8,
-    pub quad_bat_capacity_charged: f64,
-    pub max_voltage_sag: f64,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct BatteryState {
-    pub capacity: f64,
-    pub bat_voltage: f64,
-    pub bat_voltage_sag: f64,
-    pub amperage: f64,
-    pub m_ah_drawn: f64,
-}
-
-pub struct BatteryUpdate {
-    dt: f64,
-    pwm_sum: f64,
-    current_sum: f64,
-}
-
-impl ComponentModel for BatteryModel {
-    type ComponentState = BatteryState;
-    type ComponentUpdate = BatteryUpdate;
-
-    fn get_new_state(
-        &mut self,
-        state: &Self::ComponentState,
-        update: Self::ComponentUpdate,
-    ) -> Self::ComponentState {
-        let bat_charge = state.capacity / self.quad_bat_capacity;
-        let bat_voltage = f64::max(
-            self.bat_voltage_curve.sample(1. - bat_charge) * self.quad_bat_cell_count as f64,
-            0.1,
-        );
-        let power_factor_squared = f64::max(0., update.pwm_sum / 4.).powi(2);
-        let charge_factor_inv =
-            1.0 - (state.capacity / f64::max(self.quad_bat_capacity_charged, 1.));
-
-        let v_sag = self.max_voltage_sag * power_factor_squared
-            + (self.max_voltage_sag * charge_factor_inv * charge_factor_inv * power_factor_squared);
-        let bat_voltage_sag = f64::clamp(
-            state.bat_voltage - v_sag - rng_gen_range(-0.01..0.01),
-            0.0,
-            100.,
-        );
-        let m_a_min = f64::min(0.2, rng_gen_range(-0.125..0.375)) / f64::max(bat_voltage_sag, 0.01);
-        let currentm_as = f64::max(update.current_sum / 3.6, m_a_min);
-        let capacity = state.capacity - currentm_as * update.dt;
-        BatteryState {
-            capacity,
-            bat_voltage,
-            bat_voltage_sag,
-            amperage: currentm_as * 3.6,
-            m_ah_drawn: self.quad_bat_capacity_charged - capacity,
-        }
-    }
-}
-
-type Battery = DroneComponent<BatteryModel>;
-
-struct RotorState {
+pub struct RotorState {
     pub pwm: f64,            // pwm signal in percent [0,1]. Thiw will be
     pub temp: f64,           // motor core temp in deg C
     pub current: f64,        // current running through motor in Amps
@@ -132,7 +68,7 @@ struct RotorState {
 }
 
 #[derive(Debug, Clone)]
-struct RotorModel {
+pub struct RotorModel {
     pub position: Vector3<f64>, // position relative to the main body
     pub prop_max_rpm: f64,
     pub prop_a_factor: f64,
@@ -154,7 +90,6 @@ impl RotorModel {
             + self.prop_thrust_factor[2];
         let max_rpm = self.prop_max_rpm;
         let prop_a = self.prop_a_factor;
-        // let rpm = self.rpm;
         let b = (prop_f - prop_a * max_rpm * max_rpm) / max_rpm;
         let result = b * rpm + prop_a * rpm * rpm;
         f64::max(result, 0.0)
@@ -176,9 +111,9 @@ impl RotorModel {
     }
 }
 
-struct RotorUpdate {
+pub struct RotorUpdate {
     dt: f64,
-    vbat: f64,
+    battery_voltage: f64,
     rotation: Rotation3<f64>,
     linear_velocity_dir: Option<Vector3<f64>>,
     speed_factor: f64,
@@ -198,7 +133,7 @@ impl ComponentModel for RotorModel {
         update: Self::ComponentUpdate,
     ) -> Self::ComponentState {
         let armature_volts =
-            self.pwm_low_pass_filter.update(state.pwm, update.dt, 120.0) * update.vbat;
+            self.pwm_low_pass_filter.update(state.pwm, update.dt, 120.0) * update.battery_voltage;
         let motor_torque = self.motor_torque(armature_volts, state.rpm);
 
         // This is the initial propeller thrust
@@ -214,15 +149,7 @@ impl ComponentModel for RotorModel {
     }
 }
 
-type Rotor = DroneComponent<RotorModel>;
-
-// proof of concept
-struct Drone {
-    battery: Battery,
-    rotos: [Rotor; 4],
-}
-
-impl Drone {}
+pub type Rotor = DroneComponent<RotorModel>;
 
 // // TODO: what is the difference between full_capacity and quad_bat_capacity_charged?
 // #[derive(Debug, Clone)]
