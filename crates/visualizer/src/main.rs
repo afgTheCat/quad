@@ -42,7 +42,7 @@ use simulator::{
     sample_curve::{SampleCurve, SamplePoint},
     Battery, BatteryProps, BatteryState, Drone, Gyro, Motor, SimulationDebugInfo,
 };
-use std::{sync::Arc, time::Duration};
+use std::{sync::Arc, thread, time::Duration};
 
 // TODO: we should not rely on the mesh names for the simulation
 const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [
@@ -155,12 +155,16 @@ impl PlayerControllerInput {
     }
 }
 
+trait Simulation {
+    fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo;
+}
+
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
 // other things, it might make sense to have entities/components
 // TODO: we probably want to move this to the simulation crate eventually
 #[derive(Resource)]
-struct Simulation {
+struct NewSim {
     drone: SimulationTwo,
     flight_controller: Arc<dyn FlightController>,
     dt: Duration,
@@ -168,7 +172,7 @@ struct Simulation {
     ambient_temp: f64,
 }
 
-impl Simulation {
+impl NewSim {
     /// Given a duration (typically 100ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt.
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
@@ -181,6 +185,12 @@ impl Simulation {
                 channels,
             });
             if let Some(motor_input) = motor_input {
+                // TODO: haha this fixes a lot of things
+                println!(
+                    "motor input: {:?}, angular_velocity: {:?}",
+                    motor_input, drone_state.gyro_update.angular_velocity
+                );
+                // thread::sleep(Duration::from_millis(1));
                 self.drone.set_motor_pwms(motor_input);
             }
             self.time_accu -= self.dt;
@@ -250,80 +260,6 @@ fn setup_drone(
     };
     let flight_controller = Arc::new(BFController::new());
     flight_controller.init();
-
-    // let arms = PROP_BLADE_MESH_NAMES.map(|(name, motor_dir)| {
-    //     let node_id = gltf.named_nodes[name].id();
-    //     let prop_asset_node = gltf_node_assets.get(node_id).unwrap().clone();
-    //     let position = prop_asset_node.transform.translation.as_dvec3();
-    //     let motor = Motor {
-    //         state: MotorState::default(),
-    //         props: MotorProps {
-    //             position: Vector3::new(position.x, position.y, position.z),
-    //             motor_kv: 3200.,
-    //             motor_r: 0.13,
-    //             motor_io: 0.23,
-    //             motor_dir,
-    //         },
-    //     };
-    //     let propeller = Propeller {
-    //         prop_inertia: 3.5e-07,
-    //         prop_max_rpm: 36000.0,
-    //         prop_a_factor: 7.43e-10,
-    //         prop_torque_factor: 0.0056,
-    //         prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
-    //     };
-    //     Arm {
-    //         motor,
-    //         propeller,
-    //         ..Default::default()
-    //     }
-    // });
-
-    // Insert the new drone
-    // let drone = Drone {
-    //     arms,
-    //     rigid_body: RigidBody {
-    //         // random cuboid inv inertia tensor
-    //         inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
-    //         angular_velocity: Vector3::new(0., 0., 0.),
-    //         mass: 0.2972,
-    //         rotation: Rotation3::identity(), // stargin position
-    //         frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
-    //         frame_drag_constant: 1.45,
-    //         linear_velocity: Vector3::zeros(),
-    //         linear_velocity_dir: None,
-    //         acceleration: Vector3::zeros(),
-    //         position: Vector3::zeros(),
-    //     },
-    //     gyro: Gyro::default(),
-    //     battery: Battery {
-    //         state: BatteryState {
-    //             capacity: 850.,
-    //             ..Default::default()
-    //         },
-    //         props: BatteryProps {
-    //             bat_voltage_curve: SampleCurve::new(vec![
-    //                 SamplePoint::new(-0.06, 4.4),
-    //                 SamplePoint::new(0.0, 4.2),
-    //                 SamplePoint::new(0.01, 4.05),
-    //                 SamplePoint::new(0.04, 3.97),
-    //                 SamplePoint::new(0.30, 3.82),
-    //                 SamplePoint::new(0.40, 3.7),
-    //                 SamplePoint::new(1.0, 3.49),
-    //                 SamplePoint::new(1.01, 3.4),
-    //                 SamplePoint::new(1.03, 3.3),
-    //                 SamplePoint::new(1.06, 3.0),
-    //                 SamplePoint::new(1.08, 0.0),
-    //             ]),
-    //             quad_bat_cell_count: 4,
-    //             quad_bat_capacity_charged: 850.,
-    //             quad_bat_capacity: 850.,
-    //             max_voltage_sag: 1.4,
-    //         },
-    //     },
-    //     #[cfg(feature = "noise")]
-    //     frame_charachteristics: FrameCharachteristics::default(),
-    // };
 
     let rotors_state = RotorsStateTwo(PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir)| {
         let node_id = gltf.named_nodes[name].id();
@@ -424,7 +360,7 @@ fn setup_drone(
         ],
     };
 
-    let drone = SimulationTwo {
+    let new_drone = SimulationTwo {
         current_frame: initial_frame.clone(),
         next_frame: initial_frame.clone(),
         dt: Duration::from_nanos(5000).as_secs_f64(), // kinda retarded
@@ -434,14 +370,15 @@ fn setup_drone(
         gyro_model,
     };
 
-    // Insert the simulation resource
-    commands.insert_resource(Simulation {
-        drone,
-        flight_controller,
+    let new_sim = NewSim {
+        drone: new_drone,
+        flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
         dt: Duration::from_nanos(5000), // TODO: update this
         ambient_temp: 25.,
-    });
+    };
+
+    commands.insert_resource(new_sim);
 
     // Insert the simulation debug info
     commands.insert_resource(DebugUiContent::default());
@@ -464,7 +401,7 @@ fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
     mut ui_info: ResMut<DebugUiContent>,
-    mut simulation: ResMut<Simulation>,
+    mut simulation: ResMut<NewSim>,
     controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,

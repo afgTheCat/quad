@@ -1,7 +1,6 @@
 #![feature(associated_type_defaults)]
 
 pub mod arm;
-// pub mod components;
 pub mod components_two;
 mod constants;
 pub mod low_pass_filter;
@@ -14,7 +13,7 @@ pub mod sample_curve;
 use arm::Arm;
 pub use arm::Motor;
 use constants::MAX_EFFECT_SPEED;
-use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
+use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Rotation3, UnitQuaternion, Vector3, Vector4};
 use pyo3::prelude::*;
@@ -22,7 +21,7 @@ use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 use rigid_body::RigidBody;
 use sample_curve::SampleCurve;
-use std::{cell::RefCell, ops::Range};
+use std::{cell::RefCell, ops::Range, time::Duration};
 
 #[derive(Debug, Clone, Default)]
 pub struct Gyro {

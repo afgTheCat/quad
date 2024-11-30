@@ -149,13 +149,6 @@ impl BFWorker {
         }
     }
 
-    pub fn only_scheduler(&self) {
-        loop {
-            unsafe { scheduler() };
-            thread::sleep(Duration::from_micros(50));
-        }
-    }
-
     pub fn init(&self) {
         unsafe { init() }
     }

@@ -64,22 +64,6 @@ pub struct SimulationFrame {
     pub gyro_state: GyroStateTwo,
 }
 
-impl SimulationFrame {
-    fn new(
-        battery_state: BatteryStateTwo,
-        rotors_state: RotorsStateTwo,
-        drone_state: DroneFrameStateTwo,
-        gyro: GyroStateTwo,
-    ) -> Self {
-        Self {
-            battery_state,
-            rotors_state,
-            drone_state,
-            gyro_state: gyro,
-        }
-    }
-}
-
 // this is probably not useful anymore
 trait FrameModel {
     fn set_new_state(
@@ -197,7 +181,6 @@ impl FrameModel for RotorModel {
 
         let state = &current_frame.rotors_state;
         for (i, rotor) in state.iter().enumerate() {
-            // let pwm = update.pwm[i];
             let armature_volt = self.pwm_low_pass_filter[i].update(rotor.pwm, dt, 120.)
                 * current_frame.battery_state.bat_voltage_sag;
 
@@ -268,7 +251,7 @@ fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
     Matrix3::new(0., -v[2], v[1], v[2], 0., -v[0], -v[1], v[0], 0.)
 }
 
-// TODO: this is majorly bad
+// TODO: this could be better
 impl FrameModel for DroneModel {
     fn set_new_state(
         &mut self,
@@ -298,7 +281,7 @@ impl FrameModel for DroneModel {
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
         for rotor in next_frame.rotors_state.iter() {
             // apply motor torque
-            sum_torque += rotation.matrix().column(1) * rotor.motor_torque;
+            sum_torque += rotation.matrix().column(1) * rotor.motor_torque * rotor.rotor_dir;
             let mut reverse_thrust = -Vector3::dot(
                 &linear_velocity_dir, // already normalized
                 &(rotation.matrix().column(0) * rotor.effective_thrust).normalize(),
@@ -401,7 +384,6 @@ pub struct SimulationTwo {
     pub gyro_model: GyroModel,
 
     pub dt: f64,
-    // ambient_temp: f64,
 }
 
 impl SimulationTwo {
@@ -437,10 +419,17 @@ impl SimulationTwo {
         let drone_state = &self.current_frame.drone_state;
         let battery_state = &self.current_frame.battery_state;
 
-        let thrusts =
-            Vector4::from_row_slice(&rotors_state.iter().map(|r| 0.).collect::<Vec<f64>>());
-        let rpms = Vector4::from_row_slice(&rotors_state.iter().map(|r| 0.).collect::<Vec<f64>>());
-        let pwms = Vector4::from_row_slice(&rotors_state.iter().map(|r| 0.).collect::<Vec<f64>>());
+        // TODO: readd this
+        let thrusts = Vector4::from_row_slice(
+            &rotors_state
+                .iter()
+                .map(|r| r.effective_thrust)
+                .collect::<Vec<f64>>(),
+        );
+        let rpms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+        let pwms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
 
         SimulationDebugInfo {
             rotation: drone_state.rotation,
