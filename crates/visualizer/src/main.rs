@@ -28,11 +28,16 @@ use egui_extras::{Column, TableBuilder};
 use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
 };
-use nalgebra::{Matrix3, Rotation3, Vector3};
+use nalgebra::{AbstractRotation, Matrix3, Rotation3, UnitQuaternion, Vector3};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
     arm::{Arm, MotorProps, MotorState, Propeller},
+    components_two::{
+        BatteryModel, BatteryStateTwo, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
+        RotorModel, RotorStateTwo, RotorsStateTwo, SimulationFrame, SimulationTwo,
+    },
+    low_pass_filter::LowPassFilter,
     rigid_body::RigidBody,
     sample_curve::{SampleCurve, SamplePoint},
     Battery, BatteryProps, BatteryState, Drone, Gyro, Motor, SimulationDebugInfo,
@@ -156,7 +161,7 @@ impl PlayerControllerInput {
 // TODO: we probably want to move this to the simulation crate eventually
 #[derive(Resource)]
 struct Simulation {
-    drone: Drone,
+    drone: SimulationTwo,
     flight_controller: Arc<dyn FlightController>,
     dt: Duration,
     time_accu: Duration, // the accumulated time between two steps + the correction from the
@@ -169,7 +174,7 @@ impl Simulation {
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
-            let drone_state = self.drone.update(self.dt.as_secs_f64(), self.ambient_temp);
+            let drone_state = self.drone.update();
             let motor_input = self.flight_controller.update(FlightControllerUpdate {
                 battery_update: drone_state.battery_update,
                 gyro_update: drone_state.gyro_update,
@@ -245,79 +250,188 @@ fn setup_drone(
     };
     let flight_controller = Arc::new(BFController::new());
     flight_controller.init();
-    let arms = PROP_BLADE_MESH_NAMES.map(|(name, motor_dir)| {
+
+    // let arms = PROP_BLADE_MESH_NAMES.map(|(name, motor_dir)| {
+    //     let node_id = gltf.named_nodes[name].id();
+    //     let prop_asset_node = gltf_node_assets.get(node_id).unwrap().clone();
+    //     let position = prop_asset_node.transform.translation.as_dvec3();
+    //     let motor = Motor {
+    //         state: MotorState::default(),
+    //         props: MotorProps {
+    //             position: Vector3::new(position.x, position.y, position.z),
+    //             motor_kv: 3200.,
+    //             motor_r: 0.13,
+    //             motor_io: 0.23,
+    //             motor_dir,
+    //         },
+    //     };
+    //     let propeller = Propeller {
+    //         prop_inertia: 3.5e-07,
+    //         prop_max_rpm: 36000.0,
+    //         prop_a_factor: 7.43e-10,
+    //         prop_torque_factor: 0.0056,
+    //         prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
+    //     };
+    //     Arm {
+    //         motor,
+    //         propeller,
+    //         ..Default::default()
+    //     }
+    // });
+
+    // Insert the new drone
+    // let drone = Drone {
+    //     arms,
+    //     rigid_body: RigidBody {
+    //         // random cuboid inv inertia tensor
+    //         inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
+    //         angular_velocity: Vector3::new(0., 0., 0.),
+    //         mass: 0.2972,
+    //         rotation: Rotation3::identity(), // stargin position
+    //         frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
+    //         frame_drag_constant: 1.45,
+    //         linear_velocity: Vector3::zeros(),
+    //         linear_velocity_dir: None,
+    //         acceleration: Vector3::zeros(),
+    //         position: Vector3::zeros(),
+    //     },
+    //     gyro: Gyro::default(),
+    //     battery: Battery {
+    //         state: BatteryState {
+    //             capacity: 850.,
+    //             ..Default::default()
+    //         },
+    //         props: BatteryProps {
+    //             bat_voltage_curve: SampleCurve::new(vec![
+    //                 SamplePoint::new(-0.06, 4.4),
+    //                 SamplePoint::new(0.0, 4.2),
+    //                 SamplePoint::new(0.01, 4.05),
+    //                 SamplePoint::new(0.04, 3.97),
+    //                 SamplePoint::new(0.30, 3.82),
+    //                 SamplePoint::new(0.40, 3.7),
+    //                 SamplePoint::new(1.0, 3.49),
+    //                 SamplePoint::new(1.01, 3.4),
+    //                 SamplePoint::new(1.03, 3.3),
+    //                 SamplePoint::new(1.06, 3.0),
+    //                 SamplePoint::new(1.08, 0.0),
+    //             ]),
+    //             quad_bat_cell_count: 4,
+    //             quad_bat_capacity_charged: 850.,
+    //             quad_bat_capacity: 850.,
+    //             max_voltage_sag: 1.4,
+    //         },
+    //     },
+    //     #[cfg(feature = "noise")]
+    //     frame_charachteristics: FrameCharachteristics::default(),
+    // };
+
+    let rotors_state = RotorsStateTwo(PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir)| {
         let node_id = gltf.named_nodes[name].id();
         let prop_asset_node = gltf_node_assets.get(node_id).unwrap().clone();
         let position = prop_asset_node.transform.translation.as_dvec3();
-        let motor = Motor {
-            state: MotorState::default(),
-            props: MotorProps {
-                position: Vector3::new(position.x, position.y, position.z),
-                motor_kv: 3200.,
-                motor_r: 0.13,
-                motor_io: 0.23,
-                motor_dir,
-            },
-        };
-        let propeller = Propeller {
-            prop_inertia: 3.5e-07,
-            prop_max_rpm: 36000.0,
-            prop_a_factor: 7.43e-10,
-            prop_torque_factor: 0.0056,
-            prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
-        };
-        Arm {
-            motor,
-            propeller,
-            ..Default::default()
+        // guess its fine
+        RotorStateTwo {
+            current: 0.,
+            rpm: 0.,
+            motor_torque: 0.,
+            effective_thrust: 0.,
+            pwm: 0.,
+            rotor_dir,
+            motor_pos: Vector3::new(position.x, position.y, position.z),
         }
-    });
+    }));
 
-    // Insert the new drone
-    let drone = Drone {
-        arms,
-        rigid_body: RigidBody {
-            // random cuboid inv inertia tensor
-            inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
-            angular_velocity: Vector3::new(0., 0., 0.),
-            mass: 0.2972,
-            rotation: Rotation3::identity(), // stargin position
-            frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
-            frame_drag_constant: 1.45,
-            linear_velocity: Vector3::zeros(),
-            linear_velocity_dir: None,
-            acceleration: Vector3::zeros(),
-            position: Vector3::zeros(),
-            ..Default::default()
-        },
-        gyro: Gyro::default(),
-        battery: Battery {
-            state: BatteryState {
-                capacity: 850.,
-                ..Default::default()
-            },
-            props: BatteryProps {
-                bat_voltage_curve: SampleCurve::new(vec![
-                    SamplePoint::new(-0.06, 4.4),
-                    SamplePoint::new(0.0, 4.2),
-                    SamplePoint::new(0.01, 4.05),
-                    SamplePoint::new(0.04, 3.97),
-                    SamplePoint::new(0.30, 3.82),
-                    SamplePoint::new(0.40, 3.7),
-                    SamplePoint::new(1.0, 3.49),
-                    SamplePoint::new(1.01, 3.4),
-                    SamplePoint::new(1.03, 3.3),
-                    SamplePoint::new(1.06, 3.0),
-                    SamplePoint::new(1.08, 0.0),
-                ]),
-                quad_bat_cell_count: 4,
-                quad_bat_capacity_charged: 850.,
-                quad_bat_capacity: 850.,
-                max_voltage_sag: 1.4,
-            },
-        },
-        #[cfg(feature = "noise")]
-        frame_charachteristics: FrameCharachteristics::default(),
+    let battery_state = BatteryStateTwo {
+        capacity: 850.,
+        bat_voltage: 4.2,
+        bat_voltage_sag: 4.2,
+        amperage: 0.,
+        m_ah_drawn: 0.,
+    };
+
+    let drone_state = DroneFrameStateTwo {
+        position: Vector3::zeros(),
+        rotation: Rotation3::identity(), // stargin position
+        linear_velocity: Vector3::zeros(),
+        angular_velocity: Vector3::new(0., 0., 0.),
+        acceleration: Vector3::zeros(),
+    };
+
+    let gyro_state = GyroStateTwo {
+        rotation: UnitQuaternion::identity(),
+        acceleration: Vector3::zeros(),
+        angular_velocity: Vector3::zeros(),
+    };
+
+    let initial_frame = SimulationFrame {
+        battery_state,
+        rotors_state,
+        drone_state,
+        gyro_state,
+    };
+
+    let bat_voltage_curve = SampleCurve::new(vec![
+        SamplePoint::new(-0.06, 4.4),
+        SamplePoint::new(0.0, 4.2),
+        SamplePoint::new(0.01, 4.05),
+        SamplePoint::new(0.04, 3.97),
+        SamplePoint::new(0.30, 3.82),
+        SamplePoint::new(0.40, 3.7),
+        SamplePoint::new(1.0, 3.49),
+        SamplePoint::new(1.01, 3.4),
+        SamplePoint::new(1.03, 3.3),
+        SamplePoint::new(1.06, 3.0),
+        SamplePoint::new(1.08, 0.0),
+    ]);
+
+    let battery_model = BatteryModel {
+        quad_bat_capacity: 850.,
+        bat_voltage_curve,
+        quad_bat_cell_count: 4,
+        quad_bat_capacity_charged: 850.,
+        max_voltage_sag: 1.4,
+    };
+
+    let rotor_model = RotorModel {
+        prop_max_rpm: 36000.0,
+        pwm_low_pass_filter: [
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+        ],
+        motor_kv: 3200., // kv
+        motor_r: 0.13,   // resistence
+        motor_io: 0.23,  // idle current
+        prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
+        prop_torque_factor: 0.0056,
+        prop_a_factor: 7.43e-10,
+        prop_inertia: 3.5e-07,
+    };
+
+    let drone_model = DroneModel {
+        frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
+        frame_drag_constant: 1.45,
+        mass: 0.2972,
+        inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
+    };
+
+    let gyro_model = GyroModel {
+        low_pass_filter: [
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+        ],
+    };
+
+    let drone = SimulationTwo {
+        current_frame: initial_frame.clone(),
+        next_frame: initial_frame.clone(),
+        dt: Duration::from_nanos(5000).as_secs_f64(), // kinda retarded
+        battery_model,
+        rotor_model,
+        drone_model,
+        gyro_model,
     };
 
     // Insert the simulation resource
@@ -365,12 +479,14 @@ fn sim_loop(
     tranform.rotation = drone_rotation;
 
     let down_dir = debug_info.rotation * Vector3::new(0., -1., -0.);
+    let current_frame = &simulation.drone.current_frame;
     for motor_index in 0..4 {
         let motor_pos = drone_translation
-            + ntb_vec3(debug_info.rotation * simulation.drone.arms[motor_index].motor_pos());
+            + ntb_vec3(debug_info.rotation * current_frame.rotors_state.0[motor_index].motor_pos);
         gizmos.arrow(
             motor_pos,
-            motor_pos + ntb_vec3(down_dir * simulation.drone.arms[motor_index].thrust()),
+            motor_pos
+                + ntb_vec3(down_dir * current_frame.rotors_state.0[motor_index].effective_thrust),
             RED,
         );
     }

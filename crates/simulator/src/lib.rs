@@ -1,14 +1,14 @@
 #![feature(associated_type_defaults)]
 
 pub mod arm;
-pub mod components;
+// pub mod components;
 pub mod components_two;
 mod constants;
-mod low_pass_filter;
+pub mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
 pub mod rigid_body;
-mod rigid_body_two;
+// mod rigid_body_two;
 pub mod sample_curve;
 
 use arm::Arm;

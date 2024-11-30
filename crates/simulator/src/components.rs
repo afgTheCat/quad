@@ -58,13 +58,14 @@ impl<Model: ComponentModel> Component for DroneComponent<Model> {
 }
 
 pub struct RotorState {
-    pub pwm: f64,            // pwm signal in percent [0,1]. Thiw will be
-    pub temp: f64,           // motor core temp in deg C
-    pub current: f64,        // current running through motor in Amps
-    pub rpm: f64,            // motor revolutions per minute
-    pub exerted_thrust: f64, // thrust output of motor / propeller combo
-    pub m_torque: f64,       // motor torque
-    pub p_torque: f64,       // propeller torque, counter acting motor torque
+    pub pwm: f64,                           // pwm signal in percent [0,1]. Thiw will be
+    pub temp: f64,                          // motor core temp in deg C
+    pub current: f64,                       // current running through motor in Amps
+    pub rpm: f64,                           // motor revolutions per minute
+    pub exerted_thrust: f64,                // thrust output of motor / propeller combo
+    pub m_torque: f64,                      // motor torque
+    pub p_torque: f64,                      // propeller torque, counter acting motor torque
+    pub pwm_low_pass_filter: LowPassFilter, // low pass filtered pwm value
 }
 
 #[derive(Debug, Clone)]
@@ -79,7 +80,6 @@ pub struct RotorModel {
     pub motor_r: f64,  // resistence
     pub motor_io: f64, // idle current
     pub motor_dir: f64,
-    pub pwm_low_pass_filter: LowPassFilter, // low pass filtered pwm value
 }
 
 impl RotorModel {
