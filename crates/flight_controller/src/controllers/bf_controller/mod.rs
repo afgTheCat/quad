@@ -31,7 +31,7 @@ impl BFController {
             let worker = BFWorker {
                 fc_mutex: mutex_clone,
             };
-            unsafe { worker.init() };
+            worker.init();
             worker.work();
         };
 

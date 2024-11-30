@@ -5,9 +5,11 @@ use crate::{
     low_pass_filter::LowPassFilter,
     rng_gen_range,
     sample_curve::SampleCurve,
+    DroneUpdate,
 };
 use derive_more::derive::{Deref, DerefMut};
-use nalgebra::{Matrix3, Rotation3, Vector3};
+use flight_controller::{BatteryUpdate, GyroUpdate};
+use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use std::f64::consts::PI;
 
 #[derive(Debug, Clone, Default)]
@@ -17,6 +19,18 @@ pub struct BatteryState {
     pub bat_voltage_sag: f64,
     pub amperage: f64,
     pub m_ah_drawn: f64,
+}
+
+impl BatteryState {
+    pub fn battery_update(&self, cell_count: u8) -> BatteryUpdate {
+        BatteryUpdate {
+            cell_count,
+            bat_voltage_sag: self.bat_voltage_sag,
+            bat_voltage: self.bat_voltage,
+            amperage: self.amperage,
+            m_ah_drawn: self.m_ah_drawn,
+        }
+    }
 }
 
 struct RotorState {
@@ -37,15 +51,18 @@ struct DroneFrameState {
     rotation: Rotation3<f64>,
     linear_velocity: Vector3<f64>,
     angular_velocity: Vector3<f64>,
+    acceleration: Vector3<f64>,
 }
 
 struct SimulationFrame {
     battery_state: BatteryState,
     rotors_state: RotorsState,
     drone_state: DroneFrameState,
+    gyro: GyroState,
 }
 
-trait FrameComponent {
+// this is probably not useful anymore
+trait FrameModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -56,14 +73,14 @@ trait FrameComponent {
 
 #[derive(Debug, Clone)]
 pub struct BatteryModel {
-    pub quad_bat_capacity: f64, // mAH I guess
+    pub quad_bat_capacity: f64,
     pub bat_voltage_curve: SampleCurve,
     pub quad_bat_cell_count: u8,
     pub quad_bat_capacity_charged: f64,
     pub max_voltage_sag: f64,
 }
 
-impl FrameComponent for BatteryModel {
+impl FrameModel for BatteryModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -144,7 +161,7 @@ impl RotorModel {
     }
 }
 
-impl FrameComponent for RotorModel {
+impl FrameModel for RotorModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -235,7 +252,7 @@ fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
 }
 
 // TODO: this is majorly bad
-impl FrameComponent for DroneModel {
+impl FrameModel for DroneModel {
     fn set_new_state(
         &mut self,
         current_frame: &SimulationFrame,
@@ -304,11 +321,57 @@ impl FrameComponent for DroneModel {
             rotation,
             linear_velocity,
             angular_velocity,
+            acceleration,
         };
     }
 }
 
-struct Simulation {
+struct GyroState {
+    rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
+    acceleration: Vector3<f64>,
+    angular_velocity: Vector3<f64>,
+}
+
+impl GyroState {
+    fn gyro_update(&self) -> GyroUpdate {
+        GyroUpdate {
+            rotation: [
+                self.rotation.w,
+                self.rotation.i,
+                self.rotation.j,
+                self.rotation.k,
+            ],
+            linear_acc: self.acceleration.data.0[0],
+            angular_velocity: self.angular_velocity.data.0[0],
+        }
+    }
+}
+
+// we can possibly integrate things here
+struct GyroModel {
+    low_pass_filter: [LowPassFilter; 3],
+}
+
+impl FrameModel for GyroModel {
+    fn set_new_state(&mut self, _: &SimulationFrame, next_frame: &mut SimulationFrame, dt: f64) {
+        let rotation = next_frame.drone_state.rotation;
+        let frame_angular_velocity = next_frame.drone_state.angular_velocity;
+        let cutoff_freq = 300.;
+        let gyro_vel_x = self.low_pass_filter[0].update(frame_angular_velocity[0], dt, cutoff_freq);
+        let gyro_vel_y = self.low_pass_filter[1].update(frame_angular_velocity[1], dt, cutoff_freq);
+        let gyro_vel_z = self.low_pass_filter[2].update(frame_angular_velocity[2], dt, cutoff_freq);
+        let angular_velocity =
+            rotation.transpose() * Vector3::new(gyro_vel_x, gyro_vel_y, gyro_vel_z);
+        let acceleration = rotation.transpose() * next_frame.drone_state.acceleration;
+        next_frame.gyro = GyroState {
+            rotation: UnitQuaternion::from(rotation),
+            acceleration,
+            angular_velocity,
+        }
+    }
+}
+
+pub struct Simulation {
     // data
     current_frame: SimulationFrame,
     next_frame: SimulationFrame,
@@ -317,15 +380,28 @@ struct Simulation {
     battery_model: BatteryModel,
     rotor_model: RotorModel,
     drone_model: DroneModel,
+    gyro_model: GyroModel,
+
+    dt: f64,
+    ambient_temp: f64,
 }
 
 impl Simulation {
-    fn update(&mut self) {
+    fn update(&mut self) -> DroneUpdate {
         self.battery_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
         self.rotor_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
         self.drone_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, 0.1);
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+
+        std::mem::swap(&mut self.current_frame, &mut self.next_frame);
+        DroneUpdate {
+            gyro_update: self.current_frame.gyro.gyro_update(),
+            battery_update: self
+                .current_frame
+                .battery_state
+                .battery_update(self.battery_model.quad_bat_cell_count),
+        }
     }
 }
