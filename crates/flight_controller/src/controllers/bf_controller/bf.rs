@@ -1,7 +1,7 @@
 use std::{
     sync::{Arc, Mutex},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
         bf_bindings_generated::{
             armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
             rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
-            rxRuntimeState_s, scheduler, setCellCount, timeUs_t, virtualAccDev, virtualAccSet,
+            rxRuntimeState_s, scheduler, setCellCount, virtualAccDev, virtualAccSet,
             virtualGyroDev, virtualGyroSet,
         },
         motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
@@ -42,13 +42,8 @@ unsafe extern "C" fn rx_rc_frame_status(_: *mut rxRuntimeState_s) -> u8 {
     rxFrameState_e_RX_FRAME_COMPLETE as u8
 }
 
-unsafe extern "C" fn rx_rc_frame_time_us() -> timeUs_t {
-    todo!()
-}
-
 pub struct BFWorker {
     pub fc_mutex: Arc<Mutex<FCMutex>>,
-    // pub counter: RefCell<u64>,
 }
 
 impl BFWorker {
@@ -120,6 +115,8 @@ impl BFWorker {
         virtualGyroSet(virtualGyroDev, x, y, z);
     }
 
+    /// It locks the input mutex. If a new input can be read, it gets processed and the scheduler
+    /// runs. If no new input can be read, only the scheduler runs.
     pub fn update(&self) {
         let mut fc_mutex = self.fc_mutex.lock().unwrap();
         if let Some(update) = fc_mutex.update {
@@ -142,10 +139,14 @@ impl BFWorker {
         }
     }
 
-    pub fn work(&self) {
+    /// Ensures that the input is only read at a certain frequency.
+    pub fn work(&self, scheduler_delta: Duration) {
         loop {
+            let start = Instant::now();
             self.update();
-            thread::sleep(Duration::from_micros(50));
+            let elapsed = start.elapsed();
+            let sleep_time = scheduler_delta.saturating_sub(elapsed);
+            thread::sleep(sleep_time);
         }
     }
 

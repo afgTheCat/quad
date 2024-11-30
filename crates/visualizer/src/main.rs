@@ -155,26 +155,21 @@ impl PlayerControllerInput {
     }
 }
 
-trait Simulation {
-    fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo;
-}
-
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
 // other things, it might make sense to have entities/components
 // TODO: we probably want to move this to the simulation crate eventually
 #[derive(Resource)]
-struct NewSim {
+struct Simulation {
     drone: SimulationTwo,
     flight_controller: Arc<dyn FlightController>,
     dt: Duration,
     time_accu: Duration, // the accumulated time between two steps + the correction from the
-    ambient_temp: f64,
 }
 
-impl NewSim {
+impl Simulation {
     /// Given a duration (typically 100ms between frames), runs the simulation until the time
-    /// accumlator is less then the simulation's dt.
+    /// accumlator is less then the simulation's dt. It will also try to
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
@@ -370,12 +365,11 @@ fn setup_drone(
         gyro_model,
     };
 
-    let new_sim = NewSim {
+    let new_sim = Simulation {
         drone: new_drone,
         flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
         dt: Duration::from_nanos(5000), // TODO: update this
-        ambient_temp: 25.,
     };
 
     commands.insert_resource(new_sim);
@@ -401,7 +395,7 @@ fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
     mut ui_info: ResMut<DebugUiContent>,
-    mut simulation: ResMut<NewSim>,
+    mut simulation: ResMut<Simulation>,
     controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,

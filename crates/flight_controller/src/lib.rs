@@ -1,4 +1,4 @@
-use std::{f64, ops::Index};
+use std::{f64, ops::Index, time::Duration};
 
 pub mod bindings;
 pub mod controllers;
@@ -76,6 +76,7 @@ pub struct FlightControllerUpdate {
 pub trait FlightController: Send + Sync + 'static {
     fn init(&self);
     fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput>;
+    fn scheduler_delta(&self) -> Duration;
 }
 
 impl Default for MotorInput {
