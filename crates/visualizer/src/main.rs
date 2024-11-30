@@ -32,17 +32,12 @@ use nalgebra::{AbstractRotation, Matrix3, Rotation3, UnitQuaternion, Vector3};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
-    arm::{Arm, MotorProps, MotorState, Propeller},
-    components_two::{
-        BatteryModel, BatteryStateTwo, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
-        RotorModel, RotorStateTwo, RotorsStateTwo, SimulationFrame, SimulationTwo,
-    },
     low_pass_filter::LowPassFilter,
-    rigid_body::RigidBody,
     sample_curve::{SampleCurve, SamplePoint},
-    Battery, BatteryProps, BatteryState, Drone, Gyro, Motor, SimulationDebugInfo,
+    BatteryModel, BatteryStateTwo, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
+    RotorModel, RotorStateTwo, RotorsStateTwo, SimulationDebugInfo, SimulationFrame, SimulationTwo,
 };
-use std::{sync::Arc, thread, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 // TODO: we should not rely on the mesh names for the simulation
 const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [

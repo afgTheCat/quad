@@ -1,131 +1,21 @@
-#![feature(associated_type_defaults)]
-
-pub mod arm;
-pub mod components_two;
+// pub mod arm;
+// pub mod components_two;
 mod constants;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
-pub mod rigid_body;
-// mod rigid_body_two;
+// pub mod rigid_body;
 pub mod sample_curve;
 
-use arm::Arm;
-pub use arm::Motor;
-use constants::MAX_EFFECT_SPEED;
-use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
+use constants::{AIR_RHO, GRAVITY, MAX_EFFECT_SPEED};
+use derive_more::derive::{Deref, DerefMut};
+use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use low_pass_filter::LowPassFilter;
-use nalgebra::{Rotation3, UnitQuaternion, Vector3, Vector4};
-use pyo3::prelude::*;
+use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
-use rigid_body::RigidBody;
 use sample_curve::SampleCurve;
-use std::{cell::RefCell, ops::Range, time::Duration};
-
-#[derive(Debug, Clone, Default)]
-pub struct Gyro {
-    low_pass_filter: [LowPassFilter; 3],
-    previous_rotation: UnitQuaternion<f64>,
-    rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
-    acceleration: Vector3<f64>,
-    gyro_angular_vel: Vector3<f64>,
-    #[cfg(feature = "noise")]
-    gyro_base_noise_amp: f64,
-}
-
-impl Gyro {
-    pub fn set_angular_velocity(
-        &mut self,
-        rotation: Rotation3<f64>,
-        angular_velocity: Vector3<f64>,
-        dt: f64,
-        #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
-    ) {
-        #[cfg(feature = "noise")]
-        let mut angular_velocity = angular_velocity + combined_noise;
-        #[cfg(not(feature = "noise"))]
-        let mut gyro_angular_velocity = angular_velocity;
-
-        let cutoff_freq = 300.;
-        gyro_angular_velocity[0] =
-            self.low_pass_filter()[0].update(angular_velocity[0], dt, cutoff_freq);
-        gyro_angular_velocity[1] =
-            self.low_pass_filter()[1].update(angular_velocity[0], dt, cutoff_freq);
-        gyro_angular_velocity[2] =
-            self.low_pass_filter()[2].update(angular_velocity[0], dt, cutoff_freq);
-        self.gyro_angular_vel = rotation.transpose() * angular_velocity;
-    }
-
-    pub fn set_acceleration(&mut self, rotation: Rotation3<f64>, acceleration: Vector3<f64>) {
-        self.acceleration = rotation.transpose() * acceleration
-    }
-
-    pub fn low_pass_filter(&mut self) -> &mut [LowPassFilter; 3] {
-        &mut self.low_pass_filter
-    }
-
-    pub fn angular_vel(&self) -> Vector3<f64> {
-        self.gyro_angular_vel
-    }
-
-    pub fn set_rotation(&mut self, rotation: UnitQuaternion<f64>) {
-        self.rotation = rotation
-    }
-
-    pub fn acceleration(&self) -> Vector3<f64> {
-        self.acceleration
-    }
-
-    fn update(
-        &mut self,
-        dt: f64,
-        rotation: Rotation3<f64>,
-        angular_velocity: Vector3<f64>,
-        acceleration: Vector3<f64>,
-        #[cfg(feature = "noise")] combined_noise: Vector3<f64>,
-    ) {
-        let new_rotation = UnitQuaternion::from(rotation);
-        self.previous_rotation = new_rotation;
-        // BF expects the order to be w, x, y, z
-        self.set_rotation(new_rotation);
-        self.set_angular_velocity(
-            rotation,
-            angular_velocity,
-            dt,
-            #[cfg(feature = "noise")]
-            combined_noise,
-        );
-        self.set_acceleration(rotation, acceleration);
-    }
-
-    fn gyro_update(&self) -> GyroUpdate {
-        GyroUpdate {
-            rotation: [
-                self.rotation.w,
-                self.rotation.i,
-                self.rotation.j,
-                self.rotation.k,
-            ],
-            linear_acc: self.acceleration.data.0[0],
-            angular_velocity: self.gyro_angular_vel.data.0[0],
-        }
-    }
-}
-
-#[cfg(feature = "noise")]
-#[derive(Clone, Default)]
-pub struct FrameCharachteristics {
-    pub prop_harmonic_1_amp: f64,
-    pub prop_harmonic_2_amp: f64,
-    pub frame_harmonic_phase_1: f64,
-    pub frame_harmonic_phase_2: f64,
-    pub frame_harmonic_1_amp: f64,
-    pub frame_harmonic_1_freq: f64,
-    pub frame_harmonic_2_amp: f64,
-    pub frame_harmonic_2_freq: f64,
-    pub motor_imbalance: [Vector3<f64>; 4],
-}
+use std::{cell::RefCell, f64::consts::PI, ops::Range};
 
 #[derive(Debug, Default)]
 pub struct SimulationDebugInfo {
@@ -141,229 +31,11 @@ pub struct SimulationDebugInfo {
     pub bat_voltage_sag: f64,
 }
 
-/// Represnets a quadrotor. The drone contains the precise information about it's state and
-/// also provides an interface to supply noisy data for post processing.
-/// # Example
-/// ```
-///
-/// ```
-#[derive(Clone)]
-#[pyclass]
-pub struct Drone {
-    #[cfg(feature = "noise")]
-    pub frame_charachteristics: FrameCharachteristics,
-    pub battery: Battery,
-    pub arms: [Arm; 4],
-    pub rigid_body: RigidBody,
-    pub gyro: Gyro,
-}
-
-// TODO: what is the difference between full_capacity and quad_bat_capacity_charged?
 #[derive(Debug, Clone)]
-pub struct BatteryProps {
-    //battery capacacity rating
-    pub quad_bat_capacity: f64, // mAH I guess
-    pub bat_voltage_curve: SampleCurve,
-    pub quad_bat_cell_count: u8,
-    //charged up capacity, can be lower or higher than quadBatCapacity
-    pub quad_bat_capacity_charged: f64,
-    pub max_voltage_sag: f64,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct BatteryState {
-    pub capacity: f64,
-    pub bat_voltage: f64,
-    pub bat_voltage_sag: f64,
-    pub amperage: f64,
-    pub m_ah_drawn: f64,
-}
-
-#[derive(Debug, Clone)]
-pub struct Battery {
-    pub props: BatteryProps,
-    pub state: BatteryState,
-}
-
-#[derive(Debug, Clone)]
-#[pyclass]
 pub struct DroneUpdate {
     // TODO: rename this to imu
     pub gyro_update: GyroUpdate,
     pub battery_update: BatteryUpdate,
-}
-
-impl Battery {
-    pub fn update(&mut self, dt: f64, pwm_sum: f64, current_sum: f64) {
-        let bat_charge = self.state.capacity / self.props.quad_bat_capacity;
-        self.state.bat_voltage = f64::max(
-            self.props.bat_voltage_curve.sample(1. - bat_charge)
-                * self.props.quad_bat_cell_count as f64,
-            0.1,
-        );
-        let power_factor_squared = f64::max(0., pwm_sum / 4.).powi(2);
-        let charge_factor_inv =
-            1.0 - (self.state.capacity / f64::max(self.props.quad_bat_capacity_charged, 1.));
-
-        let v_sag = self.props.max_voltage_sag * power_factor_squared
-            + (self.props.max_voltage_sag
-                * charge_factor_inv
-                * charge_factor_inv
-                * power_factor_squared);
-        self.state.bat_voltage_sag = f64::clamp(
-            self.state.bat_voltage - v_sag - rng_gen_range(-0.01..0.01),
-            0.0,
-            100.,
-        );
-        let m_a_min = f64::min(0.2, rng_gen_range(-0.125..0.375))
-            / f64::max(self.state.bat_voltage_sag, 0.01);
-        let currentm_as = f64::max(current_sum / 3.6, m_a_min);
-        self.state.amperage = currentm_as * 3.6;
-        self.state.capacity -= currentm_as * dt;
-        self.state.m_ah_drawn = self.props.quad_bat_capacity_charged - self.state.capacity;
-    }
-
-    pub fn get_bat_voltage(&self) -> f64 {
-        self.state.bat_voltage
-    }
-
-    pub fn amperage(&self) -> f64 {
-        self.state.amperage
-    }
-
-    pub fn m_ah_drawn(&self) -> f64 {
-        self.state.m_ah_drawn
-    }
-
-    pub fn battery_update(&self) -> BatteryUpdate {
-        BatteryUpdate {
-            cell_count: self.props.quad_bat_cell_count,
-            bat_voltage_sag: self.state.bat_voltage_sag,
-            bat_voltage: self.state.bat_voltage,
-            amperage: self.state.amperage,
-            m_ah_drawn: self.state.m_ah_drawn,
-        }
-    }
-}
-
-impl Drone {
-    // Step first, we have to test this!
-    fn calculate_physics(&mut self, dt: f64) {
-        let motor_torque = self
-            .arms
-            .iter()
-            .map(|arm| arm.motor.state.m_torque * arm.motor.props.motor_dir)
-            .sum();
-        let rotation = self.rigid_body.rotation;
-        let individual_arm_forces = self
-            .arms
-            .iter()
-            .map(|arm| rotation * Vector3::new(0., arm.thrust(), 0.))
-            .collect::<Vec<_>>();
-        let sum_arm_forces = individual_arm_forces.iter().sum();
-        let sum_prop_torques = individual_arm_forces
-            .iter()
-            .enumerate()
-            .map(|(i, force)| {
-                let rad = rotation * self.arms[i].motor_pos();
-                Vector3::cross(&rad, &force)
-            })
-            .sum();
-        self.rigid_body
-            .integrate(motor_torque, sum_arm_forces, sum_prop_torques, dt);
-    }
-
-    fn calculate_motors(&mut self, dt: f64, ambient_temp: f64) {
-        let vbat = self.battery.state.bat_voltage_sag; // is this what we want?
-        let speed = self.rigid_body.linear_velocity.norm();
-        let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
-        let vel_up = f64::max(
-            0.,
-            Vector3::dot(
-                &self.rigid_body.linear_velocity,
-                &self.rigid_body.rotation.matrix().column(0),
-            ),
-        );
-        for i in 0..4 {
-            self.arms[i].calculate_arm_m_torque(
-                dt,
-                vbat,
-                self.rigid_body.rotation,
-                self.rigid_body.linear_velocity_dir,
-                speed_factor,
-                vel_up,
-                #[cfg(feature = "temp")]
-                speed,
-                #[cfg(feature = "temp")]
-                ambient_temp,
-            )
-        }
-    }
-
-    fn update_physics(&mut self, dt: f64, ambient_temp: f64) {
-        self.calculate_motors(dt, ambient_temp);
-        self.calculate_physics(dt);
-        let pwm_sum = self.arms.iter().map(|arm| arm.pwm()).sum();
-        let current_sum = self.arms.iter().map(|arm| arm.current()).sum();
-        self.battery.update(dt, pwm_sum, current_sum);
-    }
-
-    fn update_imu(&mut self, dt: f64) {
-        #[cfg(feature = "noise")]
-        let combined_noise = self.calculate_combined_noise(dt);
-
-        self.gyro.update(
-            dt,
-            self.rigid_body.rotation,
-            self.rigid_body.angular_velocity,
-            self.rigid_body.acceleration,
-            #[cfg(feature = "noise")]
-            combined_noise,
-        )
-    }
-
-    pub fn update(&mut self, dt: f64, ambient_temp: f64) -> DroneUpdate {
-        self.update_physics(dt, ambient_temp);
-        self.update_imu(dt);
-
-        DroneUpdate {
-            gyro_update: self.gyro.gyro_update(),
-            battery_update: self.battery.battery_update(),
-        }
-    }
-
-    pub fn debug_info(&self) -> SimulationDebugInfo {
-        let thrusts = Vector4::from_row_slice(
-            &self
-                .arms
-                .iter()
-                .map(|arm| arm.thrust())
-                .collect::<Vec<f64>>(),
-        );
-        let rpms =
-            Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.rpm()).collect::<Vec<f64>>());
-        let pwms =
-            Vector4::from_row_slice(&self.arms.iter().map(|arm| arm.pwm()).collect::<Vec<f64>>());
-
-        SimulationDebugInfo {
-            rotation: self.rigid_body.rotation,
-            position: self.rigid_body.position,
-            linear_velocity: self.rigid_body.linear_velocity,
-            acceleration: self.rigid_body.acceleration,
-            angular_velocity: self.rigid_body.angular_velocity,
-            thrusts,
-            rpms,
-            pwms,
-            bat_voltage: self.battery.state.bat_voltage,
-            bat_voltage_sag: self.battery.state.bat_voltage_sag,
-        }
-    }
-
-    pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
-        for i in 0..4 {
-            self.arms[i].set_pwm(pwms[i]);
-        }
-    }
 }
 
 thread_local! {
@@ -374,8 +46,436 @@ pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
 }
 
-#[pymodule]
-fn simulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    pyo3_log::init();
-    Ok(())
+#[derive(Debug, Clone, Default)]
+pub struct BatteryStateTwo {
+    pub capacity: f64,
+    pub bat_voltage: f64,
+    pub bat_voltage_sag: f64,
+    pub amperage: f64,
+    pub m_ah_drawn: f64,
+}
+
+impl BatteryStateTwo {
+    pub fn battery_update(&self, cell_count: u8) -> BatteryUpdate {
+        BatteryUpdate {
+            cell_count,
+            bat_voltage_sag: self.bat_voltage_sag,
+            bat_voltage: self.bat_voltage,
+            amperage: self.amperage,
+            m_ah_drawn: self.m_ah_drawn,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RotorStateTwo {
+    pub current: f64,
+    pub rpm: f64,
+    pub motor_torque: f64,     // the torque calculated
+    pub effective_thrust: f64, // reverse thrust is not accounted for
+    pub pwm: f64,
+    pub rotor_dir: f64,
+    pub motor_pos: Vector3<f64>,
+}
+
+#[derive(Debug, Deref, DerefMut, Clone)]
+pub struct RotorsStateTwo(pub [RotorStateTwo; 4]);
+
+#[derive(Debug, Clone)]
+pub struct DroneFrameStateTwo {
+    pub position: Vector3<f64>,
+    pub rotation: Rotation3<f64>,
+    pub linear_velocity: Vector3<f64>,
+    pub angular_velocity: Vector3<f64>,
+    pub acceleration: Vector3<f64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SimulationFrame {
+    pub battery_state: BatteryStateTwo,
+    pub rotors_state: RotorsStateTwo,
+    pub drone_state: DroneFrameStateTwo,
+    pub gyro_state: GyroStateTwo,
+}
+
+// this is probably not useful anymore
+trait FrameModel {
+    fn set_new_state(
+        &mut self,
+        current_frame: &SimulationFrame,
+        next_frame: &mut SimulationFrame,
+        dt: f64,
+    );
+}
+
+#[derive(Debug, Clone)]
+pub struct BatteryModel {
+    pub quad_bat_capacity: f64,
+    pub bat_voltage_curve: SampleCurve,
+    pub quad_bat_cell_count: u8,
+    pub quad_bat_capacity_charged: f64,
+    pub max_voltage_sag: f64,
+}
+
+impl FrameModel for BatteryModel {
+    fn set_new_state(
+        &mut self,
+        current_frame: &SimulationFrame,
+        next_frame: &mut SimulationFrame,
+        dt: f64,
+    ) {
+        let state = &current_frame.battery_state;
+        let bat_charge = state.capacity / self.quad_bat_capacity;
+        let bat_voltage = f64::max(
+            self.bat_voltage_curve.sample(1. - bat_charge) * self.quad_bat_cell_count as f64,
+            0.1,
+        );
+        let pwm_sum: f64 = current_frame.rotors_state.iter().map(|s| s.pwm).sum();
+        let power_factor_squared = f64::max(0., pwm_sum / 4.).powi(2);
+        let charge_factor_inv =
+            1.0 - (state.capacity / f64::max(self.quad_bat_capacity_charged, 1.));
+
+        let v_sag = self.max_voltage_sag * power_factor_squared
+            + (self.max_voltage_sag * charge_factor_inv * charge_factor_inv * power_factor_squared);
+        let bat_voltage_sag = f64::clamp(
+            state.bat_voltage - v_sag - rng_gen_range(-0.01..0.01),
+            0.0,
+            100.,
+        );
+        let m_a_min = f64::min(0.2, rng_gen_range(-0.125..0.375)) / f64::max(bat_voltage_sag, 0.01);
+        let current_sum: f64 = current_frame.rotors_state.iter().map(|s| s.current).sum();
+        let currentm_as = f64::max(current_sum / 3.6, m_a_min);
+        let capacity = state.capacity - currentm_as * dt;
+        next_frame.battery_state = BatteryStateTwo {
+            capacity,
+            bat_voltage,
+            bat_voltage_sag,
+            amperage: currentm_as * 3.6,
+            m_ah_drawn: self.quad_bat_capacity_charged - capacity,
+        }
+    }
+}
+
+// The rotor model
+pub struct RotorModel {
+    pub prop_max_rpm: f64,
+    pub pwm_low_pass_filter: [LowPassFilter; 4],
+    pub motor_kv: f64, // kv
+    pub motor_r: f64,  // resistence
+    pub motor_io: f64, // idle current
+    pub prop_thrust_factor: Vector3<f64>,
+    pub prop_torque_factor: f64,
+    pub prop_a_factor: f64,
+    pub prop_inertia: f64,
+}
+
+impl RotorModel {
+    // Calculates the motor torque based on the motor torque constant.
+    // https://en.wikipedia.org/wiki/Motor_constants#Motor_torque_constant
+    fn motor_torque(&self, armature_volts: f64, rpm: f64) -> f64 {
+        let kv = self.motor_kv;
+        let back_emf_v = rpm / kv;
+        let base_current = (armature_volts - back_emf_v) / self.motor_r;
+        let armature_current = if base_current > 0. {
+            f64::max(0., base_current - self.motor_io)
+        } else {
+            f64::min(0., base_current + self.motor_io)
+        };
+        let torque_constant = 8.3 / kv; // why do we need to calculate this?
+        armature_current * torque_constant
+    }
+
+    // Calculates the current thrust that the rotor is exerting.
+    fn prop_thrust(&self, vel_up: f64, rpm: f64) -> f64 {
+        let prop_f = self.prop_thrust_factor[0] * vel_up * vel_up
+            + self.prop_thrust_factor[1] * vel_up
+            + self.prop_thrust_factor[2];
+        let max_rpm = self.prop_max_rpm;
+        let prop_a = self.prop_a_factor;
+        let b = (prop_f - prop_a * max_rpm * max_rpm) / max_rpm;
+        let result = b * rpm + prop_a * rpm * rpm;
+        f64::max(result, 0.0)
+    }
+}
+
+impl FrameModel for RotorModel {
+    fn set_new_state(
+        &mut self,
+        current_frame: &SimulationFrame,
+        next_frame: &mut SimulationFrame,
+        dt: f64,
+    ) {
+        let vel_up = f64::max(
+            0.,
+            Vector3::dot(
+                &current_frame.drone_state.linear_velocity,
+                &current_frame.drone_state.rotation.matrix().column(0),
+            ),
+        );
+
+        let state = &current_frame.rotors_state;
+        for (i, rotor) in state.iter().enumerate() {
+            let armature_volt = self.pwm_low_pass_filter[i].update(rotor.pwm, dt, 120.)
+                * current_frame.battery_state.bat_voltage_sag;
+
+            // For this calculation we only operate with the effective thrust. I have no idea why
+            // but this is the original SITL code and it seems deliberate. I suppose we could duble
+            // check this if we have time.
+            let prop_torque = rotor.effective_thrust * self.prop_torque_factor;
+
+            // The original new torque was calculated via a motor_torque and a prop torque. The
+            // prop torque was a function of the *old* rpm and the new velocity, while the motor
+            // torque was calculated using the *new* voltage. This is super messy and probably
+            // warrents a rewrite. The issue here is that the net torque depends on the rpm through
+            // prop torque, but the net torque itself is calculated to calculate the change in rpm
+            let net_torque = rotor.motor_torque - prop_torque;
+            let domega = net_torque / self.prop_inertia;
+            let drpm = (domega * dt) * 60.0 / (2.0 * PI);
+            let maxdrpm = f64::abs(armature_volt * self.motor_kv - rotor.rpm);
+            let rpm = rotor.rpm + f64::clamp(drpm, -maxdrpm, maxdrpm);
+            let motor_torque = self.motor_torque(armature_volt, rotor.rpm);
+            let current = motor_torque * self.motor_kv / 8.3;
+            let effective_thrust = self.prop_thrust(vel_up, rpm);
+            next_frame.rotors_state[i] = RotorStateTwo {
+                rpm,
+                current,
+                effective_thrust,
+                motor_torque,
+                pwm: rotor.pwm,
+                rotor_dir: rotor.rotor_dir, // This is here as it will be used later on
+                motor_pos: rotor.motor_pos,
+            };
+        }
+    }
+}
+
+pub struct DroneModel {
+    pub frame_drag_area: Vector3<f64>,
+    pub frame_drag_constant: f64,
+    pub mass: f64,
+    pub inv_tensor: Matrix3<f64>,
+}
+
+impl DroneModel {
+    fn drag_linear(
+        &self,
+        drag_dir: &Vector3<f64>,
+        linear_velocity_dir: &Vector3<f64>,
+        rotation: Rotation3<f64>,
+    ) -> Vector3<f64> {
+        let local_dir = rotation.transpose() * linear_velocity_dir;
+        let area_linear = Vector3::dot(&self.frame_drag_area, &local_dir.abs());
+        drag_dir * area_linear
+    }
+
+    fn drag_angular(
+        &self,
+        drag_dir: &Vector3<f64>,
+        linear_velocity_dir: &Vector3<f64>,
+        rotation: Rotation3<f64>,
+    ) -> Vector3<f64> {
+        let local_dir = rotation.transpose() * linear_velocity_dir;
+        let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
+        let drag_angular: Vector3<f64> = rotation.transpose() * (drag_dir * area_angular) * 0.001;
+        drag_angular
+    }
+}
+
+fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
+    Matrix3::new(0., -v[2], v[1], v[2], 0., -v[0], -v[1], v[0], 0.)
+}
+
+// TODO: this could be better
+impl FrameModel for DroneModel {
+    fn set_new_state(
+        &mut self,
+        current_frame: &SimulationFrame,
+        next_frame: &mut SimulationFrame,
+        dt: f64,
+    ) {
+        let mut sum_force = Vector3::new(0., -GRAVITY * self.mass, 0.);
+        let mut sum_torque = Vector3::zeros();
+
+        let rotation = current_frame.drone_state.rotation;
+        let (linear_velocity_dir, speed) =
+            if current_frame.drone_state.linear_velocity.lp_norm(1) > 0. {
+                let linear_velocity_dir = current_frame.drone_state.linear_velocity.normalize();
+                let speed = current_frame.drone_state.linear_velocity.norm();
+                (linear_velocity_dir, speed)
+            } else {
+                (Vector3::zeros(), 0.)
+            };
+        let drag_dir =
+            speed.powi(2) * linear_velocity_dir * 0.5 * AIR_RHO * self.frame_drag_constant;
+
+        sum_force -= self.drag_linear(&drag_dir, &linear_velocity_dir, rotation);
+        // TODO: once testing is done, readd this to the moments
+        let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir, rotation);
+
+        let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
+        for rotor in next_frame.rotors_state.iter() {
+            // apply motor torque
+            sum_torque += rotation.matrix().column(1) * rotor.motor_torque * rotor.rotor_dir;
+            let mut reverse_thrust = -Vector3::dot(
+                &linear_velocity_dir, // already normalized
+                &(rotation.matrix().column(0) * rotor.effective_thrust).normalize(),
+            );
+
+            reverse_thrust = f64::max(0.0, reverse_thrust - 0.5) * 2.;
+            reverse_thrust = reverse_thrust * reverse_thrust;
+            let prop_wash_effect = 1.0 - (speed_factor * reverse_thrust * 0.95);
+
+            let actual_thrust =
+                rotation * Vector3::new(0., rotor.effective_thrust * prop_wash_effect, 0.);
+
+            let rad = rotation * rotor.motor_pos;
+            sum_torque += Vector3::cross(&rad, &actual_thrust);
+            sum_force += actual_thrust;
+        }
+
+        let acceleration = sum_force / self.mass;
+        let position = current_frame.drone_state.position
+            + dt * current_frame.drone_state.linear_velocity
+            + (acceleration * dt.powi(2)) / 2.;
+        let linear_velocity = current_frame.drone_state.linear_velocity + acceleration * dt;
+
+        let angular_acc: Vector3<f64> =
+            rotation * self.inv_tensor * rotation.transpose() * sum_torque;
+        let angular_velocity = current_frame.drone_state.angular_velocity + angular_acc * dt;
+        let rotation = Rotation3::from_matrix_eps(
+            &((Matrix3::identity() + cross_product_matrix(angular_velocity * dt))
+                * rotation.matrix()),
+            0.0000000001,
+            100,
+            rotation,
+        );
+
+        next_frame.drone_state = DroneFrameStateTwo {
+            position,
+            rotation,
+            linear_velocity,
+            angular_velocity,
+            acceleration,
+        };
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GyroStateTwo {
+    pub rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
+    pub acceleration: Vector3<f64>,
+    pub angular_velocity: Vector3<f64>,
+}
+
+impl GyroStateTwo {
+    fn gyro_update(&self) -> GyroUpdate {
+        GyroUpdate {
+            rotation: [
+                self.rotation.w,
+                self.rotation.i,
+                self.rotation.j,
+                self.rotation.k,
+            ],
+            linear_acc: self.acceleration.data.0[0],
+            angular_velocity: self.angular_velocity.data.0[0],
+        }
+    }
+}
+
+// we can possibly integrate things here
+pub struct GyroModel {
+    pub low_pass_filter: [LowPassFilter; 3],
+}
+
+impl FrameModel for GyroModel {
+    fn set_new_state(&mut self, _: &SimulationFrame, next_frame: &mut SimulationFrame, dt: f64) {
+        let rotation = next_frame.drone_state.rotation;
+        let frame_angular_velocity = next_frame.drone_state.angular_velocity;
+        let cutoff_freq = 300.;
+        let gyro_vel_x = self.low_pass_filter[0].update(frame_angular_velocity[0], dt, cutoff_freq);
+        let gyro_vel_y = self.low_pass_filter[1].update(frame_angular_velocity[1], dt, cutoff_freq);
+        let gyro_vel_z = self.low_pass_filter[2].update(frame_angular_velocity[2], dt, cutoff_freq);
+        let angular_velocity =
+            rotation.transpose() * Vector3::new(gyro_vel_x, gyro_vel_y, gyro_vel_z);
+        let acceleration = rotation.transpose() * next_frame.drone_state.acceleration;
+        next_frame.gyro_state = GyroStateTwo {
+            rotation: UnitQuaternion::from(rotation),
+            acceleration,
+            angular_velocity,
+        }
+    }
+}
+
+pub struct SimulationTwo {
+    // data
+    pub current_frame: SimulationFrame,
+    pub next_frame: SimulationFrame,
+
+    // models
+    pub battery_model: BatteryModel,
+    pub rotor_model: RotorModel,
+    pub drone_model: DroneModel,
+    pub gyro_model: GyroModel,
+
+    pub dt: f64,
+}
+
+impl SimulationTwo {
+    pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
+        let rotor_state = &mut self.current_frame.rotors_state;
+        for i in 0..4 {
+            rotor_state.0[i].pwm = pwms[i];
+        }
+    }
+
+    pub fn update(&mut self) -> DroneUpdate {
+        self.battery_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+        self.rotor_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+        self.drone_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+        self.gyro_model
+            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+
+        std::mem::swap(&mut self.current_frame, &mut self.next_frame);
+        DroneUpdate {
+            gyro_update: self.current_frame.gyro_state.gyro_update(),
+            battery_update: self
+                .current_frame
+                .battery_state
+                .battery_update(self.battery_model.quad_bat_cell_count),
+        }
+    }
+
+    pub fn debug_info(&self) -> SimulationDebugInfo {
+        let rotors_state = &self.current_frame.rotors_state;
+        let drone_state = &self.current_frame.drone_state;
+        let battery_state = &self.current_frame.battery_state;
+
+        // TODO: readd this
+        let thrusts = Vector4::from_row_slice(
+            &rotors_state
+                .iter()
+                .map(|r| r.effective_thrust)
+                .collect::<Vec<f64>>(),
+        );
+        let rpms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+        let pwms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+
+        SimulationDebugInfo {
+            rotation: drone_state.rotation,
+            position: drone_state.position,
+            linear_velocity: drone_state.linear_velocity,
+            acceleration: drone_state.acceleration,
+            angular_velocity: drone_state.angular_velocity,
+            thrusts,
+            rpms,
+            pwms,
+            bat_voltage: battery_state.bat_voltage,
+            bat_voltage_sag: battery_state.bat_voltage_sag,
+        }
+    }
 }
