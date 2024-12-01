@@ -23,7 +23,7 @@ struct FCMutex {
 impl BFController {
     pub fn new() -> Self {
         let fc_mutex = Arc::new(Mutex::new(FCMutex::default()));
-        let scheduler_delta = Duration::from_millis(50);
+        let scheduler_delta = Duration::from_micros(50);
         Self {
             fc_mutex,
             scheduler_delta,
@@ -39,9 +39,10 @@ impl FlightController for BFController {
         let thread = move || {
             let worker = BFWorker {
                 fc_mutex: mutex_clone,
+                scheduler_delta,
             };
             unsafe { worker.init_arm() };
-            worker.work(scheduler_delta);
+            worker.work();
         };
         thread::spawn(thread);
     }

@@ -44,6 +44,7 @@ unsafe extern "C" fn rx_rc_frame_status(_: *mut rxRuntimeState_s) -> u8 {
 
 pub struct BFWorker {
     pub fc_mutex: Arc<Mutex<FCMutex>>,
+    pub scheduler_delta: Duration,
 }
 
 impl BFWorker {
@@ -140,12 +141,12 @@ impl BFWorker {
     }
 
     /// Ensures that the input is only read at a certain frequency.
-    pub fn work(&self, scheduler_delta: Duration) {
+    pub fn work(&self) {
         loop {
             let start = Instant::now();
             self.update();
             let elapsed = start.elapsed();
-            let sleep_time = scheduler_delta.saturating_sub(elapsed);
+            let sleep_time = self.scheduler_delta.saturating_sub(elapsed);
             thread::sleep(sleep_time);
         }
     }

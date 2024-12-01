@@ -176,11 +176,10 @@ impl Simulation {
             });
             if let Some(motor_input) = motor_input {
                 // TODO: haha this fixes a lot of things
-                println!(
-                    "motor input: {:?}, angular_velocity: {:?}",
-                    motor_input, drone_state.gyro_update.angular_velocity
-                );
-                // thread::sleep(Duration::from_millis(1));
+                // println!(
+                //     "motor input: {:?}, angular_velocity: {:?}",
+                //     motor_input, drone_state.gyro_update.angular_velocity
+                // );
                 self.drone.set_motor_pwms(motor_input);
             }
             self.time_accu -= self.dt;
