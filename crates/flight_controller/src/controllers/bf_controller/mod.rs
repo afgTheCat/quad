@@ -37,10 +37,7 @@ impl FlightController for BFController {
         let scheduler_delta = self.scheduler_delta.clone();
 
         let thread = move || {
-            let worker = BFWorker {
-                fc_mutex: mutex_clone,
-                scheduler_delta,
-            };
+            let worker = BFWorker::new(mutex_clone, scheduler_delta);
             unsafe { worker.init_arm() };
             worker.work();
         };

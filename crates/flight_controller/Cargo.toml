@@ -7,5 +7,5 @@ resolver = "2"
 [build-dependencies]
 bindgen = "0.70.1"
 
-# [lib]
-# crate-type = ["staticlib"]
+[dependencies]
+libloading = "0.8.6"

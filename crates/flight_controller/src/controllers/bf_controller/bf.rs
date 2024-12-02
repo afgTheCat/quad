@@ -1,8 +1,11 @@
 use std::{
+    path::Path,
     sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
 };
+
+use libloading::Library;
 
 use crate::{
     bindings::{
@@ -14,7 +17,7 @@ use crate::{
         },
         motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
     },
-    BatteryUpdate, GyroUpdate, MotorInput,
+    BatteryUpdate, GyroUpdate,
 };
 
 use super::FCMutex;
@@ -45,9 +48,22 @@ unsafe extern "C" fn rx_rc_frame_status(_: *mut rxRuntimeState_s) -> u8 {
 pub struct BFWorker {
     pub fc_mutex: Arc<Mutex<FCMutex>>,
     pub scheduler_delta: Duration,
+    libsitl: Library,
 }
 
 impl BFWorker {
+    pub fn new(fc_mutex: Arc<Mutex<FCMutex>>, scheduler_delta: Duration) -> Self {
+        // TODO: do not hardcode things
+        let path = Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
+        let libsitl = unsafe { libloading::Library::new(path).unwrap() };
+
+        Self {
+            fc_mutex,
+            scheduler_delta,
+            libsitl,
+        }
+    }
+
     unsafe fn set_rc_data(&self, data: [f32; 8]) {
         for i in 0..8 {
             RC_DATA_CACHE[i] = (1500. + data[i] * 500.) as u16;

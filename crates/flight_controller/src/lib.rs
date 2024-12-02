@@ -97,3 +97,19 @@ impl Default for MotorInput {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use std::path::Path;
+
+    #[test]
+    fn libloading_test() {
+        unsafe {
+            let path =
+                Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
+            let lib = libloading::Library::new(path).unwrap();
+            let func: libloading::Symbol<unsafe fn()> = lib.get(b"ascent_init").unwrap();
+            func();
+        }
+    }
+}
