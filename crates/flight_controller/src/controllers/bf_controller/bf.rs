@@ -126,15 +126,15 @@ impl BFWorker {
                 self.update_battery(update.battery_update);
                 self.update_gyro_acc(update.gyro_update);
                 scheduler();
-                MotorInput([
+                [
                     motorsPwm[0] as f64 / 1000.,
                     motorsPwm[1] as f64 / 1000.,
                     motorsPwm[2] as f64 / 1000.,
                     motorsPwm[3] as f64 / 1000.,
-                ])
+                ]
             };
             fc_mutex.update = None;
-            fc_mutex.motor_input = Some(motor_input);
+            fc_mutex.motor_input.set_input(motor_input);
         } else {
             unsafe { scheduler() }
         }

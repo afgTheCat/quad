@@ -163,7 +163,7 @@ struct Simulation {
 }
 
 impl Simulation {
-    /// Given a duration (typically 100ms between frames), runs the simulation until the time
+    /// Given a duration (typically 10ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt. It will also try to
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
@@ -174,14 +174,7 @@ impl Simulation {
                 gyro_update: drone_state.gyro_update,
                 channels,
             });
-            if let Some(motor_input) = motor_input {
-                // TODO: haha this fixes a lot of things
-                // println!(
-                //     "motor input: {:?}, angular_velocity: {:?}",
-                //     motor_input, drone_state.gyro_update.angular_velocity
-                // );
-                self.drone.set_motor_pwms(motor_input);
-            }
+            self.drone.set_motor_pwms(motor_input);
             self.time_accu -= self.dt;
         }
         self.drone.debug_info()

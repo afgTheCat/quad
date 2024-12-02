@@ -17,7 +17,7 @@ pub struct BFController {
 #[derive(Default)]
 struct FCMutex {
     update: Option<FlightControllerUpdate>,
-    motor_input: Option<MotorInput>,
+    motor_input: MotorInput,
 }
 
 impl BFController {
@@ -48,7 +48,7 @@ impl FlightController for BFController {
     }
 
     /// Reads the current motor input if it can be found.
-    fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput> {
+    fn update(&self, update: FlightControllerUpdate) -> MotorInput {
         // The mutex is only locked when the scheduler is running, so this cannot really cause any
         // hang-ups
         let mut mutex = self.fc_mutex.lock().unwrap();

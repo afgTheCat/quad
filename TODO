@@ -1,8 +1,3 @@
-TODO for tomorrow:
-  - Simulate a rotating drone [DONE]
-  - Improve perf [Done]
-  - Add better logging, maybe trace logger? [TODO]
-  - Add betaflight as a flight controller [DONE]
-  - Add controller input [TODO]
-  - Investigate why scheduling needed to be reworked [TODO]
-  - Reintroduce scheduling in betaflight + some thread safety maybe
+Currently what is happening is that the simulator pre calculates one frame of information on the latest value of the scheduler
+It kinda works, but it could be better. What we probably need is to synchronize between the simulation and the flight controller.
+I will do it once I have time.

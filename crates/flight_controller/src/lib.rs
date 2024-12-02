@@ -1,16 +1,26 @@
-use std::{f64, ops::Index, time::Duration};
+use std::{f64, ops::Index, time::Duration, u64};
 
 pub mod bindings;
 pub mod controllers;
 
 #[derive(Debug, Clone, Copy)]
-pub struct MotorInput([f64; 4]);
+pub struct MotorInput {
+    scheduler_cycle: u64,
+    input: [f64; 4],
+}
+
+impl MotorInput {
+    fn set_input(&mut self, input: [f64; 4]) {
+        self.input = input;
+        self.scheduler_cycle += 1;
+    }
+}
 
 impl Index<usize> for MotorInput {
     type Output = f64;
 
     fn index(&self, index: usize) -> &f64 {
-        &self.0[index]
+        &self.input[index]
     }
 }
 
@@ -75,12 +85,15 @@ pub struct FlightControllerUpdate {
 
 pub trait FlightController: Send + Sync + 'static {
     fn init(&self);
-    fn update(&self, update: FlightControllerUpdate) -> Option<MotorInput>;
+    fn update(&self, update: FlightControllerUpdate) -> MotorInput;
     fn scheduler_delta(&self) -> Duration;
 }
 
 impl Default for MotorInput {
     fn default() -> Self {
-        Self([1.; 4])
+        Self {
+            input: [0.; 4],
+            scheduler_cycle: 0,
+        }
     }
 }
