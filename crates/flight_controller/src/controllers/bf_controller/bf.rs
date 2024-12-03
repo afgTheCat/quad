@@ -1,4 +1,5 @@
 use std::{
+    os::raw::c_ulonglong,
     path::Path,
     sync::{Arc, Mutex},
     thread,
@@ -8,14 +9,11 @@ use std::{
 use libloading::Library;
 
 use crate::{
-    bindings::{
-        bf_bindings_generated::{
-            armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init,
-            rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
-            rxRuntimeState_s, scheduler, setCellCount, virtualAccDev, virtualAccSet,
-            virtualGyroDev, virtualGyroSet,
-        },
-        motorsPwm, SIMULATOR_MAX_RC_CHANNELS_U8,
+    bindings::sitl_generated::{
+        armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init, motorsPwm,
+        rxFrameState_e_RX_FRAME_COMPLETE, rxProvider_t_RX_PROVIDER_UDP, rxRuntimeState,
+        rxRuntimeState_s, scheduler, setCellCount, virtualAccDev, virtualAccSet, virtualGyroDev,
+        virtualGyroSet,
     },
     BatteryUpdate, GyroUpdate,
 };
@@ -50,6 +48,9 @@ pub struct BFWorker {
     pub scheduler_delta: Duration,
     libsitl: Library,
 }
+
+type AscentInit = unsafe fn(file_name: *const i8);
+type AscentUpdate = unsafe fn(delta_time_us: c_ulonglong) -> bool;
 
 impl BFWorker {
     pub fn new(fc_mutex: Arc<Mutex<FCMutex>>, scheduler_delta: Duration) -> Self {
@@ -93,7 +94,7 @@ impl BFWorker {
     pub unsafe fn init_arm(&self) {
         init();
         armingFlags |= 1;
-        rxRuntimeState.channelCount = SIMULATOR_MAX_RC_CHANNELS_U8; // seems redundant
+        rxRuntimeState.channelCount = 8; // seems redundant
         rxRuntimeState.rcReadRawFn = Some(rx_rc_read_data);
         rxRuntimeState.rcFrameStatusFn = Some(rx_rc_frame_status);
         rxRuntimeState.rxProvider = rxProvider_t_RX_PROVIDER_UDP;

@@ -5,14 +5,14 @@ pub mod controllers;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MotorInput {
-    scheduler_cycle: u64,
+    // scheduler_cycle: u64,
     input: [f64; 4],
 }
 
 impl MotorInput {
     fn set_input(&mut self, input: [f64; 4]) {
         self.input = input;
-        self.scheduler_cycle += 1;
+        // self.scheduler_cycle += 1;
     }
 }
 
@@ -93,14 +93,19 @@ impl Default for MotorInput {
     fn default() -> Self {
         Self {
             input: [0.; 4],
-            scheduler_cycle: 0,
+            // scheduler_cycle: 0,
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::path::Path;
+    use std::{
+        ffi::{c_ulonglong, CString},
+        path::Path,
+    };
+
+    type AscentUpdate = unsafe fn(delta_time_us: c_ulonglong) -> bool;
 
     #[test]
     fn libloading_test() {
@@ -108,8 +113,12 @@ mod test {
             let path =
                 Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
             let lib = libloading::Library::new(path).unwrap();
-            let func: libloading::Symbol<unsafe fn()> = lib.get(b"ascent_init").unwrap();
-            func();
+            let file_name = CString::new("config_file.txt").expect("CString::new failed");
+            let func: libloading::Symbol<unsafe fn(file_name: *const i8)> =
+                lib.get(b"ascent_init").unwrap();
+            func(file_name.as_ptr());
+            let update: libloading::Symbol<AscentUpdate> = lib.get(b"update").unwrap();
+            update(50);
         }
     }
 }

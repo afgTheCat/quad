@@ -1,4 +1,5 @@
 mod bf;
+mod bf2;
 use bf::BFWorker;
 use std::{
     sync::{Arc, Mutex},

@@ -2,91 +2,44 @@ use bindgen;
 use std::path::PathBuf;
 
 fn main() {
-    let libdir_path = PathBuf::from("./betaflight")
+    let libdir_path = PathBuf::from("./sitl")
         .canonicalize()
         .expect("Could not canonicalize betaflight dir path");
     let outdir_path = PathBuf::from("./src/bindings/")
         .canonicalize()
         .expect("Could not canonicalize generated dir");
-    let bind_header = libdir_path.join("src/main/bindgen.h");
+    let bind_header = libdir_path.join("sitl.h");
     let libdir_path_str = libdir_path.to_str().expect("No betaflight directory");
     let bind_header_str = bind_header.to_str().expect("Bind header does not exists");
-
     // command line arguments are coming from bear. To generate a compile_commands.json you can
     // run bear -- make TARGET=SITL
     let bindings = bindgen::Builder::default()
         .clang_args(vec![
-            &format!("-I{libdir_path_str}/src/main"),
-            &format!("-I{libdir_path_str}/src/main/target"),
-            &format!("-I{libdir_path_str}/src/main/startup"),
-            &format!("-I{libdir_path_str}/lib/main/dyad"),
-            &format!("-I{libdir_path_str}/lib/main/MAVLink"),
-            &format!("-I{libdir_path_str}/src/main/target/SITL"),
-            &format!("-I{libdir_path_str}/lib/main/google/olc"),
+            &format!("-I{libdir_path_str}/extern/betaflightext/src/main"),
+            &format!("-I{libdir_path_str}/extern/betaflightext/src/main/target/simITL"),
+            &format!("-I{libdir_path_str}/extern/betaflight/lib/main/dyad"),
+            &format!("-I{libdir_path_str}/extern/betaflight/src/main"),
+            &format!("-I{libdir_path_str}/extern/libwebsockets/include"),
+            &format!("-I{libdir_path_str}/extern/libwebsockets/lib/../include"),
             "-std=gnu17",
-            "-Wall",
-            "-Wextra",
-            "-Werror",
-            "-Wpedantic",
-            "-Wdouble-promotion",
-            "-Wold-style-definition",
-            "-ffunction-sections",
-            "-fdata-sections",
-            "-fno-common",
-            "-DTARGET_FLASH_SIZE=2048",
+            "-DFLASH_SIZE=2048",
             "-DHSE_VALUE=8000000",
-            "-D_GNU_SOURCE",
-            "-DUSE_STDPERIPH_DRIVER",
-            "-DSITL",
             "-DSIMULATOR_BUILD",
             "-DSITL",
-            "-DSITL",
-            "-D__FORKNAME__=\"betaflight\"",
-            "-D__TARGET__=\"SITL\"",
-            "-D__REVISION__=\"norevision\"",
-            "-pipe",
+            "-D__REVISION__=\"1\"",
+            "-D__TARGET__=\"SimITL\"",
+            "-Dsitl_EXPORTS",
             "-fPIC",
-            "-g",
-            "-flto",
-            "-ffast-math",
-            "-fmerge-all-constants",
-            "-Os",
+            // "-c",
+            // "-o",
         ])
         .header(bind_header_str)
         .generate_inline_functions(true) // Make all bindings public
         .generate_comments(true)
         .generate()
         .expect("Unable to generate bindings");
-    let out_path = outdir_path.join("bf_bindings_generated.rs");
+    let out_path = outdir_path.join("sitl_generated.rs");
     bindings
         .write_to_file(out_path)
         .expect("Couldn't write bindings!");
-
-    // Linker flags
-    // let betaflight_lib_include = format!("cargo:rustc-link-search={libdir_path_str}/lib");
-    // println!("{}", betaflight_lib_include); // -L./lib
-    // println!("cargo:rustc-link-lib=dylib=betaflight"); // -lbetaflight
-    // println!("cargo:rustc-link-lib=m"); // -lm
-    // println!("cargo:rustc-link-lib=pthread"); // -lpthread
-    // println!("cargo:rustc-link-lib=c"); // -lc
-    // println!("cargo:rustc-link-lib=rt"); // -lrt
-
-    // // Additional linker options
-    // println!("cargo:rustc-link-arg=-flto=auto");
-    // println!("cargo:rustc-link-arg=-fuse-linker-plugin");
-    // println!("cargo:rustc-link-arg=-ffast-math");
-    // println!("cargo:rustc-link-arg=-fmerge-all-constants");
-    // println!("cargo:rustc-link-arg=-Ofast");
-    // println!("cargo:rustc-link-arg=-Wl,-gc-sections");
-    // let betaflight_sitl_map_include =
-    //     format!("cargo:rustc-link-arg=-Wl,-Map,{libdir_path_str}/obj/main/betaflight_SITL.map");
-    // println!("{}", betaflight_sitl_map_include);
-    // let betaflight_link_include =
-    //     format!("cargo:rustc-link-arg=-Wl,-L{libdir_path_str}/src/platform/SITL/link");
-    // println!("{}", betaflight_link_include);
-    // println!("cargo:rustc-link-arg=-Wl,--cref");
-    // let betaflight_ld_include =
-    //     format!("cargo:rustc-link-arg=-Wl,-T{libdir_path_str}/src/main/target/SITL/pg.ld");
-    // println!("{}", betaflight_ld_include);
-    // println!("cargo:rustc-link-arg=-fuse-ld=bfd");
 }
