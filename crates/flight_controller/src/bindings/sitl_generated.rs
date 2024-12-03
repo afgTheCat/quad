@@ -6970,7 +6970,7 @@ extern "C" {
     pub fn ascent_init(file_name: *const ::std::os::raw::c_char);
 }
 extern "C" {
-    pub fn update(dt: u64, fc_input: FCInput) -> bool;
+    pub fn update(delta_time_us: u64, fc_input: FCInput) -> bool;
 }
 extern "C" {
     pub fn update_serial_ws();

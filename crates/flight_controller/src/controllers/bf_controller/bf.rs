@@ -1,5 +1,4 @@
 use std::{
-    os::raw::c_ulonglong,
     path::Path,
     sync::{Arc, Mutex},
     thread,
@@ -15,10 +14,8 @@ use crate::{
         rxRuntimeState_s, scheduler, setCellCount, virtualAccDev, virtualAccSet, virtualGyroDev,
         virtualGyroSet,
     },
-    BatteryUpdate, GyroUpdate,
+    BatteryUpdate, FlightController, FlightControllerUpdate, GyroUpdate, MotorInput,
 };
-
-use super::FCMutex;
 
 fn constarain_i16(val: f64, min: f64, max: f64) -> i16 {
     if val < min {
@@ -48,9 +45,6 @@ pub struct BFWorker {
     pub scheduler_delta: Duration,
     libsitl: Library,
 }
-
-type AscentInit = unsafe fn(file_name: *const i8);
-type AscentUpdate = unsafe fn(delta_time_us: c_ulonglong) -> bool;
 
 impl BFWorker {
     pub fn new(fc_mutex: Arc<Mutex<FCMutex>>, scheduler_delta: Duration) -> Self {
@@ -170,5 +164,55 @@ impl BFWorker {
 
     pub fn init(&self) {
         unsafe { init() }
+    }
+}
+
+#[derive(Default)]
+pub struct BFController {
+    fc_mutex: Arc<Mutex<FCMutex>>,
+    scheduler_delta: Duration,
+}
+
+#[derive(Default)]
+struct FCMutex {
+    update: Option<FlightControllerUpdate>,
+    motor_input: MotorInput,
+}
+
+impl BFController {
+    pub fn new() -> Self {
+        let fc_mutex = Arc::new(Mutex::new(FCMutex::default()));
+        let scheduler_delta = Duration::from_micros(50);
+        Self {
+            fc_mutex,
+            scheduler_delta,
+        }
+    }
+}
+
+impl FlightController for BFController {
+    fn init(&self) {
+        let mutex_clone = self.fc_mutex.clone();
+        let scheduler_delta = self.scheduler_delta.clone();
+
+        let thread = move || {
+            let worker = BFWorker::new(mutex_clone, scheduler_delta);
+            unsafe { worker.init_arm() };
+            worker.work();
+        };
+        thread::spawn(thread);
+    }
+
+    /// Reads the current motor input if it can be found.
+    fn update(&self, delta_time_us: u64, update: FlightControllerUpdate) -> MotorInput {
+        // The mutex is only locked when the scheduler is running, so this cannot really cause any
+        // hang-ups
+        let mut mutex = self.fc_mutex.lock().unwrap();
+        mutex.update = Some(update);
+        mutex.motor_input
+    }
+
+    fn scheduler_delta(&self) -> Duration {
+        self.scheduler_delta
     }
 }

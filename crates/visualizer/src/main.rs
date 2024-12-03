@@ -26,7 +26,8 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use egui_extras::{Column, TableBuilder};
 use flight_controller::{
-    controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
+    controllers::bf_controller::bf2::BFController2, Channels, FlightController,
+    FlightControllerUpdate,
 };
 use nalgebra::{AbstractRotation, Matrix3, Rotation3, UnitQuaternion, Vector3};
 #[cfg(feature = "noise")]
@@ -34,8 +35,8 @@ use simulator::FrameCharachteristics;
 use simulator::{
     low_pass_filter::LowPassFilter,
     sample_curve::{SampleCurve, SamplePoint},
-    BatteryModel, BatteryStateTwo, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
-    RotorModel, RotorStateTwo, RotorsStateTwo, SimulationDebugInfo, SimulationFrame, SimulationTwo,
+    BatteryModel, BatteryStateTwo, Drone, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
+    RotorModel, RotorStateTwo, RotorsStateTwo, SimulationDebugInfo, SimulationFrame,
 };
 use std::{sync::Arc, time::Duration};
 
@@ -156,7 +157,7 @@ impl PlayerControllerInput {
 // TODO: we probably want to move this to the simulation crate eventually
 #[derive(Resource)]
 struct Simulation {
-    drone: SimulationTwo,
+    drone: Drone,
     flight_controller: Arc<dyn FlightController>,
     dt: Duration,
     time_accu: Duration, // the accumulated time between two steps + the correction from the
@@ -169,11 +170,14 @@ impl Simulation {
         self.time_accu += delta;
         while self.time_accu > self.dt {
             let drone_state = self.drone.update();
-            let motor_input = self.flight_controller.update(FlightControllerUpdate {
-                battery_update: drone_state.battery_update,
-                gyro_update: drone_state.gyro_update,
-                channels,
-            });
+            let motor_input = self.flight_controller.update(
+                0,
+                FlightControllerUpdate {
+                    battery_update: drone_state.battery_update,
+                    gyro_update: drone_state.gyro_update,
+                    channels,
+                },
+            );
             self.drone.set_motor_pwms(motor_input);
             self.time_accu -= self.dt;
         }
@@ -240,7 +244,7 @@ fn setup_drone(
     let Some(gltf) = gltf_assets.get(&drone_asset.0) else {
         return;
     };
-    let flight_controller = Arc::new(BFController::new());
+    let flight_controller = Arc::new(BFController2::new());
     flight_controller.init();
 
     let rotors_state = RotorsStateTwo(PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir)| {
@@ -342,7 +346,7 @@ fn setup_drone(
         ],
     };
 
-    let new_drone = SimulationTwo {
+    let new_drone = Drone {
         current_frame: initial_frame.clone(),
         next_frame: initial_frame.clone(),
         dt: Duration::from_nanos(5000).as_secs_f64(), // kinda retarded

@@ -406,7 +406,7 @@ impl FrameModel for GyroModel {
     }
 }
 
-pub struct SimulationTwo {
+pub struct Drone {
     // data
     pub current_frame: SimulationFrame,
     pub next_frame: SimulationFrame,
@@ -420,7 +420,7 @@ pub struct SimulationTwo {
     pub dt: f64,
 }
 
-impl SimulationTwo {
+impl Drone {
     pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
         let rotor_state = &mut self.current_frame.rotors_state;
         for i in 0..4 {
