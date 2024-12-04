@@ -100,33 +100,11 @@ impl Default for MotorInput {
 
 #[cfg(test)]
 mod test {
-    use std::{
-        ffi::{c_ulonglong, CString},
-        path::Path,
-        time::Instant,
-    };
-
     use crate::{
         controllers::bf_controller::bf2::BFController2, BatteryUpdate, Channels, FlightController,
         FlightControllerUpdate, GyroUpdate,
     };
-
-    type AscentUpdate = unsafe fn(delta_time_us: c_ulonglong) -> bool;
-
-    #[test]
-    fn libloading_test() {
-        unsafe {
-            let path =
-                Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
-            let lib = libloading::Library::new(path).unwrap();
-            let file_name = CString::new("config_file.txt").expect("CString::new failed");
-            let func: libloading::Symbol<unsafe fn(file_name: *const i8)> =
-                lib.get(b"ascent_init").unwrap();
-            func(file_name.as_ptr());
-            let update: libloading::Symbol<AscentUpdate> = lib.get(b"update").unwrap();
-            update(50);
-        }
-    }
+    use std::time::Instant;
 
     #[test]
     fn thing_2() {

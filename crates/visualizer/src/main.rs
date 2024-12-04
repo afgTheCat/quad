@@ -29,7 +29,7 @@ use flight_controller::{
     controllers::bf_controller::bf2::BFController2, Channels, FlightController,
     FlightControllerUpdate,
 };
-use nalgebra::{AbstractRotation, Matrix3, Rotation3, UnitQuaternion, Vector3};
+use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
@@ -38,7 +38,7 @@ use simulator::{
     BatteryModel, BatteryStateTwo, Drone, DroneFrameStateTwo, DroneModel, GyroModel, GyroStateTwo,
     RotorModel, RotorStateTwo, RotorsStateTwo, SimulationDebugInfo, SimulationFrame,
 };
-use std::{sync::Arc, time::Duration};
+use std::{env::args, sync::Arc, time::Duration, u64};
 
 // TODO: we should not rely on the mesh names for the simulation
 const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [
@@ -161,6 +161,7 @@ struct Simulation {
     flight_controller: Arc<dyn FlightController>,
     dt: Duration,
     time_accu: Duration, // the accumulated time between two steps + the correction from the
+    fc_time_accu: Duration,
 }
 
 impl Simulation {
@@ -169,16 +170,22 @@ impl Simulation {
     fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
+            self.fc_time_accu += self.dt;
             let drone_state = self.drone.update();
-            let motor_input = self.flight_controller.update(
-                0,
-                FlightControllerUpdate {
-                    battery_update: drone_state.battery_update,
-                    gyro_update: drone_state.gyro_update,
-                    channels,
-                },
-            );
-            self.drone.set_motor_pwms(motor_input);
+
+            // update the flight controller
+            if self.fc_time_accu > self.flight_controller.scheduler_delta() {
+                let motor_input = self.flight_controller.update(
+                    self.fc_time_accu.as_micros() as u64,
+                    FlightControllerUpdate {
+                        battery_update: drone_state.battery_update,
+                        gyro_update: drone_state.gyro_update,
+                        channels,
+                    },
+                );
+                self.drone.set_motor_pwms(motor_input);
+                self.fc_time_accu -= self.flight_controller.scheduler_delta();
+            }
             self.time_accu -= self.dt;
         }
         self.drone.debug_info()
@@ -361,6 +368,7 @@ fn setup_drone(
         flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
         dt: Duration::from_nanos(5000), // TODO: update this
+        fc_time_accu: Duration::default(),
     };
 
     commands.insert_resource(new_sim);

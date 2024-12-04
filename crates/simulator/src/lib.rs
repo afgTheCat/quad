@@ -1,10 +1,7 @@
-// pub mod arm;
-// pub mod components_two;
 mod constants;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
-// pub mod rigid_body;
 pub mod sample_curve;
 
 use constants::{AIR_RHO, GRAVITY, MAX_EFFECT_SPEED};
