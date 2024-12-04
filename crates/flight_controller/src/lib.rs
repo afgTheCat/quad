@@ -12,7 +12,6 @@ pub struct MotorInput {
 impl MotorInput {
     fn set_input(&mut self, input: [f64; 4]) {
         self.input = input;
-        // self.scheduler_cycle += 1;
     }
 }
 
@@ -52,7 +51,7 @@ pub struct Channels {
 impl Default for Channels {
     fn default() -> Self {
         Self {
-            throttle: -1.,
+            throttle: 0.,
             roll: 0.,
             pitch: 0.,
             yaw: 0.,
@@ -94,51 +93,6 @@ impl Default for MotorInput {
         Self {
             input: [0.; 4],
             // scheduler_cycle: 0,
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{
-        controllers::bf_controller::bf2::BFController2, BatteryUpdate, Channels, FlightController,
-        FlightControllerUpdate, GyroUpdate,
-    };
-    use std::time::Instant;
-
-    #[test]
-    fn thing_2() {
-        let controller = BFController2::new();
-        controller.init();
-        let start = Instant::now();
-        let mut time_ellapsed = start.elapsed();
-
-        loop {
-            let battery_update = BatteryUpdate {
-                bat_voltage_sag: 4.2,
-                bat_voltage: 4.2,
-                amperage: 0.,
-                m_ah_drawn: 0.,
-                cell_count: 4,
-            };
-            let gyro_update = GyroUpdate {
-                rotation: [1., 0., 0., 0.],
-                linear_acc: [0., 0., 0.],
-                angular_velocity: [0., 0., 0.],
-            };
-            let channels = Channels {
-                throttle: 1.,
-                roll: 0.,
-                pitch: 0.,
-                yaw: 0.,
-            };
-            let update = FlightControllerUpdate {
-                battery_update,
-                gyro_update,
-                channels,
-            };
-            controller.update(time_ellapsed.as_micros() as u64, update);
-            time_ellapsed = start.elapsed();
         }
     }
 }

@@ -740,12 +740,6 @@ pub type uint_fast32_t = ::std::os::raw::c_ulong;
 pub type uint_fast64_t = ::std::os::raw::c_ulong;
 pub type intmax_t = __intmax_t;
 pub type uintmax_t = __uintmax_t;
-extern "C" {
-    pub static mut debug: [i16; 8usize];
-}
-extern "C" {
-    pub static mut debugMode: u8;
-}
 pub const debugType_e_DEBUG_NONE: debugType_e = 0;
 pub const debugType_e_DEBUG_CYCLETIME: debugType_e = 1;
 pub const debugType_e_DEBUG_BATTERY: debugType_e = 2;
@@ -839,12 +833,6 @@ pub const debugType_e_DEBUG_EZLANDING: debugType_e = 89;
 pub const debugType_e_DEBUG_SIM: debugType_e = 90;
 pub const debugType_e_DEBUG_COUNT: debugType_e = 91;
 pub type debugType_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static debugModeNames: [*const ::std::os::raw::c_char; 91usize];
-}
-extern "C" {
-    pub fn debugInit();
-}
 pub type fix12_t = i32;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -938,137 +926,15 @@ const _: () = {
         [::std::mem::offset_of!(fp_rotationMatrix_s, m) - 0usize];
 };
 pub type fp_rotationMatrix_t = fp_rotationMatrix_s;
-extern "C" {
-    pub fn gcd(num: ::std::os::raw::c_int, denom: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn applyDeadband(value: i32, deadband: i32) -> i32;
-}
-extern "C" {
-    pub fn fapplyDeadband(value: f32, deadband: f32) -> f32;
-}
-extern "C" {
-    pub fn devClear(dev: *mut stdev_t);
-}
-extern "C" {
-    pub fn devPush(dev: *mut stdev_t, x: f32);
-}
-extern "C" {
-    pub fn devVariance(dev: *mut stdev_t) -> f32;
-}
-extern "C" {
-    pub fn devStandardDeviation(dev: *mut stdev_t) -> f32;
-}
-extern "C" {
-    pub fn degreesToRadians(degrees: i16) -> f32;
-}
-extern "C" {
-    pub fn scaleRange(
-        x: ::std::os::raw::c_int,
-        srcFrom: ::std::os::raw::c_int,
-        srcTo: ::std::os::raw::c_int,
-        destFrom: ::std::os::raw::c_int,
-        destTo: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn scaleRangef(x: f32, srcFrom: f32, srcTo: f32, destFrom: f32, destTo: f32) -> f32;
-}
-extern "C" {
-    pub fn buildRotationMatrix(delta: *mut fp_angles_t, rotation: *mut fp_rotationMatrix_t);
-}
-extern "C" {
-    pub fn applyMatrixRotation(v: *mut f32, rotationMatrix: *mut fp_rotationMatrix_t);
-}
-extern "C" {
-    pub fn quickMedianFilter3(v: *mut i32) -> i32;
-}
-extern "C" {
-    pub fn quickMedianFilter5(v: *mut i32) -> i32;
-}
-extern "C" {
-    pub fn quickMedianFilter7(v: *mut i32) -> i32;
-}
-extern "C" {
-    pub fn quickMedianFilter9(v: *mut i32) -> i32;
-}
-extern "C" {
-    pub fn quickMedianFilter3f(v: *mut f32) -> f32;
-}
-extern "C" {
-    pub fn quickMedianFilter5f(v: *mut f32) -> f32;
-}
-extern "C" {
-    pub fn quickMedianFilter7f(v: *mut f32) -> f32;
-}
-extern "C" {
-    pub fn quickMedianFilter9f(v: *mut f32) -> f32;
-}
-extern "C" {
-    pub fn sin_approx(x: f32) -> f32;
-}
-extern "C" {
-    pub fn cos_approx(x: f32) -> f32;
-}
-extern "C" {
-    pub fn atan2_approx(y: f32, x: f32) -> f32;
-}
-extern "C" {
-    pub fn acos_approx(x: f32) -> f32;
-}
-extern "C" {
-    pub fn exp_approx(val: f32) -> f32;
-}
-extern "C" {
-    pub fn log_approx(val: f32) -> f32;
-}
-extern "C" {
-    pub fn pow_approx(a: f32, b: f32) -> f32;
-}
-extern "C" {
-    pub fn arraySubInt32(
-        dest: *mut i32,
-        array1: *mut i32,
-        array2: *mut i32,
-        count: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    pub fn qPercent(q: fix12_t) -> i16;
-}
-extern "C" {
-    pub fn qMultiply(q: fix12_t, input: i16) -> i16;
-}
-extern "C" {
-    pub fn qConstruct(num: i16, den: i16) -> fix12_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct accDev_s {
     _unused: [u8; 0],
 }
-extern "C" {
-    pub static mut virtualAccDev: *mut accDev_s;
-}
-extern "C" {
-    pub fn virtualAccDetect(acc: *mut accDev_s) -> bool;
-}
-extern "C" {
-    pub fn virtualAccSet(acc: *mut accDev_s, x: i16, y: i16, z: i16);
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct gyroDev_s {
     _unused: [u8; 0],
-}
-extern "C" {
-    pub static mut virtualGyroDev: *mut gyroDev_s;
-}
-extern "C" {
-    pub fn virtualGyroDetect(gyro: *mut gyroDev_s) -> bool;
-}
-extern "C" {
-    pub fn virtualGyroSet(gyro: *mut gyroDev_s, x: i16, y: i16, z: i16);
 }
 pub type wchar_t = ::std::os::raw::c_int;
 #[repr(C)]
@@ -1088,108 +954,6 @@ const _: () = {
     ["Offset of field: max_align_t::__clang_max_align_nonce2"]
         [::std::mem::offset_of!(max_align_t, __clang_max_align_nonce2) - 16usize];
 };
-extern "C" {
-    pub fn memcpy(
-        __dest: *mut ::std::os::raw::c_void,
-        __src: *const ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn memmove(
-        __dest: *mut ::std::os::raw::c_void,
-        __src: *const ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn memccpy(
-        __dest: *mut ::std::os::raw::c_void,
-        __src: *const ::std::os::raw::c_void,
-        __c: ::std::os::raw::c_int,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn memset(
-        __s: *mut ::std::os::raw::c_void,
-        __c: ::std::os::raw::c_int,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn memcmp(
-        __s1: *const ::std::os::raw::c_void,
-        __s2: *const ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn __memcmpeq(
-        __s1: *const ::std::os::raw::c_void,
-        __s2: *const ::std::os::raw::c_void,
-        __n: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn memchr(
-        __s: *const ::std::os::raw::c_void,
-        __c: ::std::os::raw::c_int,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn strcpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strncpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strcat(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strncat(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strcmp(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strncmp(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strcoll(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strxfrm(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_ulong;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __locale_struct {
@@ -1216,267 +980,6 @@ const _: () = {
 };
 pub type __locale_t = *mut __locale_struct;
 pub type locale_t = __locale_t;
-extern "C" {
-    pub fn strcoll_l(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-        __l: locale_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strxfrm_l(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: usize,
-        __l: locale_t,
-    ) -> usize;
-}
-extern "C" {
-    pub fn strdup(__s: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strndup(
-        __string: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strchr(
-        __s: *const ::std::os::raw::c_char,
-        __c: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strrchr(
-        __s: *const ::std::os::raw::c_char,
-        __c: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strchrnul(
-        __s: *const ::std::os::raw::c_char,
-        __c: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strcspn(
-        __s: *const ::std::os::raw::c_char,
-        __reject: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub fn strspn(
-        __s: *const ::std::os::raw::c_char,
-        __accept: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub fn strpbrk(
-        __s: *const ::std::os::raw::c_char,
-        __accept: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strstr(
-        __haystack: *const ::std::os::raw::c_char,
-        __needle: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strtok(
-        __s: *mut ::std::os::raw::c_char,
-        __delim: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn __strtok_r(
-        __s: *mut ::std::os::raw::c_char,
-        __delim: *const ::std::os::raw::c_char,
-        __save_ptr: *mut *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strtok_r(
-        __s: *mut ::std::os::raw::c_char,
-        __delim: *const ::std::os::raw::c_char,
-        __save_ptr: *mut *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strcasestr(
-        __haystack: *const ::std::os::raw::c_char,
-        __needle: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn memmem(
-        __haystack: *const ::std::os::raw::c_void,
-        __haystacklen: usize,
-        __needle: *const ::std::os::raw::c_void,
-        __needlelen: usize,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn __mempcpy(
-        __dest: *mut ::std::os::raw::c_void,
-        __src: *const ::std::os::raw::c_void,
-        __n: usize,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn mempcpy(
-        __dest: *mut ::std::os::raw::c_void,
-        __src: *const ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn strlen(__s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub fn strnlen(__string: *const ::std::os::raw::c_char, __maxlen: usize) -> usize;
-}
-extern "C" {
-    pub fn strerror(__errnum: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    #[link_name = "\u{1}__xpg_strerror_r"]
-    pub fn strerror_r(
-        __errnum: ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-        __buflen: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strerror_l(
-        __errnum: ::std::os::raw::c_int,
-        __l: locale_t,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn bcmp(
-        __s1: *const ::std::os::raw::c_void,
-        __s2: *const ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn bcopy(
-        __src: *const ::std::os::raw::c_void,
-        __dest: *mut ::std::os::raw::c_void,
-        __n: ::std::os::raw::c_ulong,
-    );
-}
-extern "C" {
-    pub fn bzero(__s: *mut ::std::os::raw::c_void, __n: ::std::os::raw::c_ulong);
-}
-extern "C" {
-    pub fn index(
-        __s: *const ::std::os::raw::c_char,
-        __c: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn rindex(
-        __s: *const ::std::os::raw::c_char,
-        __c: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn ffs(__i: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn ffsl(__l: ::std::os::raw::c_long) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn ffsll(__ll: ::std::os::raw::c_longlong) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strcasecmp(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strncasecmp(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strcasecmp_l(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-        __loc: locale_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn strncasecmp_l(
-        __s1: *const ::std::os::raw::c_char,
-        __s2: *const ::std::os::raw::c_char,
-        __n: usize,
-        __loc: locale_t,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn explicit_bzero(__s: *mut ::std::os::raw::c_void, __n: usize);
-}
-extern "C" {
-    pub fn strsep(
-        __stringp: *mut *mut ::std::os::raw::c_char,
-        __delim: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strsignal(__sig: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn __stpcpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn stpcpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn __stpncpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: usize,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn stpncpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn strlcpy(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub fn strlcat(
-        __dest: *mut ::std::os::raw::c_char,
-        __src: *const ::std::os::raw::c_char,
-        __n: ::std::os::raw::c_ulong,
-    ) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub static mut EEPROM_FILENAME: *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static mut SystemCoreClock: u32;
-}
 pub const GPIO_Mode_Mode_TEST: GPIO_Mode = 0;
 pub const GPIO_Mode_Mode_Out_PP: GPIO_Mode = 16;
 pub type GPIO_Mode = ::std::os::raw::c_uint;
@@ -1568,15 +1071,6 @@ const _: () = {
     ["Offset of field: DMA_InitTypeDef::test"]
         [::std::mem::offset_of!(DMA_InitTypeDef, test) - 0usize];
 };
-extern "C" {
-    pub fn DMA_GetFlagStatus(arg1: *mut ::std::os::raw::c_void) -> u8;
-}
-extern "C" {
-    pub fn DMA_Cmd(arg1: *mut DMA_Channel_TypeDef, arg2: FunctionalState);
-}
-extern "C" {
-    pub fn DMA_ClearFlag(arg1: u32);
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct SPI_TypeDef {
@@ -1645,69 +1139,6 @@ pub const FLASH_Status_FLASH_ERROR_WRP: FLASH_Status = 3;
 pub const FLASH_Status_FLASH_COMPLETE: FLASH_Status = 4;
 pub const FLASH_Status_FLASH_TIMEOUT: FLASH_Status = 5;
 pub type FLASH_Status = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn FLASH_Unlock();
-}
-extern "C" {
-    pub fn FLASH_Lock();
-}
-extern "C" {
-    pub fn FLASH_ErasePage(Page_Address: usize) -> FLASH_Status;
-}
-extern "C" {
-    pub fn FLASH_ProgramWord(addr: usize, Data: u32) -> FLASH_Status;
-}
-extern "C" {
-    pub static mut micros_passed: u64;
-}
-extern "C" {
-    pub static mut sleep_timer: i64;
-}
-extern "C" {
-    pub fn nanos64_real() -> u64;
-}
-extern "C" {
-    pub fn micros64_real() -> u64;
-}
-extern "C" {
-    pub fn millis64_real() -> u64;
-}
-extern "C" {
-    pub fn delayMicroseconds_real(us: u32);
-}
-extern "C" {
-    pub fn micros64() -> u64;
-}
-extern "C" {
-    pub fn millis64() -> u64;
-}
-extern "C" {
-    pub fn lockMainPID() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub static targetName: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static shortGitRevision: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static shortConfigGitRevision: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static buildDate: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static buildTime: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static buildKey: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static releaseName: *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub static mut eepromData: [u8; 32768usize];
-}
 pub const mcuTypeId_e_MCU_TYPE_SIMULATOR: mcuTypeId_e = 0;
 pub const mcuTypeId_e_MCU_TYPE_F40X: mcuTypeId_e = 1;
 pub const mcuTypeId_e_MCU_TYPE_F411: mcuTypeId_e = 2;
@@ -1728,9 +1159,6 @@ pub const mcuTypeId_e_MCU_TYPE_H730: mcuTypeId_e = 16;
 pub const mcuTypeId_e_MCU_TYPE_AT32: mcuTypeId_e = 17;
 pub const mcuTypeId_e_MCU_TYPE_UNKNOWN: mcuTypeId_e = 255;
 pub type mcuTypeId_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn getMcuTypeId() -> mcuTypeId_e;
-}
 pub type pgn_t = u16;
 pub const pgRegistryFlags_e_PGRF_NONE: pgRegistryFlags_e = 0;
 pub const pgRegistryFlags_e_PGRF_CLASSIFICATON_BIT: pgRegistryFlags_e = 1;
@@ -1788,48 +1216,6 @@ const _: () = {
         [::std::mem::offset_of!(pgRegistry_s, fnv_hash) - 40usize];
 };
 pub type pgRegistry_t = pgRegistry_s;
-extern "C" {
-    pub static __pg_registry_start: [pgRegistry_t; 0usize];
-}
-extern "C" {
-    pub static __pg_registry_end: [pgRegistry_t; 0usize];
-}
-extern "C" {
-    pub static __pg_resetdata_start: [u8; 0usize];
-}
-extern "C" {
-    pub static __pg_resetdata_end: [u8; 0usize];
-}
-extern "C" {
-    pub fn pgFind(pgn: pgn_t) -> *const pgRegistry_t;
-}
-extern "C" {
-    pub fn pgLoad(
-        reg: *const pgRegistry_t,
-        from: *const ::std::os::raw::c_void,
-        size: ::std::os::raw::c_int,
-        version: ::std::os::raw::c_int,
-    ) -> bool;
-}
-extern "C" {
-    pub fn pgStore(
-        reg: *const pgRegistry_t,
-        to: *mut ::std::os::raw::c_void,
-        size: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn pgResetAll();
-}
-extern "C" {
-    pub fn pgResetInstance(reg: *const pgRegistry_t, base: *mut u8);
-}
-extern "C" {
-    pub fn pgResetCopy(copy: *mut ::std::os::raw::c_void, pgn: pgn_t) -> bool;
-}
-extern "C" {
-    pub fn pgReset(reg: *const pgRegistry_t);
-}
 pub type timeDelta_t = i32;
 pub type timeMs_t = u32;
 pub type timeUs_t = u32;
@@ -1846,27 +1232,12 @@ const _: () = {
         [::std::mem::offset_of!(timeConfig_s, tz_offsetMinutes) - 0usize];
 };
 pub type timeConfig_t = timeConfig_s;
-extern "C" {
-    pub static mut timeConfig_System: timeConfig_t;
-}
-extern "C" {
-    pub static mut timeConfig_Copy: timeConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _dummy {
     _unused: [u8; 0],
 }
 pub type rtcTime_t = i64;
-extern "C" {
-    pub fn rtcTimeMake(secs: i32, millis: u16) -> rtcTime_t;
-}
-extern "C" {
-    pub fn rtcTimeGetSeconds(t: *mut rtcTime_t) -> i32;
-}
-extern "C" {
-    pub fn rtcTimeGetMillis(t: *mut rtcTime_t) -> u16;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _dateTime_s {
@@ -1893,46 +1264,6 @@ const _: () = {
     ["Offset of field: _dateTime_s::millis"][::std::mem::offset_of!(_dateTime_s, millis) - 8usize];
 };
 pub type dateTime_t = _dateTime_s;
-extern "C" {
-    pub fn dateTimeFormatUTC(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool;
-}
-extern "C" {
-    pub fn dateTimeFormatLocal(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool;
-}
-extern "C" {
-    pub fn dateTimeFormatLocalShort(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool;
-}
-extern "C" {
-    pub fn dateTimeUTCToLocal(utcDateTime: *mut dateTime_t, localDateTime: *mut dateTime_t);
-}
-extern "C" {
-    pub fn dateTimeSplitFormatted(
-        formatted: *mut ::std::os::raw::c_char,
-        date: *mut *mut ::std::os::raw::c_char,
-        time: *mut *mut ::std::os::raw::c_char,
-    ) -> bool;
-}
-extern "C" {
-    pub fn rtcHasTime() -> bool;
-}
-extern "C" {
-    pub fn rtcGet(t: *mut rtcTime_t) -> bool;
-}
-extern "C" {
-    pub fn rtcSet(t: *mut rtcTime_t) -> bool;
-}
-extern "C" {
-    pub fn rtcGetDateTime(dt: *mut dateTime_t) -> bool;
-}
-extern "C" {
-    pub fn rtcSetDateTime(dt: *mut dateTime_t) -> bool;
-}
-extern "C" {
-    pub fn rtcPersistWrite(offsetMinutes: i16);
-}
-extern "C" {
-    pub fn rtcPersistRead(t: *mut rtcTime_t) -> bool;
-}
 pub const resourceOwner_e_OWNER_FREE: resourceOwner_e = 0;
 pub const resourceOwner_e_OWNER_PWMINPUT: resourceOwner_e = 1;
 pub const resourceOwner_e_OWNER_PPMINPUT: resourceOwner_e = 2;
@@ -2041,9 +1372,6 @@ const _: () = {
         [::std::mem::offset_of!(resourceOwner_s, resourceIndex) - 4usize];
 };
 pub type resourceOwner_t = resourceOwner_s;
-extern "C" {
-    pub static ownerNames: [*const ::std::os::raw::c_char; 90usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct dmaResource_s {
@@ -2103,86 +1431,10 @@ pub const dmaIdentifier_e_DMA1_CH6_HANDLER: dmaIdentifier_e = 6;
 pub const dmaIdentifier_e_DMA1_CH7_HANDLER: dmaIdentifier_e = 7;
 pub const dmaIdentifier_e_DMA_LAST_HANDLER: dmaIdentifier_e = 7;
 pub type dmaIdentifier_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn dmaAllocate(
-        identifier: dmaIdentifier_e,
-        owner: resourceOwner_e,
-        resourceIndex: u8,
-    ) -> dmaIdentifier_e;
-}
-extern "C" {
-    pub fn dmaEnable(identifier: dmaIdentifier_e);
-}
-extern "C" {
-    pub fn dmaSetHandler(
-        identifier: dmaIdentifier_e,
-        callback: dmaCallbackHandlerFuncPtr,
-        priority: u32,
-        userParam: u32,
-    );
-}
-extern "C" {
-    pub fn dmaGetIdentifier(channel: *const dmaResource_t) -> dmaIdentifier_e;
-}
-extern "C" {
-    pub fn dmaGetOwner(identifier: dmaIdentifier_e) -> *const resourceOwner_t;
-}
-extern "C" {
-    pub fn dmaGetDescriptorByIdentifier(identifier: dmaIdentifier_e)
-        -> *mut dmaChannelDescriptor_t;
-}
-extern "C" {
-    pub fn dmaGetChannel(channel: u8) -> u32;
-}
 pub type ioTag_t = u8;
 pub type IO_t = *mut ::std::os::raw::c_void;
 pub type ioConfig_t = u8;
-extern "C" {
-    pub fn IORead(io: IO_t) -> bool;
-}
-extern "C" {
-    pub fn IOWrite(io: IO_t, value: bool);
-}
-extern "C" {
-    pub fn IOHi(io: IO_t);
-}
-extern "C" {
-    pub fn IOLo(io: IO_t);
-}
-extern "C" {
-    pub fn IOToggle(io: IO_t);
-}
-extern "C" {
-    pub fn IOInit(io: IO_t, owner: resourceOwner_e, index: u8);
-}
-extern "C" {
-    pub fn IORelease(io: IO_t);
-}
-extern "C" {
-    pub fn IOGetOwner(io: IO_t) -> resourceOwner_e;
-}
-extern "C" {
-    pub fn IOIsFreeOrPreinit(io: IO_t) -> bool;
-}
-extern "C" {
-    pub fn IOGetByTag(tag: ioTag_t) -> IO_t;
-}
-extern "C" {
-    pub fn IOConfigGPIO(io: IO_t, cfg: ioConfig_t);
-}
-extern "C" {
-    pub fn IOInitGlobal();
-}
 pub type IOTraverseFuncPtr_t = ::std::option::Option<unsafe extern "C" fn(io: IO_t)>;
-extern "C" {
-    pub fn IOTraversePins(func: IOTraverseFuncPtr_t);
-}
-extern "C" {
-    pub fn IO_GPIO(io: IO_t) -> *mut GPIO_TypeDef;
-}
-extern "C" {
-    pub fn IO_Pin(io: IO_t) -> u16;
-}
 pub type rccPeriphTag_t = u8;
 pub type dmaCode_t = u16;
 #[repr(C)]
@@ -2213,32 +1465,6 @@ pub const dmaPeripheral_e_DMA_PERIPH_UART_RX: dmaPeripheral_e = 5;
 pub const dmaPeripheral_e_DMA_PERIPH_TIMUP: dmaPeripheral_e = 6;
 pub type dmaPeripheral_e = ::std::os::raw::c_uint;
 pub type dmaoptValue_t = i8;
-extern "C" {
-    pub fn dmaoptByTag(ioTag: ioTag_t) -> dmaoptValue_t;
-}
-extern "C" {
-    pub fn dmaGetChannelSpecByPeripheral(
-        device: dmaPeripheral_e,
-        index: u8,
-        opt: i8,
-    ) -> *const dmaChannelSpec_t;
-}
-extern "C" {
-    pub fn dmaGetChannelSpecByTimerValue(
-        tim: *mut TIM_TypeDef,
-        channel: u8,
-        dmaopt: dmaoptValue_t,
-    ) -> *const dmaChannelSpec_t;
-}
-extern "C" {
-    pub fn dmaGetChannelSpecByTimer(timer: *const timerHardware_s) -> *const dmaChannelSpec_t;
-}
-extern "C" {
-    pub fn dmaGetOptionByTimer(timer: *const timerHardware_s) -> dmaoptValue_t;
-}
-extern "C" {
-    pub fn dmaGetUpOptionByTimer(timer: *const timerHardware_s) -> dmaoptValue_t;
-}
 pub type captureCompare_t = u16;
 pub type timCCR_t = u32;
 pub type timCCER_t = u32;
@@ -2323,12 +1549,6 @@ pub const timerFlag_e_TIMER_OUTPUT_NONE: timerFlag_e = 0;
 pub const timerFlag_e_TIMER_OUTPUT_INVERTED: timerFlag_e = 1;
 pub const timerFlag_e_TIMER_OUTPUT_N_CHANNEL: timerFlag_e = 2;
 pub type timerFlag_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static fullTimerHardware: [timerHardware_t; 0usize];
-}
-extern "C" {
-    pub static timerDefinitions: [timerDef_t; 0usize];
-}
 pub const channelType_t_TYPE_FREE: channelType_t = 0;
 pub const channelType_t_TYPE_PWMINPUT: channelType_t = 1;
 pub const channelType_t_TYPE_PPMINPUT: channelType_t = 2;
@@ -2345,155 +1565,6 @@ pub const channelType_t_TYPE_SERIAL_TX: channelType_t = 12;
 pub const channelType_t_TYPE_SERIAL_RXTX: channelType_t = 13;
 pub const channelType_t_TYPE_TIMER: channelType_t = 14;
 pub type channelType_t = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn timerConfigure(timHw: *const timerHardware_t, period: u16, hz: u32);
-}
-extern "C" {
-    pub fn timerInit();
-}
-extern "C" {
-    pub fn timerStart(tim: *mut TIM_TypeDef);
-}
-extern "C" {
-    pub fn timerChConfigIC(
-        timHw: *const timerHardware_t,
-        polarityRising: bool,
-        inputFilterSamples: ::std::os::raw::c_uint,
-    );
-}
-extern "C" {
-    pub fn timerChConfigICDual(
-        timHw: *const timerHardware_t,
-        polarityRising: bool,
-        inputFilterSamples: ::std::os::raw::c_uint,
-    );
-}
-extern "C" {
-    pub fn timerChICPolarity(timHw: *const timerHardware_t, polarityRising: bool);
-}
-extern "C" {
-    pub fn timerChCCR(timHw: *const timerHardware_t) -> *mut timCCR_t;
-}
-extern "C" {
-    pub fn timerChCCRLo(timHw: *const timerHardware_t) -> *mut timCCR_t;
-}
-extern "C" {
-    pub fn timerChCCRHi(timHw: *const timerHardware_t) -> *mut timCCR_t;
-}
-extern "C" {
-    pub fn timerChConfigOC(timHw: *const timerHardware_t, outEnable: bool, stateHigh: bool);
-}
-extern "C" {
-    pub fn timerChConfigGPIO(timHw: *const timerHardware_t, mode: ioConfig_t);
-}
-extern "C" {
-    pub fn timerChCCHandlerInit(self_: *mut timerCCHandlerRec_t, fn_: timerCCHandlerCallback);
-}
-extern "C" {
-    pub fn timerChOvrHandlerInit(self_: *mut timerOvrHandlerRec_t, fn_: timerOvrHandlerCallback);
-}
-extern "C" {
-    pub fn timerChConfigCallbacks(
-        channel: *const timerHardware_t,
-        edgeCallback: *mut timerCCHandlerRec_t,
-        overflowCallback: *mut timerOvrHandlerRec_t,
-    );
-}
-extern "C" {
-    pub fn timerChConfigCallbacksDual(
-        channel: *const timerHardware_t,
-        edgeCallbackLo: *mut timerCCHandlerRec_t,
-        edgeCallbackHi: *mut timerCCHandlerRec_t,
-        overflowCallback: *mut timerOvrHandlerRec_t,
-    );
-}
-extern "C" {
-    pub fn timerChITConfigDualLo(timHw: *const timerHardware_t, newState: FunctionalState);
-}
-extern "C" {
-    pub fn timerChITConfig(timHw: *const timerHardware_t, newState: FunctionalState);
-}
-extern "C" {
-    pub fn timerChClearCCFlag(timHw: *const timerHardware_t);
-}
-extern "C" {
-    pub fn timerChInit(
-        timHw: *const timerHardware_t,
-        type_: channelType_t,
-        irqPriority: ::std::os::raw::c_int,
-        irq: u8,
-    );
-}
-extern "C" {
-    pub fn timerForceOverflow(tim: *mut TIM_TypeDef);
-}
-extern "C" {
-    pub fn timerConfigUpdateCallback(
-        tim: *const TIM_TypeDef,
-        updateCallback: *mut timerOvrHandlerRec_t,
-    );
-}
-extern "C" {
-    pub fn timerClock(tim: *mut TIM_TypeDef) -> u32;
-}
-extern "C" {
-    pub fn configTimeBase(tim: *mut TIM_TypeDef, period: u16, hz: u32);
-}
-extern "C" {
-    pub fn timerReconfigureTimeBase(tim: *mut TIM_TypeDef, period: u16, hz: u32);
-}
-extern "C" {
-    pub fn timerRCC(tim: *mut TIM_TypeDef) -> rccPeriphTag_t;
-}
-extern "C" {
-    pub fn timerInputIrq(tim: *mut TIM_TypeDef) -> u8;
-}
-extern "C" {
-    pub fn timerGetConfiguredByTag(ioTag: ioTag_t) -> *const timerHardware_t;
-}
-extern "C" {
-    pub fn timerAllocate(
-        ioTag: ioTag_t,
-        owner: resourceOwner_e,
-        resourceIndex: u8,
-    ) -> *const timerHardware_t;
-}
-extern "C" {
-    pub fn timerGetByTagAndIndex(
-        ioTag: ioTag_t,
-        timerIndex: ::std::os::raw::c_uint,
-    ) -> *const timerHardware_t;
-}
-extern "C" {
-    pub fn timerOCInit(tim: *mut TIM_TypeDef, channel: u8, init: *mut TIM_OCInitTypeDef);
-}
-extern "C" {
-    pub fn timerOCPreloadConfig(tim: *mut TIM_TypeDef, channel: u8, preload: u16);
-}
-extern "C" {
-    pub fn timerCCR(tim: *mut TIM_TypeDef, channel: u8) -> *mut timCCR_t;
-}
-extern "C" {
-    pub fn timerDmaSource(channel: u8) -> u16;
-}
-extern "C" {
-    pub fn timerGetPrescalerByDesiredHertz(tim: *mut TIM_TypeDef, hz: u32) -> u16;
-}
-extern "C" {
-    pub fn timerGetPrescalerByDesiredMhz(tim: *mut TIM_TypeDef, mhz: u16) -> u16;
-}
-extern "C" {
-    pub fn timerGetPeriodByPrescaler(tim: *mut TIM_TypeDef, prescaler: u16, hz: u32) -> u16;
-}
-extern "C" {
-    pub fn timerGetNumberByIndex(index: u8) -> i8;
-}
-extern "C" {
-    pub fn timerGetTIMNumber(tim: *const TIM_TypeDef) -> i8;
-}
-extern "C" {
-    pub fn timerLookupChannelIndex(channel: u16) -> u8;
-}
 pub const dshotBitbangMode_e_DSHOT_BITBANG_OFF: dshotBitbangMode_e = 0;
 pub const dshotBitbangMode_e_DSHOT_BITBANG_ON: dshotBitbangMode_e = 1;
 pub const dshotBitbangMode_e_DSHOT_BITBANG_AUTO: dshotBitbangMode_e = 2;
@@ -2503,24 +1574,6 @@ pub const dshotBitbangStatus_e_DSHOT_BITBANG_STATUS_MOTOR_PIN_CONFLICT: dshotBit
 pub const dshotBitbangStatus_e_DSHOT_BITBANG_STATUS_NO_PACER: dshotBitbangStatus_e = 2;
 pub const dshotBitbangStatus_e_DSHOT_BITBANG_STATUS_TOO_MANY_PORTS: dshotBitbangStatus_e = 3;
 pub type dshotBitbangStatus_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn dshotBitbangDevInit(
-        motorConfig: *const motorDevConfig_s,
-        motorCount: u8,
-    ) -> *mut motorDevice_s;
-}
-extern "C" {
-    pub fn dshotBitbangGetStatus() -> dshotBitbangStatus_e;
-}
-extern "C" {
-    pub fn dshotBitbangTimerGetAllocatedByNumberAndChannel(
-        timerNumber: i8,
-        timerChannel: u16,
-    ) -> *const timerHardware_t;
-}
-extern "C" {
-    pub fn dshotBitbangTimerGetOwner(timer: *const timerHardware_t) -> *const resourceOwner_t;
-}
 pub const dshotBitbangedTimer_e_DSHOT_BITBANGED_TIMER_AUTO: dshotBitbangedTimer_e = 0;
 pub const dshotBitbangedTimer_e_DSHOT_BITBANGED_TIMER_TIM1: dshotBitbangedTimer_e = 1;
 pub const dshotBitbangedTimer_e_DSHOT_BITBANGED_TIMER_TIM8: dshotBitbangedTimer_e = 2;
@@ -2604,12 +1657,6 @@ const _: () = {
         [::std::mem::offset_of!(motorConfig_s, motorPoleCount) - 38usize];
 };
 pub type motorConfig_t = motorConfig_s;
-extern "C" {
-    pub static mut motorConfig_System: motorConfig_t;
-}
-extern "C" {
-    pub static mut motorConfig_Copy: motorConfig_t;
-}
 pub const motorPwmProtocolTypes_e_PWM_TYPE_STANDARD: motorPwmProtocolTypes_e = 0;
 pub const motorPwmProtocolTypes_e_PWM_TYPE_ONESHOT125: motorPwmProtocolTypes_e = 1;
 pub const motorPwmProtocolTypes_e_PWM_TYPE_ONESHOT42: motorPwmProtocolTypes_e = 2;
@@ -2697,83 +1744,6 @@ const _: () = {
         [::std::mem::offset_of!(motorDevice_s, motorEnableTimeMs) - 108usize];
 };
 pub type motorDevice_t = motorDevice_s;
-extern "C" {
-    pub fn motorPostInitNull();
-}
-extern "C" {
-    pub fn motorWriteNull(index: u8, value: f32);
-}
-extern "C" {
-    pub fn motorDecodeTelemetryNull() -> bool;
-}
-extern "C" {
-    pub fn motorUpdateCompleteNull();
-}
-extern "C" {
-    pub fn motorPostInit();
-}
-extern "C" {
-    pub fn motorWriteAll(values: *mut f32);
-}
-extern "C" {
-    pub fn motorInitEndpoints(
-        motorConfig: *const motorConfig_t,
-        outputLimit: f32,
-        outputLow: *mut f32,
-        outputHigh: *mut f32,
-        disarm: *mut f32,
-        deadbandMotor3DHigh: *mut f32,
-        deadbandMotor3DLow: *mut f32,
-    );
-}
-extern "C" {
-    pub fn motorConvertFromExternal(externalValue: u16) -> f32;
-}
-extern "C" {
-    pub fn motorConvertToExternal(motorValue: f32) -> u16;
-}
-extern "C" {
-    pub fn motorDevInit(motorConfig: *const motorDevConfig_s, idlePulse: u16, motorCount: u8);
-}
-extern "C" {
-    pub fn motorDeviceCount() -> ::std::os::raw::c_uint;
-}
-extern "C" {
-    pub fn motorGetVTable() -> *mut motorVTable_t;
-}
-extern "C" {
-    pub fn checkMotorProtocolEnabled(
-        motorConfig: *const motorDevConfig_t,
-        protocolIsDshot: *mut bool,
-    ) -> bool;
-}
-extern "C" {
-    pub fn isMotorProtocolDshot() -> bool;
-}
-extern "C" {
-    pub fn isMotorProtocolEnabled() -> bool;
-}
-extern "C" {
-    pub fn motorDisable();
-}
-extern "C" {
-    pub fn motorEnable();
-}
-extern "C" {
-    pub fn motorIsEnabled() -> bool;
-}
-extern "C" {
-    pub fn motorIsMotorEnabled(index: u8) -> bool;
-}
-extern "C" {
-    pub fn motorGetMotorEnableTimeMs() -> timeMs_t;
-}
-extern "C" {
-    pub fn motorShutdown();
-}
-extern "C" {
-    pub fn getDigitalIdleOffset(motorConfig: *const motorConfig_t) -> f32;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct timerChannel_t {
@@ -2813,17 +1783,6 @@ const _: () = {
         [::std::mem::offset_of!(pwmOutputPort_t, enabled) - 25usize];
     ["Offset of field: pwmOutputPort_t::io"][::std::mem::offset_of!(pwmOutputPort_t, io) - 32usize];
 };
-extern "C" {
-    pub static mut motors: [pwmOutputPort_t; 8usize];
-}
-extern "C" {
-    pub fn motorPwmDevInit(
-        motorDevConfig: *const motorDevConfig_s,
-        idlePulse: u16,
-        motorCount: u8,
-        useUnsyncedPwm: bool,
-    ) -> *mut motorDevice_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct servoDevConfig_s {
@@ -2843,36 +1802,6 @@ const _: () = {
         [::std::mem::offset_of!(servoDevConfig_s, ioTags) - 4usize];
 };
 pub type servoDevConfig_t = servoDevConfig_s;
-extern "C" {
-    pub fn servoDevInit(servoDevConfig: *const servoDevConfig_t);
-}
-extern "C" {
-    pub fn pwmServoConfig(
-        timerHardware: *const timerHardware_s,
-        servoIndex: u8,
-        servoPwmRate: u16,
-        servoCenterPulse: u16,
-    );
-}
-extern "C" {
-    pub fn pwmOutConfig(
-        channel: *mut timerChannel_t,
-        timerHardware: *const timerHardware_t,
-        hz: u32,
-        period: u16,
-        value: u16,
-        inversion: u8,
-    );
-}
-extern "C" {
-    pub fn pwmWriteServo(index: u8, value: f32);
-}
-extern "C" {
-    pub fn pwmGetMotors() -> *mut pwmOutputPort_t;
-}
-extern "C" {
-    pub fn pwmIsSynced() -> bool;
-}
 pub const portMode_e_MODE_RX: portMode_e = 1;
 pub const portMode_e_MODE_TX: portMode_e = 2;
 pub const portMode_e_MODE_RXTX: portMode_e = 3;
@@ -2971,12 +1900,6 @@ const _: () = {
         [::std::mem::offset_of!(serialPinConfig_s, ioTagInverter) - 22usize];
 };
 pub type serialPinConfig_t = serialPinConfig_s;
-extern "C" {
-    pub static mut serialPinConfig_System: serialPinConfig_t;
-}
-extern "C" {
-    pub static mut serialPinConfig_Copy: serialPinConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct serialPortVTable {
@@ -3048,69 +1971,6 @@ const _: () = {
     ["Offset of field: serialPortVTable::endWrite"]
         [::std::mem::offset_of!(serialPortVTable, endWrite) - 88usize];
 };
-extern "C" {
-    pub fn serialWrite(instance: *mut serialPort_t, ch: u8);
-}
-extern "C" {
-    pub fn serialRxBytesWaiting(instance: *const serialPort_t) -> u32;
-}
-extern "C" {
-    pub fn serialTxBytesFree(instance: *const serialPort_t) -> u32;
-}
-extern "C" {
-    pub fn serialWriteBuf(
-        instance: *mut serialPort_t,
-        data: *const u8,
-        count: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    pub fn serialRead(instance: *mut serialPort_t) -> u8;
-}
-extern "C" {
-    pub fn serialSetBaudRate(instance: *mut serialPort_t, baudRate: u32);
-}
-extern "C" {
-    pub fn serialSetMode(instance: *mut serialPort_t, mode: portMode_e);
-}
-extern "C" {
-    pub fn serialSetCtrlLineStateCb(
-        instance: *mut serialPort_t,
-        cb: ::std::option::Option<
-            unsafe extern "C" fn(context: *mut ::std::os::raw::c_void, ctrlLineState: u16),
-        >,
-        context: *mut ::std::os::raw::c_void,
-    );
-}
-extern "C" {
-    pub fn serialSetBaudRateCb(
-        instance: *mut serialPort_t,
-        cb: ::std::option::Option<unsafe extern "C" fn(context: *mut serialPort_t, baud: u32)>,
-        context: *mut serialPort_t,
-    );
-}
-extern "C" {
-    pub fn isSerialTransmitBufferEmpty(instance: *const serialPort_t) -> bool;
-}
-extern "C" {
-    pub fn serialPrint(instance: *mut serialPort_t, str_: *const ::std::os::raw::c_char);
-}
-extern "C" {
-    pub fn serialGetBaudRate(instance: *mut serialPort_t) -> u32;
-}
-extern "C" {
-    pub fn serialWriteBufShim(
-        instance: *mut ::std::os::raw::c_void,
-        data: *const u8,
-        count: ::std::os::raw::c_int,
-    );
-}
-extern "C" {
-    pub fn serialBeginWrite(instance: *mut serialPort_t);
-}
-extern "C" {
-    pub fn serialEndWrite(instance: *mut serialPort_t);
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct wsPort_t {
@@ -3144,41 +2004,10 @@ const _: () = {
         [::std::mem::offset_of!(wsPort_t, clientCount) - 2994usize];
     ["Offset of field: wsPort_t::id"][::std::mem::offset_of!(wsPort_t, id) - 2996usize];
 };
-extern "C" {
-    pub fn serialWsOpen(
-        id: ::std::os::raw::c_int,
-        rxCallback: serialReceiveCallbackPtr,
-        rxCallbackData: *mut ::std::os::raw::c_void,
-        baudRate: u32,
-        mode: portMode_e,
-        options: portOptions_e,
-    ) -> *mut serialPort_t;
-}
-extern "C" {
-    pub fn wsDataIn(instance: *mut wsPort_t, ch: *mut u8, size: ::std::os::raw::c_int);
-}
-extern "C" {
-    pub fn wsDataOut(instance: *mut wsPort_t);
-}
-extern "C" {
-    pub fn wsUpdate();
-}
-extern "C" {
-    pub fn systemBeep(on: bool);
-}
-extern "C" {
-    pub fn systemBeepToggle();
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct beeperDevConfig_s {
     _unused: [u8; 0],
-}
-extern "C" {
-    pub fn beeperInit(beeperDevConfig: *const beeperDevConfig_s);
-}
-extern "C" {
-    pub fn getBeeper() -> bool;
 }
 pub const systemState_e_SYSTEM_STATE_INITIALISING: systemState_e = 0;
 pub const systemState_e_SYSTEM_STATE_CONFIG_LOADED: systemState_e = 1;
@@ -3187,19 +2016,10 @@ pub const systemState_e_SYSTEM_STATE_MOTORS_READY: systemState_e = 4;
 pub const systemState_e_SYSTEM_STATE_TRANSPONDER_ENABLED: systemState_e = 8;
 pub const systemState_e_SYSTEM_STATE_READY: systemState_e = 128;
 pub type systemState_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut systemState: u8;
-}
-extern "C" {
-    pub fn init();
-}
 pub const armingFlag_e_ARMED: armingFlag_e = 1;
 pub const armingFlag_e_WAS_EVER_ARMED: armingFlag_e = 2;
 pub const armingFlag_e_WAS_ARMED_WITH_PREARM: armingFlag_e = 4;
 pub type armingFlag_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut armingFlags: u8;
-}
 pub const armingDisableFlags_e_ARMING_DISABLED_NO_GYRO: armingDisableFlags_e = 1;
 pub const armingDisableFlags_e_ARMING_DISABLED_FAILSAFE: armingDisableFlags_e = 2;
 pub const armingDisableFlags_e_ARMING_DISABLED_RX_FAILSAFE: armingDisableFlags_e = 4;
@@ -3227,21 +2047,6 @@ pub const armingDisableFlags_e_ARMING_DISABLED_ACC_CALIBRATION: armingDisableFla
 pub const armingDisableFlags_e_ARMING_DISABLED_MOTOR_PROTOCOL: armingDisableFlags_e = 16777216;
 pub const armingDisableFlags_e_ARMING_DISABLED_ARM_SWITCH: armingDisableFlags_e = 33554432;
 pub type armingDisableFlags_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut armingDisableFlagNames: [*const ::std::os::raw::c_char; 26usize];
-}
-extern "C" {
-    pub fn setArmingDisabled(flag: armingDisableFlags_e);
-}
-extern "C" {
-    pub fn unsetArmingDisabled(flag: armingDisableFlags_e);
-}
-extern "C" {
-    pub fn isArmingDisabled() -> bool;
-}
-extern "C" {
-    pub fn getArmingDisableFlags() -> armingDisableFlags_e;
-}
 pub const flightModeFlags_e_ANGLE_MODE: flightModeFlags_e = 1;
 pub const flightModeFlags_e_HORIZON_MODE: flightModeFlags_e = 2;
 pub const flightModeFlags_e_MAG_MODE: flightModeFlags_e = 4;
@@ -3250,37 +2055,10 @@ pub const flightModeFlags_e_PASSTHRU_MODE: flightModeFlags_e = 256;
 pub const flightModeFlags_e_FAILSAFE_MODE: flightModeFlags_e = 1024;
 pub const flightModeFlags_e_GPS_RESCUE_MODE: flightModeFlags_e = 2048;
 pub type flightModeFlags_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut flightModeFlags: u16;
-}
 pub const stateFlags_t_GPS_FIX_HOME: stateFlags_t = 1;
 pub const stateFlags_t_GPS_FIX: stateFlags_t = 2;
 pub const stateFlags_t_GPS_FIX_EVER: stateFlags_t = 4;
 pub type stateFlags_t = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut stateFlags: u8;
-}
-extern "C" {
-    pub fn enableFlightMode(mask: flightModeFlags_e) -> u16;
-}
-extern "C" {
-    pub fn disableFlightMode(mask: flightModeFlags_e) -> u16;
-}
-extern "C" {
-    pub fn sensors(mask: u32) -> bool;
-}
-extern "C" {
-    pub fn sensorsSet(mask: u32);
-}
-extern "C" {
-    pub fn sensorsClear(mask: u32);
-}
-extern "C" {
-    pub fn sensorsMask() -> u32;
-}
-extern "C" {
-    pub fn mwDisarm();
-}
 pub const configurationState_e_CONFIGURATION_STATE_DEFAULTS_BARE: configurationState_e = 0;
 pub const configurationState_e_CONFIGURATION_STATE_DEFAULTS_CUSTOM: configurationState_e = 1;
 pub const configurationState_e_CONFIGURATION_STATE_CONFIGURED: configurationState_e = 2;
@@ -3301,12 +2079,6 @@ const _: () = {
         [::std::mem::offset_of!(pilotConfig_s, pilotName) - 17usize];
 };
 pub type pilotConfig_t = pilotConfig_s;
-extern "C" {
-    pub static mut pilotConfig_System: pilotConfig_t;
-}
-extern "C" {
-    pub static mut pilotConfig_Copy: pilotConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct systemConfig_s {
@@ -3350,94 +2122,10 @@ const _: () = {
         [::std::mem::offset_of!(systemConfig_s, enableStickArming) - 15usize];
 };
 pub type systemConfig_t = systemConfig_s;
-extern "C" {
-    pub static mut systemConfig_System: systemConfig_t;
-}
-extern "C" {
-    pub static mut systemConfig_Copy: systemConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct pidProfile_s {
     _unused: [u8; 0],
-}
-extern "C" {
-    pub static mut currentPidProfile: *mut pidProfile_s;
-}
-extern "C" {
-    pub fn initEEPROM();
-}
-extern "C" {
-    pub fn resetEEPROM() -> bool;
-}
-extern "C" {
-    pub fn readEEPROM() -> bool;
-}
-extern "C" {
-    pub fn writeEEPROM();
-}
-extern "C" {
-    pub fn writeUnmodifiedConfigToEEPROM();
-}
-extern "C" {
-    pub fn ensureEEPROMStructureIsValid();
-}
-extern "C" {
-    pub fn saveConfigAndNotify();
-}
-extern "C" {
-    pub fn validateAndFixGyroConfig();
-}
-extern "C" {
-    pub fn validateAndFixBlackBox();
-}
-extern "C" {
-    pub fn setConfigDirty();
-}
-extern "C" {
-    pub fn isConfigDirty() -> bool;
-}
-extern "C" {
-    pub fn getCurrentPidProfileIndex() -> u8;
-}
-extern "C" {
-    pub fn changePidProfile(pidProfileIndex: u8);
-}
-extern "C" {
-    pub fn changePidProfileFromCellCount(cellCount: u8);
-}
-extern "C" {
-    pub fn getCurrentControlRateProfileIndex() -> u8;
-}
-extern "C" {
-    pub fn changeControlRateProfile(profileIndex: u8);
-}
-extern "C" {
-    pub fn canSoftwareSerialBeUsed() -> bool;
-}
-extern "C" {
-    pub fn getCurrentMinthrottle() -> u16;
-}
-extern "C" {
-    pub fn resetConfig();
-}
-extern "C" {
-    pub fn targetConfiguration();
-}
-extern "C" {
-    pub fn targetValidateConfiguration();
-}
-extern "C" {
-    pub fn isSystemConfigured() -> bool;
-}
-extern "C" {
-    pub fn setRebootRequired();
-}
-extern "C" {
-    pub fn getRebootRequired() -> bool;
-}
-extern "C" {
-    pub fn isEepromWriteInProgress() -> bool;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -3455,12 +2143,6 @@ const _: () = {
         [::std::mem::offset_of!(schedulerConfig_s, osdRelaxDeterminism) - 2usize];
 };
 pub type schedulerConfig_t = schedulerConfig_s;
-extern "C" {
-    pub static mut schedulerConfig_System: schedulerConfig_t;
-}
-extern "C" {
-    pub static mut schedulerConfig_Copy: schedulerConfig_t;
-}
 pub const taskPriority_e_TASK_PRIORITY_REALTIME: taskPriority_e = -1;
 pub const taskPriority_e_TASK_PRIORITY_LOWEST: taskPriority_e = 1;
 pub const taskPriority_e_TASK_PRIORITY_LOW: taskPriority_e = 2;
@@ -3652,81 +2334,6 @@ const _: () = {
     ["Offset of field: task_t::lateCount"][::std::mem::offset_of!(task_t, lateCount) - 60usize];
     ["Offset of field: task_t::execTime"][::std::mem::offset_of!(task_t, execTime) - 64usize];
 };
-extern "C" {
-    pub fn getCheckFuncInfo(checkFuncInfo: *mut cfCheckFuncInfo_t);
-}
-extern "C" {
-    pub fn getTaskInfo(taskId: taskId_e, taskInfo: *mut taskInfo_t);
-}
-extern "C" {
-    pub fn rescheduleTask(taskId: taskId_e, newPeriodUs: timeDelta_t);
-}
-extern "C" {
-    pub fn setTaskEnabled(taskId: taskId_e, newEnabledState: bool);
-}
-extern "C" {
-    pub fn getTaskDeltaTimeUs(taskId: taskId_e) -> timeDelta_t;
-}
-extern "C" {
-    pub fn schedulerIgnoreTaskStateTime();
-}
-extern "C" {
-    pub fn schedulerIgnoreTaskExecRate();
-}
-extern "C" {
-    pub fn schedulerIgnoreTaskExecTime();
-}
-extern "C" {
-    pub fn schedulerGetIgnoreTaskExecTime() -> bool;
-}
-extern "C" {
-    pub fn schedulerResetTaskStatistics(taskId: taskId_e);
-}
-extern "C" {
-    pub fn schedulerResetTaskMaxExecutionTime(taskId: taskId_e);
-}
-extern "C" {
-    pub fn schedulerResetCheckFunctionMaxExecutionTime();
-}
-extern "C" {
-    pub fn schedulerSetNextStateTime(nextStateTime: timeDelta_t);
-}
-extern "C" {
-    pub fn schedulerGetNextStateTime() -> timeDelta_t;
-}
-extern "C" {
-    pub fn schedulerInit();
-}
-extern "C" {
-    pub fn scheduler();
-}
-extern "C" {
-    pub fn schedulerExecuteTask(selectedTask: *mut task_t, currentTimeUs: timeUs_t) -> timeUs_t;
-}
-extern "C" {
-    pub fn taskSystemLoad(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn schedulerEnableGyro();
-}
-extern "C" {
-    pub fn getAverageSystemLoadPercent() -> u16;
-}
-extern "C" {
-    pub fn schedulerGetCycleTimeMultiplier() -> f32;
-}
-extern "C" {
-    pub fn tasksInitData();
-}
-extern "C" {
-    pub fn tasksInit();
-}
-extern "C" {
-    pub fn getTask(taskId: ::std::os::raw::c_uint) -> *mut task_t;
-}
-extern "C" {
-    pub fn taskUpdateRxMainInProgress() -> bool;
-}
 pub const axis_e_X: axis_e = 0;
 pub const axis_e_Y: axis_e = 1;
 pub const axis_e_Z: axis_e = 2;
@@ -3738,9 +2345,6 @@ pub type flight_dynamics_index_t = ::std::os::raw::c_uint;
 pub const angle_index_t_AI_ROLL: angle_index_t = 0;
 pub const angle_index_t_AI_PITCH: angle_index_t = 1;
 pub type angle_index_t = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut canUseGPSHeading: bool;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct quaternion {
@@ -3833,12 +2437,6 @@ const _: () = {
     ["Offset of field: attitudeEulerAngles_t::values"]
         [::std::mem::offset_of!(attitudeEulerAngles_t, values) - 0usize];
 };
-extern "C" {
-    pub static mut attitude: attitudeEulerAngles_t;
-}
-extern "C" {
-    pub static mut rMat: [[f32; 3usize]; 3usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct imuConfig_s {
@@ -3864,12 +2462,6 @@ const _: () = {
         [::std::mem::offset_of!(imuConfig_s, mag_declination) - 6usize];
 };
 pub type imuConfig_t = imuConfig_s;
-extern "C" {
-    pub static mut imuConfig_System: imuConfig_t;
-}
-extern "C" {
-    pub static mut imuConfig_Copy: imuConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct imuRuntimeConfig_s {
@@ -3886,42 +2478,6 @@ const _: () = {
         [::std::mem::offset_of!(imuRuntimeConfig_s, imuDcmKp) - 4usize];
 };
 pub type imuRuntimeConfig_t = imuRuntimeConfig_s;
-extern "C" {
-    pub fn imuConfigure(throttle_correction_angle: u16, throttle_correction_value: u8);
-}
-extern "C" {
-    pub fn getCosTiltAngle() -> f32;
-}
-extern "C" {
-    pub fn getQuaternion(q: *mut quaternion);
-}
-extern "C" {
-    pub fn imuUpdateAttitude(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn imuInit();
-}
-extern "C" {
-    pub fn imuSetAttitudeRPY(roll: f32, pitch: f32, yaw: f32);
-}
-extern "C" {
-    pub fn imuSetAttitudeQuat(w: f32, x: f32, y: f32, z: f32);
-}
-extern "C" {
-    pub fn imuQuaternionHeadfreeOffsetSet() -> bool;
-}
-extern "C" {
-    pub fn imuQuaternionHeadfreeTransformVectorEarthToBody(v: *mut t_fp_vector_def);
-}
-extern "C" {
-    pub fn shouldInitializeGPSHeading() -> bool;
-}
-extern "C" {
-    pub fn isUpright() -> bool;
-}
-extern "C" {
-    pub static mut osdScreen: [[u8; 30usize]; 16usize];
-}
 pub const portSharing_e_PORTSHARING_UNUSED: portSharing_e = 0;
 pub const portSharing_e_PORTSHARING_NOT_SHARED: portSharing_e = 1;
 pub const portSharing_e_PORTSHARING_SHARED: portSharing_e = 2;
@@ -3963,9 +2519,6 @@ pub const baudRate_e_BAUD_2000000: baudRate_e = 14;
 pub const baudRate_e_BAUD_2470000: baudRate_e = 15;
 pub const baudRate_e_BAUD_COUNT: baudRate_e = 16;
 pub type baudRate_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static baudRates: [u32; 0usize];
-}
 pub const serialPortIdentifier_e_SERIAL_PORT_ALL: serialPortIdentifier_e = -2;
 pub const serialPortIdentifier_e_SERIAL_PORT_NONE: serialPortIdentifier_e = -1;
 pub const serialPortIdentifier_e_SERIAL_PORT_USART1: serialPortIdentifier_e = 0;
@@ -3985,9 +2538,6 @@ pub const serialPortIdentifier_e_SERIAL_PORT_SOFTSERIAL2: serialPortIdentifier_e
 pub const serialPortIdentifier_e_SERIAL_PORT_LPUART1: serialPortIdentifier_e = 40;
 pub const serialPortIdentifier_e_SERIAL_PORT_IDENTIFIER_MAX: serialPortIdentifier_e = 40;
 pub type serialPortIdentifier_e = ::std::os::raw::c_int;
-extern "C" {
-    pub static serialPortIdentifiers: [serialPortIdentifier_e; 8usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct serialPortUsage_s {
@@ -4007,12 +2557,6 @@ const _: () = {
         [::std::mem::offset_of!(serialPortUsage_s, identifier) - 12usize];
 };
 pub type serialPortUsage_t = serialPortUsage_s;
-extern "C" {
-    pub fn findSharedSerialPort(
-        functionMask: u16,
-        sharedWithFunction: serialPortFunction_e,
-    ) -> *mut serialPort_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct serialPortConfig_s {
@@ -4060,102 +2604,7 @@ const _: () = {
         [::std::mem::offset_of!(serialConfig_s, reboot_character) - 98usize];
 };
 pub type serialConfig_t = serialConfig_s;
-extern "C" {
-    pub static mut serialConfig_System: serialConfig_t;
-}
-extern "C" {
-    pub static mut serialConfig_Copy: serialConfig_t;
-}
 pub type serialConsumer = ::std::option::Option<unsafe extern "C" fn(arg1: u8)>;
-extern "C" {
-    pub fn serialInit(softserialEnabled: bool, serialPortToDisable: serialPortIdentifier_e);
-}
-extern "C" {
-    pub fn serialRemovePort(identifier: serialPortIdentifier_e);
-}
-extern "C" {
-    pub fn serialGetAvailablePortCount() -> u8;
-}
-extern "C" {
-    pub fn serialIsPortAvailable(identifier: serialPortIdentifier_e) -> bool;
-}
-extern "C" {
-    pub fn isSerialConfigValid(serialConfig: *const serialConfig_t) -> bool;
-}
-extern "C" {
-    pub fn serialFindPortConfiguration(
-        identifier: serialPortIdentifier_e,
-    ) -> *const serialPortConfig_t;
-}
-extern "C" {
-    pub fn serialFindPortConfigurationMutable(
-        identifier: serialPortIdentifier_e,
-    ) -> *mut serialPortConfig_t;
-}
-extern "C" {
-    pub fn doesConfigurationUsePort(portIdentifier: serialPortIdentifier_e) -> bool;
-}
-extern "C" {
-    pub fn findSerialPortConfig(function: serialPortFunction_e) -> *const serialPortConfig_t;
-}
-extern "C" {
-    pub fn findNextSerialPortConfig(function: serialPortFunction_e) -> *const serialPortConfig_t;
-}
-extern "C" {
-    pub fn determinePortSharing(
-        portConfig: *const serialPortConfig_t,
-        function: serialPortFunction_e,
-    ) -> portSharing_e;
-}
-extern "C" {
-    pub fn isSerialPortShared(
-        portConfig: *const serialPortConfig_t,
-        functionMask: u16,
-        sharedWithFunction: serialPortFunction_e,
-    ) -> bool;
-}
-extern "C" {
-    pub fn pgResetFn_serialConfig(serialConfig: *mut serialConfig_t);
-}
-extern "C" {
-    #[doc = "!!TODO remove need for this"]
-    pub fn findSerialPortUsageByIdentifier(
-        identifier: serialPortIdentifier_e,
-    ) -> *mut serialPortUsage_t;
-}
-extern "C" {
-    pub fn findSerialPortIndexByIdentifier(
-        identifier: serialPortIdentifier_e,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn openSerialPort(
-        identifier: serialPortIdentifier_e,
-        function: serialPortFunction_e,
-        rxCallback: serialReceiveCallbackPtr,
-        rxCallbackData: *mut ::std::os::raw::c_void,
-        baudrate: u32,
-        mode: portMode_e,
-        options: portOptions_e,
-    ) -> *mut serialPort_t;
-}
-extern "C" {
-    pub fn closeSerialPort(serialPort: *mut serialPort_t);
-}
-extern "C" {
-    pub fn waitForSerialPortToFinishTransmitting(serialPort: *mut serialPort_t);
-}
-extern "C" {
-    pub fn lookupBaudRateIndex(baudRate: u32) -> baudRate_e;
-}
-extern "C" {
-    pub fn serialPassthrough(
-        left: *mut serialPort_t,
-        right: *mut serialPort_t,
-        leftC: serialConsumer,
-        rightC: serialConsumer,
-    );
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct gpsConfig_s {
@@ -4205,12 +2654,6 @@ const _: () = {
         [::std::mem::offset_of!(gpsConfig_s, nmeaCustomCommands) - 12usize];
 };
 pub type gpsConfig_t = gpsConfig_s;
-extern "C" {
-    pub static mut gpsConfig_System: gpsConfig_t;
-}
-extern "C" {
-    pub static mut gpsConfig_Copy: gpsConfig_t;
-}
 pub const ubloxModel_e_UBLOX_MODEL_PORTABLE: ubloxModel_e = 0;
 pub const ubloxModel_e_UBLOX_MODEL_STATIONARY: ubloxModel_e = 1;
 pub const ubloxModel_e_UBLOX_MODEL_PEDESTRIAN: ubloxModel_e = 2;
@@ -4448,97 +2891,9 @@ const _: () = {
         [::std::mem::offset_of!(gpsData_s, satMessagesDisabled) - 41usize];
 };
 pub type gpsData_t = gpsData_s;
-extern "C" {
-    pub static mut GPS_home: [i32; 2usize];
-}
-extern "C" {
-    pub static mut GPS_distanceToHome: u16;
-}
-extern "C" {
-    pub static mut GPS_distanceToHomeCm: u32;
-}
-extern "C" {
-    pub static mut GPS_directionToHome: i16;
-}
-extern "C" {
-    pub static mut GPS_distanceFlownInCm: u32;
-}
-extern "C" {
-    pub static mut GPS_angle: [i16; 2usize];
-}
-extern "C" {
-    pub static mut GPS_scaleLonDown: f32;
-}
 pub const gpsUpdateToggle_e_GPS_DIRECT_TICK: gpsUpdateToggle_e = 1;
 pub const gpsUpdateToggle_e_GPS_MSP_UPDATE: gpsUpdateToggle_e = 2;
 pub type gpsUpdateToggle_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut gpsData: gpsData_t;
-}
-extern "C" {
-    pub static mut gpsSol: gpsSolutionData_t;
-}
-extern "C" {
-    pub static mut GPS_update: u8;
-}
-extern "C" {
-    pub static mut GPS_numCh: u8;
-}
-extern "C" {
-    pub static mut GPS_svinfo_chn: [u8; 32usize];
-}
-extern "C" {
-    pub static mut GPS_svinfo_svid: [u8; 32usize];
-}
-extern "C" {
-    pub static mut GPS_svinfo_quality: [u8; 32usize];
-}
-extern "C" {
-    pub static mut GPS_svinfo_cno: [u8; 32usize];
-}
-extern "C" {
-    pub fn gpsInit();
-}
-extern "C" {
-    pub fn gpsUpdate(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn gpsNewFrame(c: u8) -> bool;
-}
-extern "C" {
-    pub fn gpsIsHealthy() -> bool;
-}
-extern "C" {
-    pub fn gpsEnablePassthrough(gpsPassthroughPort: *mut serialPort_s);
-}
-extern "C" {
-    pub fn onGpsNewData();
-}
-extern "C" {
-    pub fn GPS_reset_home_position();
-}
-extern "C" {
-    pub fn GPS_calc_longitude_scaling(lat: i32);
-}
-extern "C" {
-    pub fn GPS_distance_cm_bearing(
-        currentLat1: *mut i32,
-        currentLon1: *mut i32,
-        destinationLat2: *mut i32,
-        destinationLon2: *mut i32,
-        dist: *mut u32,
-        bearing: *mut i32,
-    );
-}
-extern "C" {
-    pub fn gpsSetFixState(state: bool);
-}
-extern "C" {
-    pub fn getGpsDataIntervalSeconds() -> f32;
-}
-extern "C" {
-    pub fn getGpsPortActualBaudRateIndex() -> baudRate_e;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rxConfig_s {
@@ -4652,12 +3007,6 @@ const _: () = {
         [::std::mem::offset_of!(rxConfig_s, crsf_use_negotiated_baud) - 52usize];
 };
 pub type rxConfig_t = rxConfig_s;
-extern "C" {
-    pub static mut rxConfig_System: rxConfig_t;
-}
-extern "C" {
-    pub static mut rxConfig_Copy: rxConfig_t;
-}
 pub const rxFrameState_e_RX_FRAME_PENDING: rxFrameState_e = 0;
 pub const rxFrameState_e_RX_FRAME_COMPLETE: rxFrameState_e = 1;
 pub const rxFrameState_e_RX_FRAME_FAILSAFE: rxFrameState_e = 2;
@@ -4681,12 +3030,6 @@ pub const SerialRXType_SERIALRX_SRXL2: SerialRXType = 13;
 pub const SerialRXType_SERIALRX_GHST: SerialRXType = 14;
 pub const SerialRXType_SERIALRX_SPEKTRUM1024: SerialRXType = 15;
 pub type SerialRXType = ::std::os::raw::c_uint;
-extern "C" {
-    pub static rcChannelLetters: [::std::os::raw::c_char; 0usize];
-}
-extern "C" {
-    pub static mut rcData: [f32; 18usize];
-}
 pub const rxFailsafeChannelMode_e_RX_FAILSAFE_MODE_AUTO: rxFailsafeChannelMode_e = 0;
 pub const rxFailsafeChannelMode_e_RX_FAILSAFE_MODE_HOLD: rxFailsafeChannelMode_e = 1;
 pub const rxFailsafeChannelMode_e_RX_FAILSAFE_MODE_SET: rxFailsafeChannelMode_e = 2;
@@ -4713,12 +3056,6 @@ const _: () = {
         [::std::mem::offset_of!(rxFailsafeChannelConfig_s, step) - 1usize];
 };
 pub type rxFailsafeChannelConfig_t = rxFailsafeChannelConfig_s;
-extern "C" {
-    pub static mut rxFailsafeChannelConfigs_SystemArray: [rxFailsafeChannelConfig_t; 18usize];
-}
-extern "C" {
-    pub static mut rxFailsafeChannelConfigs_CopyArray: [rxFailsafeChannelConfig_t; 18usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rxChannelRangeConfig_s {
@@ -4736,12 +3073,6 @@ const _: () = {
         [::std::mem::offset_of!(rxChannelRangeConfig_s, max) - 2usize];
 };
 pub type rxChannelRangeConfig_t = rxChannelRangeConfig_s;
-extern "C" {
-    pub static mut rxChannelRangeConfigs_SystemArray: [rxChannelRangeConfig_t; 4usize];
-}
-extern "C" {
-    pub static mut rxChannelRangeConfigs_CopyArray: [rxChannelRangeConfig_t; 4usize];
-}
 pub type rcReadRawDataFnPtr = ::std::option::Option<
     unsafe extern "C" fn(rxRuntimeState: *const rxRuntimeState_s, chan: u8) -> f32,
 >;
@@ -4806,119 +3137,10 @@ pub const rssiSource_e_RSSI_SOURCE_MSP: rssiSource_e = 4;
 pub const rssiSource_e_RSSI_SOURCE_FRAME_ERRORS: rssiSource_e = 5;
 pub const rssiSource_e_RSSI_SOURCE_RX_PROTOCOL_CRSF: rssiSource_e = 6;
 pub type rssiSource_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut rssiSource: rssiSource_e;
-}
 pub const linkQualitySource_e_LQ_SOURCE_NONE: linkQualitySource_e = 0;
 pub const linkQualitySource_e_LQ_SOURCE_RX_PROTOCOL_CRSF: linkQualitySource_e = 1;
 pub const linkQualitySource_e_LQ_SOURCE_RX_PROTOCOL_GHST: linkQualitySource_e = 2;
 pub type linkQualitySource_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut linkQualitySource: linkQualitySource_e;
-}
-extern "C" {
-    pub static mut rxRuntimeState: rxRuntimeState_t;
-}
-extern "C" {
-    #[doc = "!!TODO remove this extern, only needed once for channelCount"]
-    pub fn rxInit();
-}
-extern "C" {
-    pub fn rxProcessPending(state: bool);
-}
-extern "C" {
-    pub fn rxUpdateCheck(currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t) -> bool;
-}
-extern "C" {
-    pub fn rxFrameCheck(currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t);
-}
-extern "C" {
-    pub fn rxIsReceivingSignal() -> bool;
-}
-extern "C" {
-    pub fn rxAreFlightChannelsValid() -> bool;
-}
-extern "C" {
-    pub fn calculateRxChannelsAndUpdateFailsafe(currentTimeUs: timeUs_t) -> bool;
-}
-extern "C" {
-    pub fn parseRcChannels(input: *const ::std::os::raw::c_char, rxConfig: *mut rxConfig_s);
-}
-extern "C" {
-    pub fn setRssiDirect(newRssi: u16, source: rssiSource_e);
-}
-extern "C" {
-    pub fn setRssi(rssiValue: u16, source: rssiSource_e);
-}
-extern "C" {
-    pub fn setRssiMsp(newMspRssi: u8);
-}
-extern "C" {
-    pub fn updateRSSI(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn getRssi() -> u16;
-}
-extern "C" {
-    pub fn getRssiPercent() -> u8;
-}
-extern "C" {
-    pub fn isRssiConfigured() -> bool;
-}
-extern "C" {
-    pub fn rxGetLinkQuality() -> u16;
-}
-extern "C" {
-    pub fn setLinkQualityDirect(linkqualityValue: u16);
-}
-extern "C" {
-    pub fn rxGetLinkQualityPercent() -> u16;
-}
-extern "C" {
-    pub fn getRsnr() -> i16;
-}
-extern "C" {
-    pub fn setRsnr(newRsnr: i16);
-}
-extern "C" {
-    pub fn setRsnrDirect(newRsnr: i16);
-}
-extern "C" {
-    pub fn rxSetRfMode(rfModeValue: u8);
-}
-extern "C" {
-    pub fn rxGetRfMode() -> u8;
-}
-extern "C" {
-    pub fn rxSetUplinkTxPwrMw(uplinkTxPwrMwValue: u16);
-}
-extern "C" {
-    pub fn rxGetUplinkTxPwrMw() -> u16;
-}
-extern "C" {
-    pub fn resetAllRxChannelRangeConfigurations(rxChannelRangeConfig: *mut rxChannelRangeConfig_t);
-}
-extern "C" {
-    pub fn suspendRxSignal();
-}
-extern "C" {
-    pub fn resumeRxSignal();
-}
-extern "C" {
-    pub fn rxGetFrameDelta(frameAgeUs: *mut timeDelta_t) -> timeDelta_t;
-}
-extern "C" {
-    pub fn rxFrameTimeUs() -> timeUs_t;
-}
-extern "C" {
-    pub fn rxMspReadRawRC(rxRuntimeState: *const rxRuntimeState_t, chan: u8) -> f32;
-}
-extern "C" {
-    pub fn rxMspInit(rxConfig: *const rxConfig_s, rxRuntimeState: *mut rxRuntimeState_s);
-}
-extern "C" {
-    pub fn rxMspFrameReceive(frame: *mut u16, channelCount: ::std::os::raw::c_int);
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct filter_s {
@@ -5115,133 +3337,6 @@ const _: () = {
         [::std::mem::offset_of!(meanAccumulator_s, count) - 4usize];
 };
 pub type meanAccumulator_t = meanAccumulator_s;
-extern "C" {
-    pub fn nullFilterApply(filter: *mut filter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn pt1FilterGain(f_cut: f32, dT: f32) -> f32;
-}
-extern "C" {
-    pub fn pt1FilterInit(filter: *mut pt1Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt1FilterUpdateCutoff(filter: *mut pt1Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt1FilterApply(filter: *mut pt1Filter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn pt2FilterGain(f_cut: f32, dT: f32) -> f32;
-}
-extern "C" {
-    pub fn pt2FilterInit(filter: *mut pt2Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt2FilterUpdateCutoff(filter: *mut pt2Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt2FilterApply(filter: *mut pt2Filter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn pt3FilterGain(f_cut: f32, dT: f32) -> f32;
-}
-extern "C" {
-    pub fn pt3FilterInit(filter: *mut pt3Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt3FilterUpdateCutoff(filter: *mut pt3Filter_t, k: f32);
-}
-extern "C" {
-    pub fn pt3FilterApply(filter: *mut pt3Filter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn filterGetNotchQ(centerFreq: f32, cutoffFreq: f32) -> f32;
-}
-extern "C" {
-    pub fn biquadFilterInitLPF(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32);
-}
-extern "C" {
-    pub fn biquadFilterInit(
-        filter: *mut biquadFilter_t,
-        filterFreq: f32,
-        refreshRate: u32,
-        Q: f32,
-        filterType: biquadFilterType_e,
-        weight: f32,
-    );
-}
-extern "C" {
-    pub fn biquadFilterUpdate(
-        filter: *mut biquadFilter_t,
-        filterFreq: f32,
-        refreshRate: u32,
-        Q: f32,
-        filterType: biquadFilterType_e,
-        weight: f32,
-    );
-}
-extern "C" {
-    pub fn biquadFilterUpdateLPF(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32);
-}
-extern "C" {
-    pub fn biquadFilterApplyDF1(filter: *mut biquadFilter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn biquadFilterApplyDF1Weighted(filter: *mut biquadFilter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn biquadFilterApply(filter: *mut biquadFilter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn phaseCompInit(
-        filter: *mut phaseComp_t,
-        centerFreq: f32,
-        centerPhase: f32,
-        looptimeUs: u32,
-    );
-}
-extern "C" {
-    pub fn phaseCompUpdate(
-        filter: *mut phaseComp_t,
-        centerFreq: f32,
-        centerPhase: f32,
-        looptimeUs: u32,
-    );
-}
-extern "C" {
-    pub fn phaseCompApply(filter: *mut phaseComp_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn slewFilterInit(filter: *mut slewFilter_t, slewLimit: f32, threshold: f32);
-}
-extern "C" {
-    pub fn slewFilterApply(filter: *mut slewFilter_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn laggedMovingAverageInit(
-        filter: *mut laggedMovingAverage_t,
-        windowSize: u16,
-        buf: *mut f32,
-    );
-}
-extern "C" {
-    pub fn laggedMovingAverageUpdate(filter: *mut laggedMovingAverage_t, input: f32) -> f32;
-}
-extern "C" {
-    pub fn simpleLPFilterInit(filter: *mut simpleLowpassFilter_t, beta: i32, fpShift: i32);
-}
-extern "C" {
-    pub fn simpleLPFilterUpdate(filter: *mut simpleLowpassFilter_t, newVal: i32) -> i32;
-}
-extern "C" {
-    pub fn meanAccumulatorInit(filter: *mut meanAccumulator_t);
-}
-extern "C" {
-    pub fn meanAccumulatorAdd(filter: *mut meanAccumulator_t, newVal: i8);
-}
-extern "C" {
-    pub fn meanAccumulatorCalc(filter: *mut meanAccumulator_t, defaultValue: i8) -> i8;
-}
 pub const currentMeterId_e_CURRENT_METER_ID_NONE: currentMeterId_e = 0;
 pub const currentMeterId_e_CURRENT_METER_ID_BATTERY_1: currentMeterId_e = 10;
 pub const currentMeterId_e_CURRENT_METER_ID_BATTERY_2: currentMeterId_e = 11;
@@ -5282,9 +3377,6 @@ pub const currentMeterSource_e_CURRENT_METER_ESC: currentMeterSource_e = 3;
 pub const currentMeterSource_e_CURRENT_METER_MSP: currentMeterSource_e = 4;
 pub const currentMeterSource_e_CURRENT_METER_COUNT: currentMeterSource_e = 5;
 pub type currentMeterSource_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static currentMeterSourceNames: [*const ::std::os::raw::c_char; 5usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct currentMeter_s {
@@ -5365,12 +3457,6 @@ const _: () = {
         [::std::mem::offset_of!(currentSensorADCConfig_s, offset) - 2usize];
 };
 pub type currentSensorADCConfig_t = currentSensorADCConfig_s;
-extern "C" {
-    pub static mut currentSensorADCConfig_System: currentSensorADCConfig_t;
-}
-extern "C" {
-    pub static mut currentSensorADCConfig_Copy: currentSensorADCConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct currentMeterVirtualState_s {
@@ -5407,12 +3493,6 @@ const _: () = {
         [::std::mem::offset_of!(currentSensorVirtualConfig_s, offset) - 2usize];
 };
 pub type currentSensorVirtualConfig_t = currentSensorVirtualConfig_s;
-extern "C" {
-    pub static mut currentSensorVirtualConfig_System: currentSensorVirtualConfig_t;
-}
-extern "C" {
-    pub static mut currentSensorVirtualConfig_Copy: currentSensorVirtualConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct currentMeterESCState_s {
@@ -5447,65 +3527,6 @@ const _: () = {
         [::std::mem::offset_of!(currentMeterMSPState_s, amperage) - 4usize];
 };
 pub type currentMeterMSPState_t = currentMeterMSPState_s;
-extern "C" {
-    pub fn currentMeterReset(meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterADCInit();
-}
-extern "C" {
-    pub fn currentMeterADCRefresh(lastUpdateAt: i32);
-}
-extern "C" {
-    pub fn currentMeterADCRead(meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterVirtualInit();
-}
-extern "C" {
-    pub fn currentMeterVirtualRefresh(
-        lastUpdateAt: i32,
-        armed: bool,
-        throttleLowAndMotorStop: bool,
-        throttleOffset: i32,
-    );
-}
-extern "C" {
-    pub fn currentMeterVirtualRead(meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterESCInit();
-}
-extern "C" {
-    pub fn currentMeterESCRefresh(lastUpdateAt: i32);
-}
-extern "C" {
-    pub fn currentMeterESCReadCombined(meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterESCReadMotor(motorNumber: u8, meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterMSPInit();
-}
-extern "C" {
-    pub fn currentMeterMSPRefresh(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn currentMeterMSPRead(meter: *mut currentMeter_t);
-}
-extern "C" {
-    pub fn currentMeterMSPSet(amperage: u16, mAhDrawn: u16);
-}
-extern "C" {
-    pub static supportedCurrentMeterCount: u8;
-}
-extern "C" {
-    pub static currentMeterIds: [u8; 0usize];
-}
-extern "C" {
-    pub fn currentMeterRead(id: currentMeterId_e, currentMeter: *mut currentMeter_t);
-}
 pub const voltageMeterId_e_VOLTAGE_METER_ID_NONE: voltageMeterId_e = 0;
 pub const voltageMeterId_e_VOLTAGE_METER_ID_BATTERY_1: voltageMeterId_e = 10;
 pub const voltageMeterId_e_VOLTAGE_METER_ID_BATTERY_2: voltageMeterId_e = 11;
@@ -5543,9 +3564,6 @@ pub const voltageMeterSource_e_VOLTAGE_METER_ADC: voltageMeterSource_e = 1;
 pub const voltageMeterSource_e_VOLTAGE_METER_ESC: voltageMeterSource_e = 2;
 pub const voltageMeterSource_e_VOLTAGE_METER_COUNT: voltageMeterSource_e = 3;
 pub type voltageMeterSource_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static voltageMeterSourceNames: [*const ::std::os::raw::c_char; 3usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct voltageMeter_s {
@@ -5597,54 +3615,6 @@ const _: () = {
         [::std::mem::offset_of!(voltageSensorADCConfig_s, vbatresdivmultiplier) - 2usize];
 };
 pub type voltageSensorADCConfig_t = voltageSensorADCConfig_s;
-extern "C" {
-    pub static mut voltageSensorADCConfig_SystemArray: [voltageSensorADCConfig_t; 1usize];
-}
-extern "C" {
-    pub static mut voltageSensorADCConfig_CopyArray: [voltageSensorADCConfig_t; 1usize];
-}
-extern "C" {
-    pub fn voltageMeterReset(voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn voltageMeterGenericInit();
-}
-extern "C" {
-    pub fn voltageMeterADCInit();
-}
-extern "C" {
-    pub fn voltageMeterADCRefresh();
-}
-extern "C" {
-    pub fn voltageMeterADCRead(adcChannel: voltageSensorADC_e, voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn voltageMeterESCInit();
-}
-extern "C" {
-    pub fn voltageMeterESCRefresh();
-}
-extern "C" {
-    pub fn voltageMeterESCReadCombined(voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn voltageMeterESCReadMotor(motor: u8, voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub static voltageMeterADCtoIDMap: [u8; 1usize];
-}
-extern "C" {
-    pub static supportedVoltageMeterCount: u8;
-}
-extern "C" {
-    pub static voltageMeterIds: [u8; 0usize];
-}
-extern "C" {
-    pub fn voltageMeterRead(id: voltageMeterId_e, voltageMeter: *mut voltageMeter_t);
-}
-extern "C" {
-    pub fn isSagCompensationConfigured() -> bool;
-}
 pub const AUTO_PROFILE_CELL_COUNT_STAY: _bindgen_ty_1 = 0;
 pub const AUTO_PROFILE_CELL_COUNT_CHANGE: _bindgen_ty_1 = -1;
 pub type _bindgen_ty_1 = ::std::os::raw::c_int;
@@ -5715,12 +3685,6 @@ const _: () = {
         [::std::mem::offset_of!(batteryConfig_s, vbatSagLpfPeriod) - 33usize];
 };
 pub type batteryConfig_t = batteryConfig_s;
-extern "C" {
-    pub static mut batteryConfig_System: batteryConfig_t;
-}
-extern "C" {
-    pub static mut batteryConfig_Copy: batteryConfig_t;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct lowVoltageCutoff_s {
@@ -5746,87 +3710,6 @@ pub const batteryState_e_BATTERY_CRITICAL: batteryState_e = 2;
 pub const batteryState_e_BATTERY_NOT_PRESENT: batteryState_e = 3;
 pub const batteryState_e_BATTERY_INIT: batteryState_e = 4;
 pub type batteryState_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub fn batteryInit();
-}
-extern "C" {
-    pub fn batteryUpdateVoltage(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn batteryUpdatePresence();
-}
-extern "C" {
-    pub fn getBatteryState() -> batteryState_e;
-}
-extern "C" {
-    pub fn getVoltageState() -> batteryState_e;
-}
-extern "C" {
-    pub fn getConsumptionState() -> batteryState_e;
-}
-extern "C" {
-    pub fn getBatteryStateString() -> *const ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn batteryUpdateStates(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn batteryUpdateAlarms();
-}
-extern "C" {
-    pub fn calculateBatteryPercentageRemaining() -> u8;
-}
-extern "C" {
-    pub fn isBatteryVoltageConfigured() -> bool;
-}
-extern "C" {
-    pub fn getBatteryVoltage() -> u16;
-}
-extern "C" {
-    pub fn getLegacyBatteryVoltage() -> u16;
-}
-extern "C" {
-    pub fn getBatteryVoltageLatest() -> u16;
-}
-extern "C" {
-    pub fn getBatteryCellCount() -> u8;
-}
-extern "C" {
-    pub fn getBatteryAverageCellVoltage() -> u16;
-}
-extern "C" {
-    pub fn getBatterySagCellVoltage() -> u16;
-}
-extern "C" {
-    pub fn isAmperageConfigured() -> bool;
-}
-extern "C" {
-    pub fn getAmperage() -> i32;
-}
-extern "C" {
-    pub fn getAmperageLatest() -> i32;
-}
-extern "C" {
-    pub fn getMAhDrawn() -> i32;
-}
-extern "C" {
-    pub fn getWhDrawn() -> f32;
-}
-extern "C" {
-    pub fn batteryUpdateCurrentMeter(currentTimeUs: timeUs_t);
-}
-extern "C" {
-    pub fn getLowVoltageCutoff() -> *const lowVoltageCutoff_t;
-}
-extern "C" {
-    pub fn getCurrentMeter() -> *mut currentMeter_t;
-}
-extern "C" {
-    pub fn getVoltageMeter() -> *mut voltageMeter_t;
-}
-extern "C" {
-    pub fn setCellCount(count: u8);
-}
 pub const sensorIndex_e_SENSOR_INDEX_GYRO: sensorIndex_e = 0;
 pub const sensorIndex_e_SENSOR_INDEX_ACC: sensorIndex_e = 1;
 pub const sensorIndex_e_SENSOR_INDEX_BARO: sensorIndex_e = 2;
@@ -5834,12 +3717,6 @@ pub const sensorIndex_e_SENSOR_INDEX_MAG: sensorIndex_e = 3;
 pub const sensorIndex_e_SENSOR_INDEX_RANGEFINDER: sensorIndex_e = 4;
 pub const sensorIndex_e_SENSOR_INDEX_COUNT: sensorIndex_e = 5;
 pub type sensorIndex_e = ::std::os::raw::c_uint;
-extern "C" {
-    pub static mut requestedSensors: [u8; 5usize];
-}
-extern "C" {
-    pub static mut detectedSensors: [u8; 5usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct int16_flightDynamicsTrims_s {
@@ -5933,87 +3810,6 @@ const _: () = {
     ["Offset of field: lldiv_t::quot"][::std::mem::offset_of!(lldiv_t, quot) - 0usize];
     ["Offset of field: lldiv_t::rem"][::std::mem::offset_of!(lldiv_t, rem) - 8usize];
 };
-extern "C" {
-    pub fn __ctype_get_mb_cur_max() -> usize;
-}
-extern "C" {
-    pub fn atof(__nptr: *const ::std::os::raw::c_char) -> f64;
-}
-extern "C" {
-    pub fn atoi(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn atol(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn atoll(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_longlong;
-}
-extern "C" {
-    pub fn strtod(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-    ) -> f64;
-}
-extern "C" {
-    pub fn strtof(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-    ) -> f32;
-}
-extern "C" {
-    pub fn strtold(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-    ) -> u128;
-}
-extern "C" {
-    pub fn strtol(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn strtoul(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_ulong;
-}
-extern "C" {
-    pub fn strtoq(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_longlong;
-}
-extern "C" {
-    pub fn strtouq(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_ulonglong;
-}
-extern "C" {
-    pub fn strtoll(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_longlong;
-}
-extern "C" {
-    pub fn strtoull(
-        __nptr: *const ::std::os::raw::c_char,
-        __endptr: *mut *mut ::std::os::raw::c_char,
-        __base: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_ulonglong;
-}
-extern "C" {
-    pub fn l64a(__n: ::std::os::raw::c_long) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn a64l(__s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long;
-}
 pub type u_char = __u_char;
 pub type u_short = __u_short;
 pub type u_int = __u_int;
@@ -6098,25 +3894,6 @@ const _: () = {
     ["Offset of field: fd_set::__fds_bits"][::std::mem::offset_of!(fd_set, __fds_bits) - 0usize];
 };
 pub type fd_mask = __fd_mask;
-extern "C" {
-    pub fn select(
-        __nfds: ::std::os::raw::c_int,
-        __readfds: *mut fd_set,
-        __writefds: *mut fd_set,
-        __exceptfds: *mut fd_set,
-        __timeout: *mut timeval,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn pselect(
-        __nfds: ::std::os::raw::c_int,
-        __readfds: *mut fd_set,
-        __writefds: *mut fd_set,
-        __exceptfds: *mut fd_set,
-        __timeout: *const timespec,
-        __sigmask: *const __sigset_t,
-    ) -> ::std::os::raw::c_int;
-}
 pub type blksize_t = __blksize_t;
 pub type blkcnt_t = __blkcnt_t;
 pub type fsblkcnt_t = __fsblkcnt_t;
@@ -6457,22 +4234,6 @@ const _: () = {
     ["Offset of field: pthread_barrierattr_t::__align"]
         [::std::mem::offset_of!(pthread_barrierattr_t, __align) - 0usize];
 };
-extern "C" {
-    pub fn random() -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn srandom(__seed: ::std::os::raw::c_uint);
-}
-extern "C" {
-    pub fn initstate(
-        __seed: ::std::os::raw::c_uint,
-        __statebuf: *mut ::std::os::raw::c_char,
-        __statelen: usize,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn setstate(__statebuf: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct random_data {
@@ -6500,65 +4261,6 @@ const _: () = {
     ["Offset of field: random_data::end_ptr"]
         [::std::mem::offset_of!(random_data, end_ptr) - 40usize];
 };
-extern "C" {
-    pub fn random_r(__buf: *mut random_data, __result: *mut i32) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn srandom_r(
-        __seed: ::std::os::raw::c_uint,
-        __buf: *mut random_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn initstate_r(
-        __seed: ::std::os::raw::c_uint,
-        __statebuf: *mut ::std::os::raw::c_char,
-        __statelen: usize,
-        __buf: *mut random_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn setstate_r(
-        __statebuf: *mut ::std::os::raw::c_char,
-        __buf: *mut random_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn rand() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn srand(__seed: ::std::os::raw::c_uint);
-}
-extern "C" {
-    pub fn rand_r(__seed: *mut ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn drand48() -> f64;
-}
-extern "C" {
-    pub fn erand48(__xsubi: *mut ::std::os::raw::c_ushort) -> f64;
-}
-extern "C" {
-    pub fn lrand48() -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn nrand48(__xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn mrand48() -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn jrand48(__xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn srand48(__seedval: ::std::os::raw::c_long);
-}
-extern "C" {
-    pub fn seed48(__seed16v: *mut ::std::os::raw::c_ushort) -> *mut ::std::os::raw::c_ushort;
-}
-extern "C" {
-    pub fn lcong48(__param: *mut ::std::os::raw::c_ushort);
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct drand48_data {
@@ -6580,362 +4282,12 @@ const _: () = {
         [::std::mem::offset_of!(drand48_data, __init) - 14usize];
     ["Offset of field: drand48_data::__a"][::std::mem::offset_of!(drand48_data, __a) - 16usize];
 };
-extern "C" {
-    pub fn drand48_r(__buffer: *mut drand48_data, __result: *mut f64) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn erand48_r(
-        __xsubi: *mut ::std::os::raw::c_ushort,
-        __buffer: *mut drand48_data,
-        __result: *mut f64,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn lrand48_r(
-        __buffer: *mut drand48_data,
-        __result: *mut ::std::os::raw::c_long,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn nrand48_r(
-        __xsubi: *mut ::std::os::raw::c_ushort,
-        __buffer: *mut drand48_data,
-        __result: *mut ::std::os::raw::c_long,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mrand48_r(
-        __buffer: *mut drand48_data,
-        __result: *mut ::std::os::raw::c_long,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn jrand48_r(
-        __xsubi: *mut ::std::os::raw::c_ushort,
-        __buffer: *mut drand48_data,
-        __result: *mut ::std::os::raw::c_long,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn srand48_r(
-        __seedval: ::std::os::raw::c_long,
-        __buffer: *mut drand48_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn seed48_r(
-        __seed16v: *mut ::std::os::raw::c_ushort,
-        __buffer: *mut drand48_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn lcong48_r(
-        __param: *mut ::std::os::raw::c_ushort,
-        __buffer: *mut drand48_data,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn arc4random() -> __uint32_t;
-}
-extern "C" {
-    pub fn arc4random_buf(__buf: *mut ::std::os::raw::c_void, __size: usize);
-}
-extern "C" {
-    pub fn arc4random_uniform(__upper_bound: __uint32_t) -> __uint32_t;
-}
-extern "C" {
-    pub fn malloc(__size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn calloc(
-        __nmemb: ::std::os::raw::c_ulong,
-        __size: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn realloc(
-        __ptr: *mut ::std::os::raw::c_void,
-        __size: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn free(__ptr: *mut ::std::os::raw::c_void);
-}
-extern "C" {
-    pub fn reallocarray(
-        __ptr: *mut ::std::os::raw::c_void,
-        __nmemb: usize,
-        __size: usize,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn alloca(__size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn valloc(__size: usize) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn posix_memalign(
-        __memptr: *mut *mut ::std::os::raw::c_void,
-        __alignment: usize,
-        __size: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn aligned_alloc(
-        __alignment: ::std::os::raw::c_ulong,
-        __size: ::std::os::raw::c_ulong,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn abort() -> !;
-}
-extern "C" {
-    pub fn atexit(__func: ::std::option::Option<unsafe extern "C" fn()>) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn at_quick_exit(
-        __func: ::std::option::Option<unsafe extern "C" fn()>,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn on_exit(
-        __func: ::std::option::Option<
-            unsafe extern "C" fn(
-                __status: ::std::os::raw::c_int,
-                __arg: *mut ::std::os::raw::c_void,
-            ),
-        >,
-        __arg: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn exit(__status: ::std::os::raw::c_int) -> !;
-}
-extern "C" {
-    pub fn quick_exit(__status: ::std::os::raw::c_int) -> !;
-}
-extern "C" {
-    pub fn _Exit(__status: ::std::os::raw::c_int) -> !;
-}
-extern "C" {
-    pub fn getenv(__name: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn putenv(__string: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn setenv(
-        __name: *const ::std::os::raw::c_char,
-        __value: *const ::std::os::raw::c_char,
-        __replace: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn unsetenv(__name: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn clearenv() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mktemp(__template: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn mkstemp(__template: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mkstemps(
-        __template: *mut ::std::os::raw::c_char,
-        __suffixlen: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mkdtemp(__template: *mut ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn system(__command: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn realpath(
-        __name: *const ::std::os::raw::c_char,
-        __resolved: *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
 pub type __compar_fn_t = ::std::option::Option<
     unsafe extern "C" fn(
         arg1: *const ::std::os::raw::c_void,
         arg2: *const ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int,
 >;
-extern "C" {
-    pub fn bsearch(
-        __key: *const ::std::os::raw::c_void,
-        __base: *const ::std::os::raw::c_void,
-        __nmemb: usize,
-        __size: usize,
-        __compar: __compar_fn_t,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    pub fn qsort(
-        __base: *mut ::std::os::raw::c_void,
-        __nmemb: usize,
-        __size: usize,
-        __compar: __compar_fn_t,
-    );
-}
-extern "C" {
-    pub fn abs(__x: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn labs(__x: ::std::os::raw::c_long) -> ::std::os::raw::c_long;
-}
-extern "C" {
-    pub fn llabs(__x: ::std::os::raw::c_longlong) -> ::std::os::raw::c_longlong;
-}
-extern "C" {
-    pub fn div(__numer: ::std::os::raw::c_int, __denom: ::std::os::raw::c_int) -> div_t;
-}
-extern "C" {
-    pub fn ldiv(__numer: ::std::os::raw::c_long, __denom: ::std::os::raw::c_long) -> ldiv_t;
-}
-extern "C" {
-    pub fn lldiv(
-        __numer: ::std::os::raw::c_longlong,
-        __denom: ::std::os::raw::c_longlong,
-    ) -> lldiv_t;
-}
-extern "C" {
-    pub fn ecvt(
-        __value: f64,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn fcvt(
-        __value: f64,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn gcvt(
-        __value: f64,
-        __ndigit: ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn qecvt(
-        __value: u128,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn qfcvt(
-        __value: u128,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn qgcvt(
-        __value: u128,
-        __ndigit: ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-    ) -> *mut ::std::os::raw::c_char;
-}
-extern "C" {
-    pub fn ecvt_r(
-        __value: f64,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-        __len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn fcvt_r(
-        __value: f64,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-        __len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn qecvt_r(
-        __value: u128,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-        __len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn qfcvt_r(
-        __value: u128,
-        __ndigit: ::std::os::raw::c_int,
-        __decpt: *mut ::std::os::raw::c_int,
-        __sign: *mut ::std::os::raw::c_int,
-        __buf: *mut ::std::os::raw::c_char,
-        __len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mblen(__s: *const ::std::os::raw::c_char, __n: usize) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mbtowc(
-        __pwc: *mut wchar_t,
-        __s: *const ::std::os::raw::c_char,
-        __n: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn wctomb(__s: *mut ::std::os::raw::c_char, __wchar: wchar_t) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn mbstowcs(__pwcs: *mut wchar_t, __s: *const ::std::os::raw::c_char, __n: usize) -> usize;
-}
-extern "C" {
-    pub fn wcstombs(__s: *mut ::std::os::raw::c_char, __pwcs: *const wchar_t, __n: usize) -> usize;
-}
-extern "C" {
-    pub fn rpmatch(__response: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn getsubopt(
-        __optionp: *mut *mut ::std::os::raw::c_char,
-        __tokens: *const *mut ::std::os::raw::c_char,
-        __valuep: *mut *mut ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn getloadavg(__loadavg: *mut f64, __nelem: ::std::os::raw::c_int)
-        -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn enable_state(mask: stateFlags_t);
-}
-extern "C" {
-    pub static mut rc_data_cache: [u16; 16usize];
-}
-extern "C" {
-    pub static mut rc_data_reception_time_us: u32;
-}
-extern "C" {
-    pub static mut motorsPwm: [i16; 8usize];
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct FCInput {
@@ -6966,36 +4318,6 @@ const _: () = {
         [::std::mem::offset_of!(FCInput, angular_velocity) - 56usize];
     ["Offset of field: FCInput::rc_data"][::std::mem::offset_of!(FCInput, rc_data) - 68usize];
 };
-extern "C" {
-    pub fn ascent_init(file_name: *const ::std::os::raw::c_char);
-}
-extern "C" {
-    pub fn update(delta_time_us: u64, fc_input: FCInput) -> bool;
-}
-extern "C" {
-    pub fn update_serial_ws();
-}
-extern "C" {
-    pub fn get_armed() -> bool;
-}
-extern "C" {
-    pub fn get_arming_disable_flags() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    pub fn get_beep() -> bool;
-}
-extern "C" {
-    pub fn get_micros_passed() -> u64;
-}
-extern "C" {
-    pub fn get_motor_pwm_signals(signals: *mut f32);
-}
-extern "C" {
-    pub fn arm();
-}
-extern "C" {
-    pub fn ascent_disarm();
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct __locale_data {
@@ -7010,4 +4332,8949 @@ pub struct lws_context {
 #[derive(Debug, Copy, Clone)]
 pub struct lws {
     pub _address: u8,
+}
+pub struct Sitl {
+    __library: ::libloading::Library,
+    pub debug: Result<*mut [i16; 8usize], ::libloading::Error>,
+    pub debugMode: Result<*mut u8, ::libloading::Error>,
+    pub debugModeNames: Result<*mut [*const ::std::os::raw::c_char; 91usize], ::libloading::Error>,
+    pub debugInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub gcd: Result<
+        unsafe extern "C" fn(
+            num: ::std::os::raw::c_int,
+            denom: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub applyDeadband:
+        Result<unsafe extern "C" fn(value: i32, deadband: i32) -> i32, ::libloading::Error>,
+    pub fapplyDeadband:
+        Result<unsafe extern "C" fn(value: f32, deadband: f32) -> f32, ::libloading::Error>,
+    pub devClear: Result<unsafe extern "C" fn(dev: *mut stdev_t), ::libloading::Error>,
+    pub devPush: Result<unsafe extern "C" fn(dev: *mut stdev_t, x: f32), ::libloading::Error>,
+    pub devVariance: Result<unsafe extern "C" fn(dev: *mut stdev_t) -> f32, ::libloading::Error>,
+    pub devStandardDeviation:
+        Result<unsafe extern "C" fn(dev: *mut stdev_t) -> f32, ::libloading::Error>,
+    pub degreesToRadians: Result<unsafe extern "C" fn(degrees: i16) -> f32, ::libloading::Error>,
+    pub scaleRange: Result<
+        unsafe extern "C" fn(
+            x: ::std::os::raw::c_int,
+            srcFrom: ::std::os::raw::c_int,
+            srcTo: ::std::os::raw::c_int,
+            destFrom: ::std::os::raw::c_int,
+            destTo: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub scaleRangef: Result<
+        unsafe extern "C" fn(x: f32, srcFrom: f32, srcTo: f32, destFrom: f32, destTo: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub buildRotationMatrix: Result<
+        unsafe extern "C" fn(delta: *mut fp_angles_t, rotation: *mut fp_rotationMatrix_t),
+        ::libloading::Error,
+    >,
+    pub applyMatrixRotation: Result<
+        unsafe extern "C" fn(v: *mut f32, rotationMatrix: *mut fp_rotationMatrix_t),
+        ::libloading::Error,
+    >,
+    pub quickMedianFilter3: Result<unsafe extern "C" fn(v: *mut i32) -> i32, ::libloading::Error>,
+    pub quickMedianFilter5: Result<unsafe extern "C" fn(v: *mut i32) -> i32, ::libloading::Error>,
+    pub quickMedianFilter7: Result<unsafe extern "C" fn(v: *mut i32) -> i32, ::libloading::Error>,
+    pub quickMedianFilter9: Result<unsafe extern "C" fn(v: *mut i32) -> i32, ::libloading::Error>,
+    pub quickMedianFilter3f: Result<unsafe extern "C" fn(v: *mut f32) -> f32, ::libloading::Error>,
+    pub quickMedianFilter5f: Result<unsafe extern "C" fn(v: *mut f32) -> f32, ::libloading::Error>,
+    pub quickMedianFilter7f: Result<unsafe extern "C" fn(v: *mut f32) -> f32, ::libloading::Error>,
+    pub quickMedianFilter9f: Result<unsafe extern "C" fn(v: *mut f32) -> f32, ::libloading::Error>,
+    pub sin_approx: Result<unsafe extern "C" fn(x: f32) -> f32, ::libloading::Error>,
+    pub cos_approx: Result<unsafe extern "C" fn(x: f32) -> f32, ::libloading::Error>,
+    pub atan2_approx: Result<unsafe extern "C" fn(y: f32, x: f32) -> f32, ::libloading::Error>,
+    pub acos_approx: Result<unsafe extern "C" fn(x: f32) -> f32, ::libloading::Error>,
+    pub exp_approx: Result<unsafe extern "C" fn(val: f32) -> f32, ::libloading::Error>,
+    pub log_approx: Result<unsafe extern "C" fn(val: f32) -> f32, ::libloading::Error>,
+    pub pow_approx: Result<unsafe extern "C" fn(a: f32, b: f32) -> f32, ::libloading::Error>,
+    pub arraySubInt32: Result<
+        unsafe extern "C" fn(
+            dest: *mut i32,
+            array1: *mut i32,
+            array2: *mut i32,
+            count: ::std::os::raw::c_int,
+        ),
+        ::libloading::Error,
+    >,
+    pub qPercent: Result<unsafe extern "C" fn(q: fix12_t) -> i16, ::libloading::Error>,
+    pub qMultiply: Result<unsafe extern "C" fn(q: fix12_t, input: i16) -> i16, ::libloading::Error>,
+    pub qConstruct:
+        Result<unsafe extern "C" fn(num: i16, den: i16) -> fix12_t, ::libloading::Error>,
+    pub virtualAccDev: Result<*mut *mut accDev_s, ::libloading::Error>,
+    pub virtualAccDetect:
+        Result<unsafe extern "C" fn(acc: *mut accDev_s) -> bool, ::libloading::Error>,
+    pub virtualAccSet: Result<
+        unsafe extern "C" fn(acc: *mut accDev_s, x: i16, y: i16, z: i16),
+        ::libloading::Error,
+    >,
+    pub virtualGyroDev: Result<*mut *mut gyroDev_s, ::libloading::Error>,
+    pub virtualGyroDetect:
+        Result<unsafe extern "C" fn(gyro: *mut gyroDev_s) -> bool, ::libloading::Error>,
+    pub virtualGyroSet: Result<
+        unsafe extern "C" fn(gyro: *mut gyroDev_s, x: i16, y: i16, z: i16),
+        ::libloading::Error,
+    >,
+    pub memcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_void,
+            __src: *const ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub memmove: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_void,
+            __src: *const ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub memccpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_void,
+            __src: *const ::std::os::raw::c_void,
+            __c: ::std::os::raw::c_int,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub memset: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_void,
+            __c: ::std::os::raw::c_int,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub memcmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_void,
+            __s2: *const ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub __memcmpeq: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_void,
+            __s2: *const ::std::os::raw::c_void,
+            __n: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub memchr: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_void,
+            __c: ::std::os::raw::c_int,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub strcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strncpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strcat: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strncat: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strcmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strncmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strcoll: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strxfrm: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strcoll_l: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+            __l: locale_t,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strxfrm_l: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: usize,
+            __l: locale_t,
+        ) -> usize,
+        ::libloading::Error,
+    >,
+    pub strdup: Result<
+        unsafe extern "C" fn(__s: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strndup: Result<
+        unsafe extern "C" fn(
+            __string: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strchr: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __c: ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strrchr: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __c: ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strchrnul: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __c: ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strcspn: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __reject: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strspn: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __accept: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strpbrk: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __accept: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strstr: Result<
+        unsafe extern "C" fn(
+            __haystack: *const ::std::os::raw::c_char,
+            __needle: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strtok: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_char,
+            __delim: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub __strtok_r: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_char,
+            __delim: *const ::std::os::raw::c_char,
+            __save_ptr: *mut *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strtok_r: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_char,
+            __delim: *const ::std::os::raw::c_char,
+            __save_ptr: *mut *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strcasestr: Result<
+        unsafe extern "C" fn(
+            __haystack: *const ::std::os::raw::c_char,
+            __needle: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub memmem: Result<
+        unsafe extern "C" fn(
+            __haystack: *const ::std::os::raw::c_void,
+            __haystacklen: usize,
+            __needle: *const ::std::os::raw::c_void,
+            __needlelen: usize,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub __mempcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_void,
+            __src: *const ::std::os::raw::c_void,
+            __n: usize,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub mempcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_void,
+            __src: *const ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub strlen: Result<
+        unsafe extern "C" fn(__s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strnlen: Result<
+        unsafe extern "C" fn(__string: *const ::std::os::raw::c_char, __maxlen: usize) -> usize,
+        ::libloading::Error,
+    >,
+    pub strerror: Result<
+        unsafe extern "C" fn(__errnum: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strerror_r: Result<
+        unsafe extern "C" fn(
+            __errnum: ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+            __buflen: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strerror_l: Result<
+        unsafe extern "C" fn(
+            __errnum: ::std::os::raw::c_int,
+            __l: locale_t,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub bcmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_void,
+            __s2: *const ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub bcopy: Result<
+        unsafe extern "C" fn(
+            __src: *const ::std::os::raw::c_void,
+            __dest: *mut ::std::os::raw::c_void,
+            __n: ::std::os::raw::c_ulong,
+        ),
+        ::libloading::Error,
+    >,
+    pub bzero: Result<
+        unsafe extern "C" fn(__s: *mut ::std::os::raw::c_void, __n: ::std::os::raw::c_ulong),
+        ::libloading::Error,
+    >,
+    pub index: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __c: ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub rindex: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __c: ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub ffs: Result<
+        unsafe extern "C" fn(__i: ::std::os::raw::c_int) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub ffsl: Result<
+        unsafe extern "C" fn(__l: ::std::os::raw::c_long) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub ffsll: Result<
+        unsafe extern "C" fn(__ll: ::std::os::raw::c_longlong) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strcasecmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strncasecmp: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strcasecmp_l: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+            __loc: locale_t,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub strncasecmp_l: Result<
+        unsafe extern "C" fn(
+            __s1: *const ::std::os::raw::c_char,
+            __s2: *const ::std::os::raw::c_char,
+            __n: usize,
+            __loc: locale_t,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub explicit_bzero: Result<
+        unsafe extern "C" fn(__s: *mut ::std::os::raw::c_void, __n: usize),
+        ::libloading::Error,
+    >,
+    pub strsep: Result<
+        unsafe extern "C" fn(
+            __stringp: *mut *mut ::std::os::raw::c_char,
+            __delim: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strsignal: Result<
+        unsafe extern "C" fn(__sig: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub __stpcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub stpcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub __stpncpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: usize,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub stpncpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub strlcpy: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strlcat: Result<
+        unsafe extern "C" fn(
+            __dest: *mut ::std::os::raw::c_char,
+            __src: *const ::std::os::raw::c_char,
+            __n: ::std::os::raw::c_ulong,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub EEPROM_FILENAME: Result<*mut *mut ::std::os::raw::c_char, ::libloading::Error>,
+    pub SystemCoreClock: Result<*mut u32, ::libloading::Error>,
+    pub DMA_GetFlagStatus:
+        Result<unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void) -> u8, ::libloading::Error>,
+    pub DMA_Cmd: Result<
+        unsafe extern "C" fn(arg1: *mut DMA_Channel_TypeDef, arg2: FunctionalState),
+        ::libloading::Error,
+    >,
+    pub DMA_ClearFlag: Result<unsafe extern "C" fn(arg1: u32), ::libloading::Error>,
+    pub FLASH_Unlock: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub FLASH_Lock: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub FLASH_ErasePage:
+        Result<unsafe extern "C" fn(Page_Address: usize) -> FLASH_Status, ::libloading::Error>,
+    pub FLASH_ProgramWord:
+        Result<unsafe extern "C" fn(addr: usize, Data: u32) -> FLASH_Status, ::libloading::Error>,
+    pub micros_passed: Result<*mut u64, ::libloading::Error>,
+    pub sleep_timer: Result<*mut i64, ::libloading::Error>,
+    pub nanos64_real: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub micros64_real: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub millis64_real: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub delayMicroseconds_real: Result<unsafe extern "C" fn(us: u32), ::libloading::Error>,
+    pub micros64: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub millis64: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub lockMainPID: Result<unsafe extern "C" fn() -> ::std::os::raw::c_int, ::libloading::Error>,
+    pub targetName: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub shortGitRevision: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub shortConfigGitRevision: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub buildDate: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub buildTime: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub buildKey: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub releaseName: Result<*mut *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub eepromData: Result<*mut [u8; 32768usize], ::libloading::Error>,
+    pub getMcuTypeId: Result<unsafe extern "C" fn() -> mcuTypeId_e, ::libloading::Error>,
+    pub __pg_registry_start: Result<*mut [pgRegistry_t; 0usize], ::libloading::Error>,
+    pub __pg_registry_end: Result<*mut [pgRegistry_t; 0usize], ::libloading::Error>,
+    pub __pg_resetdata_start: Result<*mut [u8; 0usize], ::libloading::Error>,
+    pub __pg_resetdata_end: Result<*mut [u8; 0usize], ::libloading::Error>,
+    pub pgFind:
+        Result<unsafe extern "C" fn(pgn: pgn_t) -> *const pgRegistry_t, ::libloading::Error>,
+    pub pgLoad: Result<
+        unsafe extern "C" fn(
+            reg: *const pgRegistry_t,
+            from: *const ::std::os::raw::c_void,
+            size: ::std::os::raw::c_int,
+            version: ::std::os::raw::c_int,
+        ) -> bool,
+        ::libloading::Error,
+    >,
+    pub pgStore: Result<
+        unsafe extern "C" fn(
+            reg: *const pgRegistry_t,
+            to: *mut ::std::os::raw::c_void,
+            size: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub pgResetAll: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub pgResetInstance:
+        Result<unsafe extern "C" fn(reg: *const pgRegistry_t, base: *mut u8), ::libloading::Error>,
+    pub pgResetCopy: Result<
+        unsafe extern "C" fn(copy: *mut ::std::os::raw::c_void, pgn: pgn_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub pgReset: Result<unsafe extern "C" fn(reg: *const pgRegistry_t), ::libloading::Error>,
+    pub timeConfig_System: Result<*mut timeConfig_t, ::libloading::Error>,
+    pub timeConfig_Copy: Result<*mut timeConfig_t, ::libloading::Error>,
+    pub rtcTimeMake:
+        Result<unsafe extern "C" fn(secs: i32, millis: u16) -> rtcTime_t, ::libloading::Error>,
+    pub rtcTimeGetSeconds:
+        Result<unsafe extern "C" fn(t: *mut rtcTime_t) -> i32, ::libloading::Error>,
+    pub rtcTimeGetMillis:
+        Result<unsafe extern "C" fn(t: *mut rtcTime_t) -> u16, ::libloading::Error>,
+    pub dateTimeFormatUTC: Result<
+        unsafe extern "C" fn(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub dateTimeFormatLocal: Result<
+        unsafe extern "C" fn(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub dateTimeFormatLocalShort: Result<
+        unsafe extern "C" fn(buf: *mut ::std::os::raw::c_char, dt: *mut dateTime_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub dateTimeUTCToLocal: Result<
+        unsafe extern "C" fn(utcDateTime: *mut dateTime_t, localDateTime: *mut dateTime_t),
+        ::libloading::Error,
+    >,
+    pub dateTimeSplitFormatted: Result<
+        unsafe extern "C" fn(
+            formatted: *mut ::std::os::raw::c_char,
+            date: *mut *mut ::std::os::raw::c_char,
+            time: *mut *mut ::std::os::raw::c_char,
+        ) -> bool,
+        ::libloading::Error,
+    >,
+    pub rtcHasTime: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub rtcGet: Result<unsafe extern "C" fn(t: *mut rtcTime_t) -> bool, ::libloading::Error>,
+    pub rtcSet: Result<unsafe extern "C" fn(t: *mut rtcTime_t) -> bool, ::libloading::Error>,
+    pub rtcGetDateTime:
+        Result<unsafe extern "C" fn(dt: *mut dateTime_t) -> bool, ::libloading::Error>,
+    pub rtcSetDateTime:
+        Result<unsafe extern "C" fn(dt: *mut dateTime_t) -> bool, ::libloading::Error>,
+    pub rtcPersistWrite: Result<unsafe extern "C" fn(offsetMinutes: i16), ::libloading::Error>,
+    pub rtcPersistRead:
+        Result<unsafe extern "C" fn(t: *mut rtcTime_t) -> bool, ::libloading::Error>,
+    pub ownerNames: Result<*mut [*const ::std::os::raw::c_char; 90usize], ::libloading::Error>,
+    pub dmaAllocate: Result<
+        unsafe extern "C" fn(
+            identifier: dmaIdentifier_e,
+            owner: resourceOwner_e,
+            resourceIndex: u8,
+        ) -> dmaIdentifier_e,
+        ::libloading::Error,
+    >,
+    pub dmaEnable: Result<unsafe extern "C" fn(identifier: dmaIdentifier_e), ::libloading::Error>,
+    pub dmaSetHandler: Result<
+        unsafe extern "C" fn(
+            identifier: dmaIdentifier_e,
+            callback: dmaCallbackHandlerFuncPtr,
+            priority: u32,
+            userParam: u32,
+        ),
+        ::libloading::Error,
+    >,
+    pub dmaGetIdentifier: Result<
+        unsafe extern "C" fn(channel: *const dmaResource_t) -> dmaIdentifier_e,
+        ::libloading::Error,
+    >,
+    pub dmaGetOwner: Result<
+        unsafe extern "C" fn(identifier: dmaIdentifier_e) -> *const resourceOwner_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetDescriptorByIdentifier: Result<
+        unsafe extern "C" fn(identifier: dmaIdentifier_e) -> *mut dmaChannelDescriptor_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetChannel: Result<unsafe extern "C" fn(channel: u8) -> u32, ::libloading::Error>,
+    pub IORead: Result<unsafe extern "C" fn(io: IO_t) -> bool, ::libloading::Error>,
+    pub IOWrite: Result<unsafe extern "C" fn(io: IO_t, value: bool), ::libloading::Error>,
+    pub IOHi: Result<unsafe extern "C" fn(io: IO_t), ::libloading::Error>,
+    pub IOLo: Result<unsafe extern "C" fn(io: IO_t), ::libloading::Error>,
+    pub IOToggle: Result<unsafe extern "C" fn(io: IO_t), ::libloading::Error>,
+    pub IOInit: Result<
+        unsafe extern "C" fn(io: IO_t, owner: resourceOwner_e, index: u8),
+        ::libloading::Error,
+    >,
+    pub IORelease: Result<unsafe extern "C" fn(io: IO_t), ::libloading::Error>,
+    pub IOGetOwner: Result<unsafe extern "C" fn(io: IO_t) -> resourceOwner_e, ::libloading::Error>,
+    pub IOIsFreeOrPreinit: Result<unsafe extern "C" fn(io: IO_t) -> bool, ::libloading::Error>,
+    pub IOGetByTag: Result<unsafe extern "C" fn(tag: ioTag_t) -> IO_t, ::libloading::Error>,
+    pub IOConfigGPIO: Result<unsafe extern "C" fn(io: IO_t, cfg: ioConfig_t), ::libloading::Error>,
+    pub IOInitGlobal: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub IOTraversePins:
+        Result<unsafe extern "C" fn(func: IOTraverseFuncPtr_t), ::libloading::Error>,
+    pub IO_GPIO: Result<unsafe extern "C" fn(io: IO_t) -> *mut GPIO_TypeDef, ::libloading::Error>,
+    pub IO_Pin: Result<unsafe extern "C" fn(io: IO_t) -> u16, ::libloading::Error>,
+    pub dmaoptByTag:
+        Result<unsafe extern "C" fn(ioTag: ioTag_t) -> dmaoptValue_t, ::libloading::Error>,
+    pub dmaGetChannelSpecByPeripheral: Result<
+        unsafe extern "C" fn(
+            device: dmaPeripheral_e,
+            index: u8,
+            opt: i8,
+        ) -> *const dmaChannelSpec_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetChannelSpecByTimerValue: Result<
+        unsafe extern "C" fn(
+            tim: *mut TIM_TypeDef,
+            channel: u8,
+            dmaopt: dmaoptValue_t,
+        ) -> *const dmaChannelSpec_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetChannelSpecByTimer: Result<
+        unsafe extern "C" fn(timer: *const timerHardware_s) -> *const dmaChannelSpec_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetOptionByTimer: Result<
+        unsafe extern "C" fn(timer: *const timerHardware_s) -> dmaoptValue_t,
+        ::libloading::Error,
+    >,
+    pub dmaGetUpOptionByTimer: Result<
+        unsafe extern "C" fn(timer: *const timerHardware_s) -> dmaoptValue_t,
+        ::libloading::Error,
+    >,
+    pub fullTimerHardware: Result<*mut [timerHardware_t; 0usize], ::libloading::Error>,
+    pub timerDefinitions: Result<*mut [timerDef_t; 0usize], ::libloading::Error>,
+    pub timerConfigure: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, period: u16, hz: u32),
+        ::libloading::Error,
+    >,
+    pub timerInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub timerStart: Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef), ::libloading::Error>,
+    pub timerChConfigIC: Result<
+        unsafe extern "C" fn(
+            timHw: *const timerHardware_t,
+            polarityRising: bool,
+            inputFilterSamples: ::std::os::raw::c_uint,
+        ),
+        ::libloading::Error,
+    >,
+    pub timerChConfigICDual: Result<
+        unsafe extern "C" fn(
+            timHw: *const timerHardware_t,
+            polarityRising: bool,
+            inputFilterSamples: ::std::os::raw::c_uint,
+        ),
+        ::libloading::Error,
+    >,
+    pub timerChICPolarity: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, polarityRising: bool),
+        ::libloading::Error,
+    >,
+    pub timerChCCR: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t) -> *mut timCCR_t,
+        ::libloading::Error,
+    >,
+    pub timerChCCRLo: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t) -> *mut timCCR_t,
+        ::libloading::Error,
+    >,
+    pub timerChCCRHi: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t) -> *mut timCCR_t,
+        ::libloading::Error,
+    >,
+    pub timerChConfigOC: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, outEnable: bool, stateHigh: bool),
+        ::libloading::Error,
+    >,
+    pub timerChConfigGPIO: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, mode: ioConfig_t),
+        ::libloading::Error,
+    >,
+    pub timerChCCHandlerInit: Result<
+        unsafe extern "C" fn(self_: *mut timerCCHandlerRec_t, fn_: timerCCHandlerCallback),
+        ::libloading::Error,
+    >,
+    pub timerChOvrHandlerInit: Result<
+        unsafe extern "C" fn(self_: *mut timerOvrHandlerRec_t, fn_: timerOvrHandlerCallback),
+        ::libloading::Error,
+    >,
+    pub timerChConfigCallbacks: Result<
+        unsafe extern "C" fn(
+            channel: *const timerHardware_t,
+            edgeCallback: *mut timerCCHandlerRec_t,
+            overflowCallback: *mut timerOvrHandlerRec_t,
+        ),
+        ::libloading::Error,
+    >,
+    pub timerChConfigCallbacksDual: Result<
+        unsafe extern "C" fn(
+            channel: *const timerHardware_t,
+            edgeCallbackLo: *mut timerCCHandlerRec_t,
+            edgeCallbackHi: *mut timerCCHandlerRec_t,
+            overflowCallback: *mut timerOvrHandlerRec_t,
+        ),
+        ::libloading::Error,
+    >,
+    pub timerChITConfigDualLo: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, newState: FunctionalState),
+        ::libloading::Error,
+    >,
+    pub timerChITConfig: Result<
+        unsafe extern "C" fn(timHw: *const timerHardware_t, newState: FunctionalState),
+        ::libloading::Error,
+    >,
+    pub timerChClearCCFlag:
+        Result<unsafe extern "C" fn(timHw: *const timerHardware_t), ::libloading::Error>,
+    pub timerChInit: Result<
+        unsafe extern "C" fn(
+            timHw: *const timerHardware_t,
+            type_: channelType_t,
+            irqPriority: ::std::os::raw::c_int,
+            irq: u8,
+        ),
+        ::libloading::Error,
+    >,
+    pub timerForceOverflow:
+        Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef), ::libloading::Error>,
+    pub timerConfigUpdateCallback: Result<
+        unsafe extern "C" fn(tim: *const TIM_TypeDef, updateCallback: *mut timerOvrHandlerRec_t),
+        ::libloading::Error,
+    >,
+    pub timerClock: Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef) -> u32, ::libloading::Error>,
+    pub configTimeBase: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, period: u16, hz: u32),
+        ::libloading::Error,
+    >,
+    pub timerReconfigureTimeBase: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, period: u16, hz: u32),
+        ::libloading::Error,
+    >,
+    pub timerRCC:
+        Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef) -> rccPeriphTag_t, ::libloading::Error>,
+    pub timerInputIrq:
+        Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef) -> u8, ::libloading::Error>,
+    pub timerGetConfiguredByTag:
+        Result<unsafe extern "C" fn(ioTag: ioTag_t) -> *const timerHardware_t, ::libloading::Error>,
+    pub timerAllocate: Result<
+        unsafe extern "C" fn(
+            ioTag: ioTag_t,
+            owner: resourceOwner_e,
+            resourceIndex: u8,
+        ) -> *const timerHardware_t,
+        ::libloading::Error,
+    >,
+    pub timerGetByTagAndIndex: Result<
+        unsafe extern "C" fn(
+            ioTag: ioTag_t,
+            timerIndex: ::std::os::raw::c_uint,
+        ) -> *const timerHardware_t,
+        ::libloading::Error,
+    >,
+    pub timerOCInit: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, channel: u8, init: *mut TIM_OCInitTypeDef),
+        ::libloading::Error,
+    >,
+    pub timerOCPreloadConfig: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, channel: u8, preload: u16),
+        ::libloading::Error,
+    >,
+    pub timerCCR: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, channel: u8) -> *mut timCCR_t,
+        ::libloading::Error,
+    >,
+    pub timerDmaSource: Result<unsafe extern "C" fn(channel: u8) -> u16, ::libloading::Error>,
+    pub timerGetPrescalerByDesiredHertz:
+        Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef, hz: u32) -> u16, ::libloading::Error>,
+    pub timerGetPrescalerByDesiredMhz:
+        Result<unsafe extern "C" fn(tim: *mut TIM_TypeDef, mhz: u16) -> u16, ::libloading::Error>,
+    pub timerGetPeriodByPrescaler: Result<
+        unsafe extern "C" fn(tim: *mut TIM_TypeDef, prescaler: u16, hz: u32) -> u16,
+        ::libloading::Error,
+    >,
+    pub timerGetNumberByIndex: Result<unsafe extern "C" fn(index: u8) -> i8, ::libloading::Error>,
+    pub timerGetTIMNumber:
+        Result<unsafe extern "C" fn(tim: *const TIM_TypeDef) -> i8, ::libloading::Error>,
+    pub timerLookupChannelIndex:
+        Result<unsafe extern "C" fn(channel: u16) -> u8, ::libloading::Error>,
+    pub dshotBitbangDevInit: Result<
+        unsafe extern "C" fn(
+            motorConfig: *const motorDevConfig_s,
+            motorCount: u8,
+        ) -> *mut motorDevice_s,
+        ::libloading::Error,
+    >,
+    pub dshotBitbangGetStatus:
+        Result<unsafe extern "C" fn() -> dshotBitbangStatus_e, ::libloading::Error>,
+    pub dshotBitbangTimerGetAllocatedByNumberAndChannel: Result<
+        unsafe extern "C" fn(timerNumber: i8, timerChannel: u16) -> *const timerHardware_t,
+        ::libloading::Error,
+    >,
+    pub dshotBitbangTimerGetOwner: Result<
+        unsafe extern "C" fn(timer: *const timerHardware_t) -> *const resourceOwner_t,
+        ::libloading::Error,
+    >,
+    pub motorConfig_System: Result<*mut motorConfig_t, ::libloading::Error>,
+    pub motorConfig_Copy: Result<*mut motorConfig_t, ::libloading::Error>,
+    pub motorPostInitNull: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub motorWriteNull: Result<unsafe extern "C" fn(index: u8, value: f32), ::libloading::Error>,
+    pub motorDecodeTelemetryNull: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub motorUpdateCompleteNull: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub motorPostInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub motorWriteAll: Result<unsafe extern "C" fn(values: *mut f32), ::libloading::Error>,
+    pub motorInitEndpoints: Result<
+        unsafe extern "C" fn(
+            motorConfig: *const motorConfig_t,
+            outputLimit: f32,
+            outputLow: *mut f32,
+            outputHigh: *mut f32,
+            disarm: *mut f32,
+            deadbandMotor3DHigh: *mut f32,
+            deadbandMotor3DLow: *mut f32,
+        ),
+        ::libloading::Error,
+    >,
+    pub motorConvertFromExternal:
+        Result<unsafe extern "C" fn(externalValue: u16) -> f32, ::libloading::Error>,
+    pub motorConvertToExternal:
+        Result<unsafe extern "C" fn(motorValue: f32) -> u16, ::libloading::Error>,
+    pub motorDevInit: Result<
+        unsafe extern "C" fn(motorConfig: *const motorDevConfig_s, idlePulse: u16, motorCount: u8),
+        ::libloading::Error,
+    >,
+    pub motorDeviceCount:
+        Result<unsafe extern "C" fn() -> ::std::os::raw::c_uint, ::libloading::Error>,
+    pub motorGetVTable: Result<unsafe extern "C" fn() -> *mut motorVTable_t, ::libloading::Error>,
+    pub checkMotorProtocolEnabled: Result<
+        unsafe extern "C" fn(
+            motorConfig: *const motorDevConfig_t,
+            protocolIsDshot: *mut bool,
+        ) -> bool,
+        ::libloading::Error,
+    >,
+    pub isMotorProtocolDshot: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub isMotorProtocolEnabled: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub motorDisable: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub motorEnable: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub motorIsEnabled: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub motorIsMotorEnabled: Result<unsafe extern "C" fn(index: u8) -> bool, ::libloading::Error>,
+    pub motorGetMotorEnableTimeMs: Result<unsafe extern "C" fn() -> timeMs_t, ::libloading::Error>,
+    pub motorShutdown: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub getDigitalIdleOffset:
+        Result<unsafe extern "C" fn(motorConfig: *const motorConfig_t) -> f32, ::libloading::Error>,
+    pub motors: Result<*mut [pwmOutputPort_t; 8usize], ::libloading::Error>,
+    pub motorPwmDevInit: Result<
+        unsafe extern "C" fn(
+            motorDevConfig: *const motorDevConfig_s,
+            idlePulse: u16,
+            motorCount: u8,
+            useUnsyncedPwm: bool,
+        ) -> *mut motorDevice_t,
+        ::libloading::Error,
+    >,
+    pub servoDevInit:
+        Result<unsafe extern "C" fn(servoDevConfig: *const servoDevConfig_t), ::libloading::Error>,
+    pub pwmServoConfig: Result<
+        unsafe extern "C" fn(
+            timerHardware: *const timerHardware_s,
+            servoIndex: u8,
+            servoPwmRate: u16,
+            servoCenterPulse: u16,
+        ),
+        ::libloading::Error,
+    >,
+    pub pwmOutConfig: Result<
+        unsafe extern "C" fn(
+            channel: *mut timerChannel_t,
+            timerHardware: *const timerHardware_t,
+            hz: u32,
+            period: u16,
+            value: u16,
+            inversion: u8,
+        ),
+        ::libloading::Error,
+    >,
+    pub pwmWriteServo: Result<unsafe extern "C" fn(index: u8, value: f32), ::libloading::Error>,
+    pub pwmGetMotors: Result<unsafe extern "C" fn() -> *mut pwmOutputPort_t, ::libloading::Error>,
+    pub pwmIsSynced: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub serialPinConfig_System: Result<*mut serialPinConfig_t, ::libloading::Error>,
+    pub serialPinConfig_Copy: Result<*mut serialPinConfig_t, ::libloading::Error>,
+    pub serialWrite:
+        Result<unsafe extern "C" fn(instance: *mut serialPort_t, ch: u8), ::libloading::Error>,
+    pub serialRxBytesWaiting:
+        Result<unsafe extern "C" fn(instance: *const serialPort_t) -> u32, ::libloading::Error>,
+    pub serialTxBytesFree:
+        Result<unsafe extern "C" fn(instance: *const serialPort_t) -> u32, ::libloading::Error>,
+    pub serialWriteBuf: Result<
+        unsafe extern "C" fn(
+            instance: *mut serialPort_t,
+            data: *const u8,
+            count: ::std::os::raw::c_int,
+        ),
+        ::libloading::Error,
+    >,
+    pub serialRead:
+        Result<unsafe extern "C" fn(instance: *mut serialPort_t) -> u8, ::libloading::Error>,
+    pub serialSetBaudRate: Result<
+        unsafe extern "C" fn(instance: *mut serialPort_t, baudRate: u32),
+        ::libloading::Error,
+    >,
+    pub serialSetMode: Result<
+        unsafe extern "C" fn(instance: *mut serialPort_t, mode: portMode_e),
+        ::libloading::Error,
+    >,
+    pub serialSetCtrlLineStateCb: Result<
+        unsafe extern "C" fn(
+            instance: *mut serialPort_t,
+            cb: ::std::option::Option<
+                unsafe extern "C" fn(context: *mut ::std::os::raw::c_void, ctrlLineState: u16),
+            >,
+            context: *mut ::std::os::raw::c_void,
+        ),
+        ::libloading::Error,
+    >,
+    pub serialSetBaudRateCb: Result<
+        unsafe extern "C" fn(
+            instance: *mut serialPort_t,
+            cb: ::std::option::Option<unsafe extern "C" fn(context: *mut serialPort_t, baud: u32)>,
+            context: *mut serialPort_t,
+        ),
+        ::libloading::Error,
+    >,
+    pub isSerialTransmitBufferEmpty:
+        Result<unsafe extern "C" fn(instance: *const serialPort_t) -> bool, ::libloading::Error>,
+    pub serialPrint: Result<
+        unsafe extern "C" fn(instance: *mut serialPort_t, str_: *const ::std::os::raw::c_char),
+        ::libloading::Error,
+    >,
+    pub serialGetBaudRate:
+        Result<unsafe extern "C" fn(instance: *mut serialPort_t) -> u32, ::libloading::Error>,
+    pub serialWriteBufShim: Result<
+        unsafe extern "C" fn(
+            instance: *mut ::std::os::raw::c_void,
+            data: *const u8,
+            count: ::std::os::raw::c_int,
+        ),
+        ::libloading::Error,
+    >,
+    pub serialBeginWrite:
+        Result<unsafe extern "C" fn(instance: *mut serialPort_t), ::libloading::Error>,
+    pub serialEndWrite:
+        Result<unsafe extern "C" fn(instance: *mut serialPort_t), ::libloading::Error>,
+    pub serialWsOpen: Result<
+        unsafe extern "C" fn(
+            id: ::std::os::raw::c_int,
+            rxCallback: serialReceiveCallbackPtr,
+            rxCallbackData: *mut ::std::os::raw::c_void,
+            baudRate: u32,
+            mode: portMode_e,
+            options: portOptions_e,
+        ) -> *mut serialPort_t,
+        ::libloading::Error,
+    >,
+    pub wsDataIn: Result<
+        unsafe extern "C" fn(instance: *mut wsPort_t, ch: *mut u8, size: ::std::os::raw::c_int),
+        ::libloading::Error,
+    >,
+    pub wsDataOut: Result<unsafe extern "C" fn(instance: *mut wsPort_t), ::libloading::Error>,
+    pub wsUpdate: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub systemBeep: Result<unsafe extern "C" fn(on: bool), ::libloading::Error>,
+    pub systemBeepToggle: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub beeperInit: Result<
+        unsafe extern "C" fn(beeperDevConfig: *const beeperDevConfig_s),
+        ::libloading::Error,
+    >,
+    pub getBeeper: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub systemState: Result<*mut u8, ::libloading::Error>,
+    pub init: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub armingFlags: Result<*mut u8, ::libloading::Error>,
+    pub armingDisableFlagNames:
+        Result<*mut [*const ::std::os::raw::c_char; 26usize], ::libloading::Error>,
+    pub setArmingDisabled:
+        Result<unsafe extern "C" fn(flag: armingDisableFlags_e), ::libloading::Error>,
+    pub unsetArmingDisabled:
+        Result<unsafe extern "C" fn(flag: armingDisableFlags_e), ::libloading::Error>,
+    pub isArmingDisabled: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub getArmingDisableFlags:
+        Result<unsafe extern "C" fn() -> armingDisableFlags_e, ::libloading::Error>,
+    pub flightModeFlags: Result<*mut u16, ::libloading::Error>,
+    pub stateFlags: Result<*mut u8, ::libloading::Error>,
+    pub enableFlightMode:
+        Result<unsafe extern "C" fn(mask: flightModeFlags_e) -> u16, ::libloading::Error>,
+    pub disableFlightMode:
+        Result<unsafe extern "C" fn(mask: flightModeFlags_e) -> u16, ::libloading::Error>,
+    pub sensors: Result<unsafe extern "C" fn(mask: u32) -> bool, ::libloading::Error>,
+    pub sensorsSet: Result<unsafe extern "C" fn(mask: u32), ::libloading::Error>,
+    pub sensorsClear: Result<unsafe extern "C" fn(mask: u32), ::libloading::Error>,
+    pub sensorsMask: Result<unsafe extern "C" fn() -> u32, ::libloading::Error>,
+    pub mwDisarm: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub pilotConfig_System: Result<*mut pilotConfig_t, ::libloading::Error>,
+    pub pilotConfig_Copy: Result<*mut pilotConfig_t, ::libloading::Error>,
+    pub systemConfig_System: Result<*mut systemConfig_t, ::libloading::Error>,
+    pub systemConfig_Copy: Result<*mut systemConfig_t, ::libloading::Error>,
+    pub currentPidProfile: Result<*mut *mut pidProfile_s, ::libloading::Error>,
+    pub initEEPROM: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub resetEEPROM: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub readEEPROM: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub writeEEPROM: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub writeUnmodifiedConfigToEEPROM: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub ensureEEPROMStructureIsValid: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub saveConfigAndNotify: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub validateAndFixGyroConfig: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub validateAndFixBlackBox: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub setConfigDirty: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub isConfigDirty: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub getCurrentPidProfileIndex: Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub changePidProfile: Result<unsafe extern "C" fn(pidProfileIndex: u8), ::libloading::Error>,
+    pub changePidProfileFromCellCount:
+        Result<unsafe extern "C" fn(cellCount: u8), ::libloading::Error>,
+    pub getCurrentControlRateProfileIndex:
+        Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub changeControlRateProfile:
+        Result<unsafe extern "C" fn(profileIndex: u8), ::libloading::Error>,
+    pub canSoftwareSerialBeUsed: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub getCurrentMinthrottle: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub resetConfig: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub targetConfiguration: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub targetValidateConfiguration: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub isSystemConfigured: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub setRebootRequired: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub getRebootRequired: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub isEepromWriteInProgress: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub schedulerConfig_System: Result<*mut schedulerConfig_t, ::libloading::Error>,
+    pub schedulerConfig_Copy: Result<*mut schedulerConfig_t, ::libloading::Error>,
+    pub getCheckFuncInfo:
+        Result<unsafe extern "C" fn(checkFuncInfo: *mut cfCheckFuncInfo_t), ::libloading::Error>,
+    pub getTaskInfo: Result<
+        unsafe extern "C" fn(taskId: taskId_e, taskInfo: *mut taskInfo_t),
+        ::libloading::Error,
+    >,
+    pub rescheduleTask: Result<
+        unsafe extern "C" fn(taskId: taskId_e, newPeriodUs: timeDelta_t),
+        ::libloading::Error,
+    >,
+    pub setTaskEnabled:
+        Result<unsafe extern "C" fn(taskId: taskId_e, newEnabledState: bool), ::libloading::Error>,
+    pub getTaskDeltaTimeUs:
+        Result<unsafe extern "C" fn(taskId: taskId_e) -> timeDelta_t, ::libloading::Error>,
+    pub schedulerIgnoreTaskStateTime: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub schedulerIgnoreTaskExecRate: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub schedulerIgnoreTaskExecTime: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub schedulerGetIgnoreTaskExecTime: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub schedulerResetTaskStatistics:
+        Result<unsafe extern "C" fn(taskId: taskId_e), ::libloading::Error>,
+    pub schedulerResetTaskMaxExecutionTime:
+        Result<unsafe extern "C" fn(taskId: taskId_e), ::libloading::Error>,
+    pub schedulerResetCheckFunctionMaxExecutionTime:
+        Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub schedulerSetNextStateTime:
+        Result<unsafe extern "C" fn(nextStateTime: timeDelta_t), ::libloading::Error>,
+    pub schedulerGetNextStateTime:
+        Result<unsafe extern "C" fn() -> timeDelta_t, ::libloading::Error>,
+    pub schedulerInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub scheduler: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub schedulerExecuteTask: Result<
+        unsafe extern "C" fn(selectedTask: *mut task_t, currentTimeUs: timeUs_t) -> timeUs_t,
+        ::libloading::Error,
+    >,
+    pub taskSystemLoad: Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub schedulerEnableGyro: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub getAverageSystemLoadPercent: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub schedulerGetCycleTimeMultiplier: Result<unsafe extern "C" fn() -> f32, ::libloading::Error>,
+    pub tasksInitData: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub tasksInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub getTask: Result<
+        unsafe extern "C" fn(taskId: ::std::os::raw::c_uint) -> *mut task_t,
+        ::libloading::Error,
+    >,
+    pub taskUpdateRxMainInProgress: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub canUseGPSHeading: Result<*mut bool, ::libloading::Error>,
+    pub attitude: Result<*mut attitudeEulerAngles_t, ::libloading::Error>,
+    pub rMat: Result<*mut [[f32; 3usize]; 3usize], ::libloading::Error>,
+    pub imuConfig_System: Result<*mut imuConfig_t, ::libloading::Error>,
+    pub imuConfig_Copy: Result<*mut imuConfig_t, ::libloading::Error>,
+    pub imuConfigure: Result<
+        unsafe extern "C" fn(throttle_correction_angle: u16, throttle_correction_value: u8),
+        ::libloading::Error,
+    >,
+    pub getCosTiltAngle: Result<unsafe extern "C" fn() -> f32, ::libloading::Error>,
+    pub getQuaternion: Result<unsafe extern "C" fn(q: *mut quaternion), ::libloading::Error>,
+    pub imuUpdateAttitude:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub imuInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub imuSetAttitudeRPY:
+        Result<unsafe extern "C" fn(roll: f32, pitch: f32, yaw: f32), ::libloading::Error>,
+    pub imuSetAttitudeQuat:
+        Result<unsafe extern "C" fn(w: f32, x: f32, y: f32, z: f32), ::libloading::Error>,
+    pub imuQuaternionHeadfreeOffsetSet: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub imuQuaternionHeadfreeTransformVectorEarthToBody:
+        Result<unsafe extern "C" fn(v: *mut t_fp_vector_def), ::libloading::Error>,
+    pub shouldInitializeGPSHeading: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub isUpright: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub osdScreen: Result<*mut [[u8; 30usize]; 16usize], ::libloading::Error>,
+    pub baudRates: Result<*mut [u32; 0usize], ::libloading::Error>,
+    pub serialPortIdentifiers: Result<*mut [serialPortIdentifier_e; 8usize], ::libloading::Error>,
+    pub findSharedSerialPort: Result<
+        unsafe extern "C" fn(
+            functionMask: u16,
+            sharedWithFunction: serialPortFunction_e,
+        ) -> *mut serialPort_t,
+        ::libloading::Error,
+    >,
+    pub serialConfig_System: Result<*mut serialConfig_t, ::libloading::Error>,
+    pub serialConfig_Copy: Result<*mut serialConfig_t, ::libloading::Error>,
+    pub serialInit: Result<
+        unsafe extern "C" fn(softserialEnabled: bool, serialPortToDisable: serialPortIdentifier_e),
+        ::libloading::Error,
+    >,
+    pub serialRemovePort:
+        Result<unsafe extern "C" fn(identifier: serialPortIdentifier_e), ::libloading::Error>,
+    pub serialGetAvailablePortCount: Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub serialIsPortAvailable: Result<
+        unsafe extern "C" fn(identifier: serialPortIdentifier_e) -> bool,
+        ::libloading::Error,
+    >,
+    pub isSerialConfigValid: Result<
+        unsafe extern "C" fn(serialConfig: *const serialConfig_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub serialFindPortConfiguration: Result<
+        unsafe extern "C" fn(identifier: serialPortIdentifier_e) -> *const serialPortConfig_t,
+        ::libloading::Error,
+    >,
+    pub serialFindPortConfigurationMutable: Result<
+        unsafe extern "C" fn(identifier: serialPortIdentifier_e) -> *mut serialPortConfig_t,
+        ::libloading::Error,
+    >,
+    pub doesConfigurationUsePort: Result<
+        unsafe extern "C" fn(portIdentifier: serialPortIdentifier_e) -> bool,
+        ::libloading::Error,
+    >,
+    pub findSerialPortConfig: Result<
+        unsafe extern "C" fn(function: serialPortFunction_e) -> *const serialPortConfig_t,
+        ::libloading::Error,
+    >,
+    pub findNextSerialPortConfig: Result<
+        unsafe extern "C" fn(function: serialPortFunction_e) -> *const serialPortConfig_t,
+        ::libloading::Error,
+    >,
+    pub determinePortSharing: Result<
+        unsafe extern "C" fn(
+            portConfig: *const serialPortConfig_t,
+            function: serialPortFunction_e,
+        ) -> portSharing_e,
+        ::libloading::Error,
+    >,
+    pub isSerialPortShared: Result<
+        unsafe extern "C" fn(
+            portConfig: *const serialPortConfig_t,
+            functionMask: u16,
+            sharedWithFunction: serialPortFunction_e,
+        ) -> bool,
+        ::libloading::Error,
+    >,
+    pub pgResetFn_serialConfig:
+        Result<unsafe extern "C" fn(serialConfig: *mut serialConfig_t), ::libloading::Error>,
+    pub findSerialPortUsageByIdentifier: Result<
+        unsafe extern "C" fn(identifier: serialPortIdentifier_e) -> *mut serialPortUsage_t,
+        ::libloading::Error,
+    >,
+    pub findSerialPortIndexByIdentifier: Result<
+        unsafe extern "C" fn(identifier: serialPortIdentifier_e) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub openSerialPort: Result<
+        unsafe extern "C" fn(
+            identifier: serialPortIdentifier_e,
+            function: serialPortFunction_e,
+            rxCallback: serialReceiveCallbackPtr,
+            rxCallbackData: *mut ::std::os::raw::c_void,
+            baudrate: u32,
+            mode: portMode_e,
+            options: portOptions_e,
+        ) -> *mut serialPort_t,
+        ::libloading::Error,
+    >,
+    pub closeSerialPort:
+        Result<unsafe extern "C" fn(serialPort: *mut serialPort_t), ::libloading::Error>,
+    pub waitForSerialPortToFinishTransmitting:
+        Result<unsafe extern "C" fn(serialPort: *mut serialPort_t), ::libloading::Error>,
+    pub lookupBaudRateIndex:
+        Result<unsafe extern "C" fn(baudRate: u32) -> baudRate_e, ::libloading::Error>,
+    pub serialPassthrough: Result<
+        unsafe extern "C" fn(
+            left: *mut serialPort_t,
+            right: *mut serialPort_t,
+            leftC: serialConsumer,
+            rightC: serialConsumer,
+        ),
+        ::libloading::Error,
+    >,
+    pub gpsConfig_System: Result<*mut gpsConfig_t, ::libloading::Error>,
+    pub gpsConfig_Copy: Result<*mut gpsConfig_t, ::libloading::Error>,
+    pub GPS_home: Result<*mut [i32; 2usize], ::libloading::Error>,
+    pub GPS_distanceToHome: Result<*mut u16, ::libloading::Error>,
+    pub GPS_distanceToHomeCm: Result<*mut u32, ::libloading::Error>,
+    pub GPS_directionToHome: Result<*mut i16, ::libloading::Error>,
+    pub GPS_distanceFlownInCm: Result<*mut u32, ::libloading::Error>,
+    pub GPS_angle: Result<*mut [i16; 2usize], ::libloading::Error>,
+    pub GPS_scaleLonDown: Result<*mut f32, ::libloading::Error>,
+    pub gpsData: Result<*mut gpsData_t, ::libloading::Error>,
+    pub gpsSol: Result<*mut gpsSolutionData_t, ::libloading::Error>,
+    pub GPS_update: Result<*mut u8, ::libloading::Error>,
+    pub GPS_numCh: Result<*mut u8, ::libloading::Error>,
+    pub GPS_svinfo_chn: Result<*mut [u8; 32usize], ::libloading::Error>,
+    pub GPS_svinfo_svid: Result<*mut [u8; 32usize], ::libloading::Error>,
+    pub GPS_svinfo_quality: Result<*mut [u8; 32usize], ::libloading::Error>,
+    pub GPS_svinfo_cno: Result<*mut [u8; 32usize], ::libloading::Error>,
+    pub gpsInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub gpsUpdate: Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub gpsNewFrame: Result<unsafe extern "C" fn(c: u8) -> bool, ::libloading::Error>,
+    pub gpsIsHealthy: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub gpsEnablePassthrough:
+        Result<unsafe extern "C" fn(gpsPassthroughPort: *mut serialPort_s), ::libloading::Error>,
+    pub onGpsNewData: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub GPS_reset_home_position: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub GPS_calc_longitude_scaling: Result<unsafe extern "C" fn(lat: i32), ::libloading::Error>,
+    pub GPS_distance_cm_bearing: Result<
+        unsafe extern "C" fn(
+            currentLat1: *mut i32,
+            currentLon1: *mut i32,
+            destinationLat2: *mut i32,
+            destinationLon2: *mut i32,
+            dist: *mut u32,
+            bearing: *mut i32,
+        ),
+        ::libloading::Error,
+    >,
+    pub gpsSetFixState: Result<unsafe extern "C" fn(state: bool), ::libloading::Error>,
+    pub getGpsDataIntervalSeconds: Result<unsafe extern "C" fn() -> f32, ::libloading::Error>,
+    pub getGpsPortActualBaudRateIndex:
+        Result<unsafe extern "C" fn() -> baudRate_e, ::libloading::Error>,
+    pub rxConfig_System: Result<*mut rxConfig_t, ::libloading::Error>,
+    pub rxConfig_Copy: Result<*mut rxConfig_t, ::libloading::Error>,
+    pub rcChannelLetters: Result<*mut [::std::os::raw::c_char; 0usize], ::libloading::Error>,
+    pub rcData: Result<*mut [f32; 18usize], ::libloading::Error>,
+    pub rxFailsafeChannelConfigs_SystemArray:
+        Result<*mut [rxFailsafeChannelConfig_t; 18usize], ::libloading::Error>,
+    pub rxFailsafeChannelConfigs_CopyArray:
+        Result<*mut [rxFailsafeChannelConfig_t; 18usize], ::libloading::Error>,
+    pub rxChannelRangeConfigs_SystemArray:
+        Result<*mut [rxChannelRangeConfig_t; 4usize], ::libloading::Error>,
+    pub rxChannelRangeConfigs_CopyArray:
+        Result<*mut [rxChannelRangeConfig_t; 4usize], ::libloading::Error>,
+    pub rssiSource: Result<*mut rssiSource_e, ::libloading::Error>,
+    pub linkQualitySource: Result<*mut linkQualitySource_e, ::libloading::Error>,
+    pub rxRuntimeState: Result<*mut rxRuntimeState_t, ::libloading::Error>,
+    pub rxInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub rxProcessPending: Result<unsafe extern "C" fn(state: bool), ::libloading::Error>,
+    pub rxUpdateCheck: Result<
+        unsafe extern "C" fn(currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t) -> bool,
+        ::libloading::Error,
+    >,
+    pub rxFrameCheck: Result<
+        unsafe extern "C" fn(currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t),
+        ::libloading::Error,
+    >,
+    pub rxIsReceivingSignal: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub rxAreFlightChannelsValid: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub calculateRxChannelsAndUpdateFailsafe:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t) -> bool, ::libloading::Error>,
+    pub parseRcChannels: Result<
+        unsafe extern "C" fn(input: *const ::std::os::raw::c_char, rxConfig: *mut rxConfig_s),
+        ::libloading::Error,
+    >,
+    pub setRssiDirect:
+        Result<unsafe extern "C" fn(newRssi: u16, source: rssiSource_e), ::libloading::Error>,
+    pub setRssi:
+        Result<unsafe extern "C" fn(rssiValue: u16, source: rssiSource_e), ::libloading::Error>,
+    pub setRssiMsp: Result<unsafe extern "C" fn(newMspRssi: u8), ::libloading::Error>,
+    pub updateRSSI: Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub getRssi: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getRssiPercent: Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub isRssiConfigured: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub rxGetLinkQuality: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub setLinkQualityDirect:
+        Result<unsafe extern "C" fn(linkqualityValue: u16), ::libloading::Error>,
+    pub rxGetLinkQualityPercent: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getRsnr: Result<unsafe extern "C" fn() -> i16, ::libloading::Error>,
+    pub setRsnr: Result<unsafe extern "C" fn(newRsnr: i16), ::libloading::Error>,
+    pub setRsnrDirect: Result<unsafe extern "C" fn(newRsnr: i16), ::libloading::Error>,
+    pub rxSetRfMode: Result<unsafe extern "C" fn(rfModeValue: u8), ::libloading::Error>,
+    pub rxGetRfMode: Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub rxSetUplinkTxPwrMw:
+        Result<unsafe extern "C" fn(uplinkTxPwrMwValue: u16), ::libloading::Error>,
+    pub rxGetUplinkTxPwrMw: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub resetAllRxChannelRangeConfigurations: Result<
+        unsafe extern "C" fn(rxChannelRangeConfig: *mut rxChannelRangeConfig_t),
+        ::libloading::Error,
+    >,
+    pub suspendRxSignal: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub resumeRxSignal: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub rxGetFrameDelta: Result<
+        unsafe extern "C" fn(frameAgeUs: *mut timeDelta_t) -> timeDelta_t,
+        ::libloading::Error,
+    >,
+    pub rxFrameTimeUs: Result<unsafe extern "C" fn() -> timeUs_t, ::libloading::Error>,
+    pub rxMspReadRawRC: Result<
+        unsafe extern "C" fn(rxRuntimeState: *const rxRuntimeState_t, chan: u8) -> f32,
+        ::libloading::Error,
+    >,
+    pub rxMspInit: Result<
+        unsafe extern "C" fn(rxConfig: *const rxConfig_s, rxRuntimeState: *mut rxRuntimeState_s),
+        ::libloading::Error,
+    >,
+    pub rxMspFrameReceive: Result<
+        unsafe extern "C" fn(frame: *mut u16, channelCount: ::std::os::raw::c_int),
+        ::libloading::Error,
+    >,
+    pub nullFilterApply:
+        Result<unsafe extern "C" fn(filter: *mut filter_t, input: f32) -> f32, ::libloading::Error>,
+    pub pt1FilterGain:
+        Result<unsafe extern "C" fn(f_cut: f32, dT: f32) -> f32, ::libloading::Error>,
+    pub pt1FilterInit:
+        Result<unsafe extern "C" fn(filter: *mut pt1Filter_t, k: f32), ::libloading::Error>,
+    pub pt1FilterUpdateCutoff:
+        Result<unsafe extern "C" fn(filter: *mut pt1Filter_t, k: f32), ::libloading::Error>,
+    pub pt1FilterApply: Result<
+        unsafe extern "C" fn(filter: *mut pt1Filter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub pt2FilterGain:
+        Result<unsafe extern "C" fn(f_cut: f32, dT: f32) -> f32, ::libloading::Error>,
+    pub pt2FilterInit:
+        Result<unsafe extern "C" fn(filter: *mut pt2Filter_t, k: f32), ::libloading::Error>,
+    pub pt2FilterUpdateCutoff:
+        Result<unsafe extern "C" fn(filter: *mut pt2Filter_t, k: f32), ::libloading::Error>,
+    pub pt2FilterApply: Result<
+        unsafe extern "C" fn(filter: *mut pt2Filter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub pt3FilterGain:
+        Result<unsafe extern "C" fn(f_cut: f32, dT: f32) -> f32, ::libloading::Error>,
+    pub pt3FilterInit:
+        Result<unsafe extern "C" fn(filter: *mut pt3Filter_t, k: f32), ::libloading::Error>,
+    pub pt3FilterUpdateCutoff:
+        Result<unsafe extern "C" fn(filter: *mut pt3Filter_t, k: f32), ::libloading::Error>,
+    pub pt3FilterApply: Result<
+        unsafe extern "C" fn(filter: *mut pt3Filter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub filterGetNotchQ:
+        Result<unsafe extern "C" fn(centerFreq: f32, cutoffFreq: f32) -> f32, ::libloading::Error>,
+    pub biquadFilterInitLPF: Result<
+        unsafe extern "C" fn(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32),
+        ::libloading::Error,
+    >,
+    pub biquadFilterInit: Result<
+        unsafe extern "C" fn(
+            filter: *mut biquadFilter_t,
+            filterFreq: f32,
+            refreshRate: u32,
+            Q: f32,
+            filterType: biquadFilterType_e,
+            weight: f32,
+        ),
+        ::libloading::Error,
+    >,
+    pub biquadFilterUpdate: Result<
+        unsafe extern "C" fn(
+            filter: *mut biquadFilter_t,
+            filterFreq: f32,
+            refreshRate: u32,
+            Q: f32,
+            filterType: biquadFilterType_e,
+            weight: f32,
+        ),
+        ::libloading::Error,
+    >,
+    pub biquadFilterUpdateLPF: Result<
+        unsafe extern "C" fn(filter: *mut biquadFilter_t, filterFreq: f32, refreshRate: u32),
+        ::libloading::Error,
+    >,
+    pub biquadFilterApplyDF1: Result<
+        unsafe extern "C" fn(filter: *mut biquadFilter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub biquadFilterApplyDF1Weighted: Result<
+        unsafe extern "C" fn(filter: *mut biquadFilter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub biquadFilterApply: Result<
+        unsafe extern "C" fn(filter: *mut biquadFilter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub phaseCompInit: Result<
+        unsafe extern "C" fn(
+            filter: *mut phaseComp_t,
+            centerFreq: f32,
+            centerPhase: f32,
+            looptimeUs: u32,
+        ),
+        ::libloading::Error,
+    >,
+    pub phaseCompUpdate: Result<
+        unsafe extern "C" fn(
+            filter: *mut phaseComp_t,
+            centerFreq: f32,
+            centerPhase: f32,
+            looptimeUs: u32,
+        ),
+        ::libloading::Error,
+    >,
+    pub phaseCompApply: Result<
+        unsafe extern "C" fn(filter: *mut phaseComp_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub slewFilterInit: Result<
+        unsafe extern "C" fn(filter: *mut slewFilter_t, slewLimit: f32, threshold: f32),
+        ::libloading::Error,
+    >,
+    pub slewFilterApply: Result<
+        unsafe extern "C" fn(filter: *mut slewFilter_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub laggedMovingAverageInit: Result<
+        unsafe extern "C" fn(filter: *mut laggedMovingAverage_t, windowSize: u16, buf: *mut f32),
+        ::libloading::Error,
+    >,
+    pub laggedMovingAverageUpdate: Result<
+        unsafe extern "C" fn(filter: *mut laggedMovingAverage_t, input: f32) -> f32,
+        ::libloading::Error,
+    >,
+    pub simpleLPFilterInit: Result<
+        unsafe extern "C" fn(filter: *mut simpleLowpassFilter_t, beta: i32, fpShift: i32),
+        ::libloading::Error,
+    >,
+    pub simpleLPFilterUpdate: Result<
+        unsafe extern "C" fn(filter: *mut simpleLowpassFilter_t, newVal: i32) -> i32,
+        ::libloading::Error,
+    >,
+    pub meanAccumulatorInit:
+        Result<unsafe extern "C" fn(filter: *mut meanAccumulator_t), ::libloading::Error>,
+    pub meanAccumulatorAdd: Result<
+        unsafe extern "C" fn(filter: *mut meanAccumulator_t, newVal: i8),
+        ::libloading::Error,
+    >,
+    pub meanAccumulatorCalc: Result<
+        unsafe extern "C" fn(filter: *mut meanAccumulator_t, defaultValue: i8) -> i8,
+        ::libloading::Error,
+    >,
+    pub currentMeterSourceNames:
+        Result<*mut [*const ::std::os::raw::c_char; 5usize], ::libloading::Error>,
+    pub currentSensorADCConfig_System: Result<*mut currentSensorADCConfig_t, ::libloading::Error>,
+    pub currentSensorADCConfig_Copy: Result<*mut currentSensorADCConfig_t, ::libloading::Error>,
+    pub currentSensorVirtualConfig_System:
+        Result<*mut currentSensorVirtualConfig_t, ::libloading::Error>,
+    pub currentSensorVirtualConfig_Copy:
+        Result<*mut currentSensorVirtualConfig_t, ::libloading::Error>,
+    pub currentMeterReset:
+        Result<unsafe extern "C" fn(meter: *mut currentMeter_t), ::libloading::Error>,
+    pub currentMeterADCInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub currentMeterADCRefresh:
+        Result<unsafe extern "C" fn(lastUpdateAt: i32), ::libloading::Error>,
+    pub currentMeterADCRead:
+        Result<unsafe extern "C" fn(meter: *mut currentMeter_t), ::libloading::Error>,
+    pub currentMeterVirtualInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub currentMeterVirtualRefresh: Result<
+        unsafe extern "C" fn(
+            lastUpdateAt: i32,
+            armed: bool,
+            throttleLowAndMotorStop: bool,
+            throttleOffset: i32,
+        ),
+        ::libloading::Error,
+    >,
+    pub currentMeterVirtualRead:
+        Result<unsafe extern "C" fn(meter: *mut currentMeter_t), ::libloading::Error>,
+    pub currentMeterESCInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub currentMeterESCRefresh:
+        Result<unsafe extern "C" fn(lastUpdateAt: i32), ::libloading::Error>,
+    pub currentMeterESCReadCombined:
+        Result<unsafe extern "C" fn(meter: *mut currentMeter_t), ::libloading::Error>,
+    pub currentMeterESCReadMotor: Result<
+        unsafe extern "C" fn(motorNumber: u8, meter: *mut currentMeter_t),
+        ::libloading::Error,
+    >,
+    pub currentMeterMSPInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub currentMeterMSPRefresh:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub currentMeterMSPRead:
+        Result<unsafe extern "C" fn(meter: *mut currentMeter_t), ::libloading::Error>,
+    pub currentMeterMSPSet:
+        Result<unsafe extern "C" fn(amperage: u16, mAhDrawn: u16), ::libloading::Error>,
+    pub supportedCurrentMeterCount: Result<*mut u8, ::libloading::Error>,
+    pub currentMeterIds: Result<*mut [u8; 0usize], ::libloading::Error>,
+    pub currentMeterRead: Result<
+        unsafe extern "C" fn(id: currentMeterId_e, currentMeter: *mut currentMeter_t),
+        ::libloading::Error,
+    >,
+    pub voltageMeterSourceNames:
+        Result<*mut [*const ::std::os::raw::c_char; 3usize], ::libloading::Error>,
+    pub voltageSensorADCConfig_SystemArray:
+        Result<*mut [voltageSensorADCConfig_t; 1usize], ::libloading::Error>,
+    pub voltageSensorADCConfig_CopyArray:
+        Result<*mut [voltageSensorADCConfig_t; 1usize], ::libloading::Error>,
+    pub voltageMeterReset:
+        Result<unsafe extern "C" fn(voltageMeter: *mut voltageMeter_t), ::libloading::Error>,
+    pub voltageMeterGenericInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub voltageMeterADCInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub voltageMeterADCRefresh: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub voltageMeterADCRead: Result<
+        unsafe extern "C" fn(adcChannel: voltageSensorADC_e, voltageMeter: *mut voltageMeter_t),
+        ::libloading::Error,
+    >,
+    pub voltageMeterESCInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub voltageMeterESCRefresh: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub voltageMeterESCReadCombined:
+        Result<unsafe extern "C" fn(voltageMeter: *mut voltageMeter_t), ::libloading::Error>,
+    pub voltageMeterESCReadMotor: Result<
+        unsafe extern "C" fn(motor: u8, voltageMeter: *mut voltageMeter_t),
+        ::libloading::Error,
+    >,
+    pub voltageMeterADCtoIDMap: Result<*mut [u8; 1usize], ::libloading::Error>,
+    pub supportedVoltageMeterCount: Result<*mut u8, ::libloading::Error>,
+    pub voltageMeterIds: Result<*mut [u8; 0usize], ::libloading::Error>,
+    pub voltageMeterRead: Result<
+        unsafe extern "C" fn(id: voltageMeterId_e, voltageMeter: *mut voltageMeter_t),
+        ::libloading::Error,
+    >,
+    pub isSagCompensationConfigured: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub batteryConfig_System: Result<*mut batteryConfig_t, ::libloading::Error>,
+    pub batteryConfig_Copy: Result<*mut batteryConfig_t, ::libloading::Error>,
+    pub batteryInit: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub batteryUpdateVoltage:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub batteryUpdatePresence: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub getBatteryState: Result<unsafe extern "C" fn() -> batteryState_e, ::libloading::Error>,
+    pub getVoltageState: Result<unsafe extern "C" fn() -> batteryState_e, ::libloading::Error>,
+    pub getConsumptionState: Result<unsafe extern "C" fn() -> batteryState_e, ::libloading::Error>,
+    pub getBatteryStateString:
+        Result<unsafe extern "C" fn() -> *const ::std::os::raw::c_char, ::libloading::Error>,
+    pub batteryUpdateStates:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub batteryUpdateAlarms: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub calculateBatteryPercentageRemaining:
+        Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub isBatteryVoltageConfigured: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub getBatteryVoltage: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getLegacyBatteryVoltage: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getBatteryVoltageLatest: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getBatteryCellCount: Result<unsafe extern "C" fn() -> u8, ::libloading::Error>,
+    pub getBatteryAverageCellVoltage: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub getBatterySagCellVoltage: Result<unsafe extern "C" fn() -> u16, ::libloading::Error>,
+    pub isAmperageConfigured: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub getAmperage: Result<unsafe extern "C" fn() -> i32, ::libloading::Error>,
+    pub getAmperageLatest: Result<unsafe extern "C" fn() -> i32, ::libloading::Error>,
+    pub getMAhDrawn: Result<unsafe extern "C" fn() -> i32, ::libloading::Error>,
+    pub getWhDrawn: Result<unsafe extern "C" fn() -> f32, ::libloading::Error>,
+    pub batteryUpdateCurrentMeter:
+        Result<unsafe extern "C" fn(currentTimeUs: timeUs_t), ::libloading::Error>,
+    pub getLowVoltageCutoff:
+        Result<unsafe extern "C" fn() -> *const lowVoltageCutoff_t, ::libloading::Error>,
+    pub getCurrentMeter: Result<unsafe extern "C" fn() -> *mut currentMeter_t, ::libloading::Error>,
+    pub getVoltageMeter: Result<unsafe extern "C" fn() -> *mut voltageMeter_t, ::libloading::Error>,
+    pub setCellCount: Result<unsafe extern "C" fn(count: u8), ::libloading::Error>,
+    pub requestedSensors: Result<*mut [u8; 5usize], ::libloading::Error>,
+    pub detectedSensors: Result<*mut [u8; 5usize], ::libloading::Error>,
+    pub __ctype_get_mb_cur_max: Result<unsafe extern "C" fn() -> usize, ::libloading::Error>,
+    pub atof: Result<
+        unsafe extern "C" fn(__nptr: *const ::std::os::raw::c_char) -> f64,
+        ::libloading::Error,
+    >,
+    pub atoi: Result<
+        unsafe extern "C" fn(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub atol: Result<
+        unsafe extern "C" fn(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub atoll: Result<
+        unsafe extern "C" fn(__nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_longlong,
+        ::libloading::Error,
+    >,
+    pub strtod: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+        ) -> f64,
+        ::libloading::Error,
+    >,
+    pub strtof: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+        ) -> f32,
+        ::libloading::Error,
+    >,
+    pub strtold: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+        ) -> u128,
+        ::libloading::Error,
+    >,
+    pub strtol: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub strtoul: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_ulong,
+        ::libloading::Error,
+    >,
+    pub strtoq: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_longlong,
+        ::libloading::Error,
+    >,
+    pub strtouq: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_ulonglong,
+        ::libloading::Error,
+    >,
+    pub strtoll: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_longlong,
+        ::libloading::Error,
+    >,
+    pub strtoull: Result<
+        unsafe extern "C" fn(
+            __nptr: *const ::std::os::raw::c_char,
+            __endptr: *mut *mut ::std::os::raw::c_char,
+            __base: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_ulonglong,
+        ::libloading::Error,
+    >,
+    pub l64a: Result<
+        unsafe extern "C" fn(__n: ::std::os::raw::c_long) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub a64l: Result<
+        unsafe extern "C" fn(__s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub select: Result<
+        unsafe extern "C" fn(
+            __nfds: ::std::os::raw::c_int,
+            __readfds: *mut fd_set,
+            __writefds: *mut fd_set,
+            __exceptfds: *mut fd_set,
+            __timeout: *mut timeval,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub pselect: Result<
+        unsafe extern "C" fn(
+            __nfds: ::std::os::raw::c_int,
+            __readfds: *mut fd_set,
+            __writefds: *mut fd_set,
+            __exceptfds: *mut fd_set,
+            __timeout: *const timespec,
+            __sigmask: *const __sigset_t,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub random: Result<unsafe extern "C" fn() -> ::std::os::raw::c_long, ::libloading::Error>,
+    pub srandom: Result<unsafe extern "C" fn(__seed: ::std::os::raw::c_uint), ::libloading::Error>,
+    pub initstate: Result<
+        unsafe extern "C" fn(
+            __seed: ::std::os::raw::c_uint,
+            __statebuf: *mut ::std::os::raw::c_char,
+            __statelen: usize,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub setstate: Result<
+        unsafe extern "C" fn(
+            __statebuf: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub random_r: Result<
+        unsafe extern "C" fn(__buf: *mut random_data, __result: *mut i32) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub srandom_r: Result<
+        unsafe extern "C" fn(
+            __seed: ::std::os::raw::c_uint,
+            __buf: *mut random_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub initstate_r: Result<
+        unsafe extern "C" fn(
+            __seed: ::std::os::raw::c_uint,
+            __statebuf: *mut ::std::os::raw::c_char,
+            __statelen: usize,
+            __buf: *mut random_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub setstate_r: Result<
+        unsafe extern "C" fn(
+            __statebuf: *mut ::std::os::raw::c_char,
+            __buf: *mut random_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub rand: Result<unsafe extern "C" fn() -> ::std::os::raw::c_int, ::libloading::Error>,
+    pub srand: Result<unsafe extern "C" fn(__seed: ::std::os::raw::c_uint), ::libloading::Error>,
+    pub rand_r: Result<
+        unsafe extern "C" fn(__seed: *mut ::std::os::raw::c_uint) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub drand48: Result<unsafe extern "C" fn() -> f64, ::libloading::Error>,
+    pub erand48: Result<
+        unsafe extern "C" fn(__xsubi: *mut ::std::os::raw::c_ushort) -> f64,
+        ::libloading::Error,
+    >,
+    pub lrand48: Result<unsafe extern "C" fn() -> ::std::os::raw::c_long, ::libloading::Error>,
+    pub nrand48: Result<
+        unsafe extern "C" fn(__xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub mrand48: Result<unsafe extern "C" fn() -> ::std::os::raw::c_long, ::libloading::Error>,
+    pub jrand48: Result<
+        unsafe extern "C" fn(__xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub srand48:
+        Result<unsafe extern "C" fn(__seedval: ::std::os::raw::c_long), ::libloading::Error>,
+    pub seed48: Result<
+        unsafe extern "C" fn(
+            __seed16v: *mut ::std::os::raw::c_ushort,
+        ) -> *mut ::std::os::raw::c_ushort,
+        ::libloading::Error,
+    >,
+    pub lcong48:
+        Result<unsafe extern "C" fn(__param: *mut ::std::os::raw::c_ushort), ::libloading::Error>,
+    pub drand48_r: Result<
+        unsafe extern "C" fn(
+            __buffer: *mut drand48_data,
+            __result: *mut f64,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub erand48_r: Result<
+        unsafe extern "C" fn(
+            __xsubi: *mut ::std::os::raw::c_ushort,
+            __buffer: *mut drand48_data,
+            __result: *mut f64,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub lrand48_r: Result<
+        unsafe extern "C" fn(
+            __buffer: *mut drand48_data,
+            __result: *mut ::std::os::raw::c_long,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub nrand48_r: Result<
+        unsafe extern "C" fn(
+            __xsubi: *mut ::std::os::raw::c_ushort,
+            __buffer: *mut drand48_data,
+            __result: *mut ::std::os::raw::c_long,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mrand48_r: Result<
+        unsafe extern "C" fn(
+            __buffer: *mut drand48_data,
+            __result: *mut ::std::os::raw::c_long,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub jrand48_r: Result<
+        unsafe extern "C" fn(
+            __xsubi: *mut ::std::os::raw::c_ushort,
+            __buffer: *mut drand48_data,
+            __result: *mut ::std::os::raw::c_long,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub srand48_r: Result<
+        unsafe extern "C" fn(
+            __seedval: ::std::os::raw::c_long,
+            __buffer: *mut drand48_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub seed48_r: Result<
+        unsafe extern "C" fn(
+            __seed16v: *mut ::std::os::raw::c_ushort,
+            __buffer: *mut drand48_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub lcong48_r: Result<
+        unsafe extern "C" fn(
+            __param: *mut ::std::os::raw::c_ushort,
+            __buffer: *mut drand48_data,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub arc4random: Result<unsafe extern "C" fn() -> __uint32_t, ::libloading::Error>,
+    pub arc4random_buf: Result<
+        unsafe extern "C" fn(__buf: *mut ::std::os::raw::c_void, __size: usize),
+        ::libloading::Error,
+    >,
+    pub arc4random_uniform:
+        Result<unsafe extern "C" fn(__upper_bound: __uint32_t) -> __uint32_t, ::libloading::Error>,
+    pub malloc: Result<
+        unsafe extern "C" fn(__size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub calloc: Result<
+        unsafe extern "C" fn(
+            __nmemb: ::std::os::raw::c_ulong,
+            __size: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub realloc: Result<
+        unsafe extern "C" fn(
+            __ptr: *mut ::std::os::raw::c_void,
+            __size: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub free: Result<unsafe extern "C" fn(__ptr: *mut ::std::os::raw::c_void), ::libloading::Error>,
+    pub reallocarray: Result<
+        unsafe extern "C" fn(
+            __ptr: *mut ::std::os::raw::c_void,
+            __nmemb: usize,
+            __size: usize,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub alloca: Result<
+        unsafe extern "C" fn(__size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub valloc: Result<
+        unsafe extern "C" fn(__size: usize) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub posix_memalign: Result<
+        unsafe extern "C" fn(
+            __memptr: *mut *mut ::std::os::raw::c_void,
+            __alignment: usize,
+            __size: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub aligned_alloc: Result<
+        unsafe extern "C" fn(
+            __alignment: ::std::os::raw::c_ulong,
+            __size: ::std::os::raw::c_ulong,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub abort: Result<unsafe extern "C" fn() -> !, ::libloading::Error>,
+    pub atexit: Result<
+        unsafe extern "C" fn(
+            __func: ::std::option::Option<unsafe extern "C" fn()>,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub at_quick_exit: Result<
+        unsafe extern "C" fn(
+            __func: ::std::option::Option<unsafe extern "C" fn()>,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub on_exit: Result<
+        unsafe extern "C" fn(
+            __func: ::std::option::Option<
+                unsafe extern "C" fn(
+                    __status: ::std::os::raw::c_int,
+                    __arg: *mut ::std::os::raw::c_void,
+                ),
+            >,
+            __arg: *mut ::std::os::raw::c_void,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub exit:
+        Result<unsafe extern "C" fn(__status: ::std::os::raw::c_int) -> !, ::libloading::Error>,
+    pub quick_exit:
+        Result<unsafe extern "C" fn(__status: ::std::os::raw::c_int) -> !, ::libloading::Error>,
+    pub _Exit:
+        Result<unsafe extern "C" fn(__status: ::std::os::raw::c_int) -> !, ::libloading::Error>,
+    pub getenv: Result<
+        unsafe extern "C" fn(__name: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub putenv: Result<
+        unsafe extern "C" fn(__string: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub setenv: Result<
+        unsafe extern "C" fn(
+            __name: *const ::std::os::raw::c_char,
+            __value: *const ::std::os::raw::c_char,
+            __replace: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub unsetenv: Result<
+        unsafe extern "C" fn(__name: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub clearenv: Result<unsafe extern "C" fn() -> ::std::os::raw::c_int, ::libloading::Error>,
+    pub mktemp: Result<
+        unsafe extern "C" fn(
+            __template: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub mkstemp: Result<
+        unsafe extern "C" fn(__template: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mkstemps: Result<
+        unsafe extern "C" fn(
+            __template: *mut ::std::os::raw::c_char,
+            __suffixlen: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mkdtemp: Result<
+        unsafe extern "C" fn(
+            __template: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub system: Result<
+        unsafe extern "C" fn(__command: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub realpath: Result<
+        unsafe extern "C" fn(
+            __name: *const ::std::os::raw::c_char,
+            __resolved: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub bsearch: Result<
+        unsafe extern "C" fn(
+            __key: *const ::std::os::raw::c_void,
+            __base: *const ::std::os::raw::c_void,
+            __nmemb: usize,
+            __size: usize,
+            __compar: __compar_fn_t,
+        ) -> *mut ::std::os::raw::c_void,
+        ::libloading::Error,
+    >,
+    pub qsort: Result<
+        unsafe extern "C" fn(
+            __base: *mut ::std::os::raw::c_void,
+            __nmemb: usize,
+            __size: usize,
+            __compar: __compar_fn_t,
+        ),
+        ::libloading::Error,
+    >,
+    pub abs: Result<
+        unsafe extern "C" fn(__x: ::std::os::raw::c_int) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub labs: Result<
+        unsafe extern "C" fn(__x: ::std::os::raw::c_long) -> ::std::os::raw::c_long,
+        ::libloading::Error,
+    >,
+    pub llabs: Result<
+        unsafe extern "C" fn(__x: ::std::os::raw::c_longlong) -> ::std::os::raw::c_longlong,
+        ::libloading::Error,
+    >,
+    pub div: Result<
+        unsafe extern "C" fn(
+            __numer: ::std::os::raw::c_int,
+            __denom: ::std::os::raw::c_int,
+        ) -> div_t,
+        ::libloading::Error,
+    >,
+    pub ldiv: Result<
+        unsafe extern "C" fn(
+            __numer: ::std::os::raw::c_long,
+            __denom: ::std::os::raw::c_long,
+        ) -> ldiv_t,
+        ::libloading::Error,
+    >,
+    pub lldiv: Result<
+        unsafe extern "C" fn(
+            __numer: ::std::os::raw::c_longlong,
+            __denom: ::std::os::raw::c_longlong,
+        ) -> lldiv_t,
+        ::libloading::Error,
+    >,
+    pub ecvt: Result<
+        unsafe extern "C" fn(
+            __value: f64,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub fcvt: Result<
+        unsafe extern "C" fn(
+            __value: f64,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub gcvt: Result<
+        unsafe extern "C" fn(
+            __value: f64,
+            __ndigit: ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub qecvt: Result<
+        unsafe extern "C" fn(
+            __value: u128,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub qfcvt: Result<
+        unsafe extern "C" fn(
+            __value: u128,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub qgcvt: Result<
+        unsafe extern "C" fn(
+            __value: u128,
+            __ndigit: ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_char,
+        ::libloading::Error,
+    >,
+    pub ecvt_r: Result<
+        unsafe extern "C" fn(
+            __value: f64,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+            __len: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub fcvt_r: Result<
+        unsafe extern "C" fn(
+            __value: f64,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+            __len: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub qecvt_r: Result<
+        unsafe extern "C" fn(
+            __value: u128,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+            __len: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub qfcvt_r: Result<
+        unsafe extern "C" fn(
+            __value: u128,
+            __ndigit: ::std::os::raw::c_int,
+            __decpt: *mut ::std::os::raw::c_int,
+            __sign: *mut ::std::os::raw::c_int,
+            __buf: *mut ::std::os::raw::c_char,
+            __len: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mblen: Result<
+        unsafe extern "C" fn(
+            __s: *const ::std::os::raw::c_char,
+            __n: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mbtowc: Result<
+        unsafe extern "C" fn(
+            __pwc: *mut wchar_t,
+            __s: *const ::std::os::raw::c_char,
+            __n: usize,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub wctomb: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_char,
+            __wchar: wchar_t,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub mbstowcs: Result<
+        unsafe extern "C" fn(
+            __pwcs: *mut wchar_t,
+            __s: *const ::std::os::raw::c_char,
+            __n: usize,
+        ) -> usize,
+        ::libloading::Error,
+    >,
+    pub wcstombs: Result<
+        unsafe extern "C" fn(
+            __s: *mut ::std::os::raw::c_char,
+            __pwcs: *const wchar_t,
+            __n: usize,
+        ) -> usize,
+        ::libloading::Error,
+    >,
+    pub rpmatch: Result<
+        unsafe extern "C" fn(__response: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub getsubopt: Result<
+        unsafe extern "C" fn(
+            __optionp: *mut *mut ::std::os::raw::c_char,
+            __tokens: *const *mut ::std::os::raw::c_char,
+            __valuep: *mut *mut ::std::os::raw::c_char,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub getloadavg: Result<
+        unsafe extern "C" fn(
+            __loadavg: *mut f64,
+            __nelem: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+        ::libloading::Error,
+    >,
+    pub enable_state: Result<unsafe extern "C" fn(mask: stateFlags_t), ::libloading::Error>,
+    pub rc_data_cache: Result<*mut [u16; 16usize], ::libloading::Error>,
+    pub rc_data_reception_time_us: Result<*mut u32, ::libloading::Error>,
+    pub motorsPwm: Result<*mut [i16; 8usize], ::libloading::Error>,
+    pub ascent_init:
+        Result<unsafe extern "C" fn(file_name: *const ::std::os::raw::c_char), ::libloading::Error>,
+    pub update: Result<
+        unsafe extern "C" fn(delta_time_us: u64, fc_input: FCInput) -> bool,
+        ::libloading::Error,
+    >,
+    pub update_serial_ws: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub get_armed: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub get_arming_disable_flags:
+        Result<unsafe extern "C" fn() -> ::std::os::raw::c_int, ::libloading::Error>,
+    pub get_beep: Result<unsafe extern "C" fn() -> bool, ::libloading::Error>,
+    pub get_micros_passed: Result<unsafe extern "C" fn() -> u64, ::libloading::Error>,
+    pub get_motor_pwm_signals: Result<unsafe extern "C" fn(signals: *mut f32), ::libloading::Error>,
+    pub arm: Result<unsafe extern "C" fn(), ::libloading::Error>,
+    pub ascent_disarm: Result<unsafe extern "C" fn(), ::libloading::Error>,
+}
+impl Sitl {
+    pub unsafe fn new<P>(path: P) -> Result<Self, ::libloading::Error>
+    where
+        P: AsRef<::std::ffi::OsStr>,
+    {
+        let library = ::libloading::Library::new(path)?;
+        Self::from_library(library)
+    }
+    pub unsafe fn from_library<L>(library: L) -> Result<Self, ::libloading::Error>
+    where
+        L: Into<::libloading::Library>,
+    {
+        let __library = library.into();
+        let debug = __library
+            .get::<*mut [i16; 8usize]>(b"debug\0")
+            .map(|sym| *sym);
+        let debugMode = __library.get::<*mut u8>(b"debugMode\0").map(|sym| *sym);
+        let debugModeNames = __library
+            .get::<*mut [*const ::std::os::raw::c_char; 91usize]>(b"debugModeNames\0")
+            .map(|sym| *sym);
+        let debugInit = __library.get(b"debugInit\0").map(|sym| *sym);
+        let gcd = __library.get(b"gcd\0").map(|sym| *sym);
+        let applyDeadband = __library.get(b"applyDeadband\0").map(|sym| *sym);
+        let fapplyDeadband = __library.get(b"fapplyDeadband\0").map(|sym| *sym);
+        let devClear = __library.get(b"devClear\0").map(|sym| *sym);
+        let devPush = __library.get(b"devPush\0").map(|sym| *sym);
+        let devVariance = __library.get(b"devVariance\0").map(|sym| *sym);
+        let devStandardDeviation = __library.get(b"devStandardDeviation\0").map(|sym| *sym);
+        let degreesToRadians = __library.get(b"degreesToRadians\0").map(|sym| *sym);
+        let scaleRange = __library.get(b"scaleRange\0").map(|sym| *sym);
+        let scaleRangef = __library.get(b"scaleRangef\0").map(|sym| *sym);
+        let buildRotationMatrix = __library.get(b"buildRotationMatrix\0").map(|sym| *sym);
+        let applyMatrixRotation = __library.get(b"applyMatrixRotation\0").map(|sym| *sym);
+        let quickMedianFilter3 = __library.get(b"quickMedianFilter3\0").map(|sym| *sym);
+        let quickMedianFilter5 = __library.get(b"quickMedianFilter5\0").map(|sym| *sym);
+        let quickMedianFilter7 = __library.get(b"quickMedianFilter7\0").map(|sym| *sym);
+        let quickMedianFilter9 = __library.get(b"quickMedianFilter9\0").map(|sym| *sym);
+        let quickMedianFilter3f = __library.get(b"quickMedianFilter3f\0").map(|sym| *sym);
+        let quickMedianFilter5f = __library.get(b"quickMedianFilter5f\0").map(|sym| *sym);
+        let quickMedianFilter7f = __library.get(b"quickMedianFilter7f\0").map(|sym| *sym);
+        let quickMedianFilter9f = __library.get(b"quickMedianFilter9f\0").map(|sym| *sym);
+        let sin_approx = __library.get(b"sin_approx\0").map(|sym| *sym);
+        let cos_approx = __library.get(b"cos_approx\0").map(|sym| *sym);
+        let atan2_approx = __library.get(b"atan2_approx\0").map(|sym| *sym);
+        let acos_approx = __library.get(b"acos_approx\0").map(|sym| *sym);
+        let exp_approx = __library.get(b"exp_approx\0").map(|sym| *sym);
+        let log_approx = __library.get(b"log_approx\0").map(|sym| *sym);
+        let pow_approx = __library.get(b"pow_approx\0").map(|sym| *sym);
+        let arraySubInt32 = __library.get(b"arraySubInt32\0").map(|sym| *sym);
+        let qPercent = __library.get(b"qPercent\0").map(|sym| *sym);
+        let qMultiply = __library.get(b"qMultiply\0").map(|sym| *sym);
+        let qConstruct = __library.get(b"qConstruct\0").map(|sym| *sym);
+        let virtualAccDev = __library
+            .get::<*mut *mut accDev_s>(b"virtualAccDev\0")
+            .map(|sym| *sym);
+        let virtualAccDetect = __library.get(b"virtualAccDetect\0").map(|sym| *sym);
+        let virtualAccSet = __library.get(b"virtualAccSet\0").map(|sym| *sym);
+        let virtualGyroDev = __library
+            .get::<*mut *mut gyroDev_s>(b"virtualGyroDev\0")
+            .map(|sym| *sym);
+        let virtualGyroDetect = __library.get(b"virtualGyroDetect\0").map(|sym| *sym);
+        let virtualGyroSet = __library.get(b"virtualGyroSet\0").map(|sym| *sym);
+        let memcpy = __library.get(b"memcpy\0").map(|sym| *sym);
+        let memmove = __library.get(b"memmove\0").map(|sym| *sym);
+        let memccpy = __library.get(b"memccpy\0").map(|sym| *sym);
+        let memset = __library.get(b"memset\0").map(|sym| *sym);
+        let memcmp = __library.get(b"memcmp\0").map(|sym| *sym);
+        let __memcmpeq = __library.get(b"__memcmpeq\0").map(|sym| *sym);
+        let memchr = __library.get(b"memchr\0").map(|sym| *sym);
+        let strcpy = __library.get(b"strcpy\0").map(|sym| *sym);
+        let strncpy = __library.get(b"strncpy\0").map(|sym| *sym);
+        let strcat = __library.get(b"strcat\0").map(|sym| *sym);
+        let strncat = __library.get(b"strncat\0").map(|sym| *sym);
+        let strcmp = __library.get(b"strcmp\0").map(|sym| *sym);
+        let strncmp = __library.get(b"strncmp\0").map(|sym| *sym);
+        let strcoll = __library.get(b"strcoll\0").map(|sym| *sym);
+        let strxfrm = __library.get(b"strxfrm\0").map(|sym| *sym);
+        let strcoll_l = __library.get(b"strcoll_l\0").map(|sym| *sym);
+        let strxfrm_l = __library.get(b"strxfrm_l\0").map(|sym| *sym);
+        let strdup = __library.get(b"strdup\0").map(|sym| *sym);
+        let strndup = __library.get(b"strndup\0").map(|sym| *sym);
+        let strchr = __library.get(b"strchr\0").map(|sym| *sym);
+        let strrchr = __library.get(b"strrchr\0").map(|sym| *sym);
+        let strchrnul = __library.get(b"strchrnul\0").map(|sym| *sym);
+        let strcspn = __library.get(b"strcspn\0").map(|sym| *sym);
+        let strspn = __library.get(b"strspn\0").map(|sym| *sym);
+        let strpbrk = __library.get(b"strpbrk\0").map(|sym| *sym);
+        let strstr = __library.get(b"strstr\0").map(|sym| *sym);
+        let strtok = __library.get(b"strtok\0").map(|sym| *sym);
+        let __strtok_r = __library.get(b"__strtok_r\0").map(|sym| *sym);
+        let strtok_r = __library.get(b"strtok_r\0").map(|sym| *sym);
+        let strcasestr = __library.get(b"strcasestr\0").map(|sym| *sym);
+        let memmem = __library.get(b"memmem\0").map(|sym| *sym);
+        let __mempcpy = __library.get(b"__mempcpy\0").map(|sym| *sym);
+        let mempcpy = __library.get(b"mempcpy\0").map(|sym| *sym);
+        let strlen = __library.get(b"strlen\0").map(|sym| *sym);
+        let strnlen = __library.get(b"strnlen\0").map(|sym| *sym);
+        let strerror = __library.get(b"strerror\0").map(|sym| *sym);
+        let strerror_r = __library.get(b"strerror_r\0").map(|sym| *sym);
+        let strerror_l = __library.get(b"strerror_l\0").map(|sym| *sym);
+        let bcmp = __library.get(b"bcmp\0").map(|sym| *sym);
+        let bcopy = __library.get(b"bcopy\0").map(|sym| *sym);
+        let bzero = __library.get(b"bzero\0").map(|sym| *sym);
+        let index = __library.get(b"index\0").map(|sym| *sym);
+        let rindex = __library.get(b"rindex\0").map(|sym| *sym);
+        let ffs = __library.get(b"ffs\0").map(|sym| *sym);
+        let ffsl = __library.get(b"ffsl\0").map(|sym| *sym);
+        let ffsll = __library.get(b"ffsll\0").map(|sym| *sym);
+        let strcasecmp = __library.get(b"strcasecmp\0").map(|sym| *sym);
+        let strncasecmp = __library.get(b"strncasecmp\0").map(|sym| *sym);
+        let strcasecmp_l = __library.get(b"strcasecmp_l\0").map(|sym| *sym);
+        let strncasecmp_l = __library.get(b"strncasecmp_l\0").map(|sym| *sym);
+        let explicit_bzero = __library.get(b"explicit_bzero\0").map(|sym| *sym);
+        let strsep = __library.get(b"strsep\0").map(|sym| *sym);
+        let strsignal = __library.get(b"strsignal\0").map(|sym| *sym);
+        let __stpcpy = __library.get(b"__stpcpy\0").map(|sym| *sym);
+        let stpcpy = __library.get(b"stpcpy\0").map(|sym| *sym);
+        let __stpncpy = __library.get(b"__stpncpy\0").map(|sym| *sym);
+        let stpncpy = __library.get(b"stpncpy\0").map(|sym| *sym);
+        let strlcpy = __library.get(b"strlcpy\0").map(|sym| *sym);
+        let strlcat = __library.get(b"strlcat\0").map(|sym| *sym);
+        let EEPROM_FILENAME = __library
+            .get::<*mut *mut ::std::os::raw::c_char>(b"EEPROM_FILENAME\0")
+            .map(|sym| *sym);
+        let SystemCoreClock = __library
+            .get::<*mut u32>(b"SystemCoreClock\0")
+            .map(|sym| *sym);
+        let DMA_GetFlagStatus = __library.get(b"DMA_GetFlagStatus\0").map(|sym| *sym);
+        let DMA_Cmd = __library.get(b"DMA_Cmd\0").map(|sym| *sym);
+        let DMA_ClearFlag = __library.get(b"DMA_ClearFlag\0").map(|sym| *sym);
+        let FLASH_Unlock = __library.get(b"FLASH_Unlock\0").map(|sym| *sym);
+        let FLASH_Lock = __library.get(b"FLASH_Lock\0").map(|sym| *sym);
+        let FLASH_ErasePage = __library.get(b"FLASH_ErasePage\0").map(|sym| *sym);
+        let FLASH_ProgramWord = __library.get(b"FLASH_ProgramWord\0").map(|sym| *sym);
+        let micros_passed = __library
+            .get::<*mut u64>(b"micros_passed\0")
+            .map(|sym| *sym);
+        let sleep_timer = __library.get::<*mut i64>(b"sleep_timer\0").map(|sym| *sym);
+        let nanos64_real = __library.get(b"nanos64_real\0").map(|sym| *sym);
+        let micros64_real = __library.get(b"micros64_real\0").map(|sym| *sym);
+        let millis64_real = __library.get(b"millis64_real\0").map(|sym| *sym);
+        let delayMicroseconds_real = __library.get(b"delayMicroseconds_real\0").map(|sym| *sym);
+        let micros64 = __library.get(b"micros64\0").map(|sym| *sym);
+        let millis64 = __library.get(b"millis64\0").map(|sym| *sym);
+        let lockMainPID = __library.get(b"lockMainPID\0").map(|sym| *sym);
+        let targetName = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"targetName\0")
+            .map(|sym| *sym);
+        let shortGitRevision = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"shortGitRevision\0")
+            .map(|sym| *sym);
+        let shortConfigGitRevision = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"shortConfigGitRevision\0")
+            .map(|sym| *sym);
+        let buildDate = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"buildDate\0")
+            .map(|sym| *sym);
+        let buildTime = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"buildTime\0")
+            .map(|sym| *sym);
+        let buildKey = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"buildKey\0")
+            .map(|sym| *sym);
+        let releaseName = __library
+            .get::<*mut *const ::std::os::raw::c_char>(b"releaseName\0")
+            .map(|sym| *sym);
+        let eepromData = __library
+            .get::<*mut [u8; 32768usize]>(b"eepromData\0")
+            .map(|sym| *sym);
+        let getMcuTypeId = __library.get(b"getMcuTypeId\0").map(|sym| *sym);
+        let __pg_registry_start = __library
+            .get::<*mut [pgRegistry_t; 0usize]>(b"__pg_registry_start\0")
+            .map(|sym| *sym);
+        let __pg_registry_end = __library
+            .get::<*mut [pgRegistry_t; 0usize]>(b"__pg_registry_end\0")
+            .map(|sym| *sym);
+        let __pg_resetdata_start = __library
+            .get::<*mut [u8; 0usize]>(b"__pg_resetdata_start\0")
+            .map(|sym| *sym);
+        let __pg_resetdata_end = __library
+            .get::<*mut [u8; 0usize]>(b"__pg_resetdata_end\0")
+            .map(|sym| *sym);
+        let pgFind = __library.get(b"pgFind\0").map(|sym| *sym);
+        let pgLoad = __library.get(b"pgLoad\0").map(|sym| *sym);
+        let pgStore = __library.get(b"pgStore\0").map(|sym| *sym);
+        let pgResetAll = __library.get(b"pgResetAll\0").map(|sym| *sym);
+        let pgResetInstance = __library.get(b"pgResetInstance\0").map(|sym| *sym);
+        let pgResetCopy = __library.get(b"pgResetCopy\0").map(|sym| *sym);
+        let pgReset = __library.get(b"pgReset\0").map(|sym| *sym);
+        let timeConfig_System = __library
+            .get::<*mut timeConfig_t>(b"timeConfig_System\0")
+            .map(|sym| *sym);
+        let timeConfig_Copy = __library
+            .get::<*mut timeConfig_t>(b"timeConfig_Copy\0")
+            .map(|sym| *sym);
+        let rtcTimeMake = __library.get(b"rtcTimeMake\0").map(|sym| *sym);
+        let rtcTimeGetSeconds = __library.get(b"rtcTimeGetSeconds\0").map(|sym| *sym);
+        let rtcTimeGetMillis = __library.get(b"rtcTimeGetMillis\0").map(|sym| *sym);
+        let dateTimeFormatUTC = __library.get(b"dateTimeFormatUTC\0").map(|sym| *sym);
+        let dateTimeFormatLocal = __library.get(b"dateTimeFormatLocal\0").map(|sym| *sym);
+        let dateTimeFormatLocalShort = __library.get(b"dateTimeFormatLocalShort\0").map(|sym| *sym);
+        let dateTimeUTCToLocal = __library.get(b"dateTimeUTCToLocal\0").map(|sym| *sym);
+        let dateTimeSplitFormatted = __library.get(b"dateTimeSplitFormatted\0").map(|sym| *sym);
+        let rtcHasTime = __library.get(b"rtcHasTime\0").map(|sym| *sym);
+        let rtcGet = __library.get(b"rtcGet\0").map(|sym| *sym);
+        let rtcSet = __library.get(b"rtcSet\0").map(|sym| *sym);
+        let rtcGetDateTime = __library.get(b"rtcGetDateTime\0").map(|sym| *sym);
+        let rtcSetDateTime = __library.get(b"rtcSetDateTime\0").map(|sym| *sym);
+        let rtcPersistWrite = __library.get(b"rtcPersistWrite\0").map(|sym| *sym);
+        let rtcPersistRead = __library.get(b"rtcPersistRead\0").map(|sym| *sym);
+        let ownerNames = __library
+            .get::<*mut [*const ::std::os::raw::c_char; 90usize]>(b"ownerNames\0")
+            .map(|sym| *sym);
+        let dmaAllocate = __library.get(b"dmaAllocate\0").map(|sym| *sym);
+        let dmaEnable = __library.get(b"dmaEnable\0").map(|sym| *sym);
+        let dmaSetHandler = __library.get(b"dmaSetHandler\0").map(|sym| *sym);
+        let dmaGetIdentifier = __library.get(b"dmaGetIdentifier\0").map(|sym| *sym);
+        let dmaGetOwner = __library.get(b"dmaGetOwner\0").map(|sym| *sym);
+        let dmaGetDescriptorByIdentifier = __library
+            .get(b"dmaGetDescriptorByIdentifier\0")
+            .map(|sym| *sym);
+        let dmaGetChannel = __library.get(b"dmaGetChannel\0").map(|sym| *sym);
+        let IORead = __library.get(b"IORead\0").map(|sym| *sym);
+        let IOWrite = __library.get(b"IOWrite\0").map(|sym| *sym);
+        let IOHi = __library.get(b"IOHi\0").map(|sym| *sym);
+        let IOLo = __library.get(b"IOLo\0").map(|sym| *sym);
+        let IOToggle = __library.get(b"IOToggle\0").map(|sym| *sym);
+        let IOInit = __library.get(b"IOInit\0").map(|sym| *sym);
+        let IORelease = __library.get(b"IORelease\0").map(|sym| *sym);
+        let IOGetOwner = __library.get(b"IOGetOwner\0").map(|sym| *sym);
+        let IOIsFreeOrPreinit = __library.get(b"IOIsFreeOrPreinit\0").map(|sym| *sym);
+        let IOGetByTag = __library.get(b"IOGetByTag\0").map(|sym| *sym);
+        let IOConfigGPIO = __library.get(b"IOConfigGPIO\0").map(|sym| *sym);
+        let IOInitGlobal = __library.get(b"IOInitGlobal\0").map(|sym| *sym);
+        let IOTraversePins = __library.get(b"IOTraversePins\0").map(|sym| *sym);
+        let IO_GPIO = __library.get(b"IO_GPIO\0").map(|sym| *sym);
+        let IO_Pin = __library.get(b"IO_Pin\0").map(|sym| *sym);
+        let dmaoptByTag = __library.get(b"dmaoptByTag\0").map(|sym| *sym);
+        let dmaGetChannelSpecByPeripheral = __library
+            .get(b"dmaGetChannelSpecByPeripheral\0")
+            .map(|sym| *sym);
+        let dmaGetChannelSpecByTimerValue = __library
+            .get(b"dmaGetChannelSpecByTimerValue\0")
+            .map(|sym| *sym);
+        let dmaGetChannelSpecByTimer = __library.get(b"dmaGetChannelSpecByTimer\0").map(|sym| *sym);
+        let dmaGetOptionByTimer = __library.get(b"dmaGetOptionByTimer\0").map(|sym| *sym);
+        let dmaGetUpOptionByTimer = __library.get(b"dmaGetUpOptionByTimer\0").map(|sym| *sym);
+        let fullTimerHardware = __library
+            .get::<*mut [timerHardware_t; 0usize]>(b"fullTimerHardware\0")
+            .map(|sym| *sym);
+        let timerDefinitions = __library
+            .get::<*mut [timerDef_t; 0usize]>(b"timerDefinitions\0")
+            .map(|sym| *sym);
+        let timerConfigure = __library.get(b"timerConfigure\0").map(|sym| *sym);
+        let timerInit = __library.get(b"timerInit\0").map(|sym| *sym);
+        let timerStart = __library.get(b"timerStart\0").map(|sym| *sym);
+        let timerChConfigIC = __library.get(b"timerChConfigIC\0").map(|sym| *sym);
+        let timerChConfigICDual = __library.get(b"timerChConfigICDual\0").map(|sym| *sym);
+        let timerChICPolarity = __library.get(b"timerChICPolarity\0").map(|sym| *sym);
+        let timerChCCR = __library.get(b"timerChCCR\0").map(|sym| *sym);
+        let timerChCCRLo = __library.get(b"timerChCCRLo\0").map(|sym| *sym);
+        let timerChCCRHi = __library.get(b"timerChCCRHi\0").map(|sym| *sym);
+        let timerChConfigOC = __library.get(b"timerChConfigOC\0").map(|sym| *sym);
+        let timerChConfigGPIO = __library.get(b"timerChConfigGPIO\0").map(|sym| *sym);
+        let timerChCCHandlerInit = __library.get(b"timerChCCHandlerInit\0").map(|sym| *sym);
+        let timerChOvrHandlerInit = __library.get(b"timerChOvrHandlerInit\0").map(|sym| *sym);
+        let timerChConfigCallbacks = __library.get(b"timerChConfigCallbacks\0").map(|sym| *sym);
+        let timerChConfigCallbacksDual = __library
+            .get(b"timerChConfigCallbacksDual\0")
+            .map(|sym| *sym);
+        let timerChITConfigDualLo = __library.get(b"timerChITConfigDualLo\0").map(|sym| *sym);
+        let timerChITConfig = __library.get(b"timerChITConfig\0").map(|sym| *sym);
+        let timerChClearCCFlag = __library.get(b"timerChClearCCFlag\0").map(|sym| *sym);
+        let timerChInit = __library.get(b"timerChInit\0").map(|sym| *sym);
+        let timerForceOverflow = __library.get(b"timerForceOverflow\0").map(|sym| *sym);
+        let timerConfigUpdateCallback = __library
+            .get(b"timerConfigUpdateCallback\0")
+            .map(|sym| *sym);
+        let timerClock = __library.get(b"timerClock\0").map(|sym| *sym);
+        let configTimeBase = __library.get(b"configTimeBase\0").map(|sym| *sym);
+        let timerReconfigureTimeBase = __library.get(b"timerReconfigureTimeBase\0").map(|sym| *sym);
+        let timerRCC = __library.get(b"timerRCC\0").map(|sym| *sym);
+        let timerInputIrq = __library.get(b"timerInputIrq\0").map(|sym| *sym);
+        let timerGetConfiguredByTag = __library.get(b"timerGetConfiguredByTag\0").map(|sym| *sym);
+        let timerAllocate = __library.get(b"timerAllocate\0").map(|sym| *sym);
+        let timerGetByTagAndIndex = __library.get(b"timerGetByTagAndIndex\0").map(|sym| *sym);
+        let timerOCInit = __library.get(b"timerOCInit\0").map(|sym| *sym);
+        let timerOCPreloadConfig = __library.get(b"timerOCPreloadConfig\0").map(|sym| *sym);
+        let timerCCR = __library.get(b"timerCCR\0").map(|sym| *sym);
+        let timerDmaSource = __library.get(b"timerDmaSource\0").map(|sym| *sym);
+        let timerGetPrescalerByDesiredHertz = __library
+            .get(b"timerGetPrescalerByDesiredHertz\0")
+            .map(|sym| *sym);
+        let timerGetPrescalerByDesiredMhz = __library
+            .get(b"timerGetPrescalerByDesiredMhz\0")
+            .map(|sym| *sym);
+        let timerGetPeriodByPrescaler = __library
+            .get(b"timerGetPeriodByPrescaler\0")
+            .map(|sym| *sym);
+        let timerGetNumberByIndex = __library.get(b"timerGetNumberByIndex\0").map(|sym| *sym);
+        let timerGetTIMNumber = __library.get(b"timerGetTIMNumber\0").map(|sym| *sym);
+        let timerLookupChannelIndex = __library.get(b"timerLookupChannelIndex\0").map(|sym| *sym);
+        let dshotBitbangDevInit = __library.get(b"dshotBitbangDevInit\0").map(|sym| *sym);
+        let dshotBitbangGetStatus = __library.get(b"dshotBitbangGetStatus\0").map(|sym| *sym);
+        let dshotBitbangTimerGetAllocatedByNumberAndChannel = __library
+            .get(b"dshotBitbangTimerGetAllocatedByNumberAndChannel\0")
+            .map(|sym| *sym);
+        let dshotBitbangTimerGetOwner = __library
+            .get(b"dshotBitbangTimerGetOwner\0")
+            .map(|sym| *sym);
+        let motorConfig_System = __library
+            .get::<*mut motorConfig_t>(b"motorConfig_System\0")
+            .map(|sym| *sym);
+        let motorConfig_Copy = __library
+            .get::<*mut motorConfig_t>(b"motorConfig_Copy\0")
+            .map(|sym| *sym);
+        let motorPostInitNull = __library.get(b"motorPostInitNull\0").map(|sym| *sym);
+        let motorWriteNull = __library.get(b"motorWriteNull\0").map(|sym| *sym);
+        let motorDecodeTelemetryNull = __library.get(b"motorDecodeTelemetryNull\0").map(|sym| *sym);
+        let motorUpdateCompleteNull = __library.get(b"motorUpdateCompleteNull\0").map(|sym| *sym);
+        let motorPostInit = __library.get(b"motorPostInit\0").map(|sym| *sym);
+        let motorWriteAll = __library.get(b"motorWriteAll\0").map(|sym| *sym);
+        let motorInitEndpoints = __library.get(b"motorInitEndpoints\0").map(|sym| *sym);
+        let motorConvertFromExternal = __library.get(b"motorConvertFromExternal\0").map(|sym| *sym);
+        let motorConvertToExternal = __library.get(b"motorConvertToExternal\0").map(|sym| *sym);
+        let motorDevInit = __library.get(b"motorDevInit\0").map(|sym| *sym);
+        let motorDeviceCount = __library.get(b"motorDeviceCount\0").map(|sym| *sym);
+        let motorGetVTable = __library.get(b"motorGetVTable\0").map(|sym| *sym);
+        let checkMotorProtocolEnabled = __library
+            .get(b"checkMotorProtocolEnabled\0")
+            .map(|sym| *sym);
+        let isMotorProtocolDshot = __library.get(b"isMotorProtocolDshot\0").map(|sym| *sym);
+        let isMotorProtocolEnabled = __library.get(b"isMotorProtocolEnabled\0").map(|sym| *sym);
+        let motorDisable = __library.get(b"motorDisable\0").map(|sym| *sym);
+        let motorEnable = __library.get(b"motorEnable\0").map(|sym| *sym);
+        let motorIsEnabled = __library.get(b"motorIsEnabled\0").map(|sym| *sym);
+        let motorIsMotorEnabled = __library.get(b"motorIsMotorEnabled\0").map(|sym| *sym);
+        let motorGetMotorEnableTimeMs = __library
+            .get(b"motorGetMotorEnableTimeMs\0")
+            .map(|sym| *sym);
+        let motorShutdown = __library.get(b"motorShutdown\0").map(|sym| *sym);
+        let getDigitalIdleOffset = __library.get(b"getDigitalIdleOffset\0").map(|sym| *sym);
+        let motors = __library
+            .get::<*mut [pwmOutputPort_t; 8usize]>(b"motors\0")
+            .map(|sym| *sym);
+        let motorPwmDevInit = __library.get(b"motorPwmDevInit\0").map(|sym| *sym);
+        let servoDevInit = __library.get(b"servoDevInit\0").map(|sym| *sym);
+        let pwmServoConfig = __library.get(b"pwmServoConfig\0").map(|sym| *sym);
+        let pwmOutConfig = __library.get(b"pwmOutConfig\0").map(|sym| *sym);
+        let pwmWriteServo = __library.get(b"pwmWriteServo\0").map(|sym| *sym);
+        let pwmGetMotors = __library.get(b"pwmGetMotors\0").map(|sym| *sym);
+        let pwmIsSynced = __library.get(b"pwmIsSynced\0").map(|sym| *sym);
+        let serialPinConfig_System = __library
+            .get::<*mut serialPinConfig_t>(b"serialPinConfig_System\0")
+            .map(|sym| *sym);
+        let serialPinConfig_Copy = __library
+            .get::<*mut serialPinConfig_t>(b"serialPinConfig_Copy\0")
+            .map(|sym| *sym);
+        let serialWrite = __library.get(b"serialWrite\0").map(|sym| *sym);
+        let serialRxBytesWaiting = __library.get(b"serialRxBytesWaiting\0").map(|sym| *sym);
+        let serialTxBytesFree = __library.get(b"serialTxBytesFree\0").map(|sym| *sym);
+        let serialWriteBuf = __library.get(b"serialWriteBuf\0").map(|sym| *sym);
+        let serialRead = __library.get(b"serialRead\0").map(|sym| *sym);
+        let serialSetBaudRate = __library.get(b"serialSetBaudRate\0").map(|sym| *sym);
+        let serialSetMode = __library.get(b"serialSetMode\0").map(|sym| *sym);
+        let serialSetCtrlLineStateCb = __library.get(b"serialSetCtrlLineStateCb\0").map(|sym| *sym);
+        let serialSetBaudRateCb = __library.get(b"serialSetBaudRateCb\0").map(|sym| *sym);
+        let isSerialTransmitBufferEmpty = __library
+            .get(b"isSerialTransmitBufferEmpty\0")
+            .map(|sym| *sym);
+        let serialPrint = __library.get(b"serialPrint\0").map(|sym| *sym);
+        let serialGetBaudRate = __library.get(b"serialGetBaudRate\0").map(|sym| *sym);
+        let serialWriteBufShim = __library.get(b"serialWriteBufShim\0").map(|sym| *sym);
+        let serialBeginWrite = __library.get(b"serialBeginWrite\0").map(|sym| *sym);
+        let serialEndWrite = __library.get(b"serialEndWrite\0").map(|sym| *sym);
+        let serialWsOpen = __library.get(b"serialWsOpen\0").map(|sym| *sym);
+        let wsDataIn = __library.get(b"wsDataIn\0").map(|sym| *sym);
+        let wsDataOut = __library.get(b"wsDataOut\0").map(|sym| *sym);
+        let wsUpdate = __library.get(b"wsUpdate\0").map(|sym| *sym);
+        let systemBeep = __library.get(b"systemBeep\0").map(|sym| *sym);
+        let systemBeepToggle = __library.get(b"systemBeepToggle\0").map(|sym| *sym);
+        let beeperInit = __library.get(b"beeperInit\0").map(|sym| *sym);
+        let getBeeper = __library.get(b"getBeeper\0").map(|sym| *sym);
+        let systemState = __library.get::<*mut u8>(b"systemState\0").map(|sym| *sym);
+        let init = __library.get(b"init\0").map(|sym| *sym);
+        let armingFlags = __library.get::<*mut u8>(b"armingFlags\0").map(|sym| *sym);
+        let armingDisableFlagNames = __library
+            .get::<*mut [*const ::std::os::raw::c_char; 26usize]>(b"armingDisableFlagNames\0")
+            .map(|sym| *sym);
+        let setArmingDisabled = __library.get(b"setArmingDisabled\0").map(|sym| *sym);
+        let unsetArmingDisabled = __library.get(b"unsetArmingDisabled\0").map(|sym| *sym);
+        let isArmingDisabled = __library.get(b"isArmingDisabled\0").map(|sym| *sym);
+        let getArmingDisableFlags = __library.get(b"getArmingDisableFlags\0").map(|sym| *sym);
+        let flightModeFlags = __library
+            .get::<*mut u16>(b"flightModeFlags\0")
+            .map(|sym| *sym);
+        let stateFlags = __library.get::<*mut u8>(b"stateFlags\0").map(|sym| *sym);
+        let enableFlightMode = __library.get(b"enableFlightMode\0").map(|sym| *sym);
+        let disableFlightMode = __library.get(b"disableFlightMode\0").map(|sym| *sym);
+        let sensors = __library.get(b"sensors\0").map(|sym| *sym);
+        let sensorsSet = __library.get(b"sensorsSet\0").map(|sym| *sym);
+        let sensorsClear = __library.get(b"sensorsClear\0").map(|sym| *sym);
+        let sensorsMask = __library.get(b"sensorsMask\0").map(|sym| *sym);
+        let mwDisarm = __library.get(b"mwDisarm\0").map(|sym| *sym);
+        let pilotConfig_System = __library
+            .get::<*mut pilotConfig_t>(b"pilotConfig_System\0")
+            .map(|sym| *sym);
+        let pilotConfig_Copy = __library
+            .get::<*mut pilotConfig_t>(b"pilotConfig_Copy\0")
+            .map(|sym| *sym);
+        let systemConfig_System = __library
+            .get::<*mut systemConfig_t>(b"systemConfig_System\0")
+            .map(|sym| *sym);
+        let systemConfig_Copy = __library
+            .get::<*mut systemConfig_t>(b"systemConfig_Copy\0")
+            .map(|sym| *sym);
+        let currentPidProfile = __library
+            .get::<*mut *mut pidProfile_s>(b"currentPidProfile\0")
+            .map(|sym| *sym);
+        let initEEPROM = __library.get(b"initEEPROM\0").map(|sym| *sym);
+        let resetEEPROM = __library.get(b"resetEEPROM\0").map(|sym| *sym);
+        let readEEPROM = __library.get(b"readEEPROM\0").map(|sym| *sym);
+        let writeEEPROM = __library.get(b"writeEEPROM\0").map(|sym| *sym);
+        let writeUnmodifiedConfigToEEPROM = __library
+            .get(b"writeUnmodifiedConfigToEEPROM\0")
+            .map(|sym| *sym);
+        let ensureEEPROMStructureIsValid = __library
+            .get(b"ensureEEPROMStructureIsValid\0")
+            .map(|sym| *sym);
+        let saveConfigAndNotify = __library.get(b"saveConfigAndNotify\0").map(|sym| *sym);
+        let validateAndFixGyroConfig = __library.get(b"validateAndFixGyroConfig\0").map(|sym| *sym);
+        let validateAndFixBlackBox = __library.get(b"validateAndFixBlackBox\0").map(|sym| *sym);
+        let setConfigDirty = __library.get(b"setConfigDirty\0").map(|sym| *sym);
+        let isConfigDirty = __library.get(b"isConfigDirty\0").map(|sym| *sym);
+        let getCurrentPidProfileIndex = __library
+            .get(b"getCurrentPidProfileIndex\0")
+            .map(|sym| *sym);
+        let changePidProfile = __library.get(b"changePidProfile\0").map(|sym| *sym);
+        let changePidProfileFromCellCount = __library
+            .get(b"changePidProfileFromCellCount\0")
+            .map(|sym| *sym);
+        let getCurrentControlRateProfileIndex = __library
+            .get(b"getCurrentControlRateProfileIndex\0")
+            .map(|sym| *sym);
+        let changeControlRateProfile = __library.get(b"changeControlRateProfile\0").map(|sym| *sym);
+        let canSoftwareSerialBeUsed = __library.get(b"canSoftwareSerialBeUsed\0").map(|sym| *sym);
+        let getCurrentMinthrottle = __library.get(b"getCurrentMinthrottle\0").map(|sym| *sym);
+        let resetConfig = __library.get(b"resetConfig\0").map(|sym| *sym);
+        let targetConfiguration = __library.get(b"targetConfiguration\0").map(|sym| *sym);
+        let targetValidateConfiguration = __library
+            .get(b"targetValidateConfiguration\0")
+            .map(|sym| *sym);
+        let isSystemConfigured = __library.get(b"isSystemConfigured\0").map(|sym| *sym);
+        let setRebootRequired = __library.get(b"setRebootRequired\0").map(|sym| *sym);
+        let getRebootRequired = __library.get(b"getRebootRequired\0").map(|sym| *sym);
+        let isEepromWriteInProgress = __library.get(b"isEepromWriteInProgress\0").map(|sym| *sym);
+        let schedulerConfig_System = __library
+            .get::<*mut schedulerConfig_t>(b"schedulerConfig_System\0")
+            .map(|sym| *sym);
+        let schedulerConfig_Copy = __library
+            .get::<*mut schedulerConfig_t>(b"schedulerConfig_Copy\0")
+            .map(|sym| *sym);
+        let getCheckFuncInfo = __library.get(b"getCheckFuncInfo\0").map(|sym| *sym);
+        let getTaskInfo = __library.get(b"getTaskInfo\0").map(|sym| *sym);
+        let rescheduleTask = __library.get(b"rescheduleTask\0").map(|sym| *sym);
+        let setTaskEnabled = __library.get(b"setTaskEnabled\0").map(|sym| *sym);
+        let getTaskDeltaTimeUs = __library.get(b"getTaskDeltaTimeUs\0").map(|sym| *sym);
+        let schedulerIgnoreTaskStateTime = __library
+            .get(b"schedulerIgnoreTaskStateTime\0")
+            .map(|sym| *sym);
+        let schedulerIgnoreTaskExecRate = __library
+            .get(b"schedulerIgnoreTaskExecRate\0")
+            .map(|sym| *sym);
+        let schedulerIgnoreTaskExecTime = __library
+            .get(b"schedulerIgnoreTaskExecTime\0")
+            .map(|sym| *sym);
+        let schedulerGetIgnoreTaskExecTime = __library
+            .get(b"schedulerGetIgnoreTaskExecTime\0")
+            .map(|sym| *sym);
+        let schedulerResetTaskStatistics = __library
+            .get(b"schedulerResetTaskStatistics\0")
+            .map(|sym| *sym);
+        let schedulerResetTaskMaxExecutionTime = __library
+            .get(b"schedulerResetTaskMaxExecutionTime\0")
+            .map(|sym| *sym);
+        let schedulerResetCheckFunctionMaxExecutionTime = __library
+            .get(b"schedulerResetCheckFunctionMaxExecutionTime\0")
+            .map(|sym| *sym);
+        let schedulerSetNextStateTime = __library
+            .get(b"schedulerSetNextStateTime\0")
+            .map(|sym| *sym);
+        let schedulerGetNextStateTime = __library
+            .get(b"schedulerGetNextStateTime\0")
+            .map(|sym| *sym);
+        let schedulerInit = __library.get(b"schedulerInit\0").map(|sym| *sym);
+        let scheduler = __library.get(b"scheduler\0").map(|sym| *sym);
+        let schedulerExecuteTask = __library.get(b"schedulerExecuteTask\0").map(|sym| *sym);
+        let taskSystemLoad = __library.get(b"taskSystemLoad\0").map(|sym| *sym);
+        let schedulerEnableGyro = __library.get(b"schedulerEnableGyro\0").map(|sym| *sym);
+        let getAverageSystemLoadPercent = __library
+            .get(b"getAverageSystemLoadPercent\0")
+            .map(|sym| *sym);
+        let schedulerGetCycleTimeMultiplier = __library
+            .get(b"schedulerGetCycleTimeMultiplier\0")
+            .map(|sym| *sym);
+        let tasksInitData = __library.get(b"tasksInitData\0").map(|sym| *sym);
+        let tasksInit = __library.get(b"tasksInit\0").map(|sym| *sym);
+        let getTask = __library.get(b"getTask\0").map(|sym| *sym);
+        let taskUpdateRxMainInProgress = __library
+            .get(b"taskUpdateRxMainInProgress\0")
+            .map(|sym| *sym);
+        let canUseGPSHeading = __library
+            .get::<*mut bool>(b"canUseGPSHeading\0")
+            .map(|sym| *sym);
+        let attitude = __library
+            .get::<*mut attitudeEulerAngles_t>(b"attitude\0")
+            .map(|sym| *sym);
+        let rMat = __library
+            .get::<*mut [[f32; 3usize]; 3usize]>(b"rMat\0")
+            .map(|sym| *sym);
+        let imuConfig_System = __library
+            .get::<*mut imuConfig_t>(b"imuConfig_System\0")
+            .map(|sym| *sym);
+        let imuConfig_Copy = __library
+            .get::<*mut imuConfig_t>(b"imuConfig_Copy\0")
+            .map(|sym| *sym);
+        let imuConfigure = __library.get(b"imuConfigure\0").map(|sym| *sym);
+        let getCosTiltAngle = __library.get(b"getCosTiltAngle\0").map(|sym| *sym);
+        let getQuaternion = __library.get(b"getQuaternion\0").map(|sym| *sym);
+        let imuUpdateAttitude = __library.get(b"imuUpdateAttitude\0").map(|sym| *sym);
+        let imuInit = __library.get(b"imuInit\0").map(|sym| *sym);
+        let imuSetAttitudeRPY = __library.get(b"imuSetAttitudeRPY\0").map(|sym| *sym);
+        let imuSetAttitudeQuat = __library.get(b"imuSetAttitudeQuat\0").map(|sym| *sym);
+        let imuQuaternionHeadfreeOffsetSet = __library
+            .get(b"imuQuaternionHeadfreeOffsetSet\0")
+            .map(|sym| *sym);
+        let imuQuaternionHeadfreeTransformVectorEarthToBody = __library
+            .get(b"imuQuaternionHeadfreeTransformVectorEarthToBody\0")
+            .map(|sym| *sym);
+        let shouldInitializeGPSHeading = __library
+            .get(b"shouldInitializeGPSHeading\0")
+            .map(|sym| *sym);
+        let isUpright = __library.get(b"isUpright\0").map(|sym| *sym);
+        let osdScreen = __library
+            .get::<*mut [[u8; 30usize]; 16usize]>(b"osdScreen\0")
+            .map(|sym| *sym);
+        let baudRates = __library
+            .get::<*mut [u32; 0usize]>(b"baudRates\0")
+            .map(|sym| *sym);
+        let serialPortIdentifiers = __library
+            .get::<*mut [serialPortIdentifier_e; 8usize]>(b"serialPortIdentifiers\0")
+            .map(|sym| *sym);
+        let findSharedSerialPort = __library.get(b"findSharedSerialPort\0").map(|sym| *sym);
+        let serialConfig_System = __library
+            .get::<*mut serialConfig_t>(b"serialConfig_System\0")
+            .map(|sym| *sym);
+        let serialConfig_Copy = __library
+            .get::<*mut serialConfig_t>(b"serialConfig_Copy\0")
+            .map(|sym| *sym);
+        let serialInit = __library.get(b"serialInit\0").map(|sym| *sym);
+        let serialRemovePort = __library.get(b"serialRemovePort\0").map(|sym| *sym);
+        let serialGetAvailablePortCount = __library
+            .get(b"serialGetAvailablePortCount\0")
+            .map(|sym| *sym);
+        let serialIsPortAvailable = __library.get(b"serialIsPortAvailable\0").map(|sym| *sym);
+        let isSerialConfigValid = __library.get(b"isSerialConfigValid\0").map(|sym| *sym);
+        let serialFindPortConfiguration = __library
+            .get(b"serialFindPortConfiguration\0")
+            .map(|sym| *sym);
+        let serialFindPortConfigurationMutable = __library
+            .get(b"serialFindPortConfigurationMutable\0")
+            .map(|sym| *sym);
+        let doesConfigurationUsePort = __library.get(b"doesConfigurationUsePort\0").map(|sym| *sym);
+        let findSerialPortConfig = __library.get(b"findSerialPortConfig\0").map(|sym| *sym);
+        let findNextSerialPortConfig = __library.get(b"findNextSerialPortConfig\0").map(|sym| *sym);
+        let determinePortSharing = __library.get(b"determinePortSharing\0").map(|sym| *sym);
+        let isSerialPortShared = __library.get(b"isSerialPortShared\0").map(|sym| *sym);
+        let pgResetFn_serialConfig = __library.get(b"pgResetFn_serialConfig\0").map(|sym| *sym);
+        let findSerialPortUsageByIdentifier = __library
+            .get(b"findSerialPortUsageByIdentifier\0")
+            .map(|sym| *sym);
+        let findSerialPortIndexByIdentifier = __library
+            .get(b"findSerialPortIndexByIdentifier\0")
+            .map(|sym| *sym);
+        let openSerialPort = __library.get(b"openSerialPort\0").map(|sym| *sym);
+        let closeSerialPort = __library.get(b"closeSerialPort\0").map(|sym| *sym);
+        let waitForSerialPortToFinishTransmitting = __library
+            .get(b"waitForSerialPortToFinishTransmitting\0")
+            .map(|sym| *sym);
+        let lookupBaudRateIndex = __library.get(b"lookupBaudRateIndex\0").map(|sym| *sym);
+        let serialPassthrough = __library.get(b"serialPassthrough\0").map(|sym| *sym);
+        let gpsConfig_System = __library
+            .get::<*mut gpsConfig_t>(b"gpsConfig_System\0")
+            .map(|sym| *sym);
+        let gpsConfig_Copy = __library
+            .get::<*mut gpsConfig_t>(b"gpsConfig_Copy\0")
+            .map(|sym| *sym);
+        let GPS_home = __library
+            .get::<*mut [i32; 2usize]>(b"GPS_home\0")
+            .map(|sym| *sym);
+        let GPS_distanceToHome = __library
+            .get::<*mut u16>(b"GPS_distanceToHome\0")
+            .map(|sym| *sym);
+        let GPS_distanceToHomeCm = __library
+            .get::<*mut u32>(b"GPS_distanceToHomeCm\0")
+            .map(|sym| *sym);
+        let GPS_directionToHome = __library
+            .get::<*mut i16>(b"GPS_directionToHome\0")
+            .map(|sym| *sym);
+        let GPS_distanceFlownInCm = __library
+            .get::<*mut u32>(b"GPS_distanceFlownInCm\0")
+            .map(|sym| *sym);
+        let GPS_angle = __library
+            .get::<*mut [i16; 2usize]>(b"GPS_angle\0")
+            .map(|sym| *sym);
+        let GPS_scaleLonDown = __library
+            .get::<*mut f32>(b"GPS_scaleLonDown\0")
+            .map(|sym| *sym);
+        let gpsData = __library
+            .get::<*mut gpsData_t>(b"gpsData\0")
+            .map(|sym| *sym);
+        let gpsSol = __library
+            .get::<*mut gpsSolutionData_t>(b"gpsSol\0")
+            .map(|sym| *sym);
+        let GPS_update = __library.get::<*mut u8>(b"GPS_update\0").map(|sym| *sym);
+        let GPS_numCh = __library.get::<*mut u8>(b"GPS_numCh\0").map(|sym| *sym);
+        let GPS_svinfo_chn = __library
+            .get::<*mut [u8; 32usize]>(b"GPS_svinfo_chn\0")
+            .map(|sym| *sym);
+        let GPS_svinfo_svid = __library
+            .get::<*mut [u8; 32usize]>(b"GPS_svinfo_svid\0")
+            .map(|sym| *sym);
+        let GPS_svinfo_quality = __library
+            .get::<*mut [u8; 32usize]>(b"GPS_svinfo_quality\0")
+            .map(|sym| *sym);
+        let GPS_svinfo_cno = __library
+            .get::<*mut [u8; 32usize]>(b"GPS_svinfo_cno\0")
+            .map(|sym| *sym);
+        let gpsInit = __library.get(b"gpsInit\0").map(|sym| *sym);
+        let gpsUpdate = __library.get(b"gpsUpdate\0").map(|sym| *sym);
+        let gpsNewFrame = __library.get(b"gpsNewFrame\0").map(|sym| *sym);
+        let gpsIsHealthy = __library.get(b"gpsIsHealthy\0").map(|sym| *sym);
+        let gpsEnablePassthrough = __library.get(b"gpsEnablePassthrough\0").map(|sym| *sym);
+        let onGpsNewData = __library.get(b"onGpsNewData\0").map(|sym| *sym);
+        let GPS_reset_home_position = __library.get(b"GPS_reset_home_position\0").map(|sym| *sym);
+        let GPS_calc_longitude_scaling = __library
+            .get(b"GPS_calc_longitude_scaling\0")
+            .map(|sym| *sym);
+        let GPS_distance_cm_bearing = __library.get(b"GPS_distance_cm_bearing\0").map(|sym| *sym);
+        let gpsSetFixState = __library.get(b"gpsSetFixState\0").map(|sym| *sym);
+        let getGpsDataIntervalSeconds = __library
+            .get(b"getGpsDataIntervalSeconds\0")
+            .map(|sym| *sym);
+        let getGpsPortActualBaudRateIndex = __library
+            .get(b"getGpsPortActualBaudRateIndex\0")
+            .map(|sym| *sym);
+        let rxConfig_System = __library
+            .get::<*mut rxConfig_t>(b"rxConfig_System\0")
+            .map(|sym| *sym);
+        let rxConfig_Copy = __library
+            .get::<*mut rxConfig_t>(b"rxConfig_Copy\0")
+            .map(|sym| *sym);
+        let rcChannelLetters = __library
+            .get::<*mut [::std::os::raw::c_char; 0usize]>(b"rcChannelLetters\0")
+            .map(|sym| *sym);
+        let rcData = __library
+            .get::<*mut [f32; 18usize]>(b"rcData\0")
+            .map(|sym| *sym);
+        let rxFailsafeChannelConfigs_SystemArray = __library
+            .get::<*mut [rxFailsafeChannelConfig_t; 18usize]>(
+                b"rxFailsafeChannelConfigs_SystemArray\0",
+            )
+            .map(|sym| *sym);
+        let rxFailsafeChannelConfigs_CopyArray = __library
+            .get::<*mut [rxFailsafeChannelConfig_t; 18usize]>(
+                b"rxFailsafeChannelConfigs_CopyArray\0",
+            )
+            .map(|sym| *sym);
+        let rxChannelRangeConfigs_SystemArray = __library
+            .get::<*mut [rxChannelRangeConfig_t; 4usize]>(b"rxChannelRangeConfigs_SystemArray\0")
+            .map(|sym| *sym);
+        let rxChannelRangeConfigs_CopyArray = __library
+            .get::<*mut [rxChannelRangeConfig_t; 4usize]>(b"rxChannelRangeConfigs_CopyArray\0")
+            .map(|sym| *sym);
+        let rssiSource = __library
+            .get::<*mut rssiSource_e>(b"rssiSource\0")
+            .map(|sym| *sym);
+        let linkQualitySource = __library
+            .get::<*mut linkQualitySource_e>(b"linkQualitySource\0")
+            .map(|sym| *sym);
+        let rxRuntimeState = __library
+            .get::<*mut rxRuntimeState_t>(b"rxRuntimeState\0")
+            .map(|sym| *sym);
+        let rxInit = __library.get(b"rxInit\0").map(|sym| *sym);
+        let rxProcessPending = __library.get(b"rxProcessPending\0").map(|sym| *sym);
+        let rxUpdateCheck = __library.get(b"rxUpdateCheck\0").map(|sym| *sym);
+        let rxFrameCheck = __library.get(b"rxFrameCheck\0").map(|sym| *sym);
+        let rxIsReceivingSignal = __library.get(b"rxIsReceivingSignal\0").map(|sym| *sym);
+        let rxAreFlightChannelsValid = __library.get(b"rxAreFlightChannelsValid\0").map(|sym| *sym);
+        let calculateRxChannelsAndUpdateFailsafe = __library
+            .get(b"calculateRxChannelsAndUpdateFailsafe\0")
+            .map(|sym| *sym);
+        let parseRcChannels = __library.get(b"parseRcChannels\0").map(|sym| *sym);
+        let setRssiDirect = __library.get(b"setRssiDirect\0").map(|sym| *sym);
+        let setRssi = __library.get(b"setRssi\0").map(|sym| *sym);
+        let setRssiMsp = __library.get(b"setRssiMsp\0").map(|sym| *sym);
+        let updateRSSI = __library.get(b"updateRSSI\0").map(|sym| *sym);
+        let getRssi = __library.get(b"getRssi\0").map(|sym| *sym);
+        let getRssiPercent = __library.get(b"getRssiPercent\0").map(|sym| *sym);
+        let isRssiConfigured = __library.get(b"isRssiConfigured\0").map(|sym| *sym);
+        let rxGetLinkQuality = __library.get(b"rxGetLinkQuality\0").map(|sym| *sym);
+        let setLinkQualityDirect = __library.get(b"setLinkQualityDirect\0").map(|sym| *sym);
+        let rxGetLinkQualityPercent = __library.get(b"rxGetLinkQualityPercent\0").map(|sym| *sym);
+        let getRsnr = __library.get(b"getRsnr\0").map(|sym| *sym);
+        let setRsnr = __library.get(b"setRsnr\0").map(|sym| *sym);
+        let setRsnrDirect = __library.get(b"setRsnrDirect\0").map(|sym| *sym);
+        let rxSetRfMode = __library.get(b"rxSetRfMode\0").map(|sym| *sym);
+        let rxGetRfMode = __library.get(b"rxGetRfMode\0").map(|sym| *sym);
+        let rxSetUplinkTxPwrMw = __library.get(b"rxSetUplinkTxPwrMw\0").map(|sym| *sym);
+        let rxGetUplinkTxPwrMw = __library.get(b"rxGetUplinkTxPwrMw\0").map(|sym| *sym);
+        let resetAllRxChannelRangeConfigurations = __library
+            .get(b"resetAllRxChannelRangeConfigurations\0")
+            .map(|sym| *sym);
+        let suspendRxSignal = __library.get(b"suspendRxSignal\0").map(|sym| *sym);
+        let resumeRxSignal = __library.get(b"resumeRxSignal\0").map(|sym| *sym);
+        let rxGetFrameDelta = __library.get(b"rxGetFrameDelta\0").map(|sym| *sym);
+        let rxFrameTimeUs = __library.get(b"rxFrameTimeUs\0").map(|sym| *sym);
+        let rxMspReadRawRC = __library.get(b"rxMspReadRawRC\0").map(|sym| *sym);
+        let rxMspInit = __library.get(b"rxMspInit\0").map(|sym| *sym);
+        let rxMspFrameReceive = __library.get(b"rxMspFrameReceive\0").map(|sym| *sym);
+        let nullFilterApply = __library.get(b"nullFilterApply\0").map(|sym| *sym);
+        let pt1FilterGain = __library.get(b"pt1FilterGain\0").map(|sym| *sym);
+        let pt1FilterInit = __library.get(b"pt1FilterInit\0").map(|sym| *sym);
+        let pt1FilterUpdateCutoff = __library.get(b"pt1FilterUpdateCutoff\0").map(|sym| *sym);
+        let pt1FilterApply = __library.get(b"pt1FilterApply\0").map(|sym| *sym);
+        let pt2FilterGain = __library.get(b"pt2FilterGain\0").map(|sym| *sym);
+        let pt2FilterInit = __library.get(b"pt2FilterInit\0").map(|sym| *sym);
+        let pt2FilterUpdateCutoff = __library.get(b"pt2FilterUpdateCutoff\0").map(|sym| *sym);
+        let pt2FilterApply = __library.get(b"pt2FilterApply\0").map(|sym| *sym);
+        let pt3FilterGain = __library.get(b"pt3FilterGain\0").map(|sym| *sym);
+        let pt3FilterInit = __library.get(b"pt3FilterInit\0").map(|sym| *sym);
+        let pt3FilterUpdateCutoff = __library.get(b"pt3FilterUpdateCutoff\0").map(|sym| *sym);
+        let pt3FilterApply = __library.get(b"pt3FilterApply\0").map(|sym| *sym);
+        let filterGetNotchQ = __library.get(b"filterGetNotchQ\0").map(|sym| *sym);
+        let biquadFilterInitLPF = __library.get(b"biquadFilterInitLPF\0").map(|sym| *sym);
+        let biquadFilterInit = __library.get(b"biquadFilterInit\0").map(|sym| *sym);
+        let biquadFilterUpdate = __library.get(b"biquadFilterUpdate\0").map(|sym| *sym);
+        let biquadFilterUpdateLPF = __library.get(b"biquadFilterUpdateLPF\0").map(|sym| *sym);
+        let biquadFilterApplyDF1 = __library.get(b"biquadFilterApplyDF1\0").map(|sym| *sym);
+        let biquadFilterApplyDF1Weighted = __library
+            .get(b"biquadFilterApplyDF1Weighted\0")
+            .map(|sym| *sym);
+        let biquadFilterApply = __library.get(b"biquadFilterApply\0").map(|sym| *sym);
+        let phaseCompInit = __library.get(b"phaseCompInit\0").map(|sym| *sym);
+        let phaseCompUpdate = __library.get(b"phaseCompUpdate\0").map(|sym| *sym);
+        let phaseCompApply = __library.get(b"phaseCompApply\0").map(|sym| *sym);
+        let slewFilterInit = __library.get(b"slewFilterInit\0").map(|sym| *sym);
+        let slewFilterApply = __library.get(b"slewFilterApply\0").map(|sym| *sym);
+        let laggedMovingAverageInit = __library.get(b"laggedMovingAverageInit\0").map(|sym| *sym);
+        let laggedMovingAverageUpdate = __library
+            .get(b"laggedMovingAverageUpdate\0")
+            .map(|sym| *sym);
+        let simpleLPFilterInit = __library.get(b"simpleLPFilterInit\0").map(|sym| *sym);
+        let simpleLPFilterUpdate = __library.get(b"simpleLPFilterUpdate\0").map(|sym| *sym);
+        let meanAccumulatorInit = __library.get(b"meanAccumulatorInit\0").map(|sym| *sym);
+        let meanAccumulatorAdd = __library.get(b"meanAccumulatorAdd\0").map(|sym| *sym);
+        let meanAccumulatorCalc = __library.get(b"meanAccumulatorCalc\0").map(|sym| *sym);
+        let currentMeterSourceNames = __library
+            .get::<*mut [*const ::std::os::raw::c_char; 5usize]>(b"currentMeterSourceNames\0")
+            .map(|sym| *sym);
+        let currentSensorADCConfig_System = __library
+            .get::<*mut currentSensorADCConfig_t>(b"currentSensorADCConfig_System\0")
+            .map(|sym| *sym);
+        let currentSensorADCConfig_Copy = __library
+            .get::<*mut currentSensorADCConfig_t>(b"currentSensorADCConfig_Copy\0")
+            .map(|sym| *sym);
+        let currentSensorVirtualConfig_System = __library
+            .get::<*mut currentSensorVirtualConfig_t>(b"currentSensorVirtualConfig_System\0")
+            .map(|sym| *sym);
+        let currentSensorVirtualConfig_Copy = __library
+            .get::<*mut currentSensorVirtualConfig_t>(b"currentSensorVirtualConfig_Copy\0")
+            .map(|sym| *sym);
+        let currentMeterReset = __library.get(b"currentMeterReset\0").map(|sym| *sym);
+        let currentMeterADCInit = __library.get(b"currentMeterADCInit\0").map(|sym| *sym);
+        let currentMeterADCRefresh = __library.get(b"currentMeterADCRefresh\0").map(|sym| *sym);
+        let currentMeterADCRead = __library.get(b"currentMeterADCRead\0").map(|sym| *sym);
+        let currentMeterVirtualInit = __library.get(b"currentMeterVirtualInit\0").map(|sym| *sym);
+        let currentMeterVirtualRefresh = __library
+            .get(b"currentMeterVirtualRefresh\0")
+            .map(|sym| *sym);
+        let currentMeterVirtualRead = __library.get(b"currentMeterVirtualRead\0").map(|sym| *sym);
+        let currentMeterESCInit = __library.get(b"currentMeterESCInit\0").map(|sym| *sym);
+        let currentMeterESCRefresh = __library.get(b"currentMeterESCRefresh\0").map(|sym| *sym);
+        let currentMeterESCReadCombined = __library
+            .get(b"currentMeterESCReadCombined\0")
+            .map(|sym| *sym);
+        let currentMeterESCReadMotor = __library.get(b"currentMeterESCReadMotor\0").map(|sym| *sym);
+        let currentMeterMSPInit = __library.get(b"currentMeterMSPInit\0").map(|sym| *sym);
+        let currentMeterMSPRefresh = __library.get(b"currentMeterMSPRefresh\0").map(|sym| *sym);
+        let currentMeterMSPRead = __library.get(b"currentMeterMSPRead\0").map(|sym| *sym);
+        let currentMeterMSPSet = __library.get(b"currentMeterMSPSet\0").map(|sym| *sym);
+        let supportedCurrentMeterCount = __library
+            .get::<*mut u8>(b"supportedCurrentMeterCount\0")
+            .map(|sym| *sym);
+        let currentMeterIds = __library
+            .get::<*mut [u8; 0usize]>(b"currentMeterIds\0")
+            .map(|sym| *sym);
+        let currentMeterRead = __library.get(b"currentMeterRead\0").map(|sym| *sym);
+        let voltageMeterSourceNames = __library
+            .get::<*mut [*const ::std::os::raw::c_char; 3usize]>(b"voltageMeterSourceNames\0")
+            .map(|sym| *sym);
+        let voltageSensorADCConfig_SystemArray = __library
+            .get::<*mut [voltageSensorADCConfig_t; 1usize]>(b"voltageSensorADCConfig_SystemArray\0")
+            .map(|sym| *sym);
+        let voltageSensorADCConfig_CopyArray = __library
+            .get::<*mut [voltageSensorADCConfig_t; 1usize]>(b"voltageSensorADCConfig_CopyArray\0")
+            .map(|sym| *sym);
+        let voltageMeterReset = __library.get(b"voltageMeterReset\0").map(|sym| *sym);
+        let voltageMeterGenericInit = __library.get(b"voltageMeterGenericInit\0").map(|sym| *sym);
+        let voltageMeterADCInit = __library.get(b"voltageMeterADCInit\0").map(|sym| *sym);
+        let voltageMeterADCRefresh = __library.get(b"voltageMeterADCRefresh\0").map(|sym| *sym);
+        let voltageMeterADCRead = __library.get(b"voltageMeterADCRead\0").map(|sym| *sym);
+        let voltageMeterESCInit = __library.get(b"voltageMeterESCInit\0").map(|sym| *sym);
+        let voltageMeterESCRefresh = __library.get(b"voltageMeterESCRefresh\0").map(|sym| *sym);
+        let voltageMeterESCReadCombined = __library
+            .get(b"voltageMeterESCReadCombined\0")
+            .map(|sym| *sym);
+        let voltageMeterESCReadMotor = __library.get(b"voltageMeterESCReadMotor\0").map(|sym| *sym);
+        let voltageMeterADCtoIDMap = __library
+            .get::<*mut [u8; 1usize]>(b"voltageMeterADCtoIDMap\0")
+            .map(|sym| *sym);
+        let supportedVoltageMeterCount = __library
+            .get::<*mut u8>(b"supportedVoltageMeterCount\0")
+            .map(|sym| *sym);
+        let voltageMeterIds = __library
+            .get::<*mut [u8; 0usize]>(b"voltageMeterIds\0")
+            .map(|sym| *sym);
+        let voltageMeterRead = __library.get(b"voltageMeterRead\0").map(|sym| *sym);
+        let isSagCompensationConfigured = __library
+            .get(b"isSagCompensationConfigured\0")
+            .map(|sym| *sym);
+        let batteryConfig_System = __library
+            .get::<*mut batteryConfig_t>(b"batteryConfig_System\0")
+            .map(|sym| *sym);
+        let batteryConfig_Copy = __library
+            .get::<*mut batteryConfig_t>(b"batteryConfig_Copy\0")
+            .map(|sym| *sym);
+        let batteryInit = __library.get(b"batteryInit\0").map(|sym| *sym);
+        let batteryUpdateVoltage = __library.get(b"batteryUpdateVoltage\0").map(|sym| *sym);
+        let batteryUpdatePresence = __library.get(b"batteryUpdatePresence\0").map(|sym| *sym);
+        let getBatteryState = __library.get(b"getBatteryState\0").map(|sym| *sym);
+        let getVoltageState = __library.get(b"getVoltageState\0").map(|sym| *sym);
+        let getConsumptionState = __library.get(b"getConsumptionState\0").map(|sym| *sym);
+        let getBatteryStateString = __library.get(b"getBatteryStateString\0").map(|sym| *sym);
+        let batteryUpdateStates = __library.get(b"batteryUpdateStates\0").map(|sym| *sym);
+        let batteryUpdateAlarms = __library.get(b"batteryUpdateAlarms\0").map(|sym| *sym);
+        let calculateBatteryPercentageRemaining = __library
+            .get(b"calculateBatteryPercentageRemaining\0")
+            .map(|sym| *sym);
+        let isBatteryVoltageConfigured = __library
+            .get(b"isBatteryVoltageConfigured\0")
+            .map(|sym| *sym);
+        let getBatteryVoltage = __library.get(b"getBatteryVoltage\0").map(|sym| *sym);
+        let getLegacyBatteryVoltage = __library.get(b"getLegacyBatteryVoltage\0").map(|sym| *sym);
+        let getBatteryVoltageLatest = __library.get(b"getBatteryVoltageLatest\0").map(|sym| *sym);
+        let getBatteryCellCount = __library.get(b"getBatteryCellCount\0").map(|sym| *sym);
+        let getBatteryAverageCellVoltage = __library
+            .get(b"getBatteryAverageCellVoltage\0")
+            .map(|sym| *sym);
+        let getBatterySagCellVoltage = __library.get(b"getBatterySagCellVoltage\0").map(|sym| *sym);
+        let isAmperageConfigured = __library.get(b"isAmperageConfigured\0").map(|sym| *sym);
+        let getAmperage = __library.get(b"getAmperage\0").map(|sym| *sym);
+        let getAmperageLatest = __library.get(b"getAmperageLatest\0").map(|sym| *sym);
+        let getMAhDrawn = __library.get(b"getMAhDrawn\0").map(|sym| *sym);
+        let getWhDrawn = __library.get(b"getWhDrawn\0").map(|sym| *sym);
+        let batteryUpdateCurrentMeter = __library
+            .get(b"batteryUpdateCurrentMeter\0")
+            .map(|sym| *sym);
+        let getLowVoltageCutoff = __library.get(b"getLowVoltageCutoff\0").map(|sym| *sym);
+        let getCurrentMeter = __library.get(b"getCurrentMeter\0").map(|sym| *sym);
+        let getVoltageMeter = __library.get(b"getVoltageMeter\0").map(|sym| *sym);
+        let setCellCount = __library.get(b"setCellCount\0").map(|sym| *sym);
+        let requestedSensors = __library
+            .get::<*mut [u8; 5usize]>(b"requestedSensors\0")
+            .map(|sym| *sym);
+        let detectedSensors = __library
+            .get::<*mut [u8; 5usize]>(b"detectedSensors\0")
+            .map(|sym| *sym);
+        let __ctype_get_mb_cur_max = __library.get(b"__ctype_get_mb_cur_max\0").map(|sym| *sym);
+        let atof = __library.get(b"atof\0").map(|sym| *sym);
+        let atoi = __library.get(b"atoi\0").map(|sym| *sym);
+        let atol = __library.get(b"atol\0").map(|sym| *sym);
+        let atoll = __library.get(b"atoll\0").map(|sym| *sym);
+        let strtod = __library.get(b"strtod\0").map(|sym| *sym);
+        let strtof = __library.get(b"strtof\0").map(|sym| *sym);
+        let strtold = __library.get(b"strtold\0").map(|sym| *sym);
+        let strtol = __library.get(b"strtol\0").map(|sym| *sym);
+        let strtoul = __library.get(b"strtoul\0").map(|sym| *sym);
+        let strtoq = __library.get(b"strtoq\0").map(|sym| *sym);
+        let strtouq = __library.get(b"strtouq\0").map(|sym| *sym);
+        let strtoll = __library.get(b"strtoll\0").map(|sym| *sym);
+        let strtoull = __library.get(b"strtoull\0").map(|sym| *sym);
+        let l64a = __library.get(b"l64a\0").map(|sym| *sym);
+        let a64l = __library.get(b"a64l\0").map(|sym| *sym);
+        let select = __library.get(b"select\0").map(|sym| *sym);
+        let pselect = __library.get(b"pselect\0").map(|sym| *sym);
+        let random = __library.get(b"random\0").map(|sym| *sym);
+        let srandom = __library.get(b"srandom\0").map(|sym| *sym);
+        let initstate = __library.get(b"initstate\0").map(|sym| *sym);
+        let setstate = __library.get(b"setstate\0").map(|sym| *sym);
+        let random_r = __library.get(b"random_r\0").map(|sym| *sym);
+        let srandom_r = __library.get(b"srandom_r\0").map(|sym| *sym);
+        let initstate_r = __library.get(b"initstate_r\0").map(|sym| *sym);
+        let setstate_r = __library.get(b"setstate_r\0").map(|sym| *sym);
+        let rand = __library.get(b"rand\0").map(|sym| *sym);
+        let srand = __library.get(b"srand\0").map(|sym| *sym);
+        let rand_r = __library.get(b"rand_r\0").map(|sym| *sym);
+        let drand48 = __library.get(b"drand48\0").map(|sym| *sym);
+        let erand48 = __library.get(b"erand48\0").map(|sym| *sym);
+        let lrand48 = __library.get(b"lrand48\0").map(|sym| *sym);
+        let nrand48 = __library.get(b"nrand48\0").map(|sym| *sym);
+        let mrand48 = __library.get(b"mrand48\0").map(|sym| *sym);
+        let jrand48 = __library.get(b"jrand48\0").map(|sym| *sym);
+        let srand48 = __library.get(b"srand48\0").map(|sym| *sym);
+        let seed48 = __library.get(b"seed48\0").map(|sym| *sym);
+        let lcong48 = __library.get(b"lcong48\0").map(|sym| *sym);
+        let drand48_r = __library.get(b"drand48_r\0").map(|sym| *sym);
+        let erand48_r = __library.get(b"erand48_r\0").map(|sym| *sym);
+        let lrand48_r = __library.get(b"lrand48_r\0").map(|sym| *sym);
+        let nrand48_r = __library.get(b"nrand48_r\0").map(|sym| *sym);
+        let mrand48_r = __library.get(b"mrand48_r\0").map(|sym| *sym);
+        let jrand48_r = __library.get(b"jrand48_r\0").map(|sym| *sym);
+        let srand48_r = __library.get(b"srand48_r\0").map(|sym| *sym);
+        let seed48_r = __library.get(b"seed48_r\0").map(|sym| *sym);
+        let lcong48_r = __library.get(b"lcong48_r\0").map(|sym| *sym);
+        let arc4random = __library.get(b"arc4random\0").map(|sym| *sym);
+        let arc4random_buf = __library.get(b"arc4random_buf\0").map(|sym| *sym);
+        let arc4random_uniform = __library.get(b"arc4random_uniform\0").map(|sym| *sym);
+        let malloc = __library.get(b"malloc\0").map(|sym| *sym);
+        let calloc = __library.get(b"calloc\0").map(|sym| *sym);
+        let realloc = __library.get(b"realloc\0").map(|sym| *sym);
+        let free = __library.get(b"free\0").map(|sym| *sym);
+        let reallocarray = __library.get(b"reallocarray\0").map(|sym| *sym);
+        let alloca = __library.get(b"alloca\0").map(|sym| *sym);
+        let valloc = __library.get(b"valloc\0").map(|sym| *sym);
+        let posix_memalign = __library.get(b"posix_memalign\0").map(|sym| *sym);
+        let aligned_alloc = __library.get(b"aligned_alloc\0").map(|sym| *sym);
+        let abort = __library.get(b"abort\0").map(|sym| *sym);
+        let atexit = __library.get(b"atexit\0").map(|sym| *sym);
+        let at_quick_exit = __library.get(b"at_quick_exit\0").map(|sym| *sym);
+        let on_exit = __library.get(b"on_exit\0").map(|sym| *sym);
+        let exit = __library.get(b"exit\0").map(|sym| *sym);
+        let quick_exit = __library.get(b"quick_exit\0").map(|sym| *sym);
+        let _Exit = __library.get(b"_Exit\0").map(|sym| *sym);
+        let getenv = __library.get(b"getenv\0").map(|sym| *sym);
+        let putenv = __library.get(b"putenv\0").map(|sym| *sym);
+        let setenv = __library.get(b"setenv\0").map(|sym| *sym);
+        let unsetenv = __library.get(b"unsetenv\0").map(|sym| *sym);
+        let clearenv = __library.get(b"clearenv\0").map(|sym| *sym);
+        let mktemp = __library.get(b"mktemp\0").map(|sym| *sym);
+        let mkstemp = __library.get(b"mkstemp\0").map(|sym| *sym);
+        let mkstemps = __library.get(b"mkstemps\0").map(|sym| *sym);
+        let mkdtemp = __library.get(b"mkdtemp\0").map(|sym| *sym);
+        let system = __library.get(b"system\0").map(|sym| *sym);
+        let realpath = __library.get(b"realpath\0").map(|sym| *sym);
+        let bsearch = __library.get(b"bsearch\0").map(|sym| *sym);
+        let qsort = __library.get(b"qsort\0").map(|sym| *sym);
+        let abs = __library.get(b"abs\0").map(|sym| *sym);
+        let labs = __library.get(b"labs\0").map(|sym| *sym);
+        let llabs = __library.get(b"llabs\0").map(|sym| *sym);
+        let div = __library.get(b"div\0").map(|sym| *sym);
+        let ldiv = __library.get(b"ldiv\0").map(|sym| *sym);
+        let lldiv = __library.get(b"lldiv\0").map(|sym| *sym);
+        let ecvt = __library.get(b"ecvt\0").map(|sym| *sym);
+        let fcvt = __library.get(b"fcvt\0").map(|sym| *sym);
+        let gcvt = __library.get(b"gcvt\0").map(|sym| *sym);
+        let qecvt = __library.get(b"qecvt\0").map(|sym| *sym);
+        let qfcvt = __library.get(b"qfcvt\0").map(|sym| *sym);
+        let qgcvt = __library.get(b"qgcvt\0").map(|sym| *sym);
+        let ecvt_r = __library.get(b"ecvt_r\0").map(|sym| *sym);
+        let fcvt_r = __library.get(b"fcvt_r\0").map(|sym| *sym);
+        let qecvt_r = __library.get(b"qecvt_r\0").map(|sym| *sym);
+        let qfcvt_r = __library.get(b"qfcvt_r\0").map(|sym| *sym);
+        let mblen = __library.get(b"mblen\0").map(|sym| *sym);
+        let mbtowc = __library.get(b"mbtowc\0").map(|sym| *sym);
+        let wctomb = __library.get(b"wctomb\0").map(|sym| *sym);
+        let mbstowcs = __library.get(b"mbstowcs\0").map(|sym| *sym);
+        let wcstombs = __library.get(b"wcstombs\0").map(|sym| *sym);
+        let rpmatch = __library.get(b"rpmatch\0").map(|sym| *sym);
+        let getsubopt = __library.get(b"getsubopt\0").map(|sym| *sym);
+        let getloadavg = __library.get(b"getloadavg\0").map(|sym| *sym);
+        let enable_state = __library.get(b"enable_state\0").map(|sym| *sym);
+        let rc_data_cache = __library
+            .get::<*mut [u16; 16usize]>(b"rc_data_cache\0")
+            .map(|sym| *sym);
+        let rc_data_reception_time_us = __library
+            .get::<*mut u32>(b"rc_data_reception_time_us\0")
+            .map(|sym| *sym);
+        let motorsPwm = __library
+            .get::<*mut [i16; 8usize]>(b"motorsPwm\0")
+            .map(|sym| *sym);
+        let ascent_init = __library.get(b"ascent_init\0").map(|sym| *sym);
+        let update = __library.get(b"update\0").map(|sym| *sym);
+        let update_serial_ws = __library.get(b"update_serial_ws\0").map(|sym| *sym);
+        let get_armed = __library.get(b"get_armed\0").map(|sym| *sym);
+        let get_arming_disable_flags = __library.get(b"get_arming_disable_flags\0").map(|sym| *sym);
+        let get_beep = __library.get(b"get_beep\0").map(|sym| *sym);
+        let get_micros_passed = __library.get(b"get_micros_passed\0").map(|sym| *sym);
+        let get_motor_pwm_signals = __library.get(b"get_motor_pwm_signals\0").map(|sym| *sym);
+        let arm = __library.get(b"arm\0").map(|sym| *sym);
+        let ascent_disarm = __library.get(b"ascent_disarm\0").map(|sym| *sym);
+        Ok(Sitl {
+            __library,
+            debug,
+            debugMode,
+            debugModeNames,
+            debugInit,
+            gcd,
+            applyDeadband,
+            fapplyDeadband,
+            devClear,
+            devPush,
+            devVariance,
+            devStandardDeviation,
+            degreesToRadians,
+            scaleRange,
+            scaleRangef,
+            buildRotationMatrix,
+            applyMatrixRotation,
+            quickMedianFilter3,
+            quickMedianFilter5,
+            quickMedianFilter7,
+            quickMedianFilter9,
+            quickMedianFilter3f,
+            quickMedianFilter5f,
+            quickMedianFilter7f,
+            quickMedianFilter9f,
+            sin_approx,
+            cos_approx,
+            atan2_approx,
+            acos_approx,
+            exp_approx,
+            log_approx,
+            pow_approx,
+            arraySubInt32,
+            qPercent,
+            qMultiply,
+            qConstruct,
+            virtualAccDev,
+            virtualAccDetect,
+            virtualAccSet,
+            virtualGyroDev,
+            virtualGyroDetect,
+            virtualGyroSet,
+            memcpy,
+            memmove,
+            memccpy,
+            memset,
+            memcmp,
+            __memcmpeq,
+            memchr,
+            strcpy,
+            strncpy,
+            strcat,
+            strncat,
+            strcmp,
+            strncmp,
+            strcoll,
+            strxfrm,
+            strcoll_l,
+            strxfrm_l,
+            strdup,
+            strndup,
+            strchr,
+            strrchr,
+            strchrnul,
+            strcspn,
+            strspn,
+            strpbrk,
+            strstr,
+            strtok,
+            __strtok_r,
+            strtok_r,
+            strcasestr,
+            memmem,
+            __mempcpy,
+            mempcpy,
+            strlen,
+            strnlen,
+            strerror,
+            strerror_r,
+            strerror_l,
+            bcmp,
+            bcopy,
+            bzero,
+            index,
+            rindex,
+            ffs,
+            ffsl,
+            ffsll,
+            strcasecmp,
+            strncasecmp,
+            strcasecmp_l,
+            strncasecmp_l,
+            explicit_bzero,
+            strsep,
+            strsignal,
+            __stpcpy,
+            stpcpy,
+            __stpncpy,
+            stpncpy,
+            strlcpy,
+            strlcat,
+            EEPROM_FILENAME,
+            SystemCoreClock,
+            DMA_GetFlagStatus,
+            DMA_Cmd,
+            DMA_ClearFlag,
+            FLASH_Unlock,
+            FLASH_Lock,
+            FLASH_ErasePage,
+            FLASH_ProgramWord,
+            micros_passed,
+            sleep_timer,
+            nanos64_real,
+            micros64_real,
+            millis64_real,
+            delayMicroseconds_real,
+            micros64,
+            millis64,
+            lockMainPID,
+            targetName,
+            shortGitRevision,
+            shortConfigGitRevision,
+            buildDate,
+            buildTime,
+            buildKey,
+            releaseName,
+            eepromData,
+            getMcuTypeId,
+            __pg_registry_start,
+            __pg_registry_end,
+            __pg_resetdata_start,
+            __pg_resetdata_end,
+            pgFind,
+            pgLoad,
+            pgStore,
+            pgResetAll,
+            pgResetInstance,
+            pgResetCopy,
+            pgReset,
+            timeConfig_System,
+            timeConfig_Copy,
+            rtcTimeMake,
+            rtcTimeGetSeconds,
+            rtcTimeGetMillis,
+            dateTimeFormatUTC,
+            dateTimeFormatLocal,
+            dateTimeFormatLocalShort,
+            dateTimeUTCToLocal,
+            dateTimeSplitFormatted,
+            rtcHasTime,
+            rtcGet,
+            rtcSet,
+            rtcGetDateTime,
+            rtcSetDateTime,
+            rtcPersistWrite,
+            rtcPersistRead,
+            ownerNames,
+            dmaAllocate,
+            dmaEnable,
+            dmaSetHandler,
+            dmaGetIdentifier,
+            dmaGetOwner,
+            dmaGetDescriptorByIdentifier,
+            dmaGetChannel,
+            IORead,
+            IOWrite,
+            IOHi,
+            IOLo,
+            IOToggle,
+            IOInit,
+            IORelease,
+            IOGetOwner,
+            IOIsFreeOrPreinit,
+            IOGetByTag,
+            IOConfigGPIO,
+            IOInitGlobal,
+            IOTraversePins,
+            IO_GPIO,
+            IO_Pin,
+            dmaoptByTag,
+            dmaGetChannelSpecByPeripheral,
+            dmaGetChannelSpecByTimerValue,
+            dmaGetChannelSpecByTimer,
+            dmaGetOptionByTimer,
+            dmaGetUpOptionByTimer,
+            fullTimerHardware,
+            timerDefinitions,
+            timerConfigure,
+            timerInit,
+            timerStart,
+            timerChConfigIC,
+            timerChConfigICDual,
+            timerChICPolarity,
+            timerChCCR,
+            timerChCCRLo,
+            timerChCCRHi,
+            timerChConfigOC,
+            timerChConfigGPIO,
+            timerChCCHandlerInit,
+            timerChOvrHandlerInit,
+            timerChConfigCallbacks,
+            timerChConfigCallbacksDual,
+            timerChITConfigDualLo,
+            timerChITConfig,
+            timerChClearCCFlag,
+            timerChInit,
+            timerForceOverflow,
+            timerConfigUpdateCallback,
+            timerClock,
+            configTimeBase,
+            timerReconfigureTimeBase,
+            timerRCC,
+            timerInputIrq,
+            timerGetConfiguredByTag,
+            timerAllocate,
+            timerGetByTagAndIndex,
+            timerOCInit,
+            timerOCPreloadConfig,
+            timerCCR,
+            timerDmaSource,
+            timerGetPrescalerByDesiredHertz,
+            timerGetPrescalerByDesiredMhz,
+            timerGetPeriodByPrescaler,
+            timerGetNumberByIndex,
+            timerGetTIMNumber,
+            timerLookupChannelIndex,
+            dshotBitbangDevInit,
+            dshotBitbangGetStatus,
+            dshotBitbangTimerGetAllocatedByNumberAndChannel,
+            dshotBitbangTimerGetOwner,
+            motorConfig_System,
+            motorConfig_Copy,
+            motorPostInitNull,
+            motorWriteNull,
+            motorDecodeTelemetryNull,
+            motorUpdateCompleteNull,
+            motorPostInit,
+            motorWriteAll,
+            motorInitEndpoints,
+            motorConvertFromExternal,
+            motorConvertToExternal,
+            motorDevInit,
+            motorDeviceCount,
+            motorGetVTable,
+            checkMotorProtocolEnabled,
+            isMotorProtocolDshot,
+            isMotorProtocolEnabled,
+            motorDisable,
+            motorEnable,
+            motorIsEnabled,
+            motorIsMotorEnabled,
+            motorGetMotorEnableTimeMs,
+            motorShutdown,
+            getDigitalIdleOffset,
+            motors,
+            motorPwmDevInit,
+            servoDevInit,
+            pwmServoConfig,
+            pwmOutConfig,
+            pwmWriteServo,
+            pwmGetMotors,
+            pwmIsSynced,
+            serialPinConfig_System,
+            serialPinConfig_Copy,
+            serialWrite,
+            serialRxBytesWaiting,
+            serialTxBytesFree,
+            serialWriteBuf,
+            serialRead,
+            serialSetBaudRate,
+            serialSetMode,
+            serialSetCtrlLineStateCb,
+            serialSetBaudRateCb,
+            isSerialTransmitBufferEmpty,
+            serialPrint,
+            serialGetBaudRate,
+            serialWriteBufShim,
+            serialBeginWrite,
+            serialEndWrite,
+            serialWsOpen,
+            wsDataIn,
+            wsDataOut,
+            wsUpdate,
+            systemBeep,
+            systemBeepToggle,
+            beeperInit,
+            getBeeper,
+            systemState,
+            init,
+            armingFlags,
+            armingDisableFlagNames,
+            setArmingDisabled,
+            unsetArmingDisabled,
+            isArmingDisabled,
+            getArmingDisableFlags,
+            flightModeFlags,
+            stateFlags,
+            enableFlightMode,
+            disableFlightMode,
+            sensors,
+            sensorsSet,
+            sensorsClear,
+            sensorsMask,
+            mwDisarm,
+            pilotConfig_System,
+            pilotConfig_Copy,
+            systemConfig_System,
+            systemConfig_Copy,
+            currentPidProfile,
+            initEEPROM,
+            resetEEPROM,
+            readEEPROM,
+            writeEEPROM,
+            writeUnmodifiedConfigToEEPROM,
+            ensureEEPROMStructureIsValid,
+            saveConfigAndNotify,
+            validateAndFixGyroConfig,
+            validateAndFixBlackBox,
+            setConfigDirty,
+            isConfigDirty,
+            getCurrentPidProfileIndex,
+            changePidProfile,
+            changePidProfileFromCellCount,
+            getCurrentControlRateProfileIndex,
+            changeControlRateProfile,
+            canSoftwareSerialBeUsed,
+            getCurrentMinthrottle,
+            resetConfig,
+            targetConfiguration,
+            targetValidateConfiguration,
+            isSystemConfigured,
+            setRebootRequired,
+            getRebootRequired,
+            isEepromWriteInProgress,
+            schedulerConfig_System,
+            schedulerConfig_Copy,
+            getCheckFuncInfo,
+            getTaskInfo,
+            rescheduleTask,
+            setTaskEnabled,
+            getTaskDeltaTimeUs,
+            schedulerIgnoreTaskStateTime,
+            schedulerIgnoreTaskExecRate,
+            schedulerIgnoreTaskExecTime,
+            schedulerGetIgnoreTaskExecTime,
+            schedulerResetTaskStatistics,
+            schedulerResetTaskMaxExecutionTime,
+            schedulerResetCheckFunctionMaxExecutionTime,
+            schedulerSetNextStateTime,
+            schedulerGetNextStateTime,
+            schedulerInit,
+            scheduler,
+            schedulerExecuteTask,
+            taskSystemLoad,
+            schedulerEnableGyro,
+            getAverageSystemLoadPercent,
+            schedulerGetCycleTimeMultiplier,
+            tasksInitData,
+            tasksInit,
+            getTask,
+            taskUpdateRxMainInProgress,
+            canUseGPSHeading,
+            attitude,
+            rMat,
+            imuConfig_System,
+            imuConfig_Copy,
+            imuConfigure,
+            getCosTiltAngle,
+            getQuaternion,
+            imuUpdateAttitude,
+            imuInit,
+            imuSetAttitudeRPY,
+            imuSetAttitudeQuat,
+            imuQuaternionHeadfreeOffsetSet,
+            imuQuaternionHeadfreeTransformVectorEarthToBody,
+            shouldInitializeGPSHeading,
+            isUpright,
+            osdScreen,
+            baudRates,
+            serialPortIdentifiers,
+            findSharedSerialPort,
+            serialConfig_System,
+            serialConfig_Copy,
+            serialInit,
+            serialRemovePort,
+            serialGetAvailablePortCount,
+            serialIsPortAvailable,
+            isSerialConfigValid,
+            serialFindPortConfiguration,
+            serialFindPortConfigurationMutable,
+            doesConfigurationUsePort,
+            findSerialPortConfig,
+            findNextSerialPortConfig,
+            determinePortSharing,
+            isSerialPortShared,
+            pgResetFn_serialConfig,
+            findSerialPortUsageByIdentifier,
+            findSerialPortIndexByIdentifier,
+            openSerialPort,
+            closeSerialPort,
+            waitForSerialPortToFinishTransmitting,
+            lookupBaudRateIndex,
+            serialPassthrough,
+            gpsConfig_System,
+            gpsConfig_Copy,
+            GPS_home,
+            GPS_distanceToHome,
+            GPS_distanceToHomeCm,
+            GPS_directionToHome,
+            GPS_distanceFlownInCm,
+            GPS_angle,
+            GPS_scaleLonDown,
+            gpsData,
+            gpsSol,
+            GPS_update,
+            GPS_numCh,
+            GPS_svinfo_chn,
+            GPS_svinfo_svid,
+            GPS_svinfo_quality,
+            GPS_svinfo_cno,
+            gpsInit,
+            gpsUpdate,
+            gpsNewFrame,
+            gpsIsHealthy,
+            gpsEnablePassthrough,
+            onGpsNewData,
+            GPS_reset_home_position,
+            GPS_calc_longitude_scaling,
+            GPS_distance_cm_bearing,
+            gpsSetFixState,
+            getGpsDataIntervalSeconds,
+            getGpsPortActualBaudRateIndex,
+            rxConfig_System,
+            rxConfig_Copy,
+            rcChannelLetters,
+            rcData,
+            rxFailsafeChannelConfigs_SystemArray,
+            rxFailsafeChannelConfigs_CopyArray,
+            rxChannelRangeConfigs_SystemArray,
+            rxChannelRangeConfigs_CopyArray,
+            rssiSource,
+            linkQualitySource,
+            rxRuntimeState,
+            rxInit,
+            rxProcessPending,
+            rxUpdateCheck,
+            rxFrameCheck,
+            rxIsReceivingSignal,
+            rxAreFlightChannelsValid,
+            calculateRxChannelsAndUpdateFailsafe,
+            parseRcChannels,
+            setRssiDirect,
+            setRssi,
+            setRssiMsp,
+            updateRSSI,
+            getRssi,
+            getRssiPercent,
+            isRssiConfigured,
+            rxGetLinkQuality,
+            setLinkQualityDirect,
+            rxGetLinkQualityPercent,
+            getRsnr,
+            setRsnr,
+            setRsnrDirect,
+            rxSetRfMode,
+            rxGetRfMode,
+            rxSetUplinkTxPwrMw,
+            rxGetUplinkTxPwrMw,
+            resetAllRxChannelRangeConfigurations,
+            suspendRxSignal,
+            resumeRxSignal,
+            rxGetFrameDelta,
+            rxFrameTimeUs,
+            rxMspReadRawRC,
+            rxMspInit,
+            rxMspFrameReceive,
+            nullFilterApply,
+            pt1FilterGain,
+            pt1FilterInit,
+            pt1FilterUpdateCutoff,
+            pt1FilterApply,
+            pt2FilterGain,
+            pt2FilterInit,
+            pt2FilterUpdateCutoff,
+            pt2FilterApply,
+            pt3FilterGain,
+            pt3FilterInit,
+            pt3FilterUpdateCutoff,
+            pt3FilterApply,
+            filterGetNotchQ,
+            biquadFilterInitLPF,
+            biquadFilterInit,
+            biquadFilterUpdate,
+            biquadFilterUpdateLPF,
+            biquadFilterApplyDF1,
+            biquadFilterApplyDF1Weighted,
+            biquadFilterApply,
+            phaseCompInit,
+            phaseCompUpdate,
+            phaseCompApply,
+            slewFilterInit,
+            slewFilterApply,
+            laggedMovingAverageInit,
+            laggedMovingAverageUpdate,
+            simpleLPFilterInit,
+            simpleLPFilterUpdate,
+            meanAccumulatorInit,
+            meanAccumulatorAdd,
+            meanAccumulatorCalc,
+            currentMeterSourceNames,
+            currentSensorADCConfig_System,
+            currentSensorADCConfig_Copy,
+            currentSensorVirtualConfig_System,
+            currentSensorVirtualConfig_Copy,
+            currentMeterReset,
+            currentMeterADCInit,
+            currentMeterADCRefresh,
+            currentMeterADCRead,
+            currentMeterVirtualInit,
+            currentMeterVirtualRefresh,
+            currentMeterVirtualRead,
+            currentMeterESCInit,
+            currentMeterESCRefresh,
+            currentMeterESCReadCombined,
+            currentMeterESCReadMotor,
+            currentMeterMSPInit,
+            currentMeterMSPRefresh,
+            currentMeterMSPRead,
+            currentMeterMSPSet,
+            supportedCurrentMeterCount,
+            currentMeterIds,
+            currentMeterRead,
+            voltageMeterSourceNames,
+            voltageSensorADCConfig_SystemArray,
+            voltageSensorADCConfig_CopyArray,
+            voltageMeterReset,
+            voltageMeterGenericInit,
+            voltageMeterADCInit,
+            voltageMeterADCRefresh,
+            voltageMeterADCRead,
+            voltageMeterESCInit,
+            voltageMeterESCRefresh,
+            voltageMeterESCReadCombined,
+            voltageMeterESCReadMotor,
+            voltageMeterADCtoIDMap,
+            supportedVoltageMeterCount,
+            voltageMeterIds,
+            voltageMeterRead,
+            isSagCompensationConfigured,
+            batteryConfig_System,
+            batteryConfig_Copy,
+            batteryInit,
+            batteryUpdateVoltage,
+            batteryUpdatePresence,
+            getBatteryState,
+            getVoltageState,
+            getConsumptionState,
+            getBatteryStateString,
+            batteryUpdateStates,
+            batteryUpdateAlarms,
+            calculateBatteryPercentageRemaining,
+            isBatteryVoltageConfigured,
+            getBatteryVoltage,
+            getLegacyBatteryVoltage,
+            getBatteryVoltageLatest,
+            getBatteryCellCount,
+            getBatteryAverageCellVoltage,
+            getBatterySagCellVoltage,
+            isAmperageConfigured,
+            getAmperage,
+            getAmperageLatest,
+            getMAhDrawn,
+            getWhDrawn,
+            batteryUpdateCurrentMeter,
+            getLowVoltageCutoff,
+            getCurrentMeter,
+            getVoltageMeter,
+            setCellCount,
+            requestedSensors,
+            detectedSensors,
+            __ctype_get_mb_cur_max,
+            atof,
+            atoi,
+            atol,
+            atoll,
+            strtod,
+            strtof,
+            strtold,
+            strtol,
+            strtoul,
+            strtoq,
+            strtouq,
+            strtoll,
+            strtoull,
+            l64a,
+            a64l,
+            select,
+            pselect,
+            random,
+            srandom,
+            initstate,
+            setstate,
+            random_r,
+            srandom_r,
+            initstate_r,
+            setstate_r,
+            rand,
+            srand,
+            rand_r,
+            drand48,
+            erand48,
+            lrand48,
+            nrand48,
+            mrand48,
+            jrand48,
+            srand48,
+            seed48,
+            lcong48,
+            drand48_r,
+            erand48_r,
+            lrand48_r,
+            nrand48_r,
+            mrand48_r,
+            jrand48_r,
+            srand48_r,
+            seed48_r,
+            lcong48_r,
+            arc4random,
+            arc4random_buf,
+            arc4random_uniform,
+            malloc,
+            calloc,
+            realloc,
+            free,
+            reallocarray,
+            alloca,
+            valloc,
+            posix_memalign,
+            aligned_alloc,
+            abort,
+            atexit,
+            at_quick_exit,
+            on_exit,
+            exit,
+            quick_exit,
+            _Exit,
+            getenv,
+            putenv,
+            setenv,
+            unsetenv,
+            clearenv,
+            mktemp,
+            mkstemp,
+            mkstemps,
+            mkdtemp,
+            system,
+            realpath,
+            bsearch,
+            qsort,
+            abs,
+            labs,
+            llabs,
+            div,
+            ldiv,
+            lldiv,
+            ecvt,
+            fcvt,
+            gcvt,
+            qecvt,
+            qfcvt,
+            qgcvt,
+            ecvt_r,
+            fcvt_r,
+            qecvt_r,
+            qfcvt_r,
+            mblen,
+            mbtowc,
+            wctomb,
+            mbstowcs,
+            wcstombs,
+            rpmatch,
+            getsubopt,
+            getloadavg,
+            enable_state,
+            rc_data_cache,
+            rc_data_reception_time_us,
+            motorsPwm,
+            ascent_init,
+            update,
+            update_serial_ws,
+            get_armed,
+            get_arming_disable_flags,
+            get_beep,
+            get_micros_passed,
+            get_motor_pwm_signals,
+            arm,
+            ascent_disarm,
+        })
+    }
+    pub unsafe fn debug(&self) -> *mut [i16; 8usize] {
+        *self.debug.as_ref().expect("Expected variable, got error.")
+    }
+    pub unsafe fn debugMode(&self) -> *mut u8 {
+        *self
+            .debugMode
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn debugModeNames(&self) -> *mut [*const ::std::os::raw::c_char; 91usize] {
+        *self
+            .debugModeNames
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn debugInit(&self) {
+        (self
+            .debugInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn gcd(
+        &self,
+        num: ::std::os::raw::c_int,
+        denom: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self.gcd.as_ref().expect("Expected function, got error."))(num, denom)
+    }
+    pub unsafe fn applyDeadband(&self, value: i32, deadband: i32) -> i32 {
+        (self
+            .applyDeadband
+            .as_ref()
+            .expect("Expected function, got error."))(value, deadband)
+    }
+    pub unsafe fn fapplyDeadband(&self, value: f32, deadband: f32) -> f32 {
+        (self
+            .fapplyDeadband
+            .as_ref()
+            .expect("Expected function, got error."))(value, deadband)
+    }
+    pub unsafe fn devClear(&self, dev: *mut stdev_t) {
+        (self
+            .devClear
+            .as_ref()
+            .expect("Expected function, got error."))(dev)
+    }
+    pub unsafe fn devPush(&self, dev: *mut stdev_t, x: f32) {
+        (self
+            .devPush
+            .as_ref()
+            .expect("Expected function, got error."))(dev, x)
+    }
+    pub unsafe fn devVariance(&self, dev: *mut stdev_t) -> f32 {
+        (self
+            .devVariance
+            .as_ref()
+            .expect("Expected function, got error."))(dev)
+    }
+    pub unsafe fn devStandardDeviation(&self, dev: *mut stdev_t) -> f32 {
+        (self
+            .devStandardDeviation
+            .as_ref()
+            .expect("Expected function, got error."))(dev)
+    }
+    pub unsafe fn degreesToRadians(&self, degrees: i16) -> f32 {
+        (self
+            .degreesToRadians
+            .as_ref()
+            .expect("Expected function, got error."))(degrees)
+    }
+    pub unsafe fn scaleRange(
+        &self,
+        x: ::std::os::raw::c_int,
+        srcFrom: ::std::os::raw::c_int,
+        srcTo: ::std::os::raw::c_int,
+        destFrom: ::std::os::raw::c_int,
+        destTo: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .scaleRange
+            .as_ref()
+            .expect("Expected function, got error."))(x, srcFrom, srcTo, destFrom, destTo)
+    }
+    pub unsafe fn scaleRangef(
+        &self,
+        x: f32,
+        srcFrom: f32,
+        srcTo: f32,
+        destFrom: f32,
+        destTo: f32,
+    ) -> f32 {
+        (self
+            .scaleRangef
+            .as_ref()
+            .expect("Expected function, got error."))(x, srcFrom, srcTo, destFrom, destTo)
+    }
+    pub unsafe fn buildRotationMatrix(
+        &self,
+        delta: *mut fp_angles_t,
+        rotation: *mut fp_rotationMatrix_t,
+    ) {
+        (self
+            .buildRotationMatrix
+            .as_ref()
+            .expect("Expected function, got error."))(delta, rotation)
+    }
+    pub unsafe fn applyMatrixRotation(
+        &self,
+        v: *mut f32,
+        rotationMatrix: *mut fp_rotationMatrix_t,
+    ) {
+        (self
+            .applyMatrixRotation
+            .as_ref()
+            .expect("Expected function, got error."))(v, rotationMatrix)
+    }
+    pub unsafe fn quickMedianFilter3(&self, v: *mut i32) -> i32 {
+        (self
+            .quickMedianFilter3
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter5(&self, v: *mut i32) -> i32 {
+        (self
+            .quickMedianFilter5
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter7(&self, v: *mut i32) -> i32 {
+        (self
+            .quickMedianFilter7
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter9(&self, v: *mut i32) -> i32 {
+        (self
+            .quickMedianFilter9
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter3f(&self, v: *mut f32) -> f32 {
+        (self
+            .quickMedianFilter3f
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter5f(&self, v: *mut f32) -> f32 {
+        (self
+            .quickMedianFilter5f
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter7f(&self, v: *mut f32) -> f32 {
+        (self
+            .quickMedianFilter7f
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn quickMedianFilter9f(&self, v: *mut f32) -> f32 {
+        (self
+            .quickMedianFilter9f
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn sin_approx(&self, x: f32) -> f32 {
+        (self
+            .sin_approx
+            .as_ref()
+            .expect("Expected function, got error."))(x)
+    }
+    pub unsafe fn cos_approx(&self, x: f32) -> f32 {
+        (self
+            .cos_approx
+            .as_ref()
+            .expect("Expected function, got error."))(x)
+    }
+    pub unsafe fn atan2_approx(&self, y: f32, x: f32) -> f32 {
+        (self
+            .atan2_approx
+            .as_ref()
+            .expect("Expected function, got error."))(y, x)
+    }
+    pub unsafe fn acos_approx(&self, x: f32) -> f32 {
+        (self
+            .acos_approx
+            .as_ref()
+            .expect("Expected function, got error."))(x)
+    }
+    pub unsafe fn exp_approx(&self, val: f32) -> f32 {
+        (self
+            .exp_approx
+            .as_ref()
+            .expect("Expected function, got error."))(val)
+    }
+    pub unsafe fn log_approx(&self, val: f32) -> f32 {
+        (self
+            .log_approx
+            .as_ref()
+            .expect("Expected function, got error."))(val)
+    }
+    pub unsafe fn pow_approx(&self, a: f32, b: f32) -> f32 {
+        (self
+            .pow_approx
+            .as_ref()
+            .expect("Expected function, got error."))(a, b)
+    }
+    pub unsafe fn arraySubInt32(
+        &self,
+        dest: *mut i32,
+        array1: *mut i32,
+        array2: *mut i32,
+        count: ::std::os::raw::c_int,
+    ) {
+        (self
+            .arraySubInt32
+            .as_ref()
+            .expect("Expected function, got error."))(dest, array1, array2, count)
+    }
+    pub unsafe fn qPercent(&self, q: fix12_t) -> i16 {
+        (self
+            .qPercent
+            .as_ref()
+            .expect("Expected function, got error."))(q)
+    }
+    pub unsafe fn qMultiply(&self, q: fix12_t, input: i16) -> i16 {
+        (self
+            .qMultiply
+            .as_ref()
+            .expect("Expected function, got error."))(q, input)
+    }
+    pub unsafe fn qConstruct(&self, num: i16, den: i16) -> fix12_t {
+        (self
+            .qConstruct
+            .as_ref()
+            .expect("Expected function, got error."))(num, den)
+    }
+    pub unsafe fn virtualAccDev(&self) -> *mut *mut accDev_s {
+        *self
+            .virtualAccDev
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn virtualAccDetect(&self, acc: *mut accDev_s) -> bool {
+        (self
+            .virtualAccDetect
+            .as_ref()
+            .expect("Expected function, got error."))(acc)
+    }
+    pub unsafe fn virtualAccSet(&self, acc: *mut accDev_s, x: i16, y: i16, z: i16) {
+        (self
+            .virtualAccSet
+            .as_ref()
+            .expect("Expected function, got error."))(acc, x, y, z)
+    }
+    pub unsafe fn virtualGyroDev(&self) -> *mut *mut gyroDev_s {
+        *self
+            .virtualGyroDev
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn virtualGyroDetect(&self, gyro: *mut gyroDev_s) -> bool {
+        (self
+            .virtualGyroDetect
+            .as_ref()
+            .expect("Expected function, got error."))(gyro)
+    }
+    pub unsafe fn virtualGyroSet(&self, gyro: *mut gyroDev_s, x: i16, y: i16, z: i16) {
+        (self
+            .virtualGyroSet
+            .as_ref()
+            .expect("Expected function, got error."))(gyro, x, y, z)
+    }
+    pub unsafe fn memcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_void,
+        __src: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.memcpy.as_ref().expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn memmove(
+        &self,
+        __dest: *mut ::std::os::raw::c_void,
+        __src: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .memmove
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn memccpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_void,
+        __src: *const ::std::os::raw::c_void,
+        __c: ::std::os::raw::c_int,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .memccpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __c, __n)
+    }
+    pub unsafe fn memset(
+        &self,
+        __s: *mut ::std::os::raw::c_void,
+        __c: ::std::os::raw::c_int,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.memset.as_ref().expect("Expected function, got error."))(__s, __c, __n)
+    }
+    pub unsafe fn memcmp(
+        &self,
+        __s1: *const ::std::os::raw::c_void,
+        __s2: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_int {
+        (self.memcmp.as_ref().expect("Expected function, got error."))(__s1, __s2, __n)
+    }
+    pub unsafe fn __memcmpeq(
+        &self,
+        __s1: *const ::std::os::raw::c_void,
+        __s2: *const ::std::os::raw::c_void,
+        __n: usize,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .__memcmpeq
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __n)
+    }
+    pub unsafe fn memchr(
+        &self,
+        __s: *const ::std::os::raw::c_void,
+        __c: ::std::os::raw::c_int,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.memchr.as_ref().expect("Expected function, got error."))(__s, __c, __n)
+    }
+    pub unsafe fn strcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strcpy.as_ref().expect("Expected function, got error."))(__dest, __src)
+    }
+    pub unsafe fn strncpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strncpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strcat(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strcat.as_ref().expect("Expected function, got error."))(__dest, __src)
+    }
+    pub unsafe fn strncat(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strncat
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strcmp(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int {
+        (self.strcmp.as_ref().expect("Expected function, got error."))(__s1, __s2)
+    }
+    pub unsafe fn strncmp(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strncmp
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __n)
+    }
+    pub unsafe fn strcoll(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strcoll
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2)
+    }
+    pub unsafe fn strxfrm(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_ulong {
+        (self
+            .strxfrm
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strcoll_l(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __l: locale_t,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strcoll_l
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __l)
+    }
+    pub unsafe fn strxfrm_l(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: usize,
+        __l: locale_t,
+    ) -> usize {
+        (self
+            .strxfrm_l
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n, __l)
+    }
+    pub unsafe fn strdup(&self, __s: *const ::std::os::raw::c_char) -> *mut ::std::os::raw::c_char {
+        (self.strdup.as_ref().expect("Expected function, got error."))(__s)
+    }
+    pub unsafe fn strndup(
+        &self,
+        __string: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strndup
+            .as_ref()
+            .expect("Expected function, got error."))(__string, __n)
+    }
+    pub unsafe fn strchr(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __c: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strchr.as_ref().expect("Expected function, got error."))(__s, __c)
+    }
+    pub unsafe fn strrchr(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __c: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strrchr
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __c)
+    }
+    pub unsafe fn strchrnul(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __c: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strchrnul
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __c)
+    }
+    pub unsafe fn strcspn(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __reject: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_ulong {
+        (self
+            .strcspn
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __reject)
+    }
+    pub unsafe fn strspn(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __accept: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_ulong {
+        (self.strspn.as_ref().expect("Expected function, got error."))(__s, __accept)
+    }
+    pub unsafe fn strpbrk(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __accept: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strpbrk
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __accept)
+    }
+    pub unsafe fn strstr(
+        &self,
+        __haystack: *const ::std::os::raw::c_char,
+        __needle: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strstr.as_ref().expect("Expected function, got error."))(__haystack, __needle)
+    }
+    pub unsafe fn strtok(
+        &self,
+        __s: *mut ::std::os::raw::c_char,
+        __delim: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strtok.as_ref().expect("Expected function, got error."))(__s, __delim)
+    }
+    pub unsafe fn __strtok_r(
+        &self,
+        __s: *mut ::std::os::raw::c_char,
+        __delim: *const ::std::os::raw::c_char,
+        __save_ptr: *mut *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .__strtok_r
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __delim, __save_ptr)
+    }
+    pub unsafe fn strtok_r(
+        &self,
+        __s: *mut ::std::os::raw::c_char,
+        __delim: *const ::std::os::raw::c_char,
+        __save_ptr: *mut *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strtok_r
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __delim, __save_ptr)
+    }
+    pub unsafe fn strcasestr(
+        &self,
+        __haystack: *const ::std::os::raw::c_char,
+        __needle: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strcasestr
+            .as_ref()
+            .expect("Expected function, got error."))(__haystack, __needle)
+    }
+    pub unsafe fn memmem(
+        &self,
+        __haystack: *const ::std::os::raw::c_void,
+        __haystacklen: usize,
+        __needle: *const ::std::os::raw::c_void,
+        __needlelen: usize,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.memmem.as_ref().expect("Expected function, got error."))(
+            __haystack,
+            __haystacklen,
+            __needle,
+            __needlelen,
+        )
+    }
+    pub unsafe fn __mempcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_void,
+        __src: *const ::std::os::raw::c_void,
+        __n: usize,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .__mempcpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn mempcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_void,
+        __src: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .mempcpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strlen(&self, __s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_ulong {
+        (self.strlen.as_ref().expect("Expected function, got error."))(__s)
+    }
+    pub unsafe fn strnlen(
+        &self,
+        __string: *const ::std::os::raw::c_char,
+        __maxlen: usize,
+    ) -> usize {
+        (self
+            .strnlen
+            .as_ref()
+            .expect("Expected function, got error."))(__string, __maxlen)
+    }
+    pub unsafe fn strerror(&self, __errnum: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char {
+        (self
+            .strerror
+            .as_ref()
+            .expect("Expected function, got error."))(__errnum)
+    }
+    pub unsafe fn strerror_r(
+        &self,
+        __errnum: ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+        __buflen: usize,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strerror_r
+            .as_ref()
+            .expect("Expected function, got error."))(__errnum, __buf, __buflen)
+    }
+    pub unsafe fn strerror_l(
+        &self,
+        __errnum: ::std::os::raw::c_int,
+        __l: locale_t,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .strerror_l
+            .as_ref()
+            .expect("Expected function, got error."))(__errnum, __l)
+    }
+    pub unsafe fn bcmp(
+        &self,
+        __s1: *const ::std::os::raw::c_void,
+        __s2: *const ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_int {
+        (self.bcmp.as_ref().expect("Expected function, got error."))(__s1, __s2, __n)
+    }
+    pub unsafe fn bcopy(
+        &self,
+        __src: *const ::std::os::raw::c_void,
+        __dest: *mut ::std::os::raw::c_void,
+        __n: ::std::os::raw::c_ulong,
+    ) {
+        (self.bcopy.as_ref().expect("Expected function, got error."))(__src, __dest, __n)
+    }
+    pub unsafe fn bzero(&self, __s: *mut ::std::os::raw::c_void, __n: ::std::os::raw::c_ulong) {
+        (self.bzero.as_ref().expect("Expected function, got error."))(__s, __n)
+    }
+    pub unsafe fn index(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __c: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.index.as_ref().expect("Expected function, got error."))(__s, __c)
+    }
+    pub unsafe fn rindex(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __c: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.rindex.as_ref().expect("Expected function, got error."))(__s, __c)
+    }
+    pub unsafe fn ffs(&self, __i: ::std::os::raw::c_int) -> ::std::os::raw::c_int {
+        (self.ffs.as_ref().expect("Expected function, got error."))(__i)
+    }
+    pub unsafe fn ffsl(&self, __l: ::std::os::raw::c_long) -> ::std::os::raw::c_int {
+        (self.ffsl.as_ref().expect("Expected function, got error."))(__l)
+    }
+    pub unsafe fn ffsll(&self, __ll: ::std::os::raw::c_longlong) -> ::std::os::raw::c_int {
+        (self.ffsll.as_ref().expect("Expected function, got error."))(__ll)
+    }
+    pub unsafe fn strcasecmp(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strcasecmp
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2)
+    }
+    pub unsafe fn strncasecmp(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strncasecmp
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __n)
+    }
+    pub unsafe fn strcasecmp_l(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __loc: locale_t,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strcasecmp_l
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __loc)
+    }
+    pub unsafe fn strncasecmp_l(
+        &self,
+        __s1: *const ::std::os::raw::c_char,
+        __s2: *const ::std::os::raw::c_char,
+        __n: usize,
+        __loc: locale_t,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .strncasecmp_l
+            .as_ref()
+            .expect("Expected function, got error."))(__s1, __s2, __n, __loc)
+    }
+    pub unsafe fn explicit_bzero(&self, __s: *mut ::std::os::raw::c_void, __n: usize) {
+        (self
+            .explicit_bzero
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __n)
+    }
+    pub unsafe fn strsep(
+        &self,
+        __stringp: *mut *mut ::std::os::raw::c_char,
+        __delim: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.strsep.as_ref().expect("Expected function, got error."))(__stringp, __delim)
+    }
+    pub unsafe fn strsignal(&self, __sig: ::std::os::raw::c_int) -> *mut ::std::os::raw::c_char {
+        (self
+            .strsignal
+            .as_ref()
+            .expect("Expected function, got error."))(__sig)
+    }
+    pub unsafe fn __stpcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .__stpcpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src)
+    }
+    pub unsafe fn stpcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.stpcpy.as_ref().expect("Expected function, got error."))(__dest, __src)
+    }
+    pub unsafe fn __stpncpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: usize,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .__stpncpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn stpncpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .stpncpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strlcpy(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_ulong {
+        (self
+            .strlcpy
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn strlcat(
+        &self,
+        __dest: *mut ::std::os::raw::c_char,
+        __src: *const ::std::os::raw::c_char,
+        __n: ::std::os::raw::c_ulong,
+    ) -> ::std::os::raw::c_ulong {
+        (self
+            .strlcat
+            .as_ref()
+            .expect("Expected function, got error."))(__dest, __src, __n)
+    }
+    pub unsafe fn EEPROM_FILENAME(&self) -> *mut *mut ::std::os::raw::c_char {
+        *self
+            .EEPROM_FILENAME
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn SystemCoreClock(&self) -> *mut u32 {
+        *self
+            .SystemCoreClock
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn DMA_GetFlagStatus(&self, arg1: *mut ::std::os::raw::c_void) -> u8 {
+        (self
+            .DMA_GetFlagStatus
+            .as_ref()
+            .expect("Expected function, got error."))(arg1)
+    }
+    pub unsafe fn DMA_Cmd(&self, arg1: *mut DMA_Channel_TypeDef, arg2: FunctionalState) {
+        (self
+            .DMA_Cmd
+            .as_ref()
+            .expect("Expected function, got error."))(arg1, arg2)
+    }
+    pub unsafe fn DMA_ClearFlag(&self, arg1: u32) {
+        (self
+            .DMA_ClearFlag
+            .as_ref()
+            .expect("Expected function, got error."))(arg1)
+    }
+    pub unsafe fn FLASH_Unlock(&self) {
+        (self
+            .FLASH_Unlock
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn FLASH_Lock(&self) {
+        (self
+            .FLASH_Lock
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn FLASH_ErasePage(&self, Page_Address: usize) -> FLASH_Status {
+        (self
+            .FLASH_ErasePage
+            .as_ref()
+            .expect("Expected function, got error."))(Page_Address)
+    }
+    pub unsafe fn FLASH_ProgramWord(&self, addr: usize, Data: u32) -> FLASH_Status {
+        (self
+            .FLASH_ProgramWord
+            .as_ref()
+            .expect("Expected function, got error."))(addr, Data)
+    }
+    pub unsafe fn micros_passed(&self) -> *mut u64 {
+        *self
+            .micros_passed
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn sleep_timer(&self) -> *mut i64 {
+        *self
+            .sleep_timer
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn nanos64_real(&self) -> u64 {
+        (self
+            .nanos64_real
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn micros64_real(&self) -> u64 {
+        (self
+            .micros64_real
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn millis64_real(&self) -> u64 {
+        (self
+            .millis64_real
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn delayMicroseconds_real(&self, us: u32) {
+        (self
+            .delayMicroseconds_real
+            .as_ref()
+            .expect("Expected function, got error."))(us)
+    }
+    pub unsafe fn micros64(&self) -> u64 {
+        (self
+            .micros64
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn millis64(&self) -> u64 {
+        (self
+            .millis64
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn lockMainPID(&self) -> ::std::os::raw::c_int {
+        (self
+            .lockMainPID
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn targetName(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .targetName
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn shortGitRevision(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .shortGitRevision
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn shortConfigGitRevision(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .shortConfigGitRevision
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn buildDate(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .buildDate
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn buildTime(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .buildTime
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn buildKey(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .buildKey
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn releaseName(&self) -> *mut *const ::std::os::raw::c_char {
+        *self
+            .releaseName
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn eepromData(&self) -> *mut [u8; 32768usize] {
+        *self
+            .eepromData
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn getMcuTypeId(&self) -> mcuTypeId_e {
+        (self
+            .getMcuTypeId
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn __pg_registry_start(&self) -> *mut [pgRegistry_t; 0usize] {
+        *self
+            .__pg_registry_start
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn __pg_registry_end(&self) -> *mut [pgRegistry_t; 0usize] {
+        *self
+            .__pg_registry_end
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn __pg_resetdata_start(&self) -> *mut [u8; 0usize] {
+        *self
+            .__pg_resetdata_start
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn __pg_resetdata_end(&self) -> *mut [u8; 0usize] {
+        *self
+            .__pg_resetdata_end
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn pgFind(&self, pgn: pgn_t) -> *const pgRegistry_t {
+        (self.pgFind.as_ref().expect("Expected function, got error."))(pgn)
+    }
+    pub unsafe fn pgLoad(
+        &self,
+        reg: *const pgRegistry_t,
+        from: *const ::std::os::raw::c_void,
+        size: ::std::os::raw::c_int,
+        version: ::std::os::raw::c_int,
+    ) -> bool {
+        (self.pgLoad.as_ref().expect("Expected function, got error."))(reg, from, size, version)
+    }
+    pub unsafe fn pgStore(
+        &self,
+        reg: *const pgRegistry_t,
+        to: *mut ::std::os::raw::c_void,
+        size: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .pgStore
+            .as_ref()
+            .expect("Expected function, got error."))(reg, to, size)
+    }
+    pub unsafe fn pgResetAll(&self) {
+        (self
+            .pgResetAll
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn pgResetInstance(&self, reg: *const pgRegistry_t, base: *mut u8) {
+        (self
+            .pgResetInstance
+            .as_ref()
+            .expect("Expected function, got error."))(reg, base)
+    }
+    pub unsafe fn pgResetCopy(&self, copy: *mut ::std::os::raw::c_void, pgn: pgn_t) -> bool {
+        (self
+            .pgResetCopy
+            .as_ref()
+            .expect("Expected function, got error."))(copy, pgn)
+    }
+    pub unsafe fn pgReset(&self, reg: *const pgRegistry_t) {
+        (self
+            .pgReset
+            .as_ref()
+            .expect("Expected function, got error."))(reg)
+    }
+    pub unsafe fn timeConfig_System(&self) -> *mut timeConfig_t {
+        *self
+            .timeConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn timeConfig_Copy(&self) -> *mut timeConfig_t {
+        *self
+            .timeConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rtcTimeMake(&self, secs: i32, millis: u16) -> rtcTime_t {
+        (self
+            .rtcTimeMake
+            .as_ref()
+            .expect("Expected function, got error."))(secs, millis)
+    }
+    pub unsafe fn rtcTimeGetSeconds(&self, t: *mut rtcTime_t) -> i32 {
+        (self
+            .rtcTimeGetSeconds
+            .as_ref()
+            .expect("Expected function, got error."))(t)
+    }
+    pub unsafe fn rtcTimeGetMillis(&self, t: *mut rtcTime_t) -> u16 {
+        (self
+            .rtcTimeGetMillis
+            .as_ref()
+            .expect("Expected function, got error."))(t)
+    }
+    pub unsafe fn dateTimeFormatUTC(
+        &self,
+        buf: *mut ::std::os::raw::c_char,
+        dt: *mut dateTime_t,
+    ) -> bool {
+        (self
+            .dateTimeFormatUTC
+            .as_ref()
+            .expect("Expected function, got error."))(buf, dt)
+    }
+    pub unsafe fn dateTimeFormatLocal(
+        &self,
+        buf: *mut ::std::os::raw::c_char,
+        dt: *mut dateTime_t,
+    ) -> bool {
+        (self
+            .dateTimeFormatLocal
+            .as_ref()
+            .expect("Expected function, got error."))(buf, dt)
+    }
+    pub unsafe fn dateTimeFormatLocalShort(
+        &self,
+        buf: *mut ::std::os::raw::c_char,
+        dt: *mut dateTime_t,
+    ) -> bool {
+        (self
+            .dateTimeFormatLocalShort
+            .as_ref()
+            .expect("Expected function, got error."))(buf, dt)
+    }
+    pub unsafe fn dateTimeUTCToLocal(
+        &self,
+        utcDateTime: *mut dateTime_t,
+        localDateTime: *mut dateTime_t,
+    ) {
+        (self
+            .dateTimeUTCToLocal
+            .as_ref()
+            .expect("Expected function, got error."))(utcDateTime, localDateTime)
+    }
+    pub unsafe fn dateTimeSplitFormatted(
+        &self,
+        formatted: *mut ::std::os::raw::c_char,
+        date: *mut *mut ::std::os::raw::c_char,
+        time: *mut *mut ::std::os::raw::c_char,
+    ) -> bool {
+        (self
+            .dateTimeSplitFormatted
+            .as_ref()
+            .expect("Expected function, got error."))(formatted, date, time)
+    }
+    pub unsafe fn rtcHasTime(&self) -> bool {
+        (self
+            .rtcHasTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rtcGet(&self, t: *mut rtcTime_t) -> bool {
+        (self.rtcGet.as_ref().expect("Expected function, got error."))(t)
+    }
+    pub unsafe fn rtcSet(&self, t: *mut rtcTime_t) -> bool {
+        (self.rtcSet.as_ref().expect("Expected function, got error."))(t)
+    }
+    pub unsafe fn rtcGetDateTime(&self, dt: *mut dateTime_t) -> bool {
+        (self
+            .rtcGetDateTime
+            .as_ref()
+            .expect("Expected function, got error."))(dt)
+    }
+    pub unsafe fn rtcSetDateTime(&self, dt: *mut dateTime_t) -> bool {
+        (self
+            .rtcSetDateTime
+            .as_ref()
+            .expect("Expected function, got error."))(dt)
+    }
+    pub unsafe fn rtcPersistWrite(&self, offsetMinutes: i16) {
+        (self
+            .rtcPersistWrite
+            .as_ref()
+            .expect("Expected function, got error."))(offsetMinutes)
+    }
+    pub unsafe fn rtcPersistRead(&self, t: *mut rtcTime_t) -> bool {
+        (self
+            .rtcPersistRead
+            .as_ref()
+            .expect("Expected function, got error."))(t)
+    }
+    pub unsafe fn ownerNames(&self) -> *mut [*const ::std::os::raw::c_char; 90usize] {
+        *self
+            .ownerNames
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn dmaAllocate(
+        &self,
+        identifier: dmaIdentifier_e,
+        owner: resourceOwner_e,
+        resourceIndex: u8,
+    ) -> dmaIdentifier_e {
+        (self
+            .dmaAllocate
+            .as_ref()
+            .expect("Expected function, got error."))(identifier, owner, resourceIndex)
+    }
+    pub unsafe fn dmaEnable(&self, identifier: dmaIdentifier_e) {
+        (self
+            .dmaEnable
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn dmaSetHandler(
+        &self,
+        identifier: dmaIdentifier_e,
+        callback: dmaCallbackHandlerFuncPtr,
+        priority: u32,
+        userParam: u32,
+    ) {
+        (self
+            .dmaSetHandler
+            .as_ref()
+            .expect("Expected function, got error."))(
+            identifier, callback, priority, userParam
+        )
+    }
+    pub unsafe fn dmaGetIdentifier(&self, channel: *const dmaResource_t) -> dmaIdentifier_e {
+        (self
+            .dmaGetIdentifier
+            .as_ref()
+            .expect("Expected function, got error."))(channel)
+    }
+    pub unsafe fn dmaGetOwner(&self, identifier: dmaIdentifier_e) -> *const resourceOwner_t {
+        (self
+            .dmaGetOwner
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn dmaGetDescriptorByIdentifier(
+        &self,
+        identifier: dmaIdentifier_e,
+    ) -> *mut dmaChannelDescriptor_t {
+        (self
+            .dmaGetDescriptorByIdentifier
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn dmaGetChannel(&self, channel: u8) -> u32 {
+        (self
+            .dmaGetChannel
+            .as_ref()
+            .expect("Expected function, got error."))(channel)
+    }
+    pub unsafe fn IORead(&self, io: IO_t) -> bool {
+        (self.IORead.as_ref().expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOWrite(&self, io: IO_t, value: bool) {
+        (self
+            .IOWrite
+            .as_ref()
+            .expect("Expected function, got error."))(io, value)
+    }
+    pub unsafe fn IOHi(&self, io: IO_t) {
+        (self.IOHi.as_ref().expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOLo(&self, io: IO_t) {
+        (self.IOLo.as_ref().expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOToggle(&self, io: IO_t) {
+        (self
+            .IOToggle
+            .as_ref()
+            .expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOInit(&self, io: IO_t, owner: resourceOwner_e, index: u8) {
+        (self.IOInit.as_ref().expect("Expected function, got error."))(io, owner, index)
+    }
+    pub unsafe fn IORelease(&self, io: IO_t) {
+        (self
+            .IORelease
+            .as_ref()
+            .expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOGetOwner(&self, io: IO_t) -> resourceOwner_e {
+        (self
+            .IOGetOwner
+            .as_ref()
+            .expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOIsFreeOrPreinit(&self, io: IO_t) -> bool {
+        (self
+            .IOIsFreeOrPreinit
+            .as_ref()
+            .expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IOGetByTag(&self, tag: ioTag_t) -> IO_t {
+        (self
+            .IOGetByTag
+            .as_ref()
+            .expect("Expected function, got error."))(tag)
+    }
+    pub unsafe fn IOConfigGPIO(&self, io: IO_t, cfg: ioConfig_t) {
+        (self
+            .IOConfigGPIO
+            .as_ref()
+            .expect("Expected function, got error."))(io, cfg)
+    }
+    pub unsafe fn IOInitGlobal(&self) {
+        (self
+            .IOInitGlobal
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn IOTraversePins(&self, func: IOTraverseFuncPtr_t) {
+        (self
+            .IOTraversePins
+            .as_ref()
+            .expect("Expected function, got error."))(func)
+    }
+    pub unsafe fn IO_GPIO(&self, io: IO_t) -> *mut GPIO_TypeDef {
+        (self
+            .IO_GPIO
+            .as_ref()
+            .expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn IO_Pin(&self, io: IO_t) -> u16 {
+        (self.IO_Pin.as_ref().expect("Expected function, got error."))(io)
+    }
+    pub unsafe fn dmaoptByTag(&self, ioTag: ioTag_t) -> dmaoptValue_t {
+        (self
+            .dmaoptByTag
+            .as_ref()
+            .expect("Expected function, got error."))(ioTag)
+    }
+    pub unsafe fn dmaGetChannelSpecByPeripheral(
+        &self,
+        device: dmaPeripheral_e,
+        index: u8,
+        opt: i8,
+    ) -> *const dmaChannelSpec_t {
+        (self
+            .dmaGetChannelSpecByPeripheral
+            .as_ref()
+            .expect("Expected function, got error."))(device, index, opt)
+    }
+    pub unsafe fn dmaGetChannelSpecByTimerValue(
+        &self,
+        tim: *mut TIM_TypeDef,
+        channel: u8,
+        dmaopt: dmaoptValue_t,
+    ) -> *const dmaChannelSpec_t {
+        (self
+            .dmaGetChannelSpecByTimerValue
+            .as_ref()
+            .expect("Expected function, got error."))(tim, channel, dmaopt)
+    }
+    pub unsafe fn dmaGetChannelSpecByTimer(
+        &self,
+        timer: *const timerHardware_s,
+    ) -> *const dmaChannelSpec_t {
+        (self
+            .dmaGetChannelSpecByTimer
+            .as_ref()
+            .expect("Expected function, got error."))(timer)
+    }
+    pub unsafe fn dmaGetOptionByTimer(&self, timer: *const timerHardware_s) -> dmaoptValue_t {
+        (self
+            .dmaGetOptionByTimer
+            .as_ref()
+            .expect("Expected function, got error."))(timer)
+    }
+    pub unsafe fn dmaGetUpOptionByTimer(&self, timer: *const timerHardware_s) -> dmaoptValue_t {
+        (self
+            .dmaGetUpOptionByTimer
+            .as_ref()
+            .expect("Expected function, got error."))(timer)
+    }
+    pub unsafe fn fullTimerHardware(&self) -> *mut [timerHardware_t; 0usize] {
+        *self
+            .fullTimerHardware
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn timerDefinitions(&self) -> *mut [timerDef_t; 0usize] {
+        *self
+            .timerDefinitions
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn timerConfigure(&self, timHw: *const timerHardware_t, period: u16, hz: u32) {
+        (self
+            .timerConfigure
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, period, hz)
+    }
+    pub unsafe fn timerInit(&self) {
+        (self
+            .timerInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn timerStart(&self, tim: *mut TIM_TypeDef) {
+        (self
+            .timerStart
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn timerChConfigIC(
+        &self,
+        timHw: *const timerHardware_t,
+        polarityRising: bool,
+        inputFilterSamples: ::std::os::raw::c_uint,
+    ) {
+        (self
+            .timerChConfigIC
+            .as_ref()
+            .expect("Expected function, got error."))(
+            timHw, polarityRising, inputFilterSamples
+        )
+    }
+    pub unsafe fn timerChConfigICDual(
+        &self,
+        timHw: *const timerHardware_t,
+        polarityRising: bool,
+        inputFilterSamples: ::std::os::raw::c_uint,
+    ) {
+        (self
+            .timerChConfigICDual
+            .as_ref()
+            .expect("Expected function, got error."))(
+            timHw, polarityRising, inputFilterSamples
+        )
+    }
+    pub unsafe fn timerChICPolarity(&self, timHw: *const timerHardware_t, polarityRising: bool) {
+        (self
+            .timerChICPolarity
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, polarityRising)
+    }
+    pub unsafe fn timerChCCR(&self, timHw: *const timerHardware_t) -> *mut timCCR_t {
+        (self
+            .timerChCCR
+            .as_ref()
+            .expect("Expected function, got error."))(timHw)
+    }
+    pub unsafe fn timerChCCRLo(&self, timHw: *const timerHardware_t) -> *mut timCCR_t {
+        (self
+            .timerChCCRLo
+            .as_ref()
+            .expect("Expected function, got error."))(timHw)
+    }
+    pub unsafe fn timerChCCRHi(&self, timHw: *const timerHardware_t) -> *mut timCCR_t {
+        (self
+            .timerChCCRHi
+            .as_ref()
+            .expect("Expected function, got error."))(timHw)
+    }
+    pub unsafe fn timerChConfigOC(
+        &self,
+        timHw: *const timerHardware_t,
+        outEnable: bool,
+        stateHigh: bool,
+    ) {
+        (self
+            .timerChConfigOC
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, outEnable, stateHigh)
+    }
+    pub unsafe fn timerChConfigGPIO(&self, timHw: *const timerHardware_t, mode: ioConfig_t) {
+        (self
+            .timerChConfigGPIO
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, mode)
+    }
+    pub unsafe fn timerChCCHandlerInit(
+        &self,
+        self_: *mut timerCCHandlerRec_t,
+        fn_: timerCCHandlerCallback,
+    ) {
+        (self
+            .timerChCCHandlerInit
+            .as_ref()
+            .expect("Expected function, got error."))(self_, fn_)
+    }
+    pub unsafe fn timerChOvrHandlerInit(
+        &self,
+        self_: *mut timerOvrHandlerRec_t,
+        fn_: timerOvrHandlerCallback,
+    ) {
+        (self
+            .timerChOvrHandlerInit
+            .as_ref()
+            .expect("Expected function, got error."))(self_, fn_)
+    }
+    pub unsafe fn timerChConfigCallbacks(
+        &self,
+        channel: *const timerHardware_t,
+        edgeCallback: *mut timerCCHandlerRec_t,
+        overflowCallback: *mut timerOvrHandlerRec_t,
+    ) {
+        (self
+            .timerChConfigCallbacks
+            .as_ref()
+            .expect("Expected function, got error."))(
+            channel, edgeCallback, overflowCallback
+        )
+    }
+    pub unsafe fn timerChConfigCallbacksDual(
+        &self,
+        channel: *const timerHardware_t,
+        edgeCallbackLo: *mut timerCCHandlerRec_t,
+        edgeCallbackHi: *mut timerCCHandlerRec_t,
+        overflowCallback: *mut timerOvrHandlerRec_t,
+    ) {
+        (self
+            .timerChConfigCallbacksDual
+            .as_ref()
+            .expect("Expected function, got error."))(
+            channel,
+            edgeCallbackLo,
+            edgeCallbackHi,
+            overflowCallback,
+        )
+    }
+    pub unsafe fn timerChITConfigDualLo(
+        &self,
+        timHw: *const timerHardware_t,
+        newState: FunctionalState,
+    ) {
+        (self
+            .timerChITConfigDualLo
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, newState)
+    }
+    pub unsafe fn timerChITConfig(&self, timHw: *const timerHardware_t, newState: FunctionalState) {
+        (self
+            .timerChITConfig
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, newState)
+    }
+    pub unsafe fn timerChClearCCFlag(&self, timHw: *const timerHardware_t) {
+        (self
+            .timerChClearCCFlag
+            .as_ref()
+            .expect("Expected function, got error."))(timHw)
+    }
+    pub unsafe fn timerChInit(
+        &self,
+        timHw: *const timerHardware_t,
+        type_: channelType_t,
+        irqPriority: ::std::os::raw::c_int,
+        irq: u8,
+    ) {
+        (self
+            .timerChInit
+            .as_ref()
+            .expect("Expected function, got error."))(timHw, type_, irqPriority, irq)
+    }
+    pub unsafe fn timerForceOverflow(&self, tim: *mut TIM_TypeDef) {
+        (self
+            .timerForceOverflow
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn timerConfigUpdateCallback(
+        &self,
+        tim: *const TIM_TypeDef,
+        updateCallback: *mut timerOvrHandlerRec_t,
+    ) {
+        (self
+            .timerConfigUpdateCallback
+            .as_ref()
+            .expect("Expected function, got error."))(tim, updateCallback)
+    }
+    pub unsafe fn timerClock(&self, tim: *mut TIM_TypeDef) -> u32 {
+        (self
+            .timerClock
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn configTimeBase(&self, tim: *mut TIM_TypeDef, period: u16, hz: u32) {
+        (self
+            .configTimeBase
+            .as_ref()
+            .expect("Expected function, got error."))(tim, period, hz)
+    }
+    pub unsafe fn timerReconfigureTimeBase(&self, tim: *mut TIM_TypeDef, period: u16, hz: u32) {
+        (self
+            .timerReconfigureTimeBase
+            .as_ref()
+            .expect("Expected function, got error."))(tim, period, hz)
+    }
+    pub unsafe fn timerRCC(&self, tim: *mut TIM_TypeDef) -> rccPeriphTag_t {
+        (self
+            .timerRCC
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn timerInputIrq(&self, tim: *mut TIM_TypeDef) -> u8 {
+        (self
+            .timerInputIrq
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn timerGetConfiguredByTag(&self, ioTag: ioTag_t) -> *const timerHardware_t {
+        (self
+            .timerGetConfiguredByTag
+            .as_ref()
+            .expect("Expected function, got error."))(ioTag)
+    }
+    pub unsafe fn timerAllocate(
+        &self,
+        ioTag: ioTag_t,
+        owner: resourceOwner_e,
+        resourceIndex: u8,
+    ) -> *const timerHardware_t {
+        (self
+            .timerAllocate
+            .as_ref()
+            .expect("Expected function, got error."))(ioTag, owner, resourceIndex)
+    }
+    pub unsafe fn timerGetByTagAndIndex(
+        &self,
+        ioTag: ioTag_t,
+        timerIndex: ::std::os::raw::c_uint,
+    ) -> *const timerHardware_t {
+        (self
+            .timerGetByTagAndIndex
+            .as_ref()
+            .expect("Expected function, got error."))(ioTag, timerIndex)
+    }
+    pub unsafe fn timerOCInit(
+        &self,
+        tim: *mut TIM_TypeDef,
+        channel: u8,
+        init: *mut TIM_OCInitTypeDef,
+    ) {
+        (self
+            .timerOCInit
+            .as_ref()
+            .expect("Expected function, got error."))(tim, channel, init)
+    }
+    pub unsafe fn timerOCPreloadConfig(&self, tim: *mut TIM_TypeDef, channel: u8, preload: u16) {
+        (self
+            .timerOCPreloadConfig
+            .as_ref()
+            .expect("Expected function, got error."))(tim, channel, preload)
+    }
+    pub unsafe fn timerCCR(&self, tim: *mut TIM_TypeDef, channel: u8) -> *mut timCCR_t {
+        (self
+            .timerCCR
+            .as_ref()
+            .expect("Expected function, got error."))(tim, channel)
+    }
+    pub unsafe fn timerDmaSource(&self, channel: u8) -> u16 {
+        (self
+            .timerDmaSource
+            .as_ref()
+            .expect("Expected function, got error."))(channel)
+    }
+    pub unsafe fn timerGetPrescalerByDesiredHertz(&self, tim: *mut TIM_TypeDef, hz: u32) -> u16 {
+        (self
+            .timerGetPrescalerByDesiredHertz
+            .as_ref()
+            .expect("Expected function, got error."))(tim, hz)
+    }
+    pub unsafe fn timerGetPrescalerByDesiredMhz(&self, tim: *mut TIM_TypeDef, mhz: u16) -> u16 {
+        (self
+            .timerGetPrescalerByDesiredMhz
+            .as_ref()
+            .expect("Expected function, got error."))(tim, mhz)
+    }
+    pub unsafe fn timerGetPeriodByPrescaler(
+        &self,
+        tim: *mut TIM_TypeDef,
+        prescaler: u16,
+        hz: u32,
+    ) -> u16 {
+        (self
+            .timerGetPeriodByPrescaler
+            .as_ref()
+            .expect("Expected function, got error."))(tim, prescaler, hz)
+    }
+    pub unsafe fn timerGetNumberByIndex(&self, index: u8) -> i8 {
+        (self
+            .timerGetNumberByIndex
+            .as_ref()
+            .expect("Expected function, got error."))(index)
+    }
+    pub unsafe fn timerGetTIMNumber(&self, tim: *const TIM_TypeDef) -> i8 {
+        (self
+            .timerGetTIMNumber
+            .as_ref()
+            .expect("Expected function, got error."))(tim)
+    }
+    pub unsafe fn timerLookupChannelIndex(&self, channel: u16) -> u8 {
+        (self
+            .timerLookupChannelIndex
+            .as_ref()
+            .expect("Expected function, got error."))(channel)
+    }
+    pub unsafe fn dshotBitbangDevInit(
+        &self,
+        motorConfig: *const motorDevConfig_s,
+        motorCount: u8,
+    ) -> *mut motorDevice_s {
+        (self
+            .dshotBitbangDevInit
+            .as_ref()
+            .expect("Expected function, got error."))(motorConfig, motorCount)
+    }
+    pub unsafe fn dshotBitbangGetStatus(&self) -> dshotBitbangStatus_e {
+        (self
+            .dshotBitbangGetStatus
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn dshotBitbangTimerGetAllocatedByNumberAndChannel(
+        &self,
+        timerNumber: i8,
+        timerChannel: u16,
+    ) -> *const timerHardware_t {
+        (self
+            .dshotBitbangTimerGetAllocatedByNumberAndChannel
+            .as_ref()
+            .expect("Expected function, got error."))(timerNumber, timerChannel)
+    }
+    pub unsafe fn dshotBitbangTimerGetOwner(
+        &self,
+        timer: *const timerHardware_t,
+    ) -> *const resourceOwner_t {
+        (self
+            .dshotBitbangTimerGetOwner
+            .as_ref()
+            .expect("Expected function, got error."))(timer)
+    }
+    pub unsafe fn motorConfig_System(&self) -> *mut motorConfig_t {
+        *self
+            .motorConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn motorConfig_Copy(&self) -> *mut motorConfig_t {
+        *self
+            .motorConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn motorPostInitNull(&self) {
+        (self
+            .motorPostInitNull
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorWriteNull(&self, index: u8, value: f32) {
+        (self
+            .motorWriteNull
+            .as_ref()
+            .expect("Expected function, got error."))(index, value)
+    }
+    pub unsafe fn motorDecodeTelemetryNull(&self) -> bool {
+        (self
+            .motorDecodeTelemetryNull
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorUpdateCompleteNull(&self) {
+        (self
+            .motorUpdateCompleteNull
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorPostInit(&self) {
+        (self
+            .motorPostInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorWriteAll(&self, values: *mut f32) {
+        (self
+            .motorWriteAll
+            .as_ref()
+            .expect("Expected function, got error."))(values)
+    }
+    pub unsafe fn motorInitEndpoints(
+        &self,
+        motorConfig: *const motorConfig_t,
+        outputLimit: f32,
+        outputLow: *mut f32,
+        outputHigh: *mut f32,
+        disarm: *mut f32,
+        deadbandMotor3DHigh: *mut f32,
+        deadbandMotor3DLow: *mut f32,
+    ) {
+        (self
+            .motorInitEndpoints
+            .as_ref()
+            .expect("Expected function, got error."))(
+            motorConfig,
+            outputLimit,
+            outputLow,
+            outputHigh,
+            disarm,
+            deadbandMotor3DHigh,
+            deadbandMotor3DLow,
+        )
+    }
+    pub unsafe fn motorConvertFromExternal(&self, externalValue: u16) -> f32 {
+        (self
+            .motorConvertFromExternal
+            .as_ref()
+            .expect("Expected function, got error."))(externalValue)
+    }
+    pub unsafe fn motorConvertToExternal(&self, motorValue: f32) -> u16 {
+        (self
+            .motorConvertToExternal
+            .as_ref()
+            .expect("Expected function, got error."))(motorValue)
+    }
+    pub unsafe fn motorDevInit(
+        &self,
+        motorConfig: *const motorDevConfig_s,
+        idlePulse: u16,
+        motorCount: u8,
+    ) {
+        (self
+            .motorDevInit
+            .as_ref()
+            .expect("Expected function, got error."))(motorConfig, idlePulse, motorCount)
+    }
+    pub unsafe fn motorDeviceCount(&self) -> ::std::os::raw::c_uint {
+        (self
+            .motorDeviceCount
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorGetVTable(&self) -> *mut motorVTable_t {
+        (self
+            .motorGetVTable
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn checkMotorProtocolEnabled(
+        &self,
+        motorConfig: *const motorDevConfig_t,
+        protocolIsDshot: *mut bool,
+    ) -> bool {
+        (self
+            .checkMotorProtocolEnabled
+            .as_ref()
+            .expect("Expected function, got error."))(motorConfig, protocolIsDshot)
+    }
+    pub unsafe fn isMotorProtocolDshot(&self) -> bool {
+        (self
+            .isMotorProtocolDshot
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isMotorProtocolEnabled(&self) -> bool {
+        (self
+            .isMotorProtocolEnabled
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorDisable(&self) {
+        (self
+            .motorDisable
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorEnable(&self) {
+        (self
+            .motorEnable
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorIsEnabled(&self) -> bool {
+        (self
+            .motorIsEnabled
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorIsMotorEnabled(&self, index: u8) -> bool {
+        (self
+            .motorIsMotorEnabled
+            .as_ref()
+            .expect("Expected function, got error."))(index)
+    }
+    pub unsafe fn motorGetMotorEnableTimeMs(&self) -> timeMs_t {
+        (self
+            .motorGetMotorEnableTimeMs
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn motorShutdown(&self) {
+        (self
+            .motorShutdown
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getDigitalIdleOffset(&self, motorConfig: *const motorConfig_t) -> f32 {
+        (self
+            .getDigitalIdleOffset
+            .as_ref()
+            .expect("Expected function, got error."))(motorConfig)
+    }
+    pub unsafe fn motors(&self) -> *mut [pwmOutputPort_t; 8usize] {
+        *self.motors.as_ref().expect("Expected variable, got error.")
+    }
+    pub unsafe fn motorPwmDevInit(
+        &self,
+        motorDevConfig: *const motorDevConfig_s,
+        idlePulse: u16,
+        motorCount: u8,
+        useUnsyncedPwm: bool,
+    ) -> *mut motorDevice_t {
+        (self
+            .motorPwmDevInit
+            .as_ref()
+            .expect("Expected function, got error."))(
+            motorDevConfig,
+            idlePulse,
+            motorCount,
+            useUnsyncedPwm,
+        )
+    }
+    pub unsafe fn servoDevInit(&self, servoDevConfig: *const servoDevConfig_t) {
+        (self
+            .servoDevInit
+            .as_ref()
+            .expect("Expected function, got error."))(servoDevConfig)
+    }
+    pub unsafe fn pwmServoConfig(
+        &self,
+        timerHardware: *const timerHardware_s,
+        servoIndex: u8,
+        servoPwmRate: u16,
+        servoCenterPulse: u16,
+    ) {
+        (self
+            .pwmServoConfig
+            .as_ref()
+            .expect("Expected function, got error."))(
+            timerHardware,
+            servoIndex,
+            servoPwmRate,
+            servoCenterPulse,
+        )
+    }
+    pub unsafe fn pwmOutConfig(
+        &self,
+        channel: *mut timerChannel_t,
+        timerHardware: *const timerHardware_t,
+        hz: u32,
+        period: u16,
+        value: u16,
+        inversion: u8,
+    ) {
+        (self
+            .pwmOutConfig
+            .as_ref()
+            .expect("Expected function, got error."))(
+            channel,
+            timerHardware,
+            hz,
+            period,
+            value,
+            inversion,
+        )
+    }
+    pub unsafe fn pwmWriteServo(&self, index: u8, value: f32) {
+        (self
+            .pwmWriteServo
+            .as_ref()
+            .expect("Expected function, got error."))(index, value)
+    }
+    pub unsafe fn pwmGetMotors(&self) -> *mut pwmOutputPort_t {
+        (self
+            .pwmGetMotors
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn pwmIsSynced(&self) -> bool {
+        (self
+            .pwmIsSynced
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn serialPinConfig_System(&self) -> *mut serialPinConfig_t {
+        *self
+            .serialPinConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn serialPinConfig_Copy(&self) -> *mut serialPinConfig_t {
+        *self
+            .serialPinConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn serialWrite(&self, instance: *mut serialPort_t, ch: u8) {
+        (self
+            .serialWrite
+            .as_ref()
+            .expect("Expected function, got error."))(instance, ch)
+    }
+    pub unsafe fn serialRxBytesWaiting(&self, instance: *const serialPort_t) -> u32 {
+        (self
+            .serialRxBytesWaiting
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialTxBytesFree(&self, instance: *const serialPort_t) -> u32 {
+        (self
+            .serialTxBytesFree
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialWriteBuf(
+        &self,
+        instance: *mut serialPort_t,
+        data: *const u8,
+        count: ::std::os::raw::c_int,
+    ) {
+        (self
+            .serialWriteBuf
+            .as_ref()
+            .expect("Expected function, got error."))(instance, data, count)
+    }
+    pub unsafe fn serialRead(&self, instance: *mut serialPort_t) -> u8 {
+        (self
+            .serialRead
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialSetBaudRate(&self, instance: *mut serialPort_t, baudRate: u32) {
+        (self
+            .serialSetBaudRate
+            .as_ref()
+            .expect("Expected function, got error."))(instance, baudRate)
+    }
+    pub unsafe fn serialSetMode(&self, instance: *mut serialPort_t, mode: portMode_e) {
+        (self
+            .serialSetMode
+            .as_ref()
+            .expect("Expected function, got error."))(instance, mode)
+    }
+    pub unsafe fn serialSetCtrlLineStateCb(
+        &self,
+        instance: *mut serialPort_t,
+        cb: ::std::option::Option<
+            unsafe extern "C" fn(context: *mut ::std::os::raw::c_void, ctrlLineState: u16),
+        >,
+        context: *mut ::std::os::raw::c_void,
+    ) {
+        (self
+            .serialSetCtrlLineStateCb
+            .as_ref()
+            .expect("Expected function, got error."))(instance, cb, context)
+    }
+    pub unsafe fn serialSetBaudRateCb(
+        &self,
+        instance: *mut serialPort_t,
+        cb: ::std::option::Option<unsafe extern "C" fn(context: *mut serialPort_t, baud: u32)>,
+        context: *mut serialPort_t,
+    ) {
+        (self
+            .serialSetBaudRateCb
+            .as_ref()
+            .expect("Expected function, got error."))(instance, cb, context)
+    }
+    pub unsafe fn isSerialTransmitBufferEmpty(&self, instance: *const serialPort_t) -> bool {
+        (self
+            .isSerialTransmitBufferEmpty
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialPrint(
+        &self,
+        instance: *mut serialPort_t,
+        str_: *const ::std::os::raw::c_char,
+    ) {
+        (self
+            .serialPrint
+            .as_ref()
+            .expect("Expected function, got error."))(instance, str_)
+    }
+    pub unsafe fn serialGetBaudRate(&self, instance: *mut serialPort_t) -> u32 {
+        (self
+            .serialGetBaudRate
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialWriteBufShim(
+        &self,
+        instance: *mut ::std::os::raw::c_void,
+        data: *const u8,
+        count: ::std::os::raw::c_int,
+    ) {
+        (self
+            .serialWriteBufShim
+            .as_ref()
+            .expect("Expected function, got error."))(instance, data, count)
+    }
+    pub unsafe fn serialBeginWrite(&self, instance: *mut serialPort_t) {
+        (self
+            .serialBeginWrite
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialEndWrite(&self, instance: *mut serialPort_t) {
+        (self
+            .serialEndWrite
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn serialWsOpen(
+        &self,
+        id: ::std::os::raw::c_int,
+        rxCallback: serialReceiveCallbackPtr,
+        rxCallbackData: *mut ::std::os::raw::c_void,
+        baudRate: u32,
+        mode: portMode_e,
+        options: portOptions_e,
+    ) -> *mut serialPort_t {
+        (self
+            .serialWsOpen
+            .as_ref()
+            .expect("Expected function, got error."))(
+            id,
+            rxCallback,
+            rxCallbackData,
+            baudRate,
+            mode,
+            options,
+        )
+    }
+    pub unsafe fn wsDataIn(
+        &self,
+        instance: *mut wsPort_t,
+        ch: *mut u8,
+        size: ::std::os::raw::c_int,
+    ) {
+        (self
+            .wsDataIn
+            .as_ref()
+            .expect("Expected function, got error."))(instance, ch, size)
+    }
+    pub unsafe fn wsDataOut(&self, instance: *mut wsPort_t) {
+        (self
+            .wsDataOut
+            .as_ref()
+            .expect("Expected function, got error."))(instance)
+    }
+    pub unsafe fn wsUpdate(&self) {
+        (self
+            .wsUpdate
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn systemBeep(&self, on: bool) {
+        (self
+            .systemBeep
+            .as_ref()
+            .expect("Expected function, got error."))(on)
+    }
+    pub unsafe fn systemBeepToggle(&self) {
+        (self
+            .systemBeepToggle
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn beeperInit(&self, beeperDevConfig: *const beeperDevConfig_s) {
+        (self
+            .beeperInit
+            .as_ref()
+            .expect("Expected function, got error."))(beeperDevConfig)
+    }
+    pub unsafe fn getBeeper(&self) -> bool {
+        (self
+            .getBeeper
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn systemState(&self) -> *mut u8 {
+        *self
+            .systemState
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn init(&self) {
+        (self.init.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn armingFlags(&self) -> *mut u8 {
+        *self
+            .armingFlags
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn armingDisableFlagNames(&self) -> *mut [*const ::std::os::raw::c_char; 26usize] {
+        *self
+            .armingDisableFlagNames
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn setArmingDisabled(&self, flag: armingDisableFlags_e) {
+        (self
+            .setArmingDisabled
+            .as_ref()
+            .expect("Expected function, got error."))(flag)
+    }
+    pub unsafe fn unsetArmingDisabled(&self, flag: armingDisableFlags_e) {
+        (self
+            .unsetArmingDisabled
+            .as_ref()
+            .expect("Expected function, got error."))(flag)
+    }
+    pub unsafe fn isArmingDisabled(&self) -> bool {
+        (self
+            .isArmingDisabled
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getArmingDisableFlags(&self) -> armingDisableFlags_e {
+        (self
+            .getArmingDisableFlags
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn flightModeFlags(&self) -> *mut u16 {
+        *self
+            .flightModeFlags
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn stateFlags(&self) -> *mut u8 {
+        *self
+            .stateFlags
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn enableFlightMode(&self, mask: flightModeFlags_e) -> u16 {
+        (self
+            .enableFlightMode
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn disableFlightMode(&self, mask: flightModeFlags_e) -> u16 {
+        (self
+            .disableFlightMode
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn sensors(&self, mask: u32) -> bool {
+        (self
+            .sensors
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn sensorsSet(&self, mask: u32) {
+        (self
+            .sensorsSet
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn sensorsClear(&self, mask: u32) {
+        (self
+            .sensorsClear
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn sensorsMask(&self) -> u32 {
+        (self
+            .sensorsMask
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn mwDisarm(&self) {
+        (self
+            .mwDisarm
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn pilotConfig_System(&self) -> *mut pilotConfig_t {
+        *self
+            .pilotConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn pilotConfig_Copy(&self) -> *mut pilotConfig_t {
+        *self
+            .pilotConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn systemConfig_System(&self) -> *mut systemConfig_t {
+        *self
+            .systemConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn systemConfig_Copy(&self) -> *mut systemConfig_t {
+        *self
+            .systemConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentPidProfile(&self) -> *mut *mut pidProfile_s {
+        *self
+            .currentPidProfile
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn initEEPROM(&self) {
+        (self
+            .initEEPROM
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn resetEEPROM(&self) -> bool {
+        (self
+            .resetEEPROM
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn readEEPROM(&self) -> bool {
+        (self
+            .readEEPROM
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn writeEEPROM(&self) {
+        (self
+            .writeEEPROM
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn writeUnmodifiedConfigToEEPROM(&self) {
+        (self
+            .writeUnmodifiedConfigToEEPROM
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn ensureEEPROMStructureIsValid(&self) {
+        (self
+            .ensureEEPROMStructureIsValid
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn saveConfigAndNotify(&self) {
+        (self
+            .saveConfigAndNotify
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn validateAndFixGyroConfig(&self) {
+        (self
+            .validateAndFixGyroConfig
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn validateAndFixBlackBox(&self) {
+        (self
+            .validateAndFixBlackBox
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn setConfigDirty(&self) {
+        (self
+            .setConfigDirty
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isConfigDirty(&self) -> bool {
+        (self
+            .isConfigDirty
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getCurrentPidProfileIndex(&self) -> u8 {
+        (self
+            .getCurrentPidProfileIndex
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn changePidProfile(&self, pidProfileIndex: u8) {
+        (self
+            .changePidProfile
+            .as_ref()
+            .expect("Expected function, got error."))(pidProfileIndex)
+    }
+    pub unsafe fn changePidProfileFromCellCount(&self, cellCount: u8) {
+        (self
+            .changePidProfileFromCellCount
+            .as_ref()
+            .expect("Expected function, got error."))(cellCount)
+    }
+    pub unsafe fn getCurrentControlRateProfileIndex(&self) -> u8 {
+        (self
+            .getCurrentControlRateProfileIndex
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn changeControlRateProfile(&self, profileIndex: u8) {
+        (self
+            .changeControlRateProfile
+            .as_ref()
+            .expect("Expected function, got error."))(profileIndex)
+    }
+    pub unsafe fn canSoftwareSerialBeUsed(&self) -> bool {
+        (self
+            .canSoftwareSerialBeUsed
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getCurrentMinthrottle(&self) -> u16 {
+        (self
+            .getCurrentMinthrottle
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn resetConfig(&self) {
+        (self
+            .resetConfig
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn targetConfiguration(&self) {
+        (self
+            .targetConfiguration
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn targetValidateConfiguration(&self) {
+        (self
+            .targetValidateConfiguration
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isSystemConfigured(&self) -> bool {
+        (self
+            .isSystemConfigured
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn setRebootRequired(&self) {
+        (self
+            .setRebootRequired
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getRebootRequired(&self) -> bool {
+        (self
+            .getRebootRequired
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isEepromWriteInProgress(&self) -> bool {
+        (self
+            .isEepromWriteInProgress
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerConfig_System(&self) -> *mut schedulerConfig_t {
+        *self
+            .schedulerConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn schedulerConfig_Copy(&self) -> *mut schedulerConfig_t {
+        *self
+            .schedulerConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn getCheckFuncInfo(&self, checkFuncInfo: *mut cfCheckFuncInfo_t) {
+        (self
+            .getCheckFuncInfo
+            .as_ref()
+            .expect("Expected function, got error."))(checkFuncInfo)
+    }
+    pub unsafe fn getTaskInfo(&self, taskId: taskId_e, taskInfo: *mut taskInfo_t) {
+        (self
+            .getTaskInfo
+            .as_ref()
+            .expect("Expected function, got error."))(taskId, taskInfo)
+    }
+    pub unsafe fn rescheduleTask(&self, taskId: taskId_e, newPeriodUs: timeDelta_t) {
+        (self
+            .rescheduleTask
+            .as_ref()
+            .expect("Expected function, got error."))(taskId, newPeriodUs)
+    }
+    pub unsafe fn setTaskEnabled(&self, taskId: taskId_e, newEnabledState: bool) {
+        (self
+            .setTaskEnabled
+            .as_ref()
+            .expect("Expected function, got error."))(taskId, newEnabledState)
+    }
+    pub unsafe fn getTaskDeltaTimeUs(&self, taskId: taskId_e) -> timeDelta_t {
+        (self
+            .getTaskDeltaTimeUs
+            .as_ref()
+            .expect("Expected function, got error."))(taskId)
+    }
+    pub unsafe fn schedulerIgnoreTaskStateTime(&self) {
+        (self
+            .schedulerIgnoreTaskStateTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerIgnoreTaskExecRate(&self) {
+        (self
+            .schedulerIgnoreTaskExecRate
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerIgnoreTaskExecTime(&self) {
+        (self
+            .schedulerIgnoreTaskExecTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerGetIgnoreTaskExecTime(&self) -> bool {
+        (self
+            .schedulerGetIgnoreTaskExecTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerResetTaskStatistics(&self, taskId: taskId_e) {
+        (self
+            .schedulerResetTaskStatistics
+            .as_ref()
+            .expect("Expected function, got error."))(taskId)
+    }
+    pub unsafe fn schedulerResetTaskMaxExecutionTime(&self, taskId: taskId_e) {
+        (self
+            .schedulerResetTaskMaxExecutionTime
+            .as_ref()
+            .expect("Expected function, got error."))(taskId)
+    }
+    pub unsafe fn schedulerResetCheckFunctionMaxExecutionTime(&self) {
+        (self
+            .schedulerResetCheckFunctionMaxExecutionTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerSetNextStateTime(&self, nextStateTime: timeDelta_t) {
+        (self
+            .schedulerSetNextStateTime
+            .as_ref()
+            .expect("Expected function, got error."))(nextStateTime)
+    }
+    pub unsafe fn schedulerGetNextStateTime(&self) -> timeDelta_t {
+        (self
+            .schedulerGetNextStateTime
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerInit(&self) {
+        (self
+            .schedulerInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn scheduler(&self) {
+        (self
+            .scheduler
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerExecuteTask(
+        &self,
+        selectedTask: *mut task_t,
+        currentTimeUs: timeUs_t,
+    ) -> timeUs_t {
+        (self
+            .schedulerExecuteTask
+            .as_ref()
+            .expect("Expected function, got error."))(selectedTask, currentTimeUs)
+    }
+    pub unsafe fn taskSystemLoad(&self, currentTimeUs: timeUs_t) {
+        (self
+            .taskSystemLoad
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn schedulerEnableGyro(&self) {
+        (self
+            .schedulerEnableGyro
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getAverageSystemLoadPercent(&self) -> u16 {
+        (self
+            .getAverageSystemLoadPercent
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn schedulerGetCycleTimeMultiplier(&self) -> f32 {
+        (self
+            .schedulerGetCycleTimeMultiplier
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn tasksInitData(&self) {
+        (self
+            .tasksInitData
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn tasksInit(&self) {
+        (self
+            .tasksInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getTask(&self, taskId: ::std::os::raw::c_uint) -> *mut task_t {
+        (self
+            .getTask
+            .as_ref()
+            .expect("Expected function, got error."))(taskId)
+    }
+    pub unsafe fn taskUpdateRxMainInProgress(&self) -> bool {
+        (self
+            .taskUpdateRxMainInProgress
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn canUseGPSHeading(&self) -> *mut bool {
+        *self
+            .canUseGPSHeading
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn attitude(&self) -> *mut attitudeEulerAngles_t {
+        *self
+            .attitude
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rMat(&self) -> *mut [[f32; 3usize]; 3usize] {
+        *self.rMat.as_ref().expect("Expected variable, got error.")
+    }
+    pub unsafe fn imuConfig_System(&self) -> *mut imuConfig_t {
+        *self
+            .imuConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn imuConfig_Copy(&self) -> *mut imuConfig_t {
+        *self
+            .imuConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn imuConfigure(
+        &self,
+        throttle_correction_angle: u16,
+        throttle_correction_value: u8,
+    ) {
+        (self
+            .imuConfigure
+            .as_ref()
+            .expect("Expected function, got error."))(
+            throttle_correction_angle,
+            throttle_correction_value,
+        )
+    }
+    pub unsafe fn getCosTiltAngle(&self) -> f32 {
+        (self
+            .getCosTiltAngle
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getQuaternion(&self, q: *mut quaternion) {
+        (self
+            .getQuaternion
+            .as_ref()
+            .expect("Expected function, got error."))(q)
+    }
+    pub unsafe fn imuUpdateAttitude(&self, currentTimeUs: timeUs_t) {
+        (self
+            .imuUpdateAttitude
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn imuInit(&self) {
+        (self
+            .imuInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn imuSetAttitudeRPY(&self, roll: f32, pitch: f32, yaw: f32) {
+        (self
+            .imuSetAttitudeRPY
+            .as_ref()
+            .expect("Expected function, got error."))(roll, pitch, yaw)
+    }
+    pub unsafe fn imuSetAttitudeQuat(&self, w: f32, x: f32, y: f32, z: f32) {
+        (self
+            .imuSetAttitudeQuat
+            .as_ref()
+            .expect("Expected function, got error."))(w, x, y, z)
+    }
+    pub unsafe fn imuQuaternionHeadfreeOffsetSet(&self) -> bool {
+        (self
+            .imuQuaternionHeadfreeOffsetSet
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn imuQuaternionHeadfreeTransformVectorEarthToBody(&self, v: *mut t_fp_vector_def) {
+        (self
+            .imuQuaternionHeadfreeTransformVectorEarthToBody
+            .as_ref()
+            .expect("Expected function, got error."))(v)
+    }
+    pub unsafe fn shouldInitializeGPSHeading(&self) -> bool {
+        (self
+            .shouldInitializeGPSHeading
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isUpright(&self) -> bool {
+        (self
+            .isUpright
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn osdScreen(&self) -> *mut [[u8; 30usize]; 16usize] {
+        *self
+            .osdScreen
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn baudRates(&self) -> *mut [u32; 0usize] {
+        *self
+            .baudRates
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn serialPortIdentifiers(&self) -> *mut [serialPortIdentifier_e; 8usize] {
+        *self
+            .serialPortIdentifiers
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn findSharedSerialPort(
+        &self,
+        functionMask: u16,
+        sharedWithFunction: serialPortFunction_e,
+    ) -> *mut serialPort_t {
+        (self
+            .findSharedSerialPort
+            .as_ref()
+            .expect("Expected function, got error."))(functionMask, sharedWithFunction)
+    }
+    pub unsafe fn serialConfig_System(&self) -> *mut serialConfig_t {
+        *self
+            .serialConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn serialConfig_Copy(&self) -> *mut serialConfig_t {
+        *self
+            .serialConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn serialInit(
+        &self,
+        softserialEnabled: bool,
+        serialPortToDisable: serialPortIdentifier_e,
+    ) {
+        (self
+            .serialInit
+            .as_ref()
+            .expect("Expected function, got error."))(softserialEnabled, serialPortToDisable)
+    }
+    pub unsafe fn serialRemovePort(&self, identifier: serialPortIdentifier_e) {
+        (self
+            .serialRemovePort
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn serialGetAvailablePortCount(&self) -> u8 {
+        (self
+            .serialGetAvailablePortCount
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn serialIsPortAvailable(&self, identifier: serialPortIdentifier_e) -> bool {
+        (self
+            .serialIsPortAvailable
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn isSerialConfigValid(&self, serialConfig: *const serialConfig_t) -> bool {
+        (self
+            .isSerialConfigValid
+            .as_ref()
+            .expect("Expected function, got error."))(serialConfig)
+    }
+    pub unsafe fn serialFindPortConfiguration(
+        &self,
+        identifier: serialPortIdentifier_e,
+    ) -> *const serialPortConfig_t {
+        (self
+            .serialFindPortConfiguration
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn serialFindPortConfigurationMutable(
+        &self,
+        identifier: serialPortIdentifier_e,
+    ) -> *mut serialPortConfig_t {
+        (self
+            .serialFindPortConfigurationMutable
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn doesConfigurationUsePort(&self, portIdentifier: serialPortIdentifier_e) -> bool {
+        (self
+            .doesConfigurationUsePort
+            .as_ref()
+            .expect("Expected function, got error."))(portIdentifier)
+    }
+    pub unsafe fn findSerialPortConfig(
+        &self,
+        function: serialPortFunction_e,
+    ) -> *const serialPortConfig_t {
+        (self
+            .findSerialPortConfig
+            .as_ref()
+            .expect("Expected function, got error."))(function)
+    }
+    pub unsafe fn findNextSerialPortConfig(
+        &self,
+        function: serialPortFunction_e,
+    ) -> *const serialPortConfig_t {
+        (self
+            .findNextSerialPortConfig
+            .as_ref()
+            .expect("Expected function, got error."))(function)
+    }
+    pub unsafe fn determinePortSharing(
+        &self,
+        portConfig: *const serialPortConfig_t,
+        function: serialPortFunction_e,
+    ) -> portSharing_e {
+        (self
+            .determinePortSharing
+            .as_ref()
+            .expect("Expected function, got error."))(portConfig, function)
+    }
+    pub unsafe fn isSerialPortShared(
+        &self,
+        portConfig: *const serialPortConfig_t,
+        functionMask: u16,
+        sharedWithFunction: serialPortFunction_e,
+    ) -> bool {
+        (self
+            .isSerialPortShared
+            .as_ref()
+            .expect("Expected function, got error."))(
+            portConfig, functionMask, sharedWithFunction
+        )
+    }
+    pub unsafe fn pgResetFn_serialConfig(&self, serialConfig: *mut serialConfig_t) {
+        (self
+            .pgResetFn_serialConfig
+            .as_ref()
+            .expect("Expected function, got error."))(serialConfig)
+    }
+    #[doc = "!!TODO remove need for this"]
+    pub unsafe fn findSerialPortUsageByIdentifier(
+        &self,
+        identifier: serialPortIdentifier_e,
+    ) -> *mut serialPortUsage_t {
+        (self
+            .findSerialPortUsageByIdentifier
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn findSerialPortIndexByIdentifier(
+        &self,
+        identifier: serialPortIdentifier_e,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .findSerialPortIndexByIdentifier
+            .as_ref()
+            .expect("Expected function, got error."))(identifier)
+    }
+    pub unsafe fn openSerialPort(
+        &self,
+        identifier: serialPortIdentifier_e,
+        function: serialPortFunction_e,
+        rxCallback: serialReceiveCallbackPtr,
+        rxCallbackData: *mut ::std::os::raw::c_void,
+        baudrate: u32,
+        mode: portMode_e,
+        options: portOptions_e,
+    ) -> *mut serialPort_t {
+        (self
+            .openSerialPort
+            .as_ref()
+            .expect("Expected function, got error."))(
+            identifier,
+            function,
+            rxCallback,
+            rxCallbackData,
+            baudrate,
+            mode,
+            options,
+        )
+    }
+    pub unsafe fn closeSerialPort(&self, serialPort: *mut serialPort_t) {
+        (self
+            .closeSerialPort
+            .as_ref()
+            .expect("Expected function, got error."))(serialPort)
+    }
+    pub unsafe fn waitForSerialPortToFinishTransmitting(&self, serialPort: *mut serialPort_t) {
+        (self
+            .waitForSerialPortToFinishTransmitting
+            .as_ref()
+            .expect("Expected function, got error."))(serialPort)
+    }
+    pub unsafe fn lookupBaudRateIndex(&self, baudRate: u32) -> baudRate_e {
+        (self
+            .lookupBaudRateIndex
+            .as_ref()
+            .expect("Expected function, got error."))(baudRate)
+    }
+    pub unsafe fn serialPassthrough(
+        &self,
+        left: *mut serialPort_t,
+        right: *mut serialPort_t,
+        leftC: serialConsumer,
+        rightC: serialConsumer,
+    ) {
+        (self
+            .serialPassthrough
+            .as_ref()
+            .expect("Expected function, got error."))(left, right, leftC, rightC)
+    }
+    pub unsafe fn gpsConfig_System(&self) -> *mut gpsConfig_t {
+        *self
+            .gpsConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn gpsConfig_Copy(&self) -> *mut gpsConfig_t {
+        *self
+            .gpsConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_home(&self) -> *mut [i32; 2usize] {
+        *self
+            .GPS_home
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_distanceToHome(&self) -> *mut u16 {
+        *self
+            .GPS_distanceToHome
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_distanceToHomeCm(&self) -> *mut u32 {
+        *self
+            .GPS_distanceToHomeCm
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_directionToHome(&self) -> *mut i16 {
+        *self
+            .GPS_directionToHome
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_distanceFlownInCm(&self) -> *mut u32 {
+        *self
+            .GPS_distanceFlownInCm
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_angle(&self) -> *mut [i16; 2usize] {
+        *self
+            .GPS_angle
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_scaleLonDown(&self) -> *mut f32 {
+        *self
+            .GPS_scaleLonDown
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn gpsData(&self) -> *mut gpsData_t {
+        *self
+            .gpsData
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn gpsSol(&self) -> *mut gpsSolutionData_t {
+        *self.gpsSol.as_ref().expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_update(&self) -> *mut u8 {
+        *self
+            .GPS_update
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_numCh(&self) -> *mut u8 {
+        *self
+            .GPS_numCh
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_svinfo_chn(&self) -> *mut [u8; 32usize] {
+        *self
+            .GPS_svinfo_chn
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_svinfo_svid(&self) -> *mut [u8; 32usize] {
+        *self
+            .GPS_svinfo_svid
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_svinfo_quality(&self) -> *mut [u8; 32usize] {
+        *self
+            .GPS_svinfo_quality
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn GPS_svinfo_cno(&self) -> *mut [u8; 32usize] {
+        *self
+            .GPS_svinfo_cno
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn gpsInit(&self) {
+        (self
+            .gpsInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn gpsUpdate(&self, currentTimeUs: timeUs_t) {
+        (self
+            .gpsUpdate
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn gpsNewFrame(&self, c: u8) -> bool {
+        (self
+            .gpsNewFrame
+            .as_ref()
+            .expect("Expected function, got error."))(c)
+    }
+    pub unsafe fn gpsIsHealthy(&self) -> bool {
+        (self
+            .gpsIsHealthy
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn gpsEnablePassthrough(&self, gpsPassthroughPort: *mut serialPort_s) {
+        (self
+            .gpsEnablePassthrough
+            .as_ref()
+            .expect("Expected function, got error."))(gpsPassthroughPort)
+    }
+    pub unsafe fn onGpsNewData(&self) {
+        (self
+            .onGpsNewData
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn GPS_reset_home_position(&self) {
+        (self
+            .GPS_reset_home_position
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn GPS_calc_longitude_scaling(&self, lat: i32) {
+        (self
+            .GPS_calc_longitude_scaling
+            .as_ref()
+            .expect("Expected function, got error."))(lat)
+    }
+    pub unsafe fn GPS_distance_cm_bearing(
+        &self,
+        currentLat1: *mut i32,
+        currentLon1: *mut i32,
+        destinationLat2: *mut i32,
+        destinationLon2: *mut i32,
+        dist: *mut u32,
+        bearing: *mut i32,
+    ) {
+        (self
+            .GPS_distance_cm_bearing
+            .as_ref()
+            .expect("Expected function, got error."))(
+            currentLat1,
+            currentLon1,
+            destinationLat2,
+            destinationLon2,
+            dist,
+            bearing,
+        )
+    }
+    pub unsafe fn gpsSetFixState(&self, state: bool) {
+        (self
+            .gpsSetFixState
+            .as_ref()
+            .expect("Expected function, got error."))(state)
+    }
+    pub unsafe fn getGpsDataIntervalSeconds(&self) -> f32 {
+        (self
+            .getGpsDataIntervalSeconds
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getGpsPortActualBaudRateIndex(&self) -> baudRate_e {
+        (self
+            .getGpsPortActualBaudRateIndex
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxConfig_System(&self) -> *mut rxConfig_t {
+        *self
+            .rxConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxConfig_Copy(&self) -> *mut rxConfig_t {
+        *self
+            .rxConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rcChannelLetters(&self) -> *mut [::std::os::raw::c_char; 0usize] {
+        *self
+            .rcChannelLetters
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rcData(&self) -> *mut [f32; 18usize] {
+        *self.rcData.as_ref().expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxFailsafeChannelConfigs_SystemArray(
+        &self,
+    ) -> *mut [rxFailsafeChannelConfig_t; 18usize] {
+        *self
+            .rxFailsafeChannelConfigs_SystemArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxFailsafeChannelConfigs_CopyArray(
+        &self,
+    ) -> *mut [rxFailsafeChannelConfig_t; 18usize] {
+        *self
+            .rxFailsafeChannelConfigs_CopyArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxChannelRangeConfigs_SystemArray(
+        &self,
+    ) -> *mut [rxChannelRangeConfig_t; 4usize] {
+        *self
+            .rxChannelRangeConfigs_SystemArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxChannelRangeConfigs_CopyArray(&self) -> *mut [rxChannelRangeConfig_t; 4usize] {
+        *self
+            .rxChannelRangeConfigs_CopyArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rssiSource(&self) -> *mut rssiSource_e {
+        *self
+            .rssiSource
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn linkQualitySource(&self) -> *mut linkQualitySource_e {
+        *self
+            .linkQualitySource
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rxRuntimeState(&self) -> *mut rxRuntimeState_t {
+        *self
+            .rxRuntimeState
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    #[doc = "!!TODO remove this extern, only needed once for channelCount"]
+    pub unsafe fn rxInit(&self) {
+        (self.rxInit.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxProcessPending(&self, state: bool) {
+        (self
+            .rxProcessPending
+            .as_ref()
+            .expect("Expected function, got error."))(state)
+    }
+    pub unsafe fn rxUpdateCheck(
+        &self,
+        currentTimeUs: timeUs_t,
+        currentDeltaTimeUs: timeDelta_t,
+    ) -> bool {
+        (self
+            .rxUpdateCheck
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs, currentDeltaTimeUs)
+    }
+    pub unsafe fn rxFrameCheck(&self, currentTimeUs: timeUs_t, currentDeltaTimeUs: timeDelta_t) {
+        (self
+            .rxFrameCheck
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs, currentDeltaTimeUs)
+    }
+    pub unsafe fn rxIsReceivingSignal(&self) -> bool {
+        (self
+            .rxIsReceivingSignal
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxAreFlightChannelsValid(&self) -> bool {
+        (self
+            .rxAreFlightChannelsValid
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn calculateRxChannelsAndUpdateFailsafe(&self, currentTimeUs: timeUs_t) -> bool {
+        (self
+            .calculateRxChannelsAndUpdateFailsafe
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn parseRcChannels(
+        &self,
+        input: *const ::std::os::raw::c_char,
+        rxConfig: *mut rxConfig_s,
+    ) {
+        (self
+            .parseRcChannels
+            .as_ref()
+            .expect("Expected function, got error."))(input, rxConfig)
+    }
+    pub unsafe fn setRssiDirect(&self, newRssi: u16, source: rssiSource_e) {
+        (self
+            .setRssiDirect
+            .as_ref()
+            .expect("Expected function, got error."))(newRssi, source)
+    }
+    pub unsafe fn setRssi(&self, rssiValue: u16, source: rssiSource_e) {
+        (self
+            .setRssi
+            .as_ref()
+            .expect("Expected function, got error."))(rssiValue, source)
+    }
+    pub unsafe fn setRssiMsp(&self, newMspRssi: u8) {
+        (self
+            .setRssiMsp
+            .as_ref()
+            .expect("Expected function, got error."))(newMspRssi)
+    }
+    pub unsafe fn updateRSSI(&self, currentTimeUs: timeUs_t) {
+        (self
+            .updateRSSI
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn getRssi(&self) -> u16 {
+        (self
+            .getRssi
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getRssiPercent(&self) -> u8 {
+        (self
+            .getRssiPercent
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isRssiConfigured(&self) -> bool {
+        (self
+            .isRssiConfigured
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxGetLinkQuality(&self) -> u16 {
+        (self
+            .rxGetLinkQuality
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn setLinkQualityDirect(&self, linkqualityValue: u16) {
+        (self
+            .setLinkQualityDirect
+            .as_ref()
+            .expect("Expected function, got error."))(linkqualityValue)
+    }
+    pub unsafe fn rxGetLinkQualityPercent(&self) -> u16 {
+        (self
+            .rxGetLinkQualityPercent
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getRsnr(&self) -> i16 {
+        (self
+            .getRsnr
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn setRsnr(&self, newRsnr: i16) {
+        (self
+            .setRsnr
+            .as_ref()
+            .expect("Expected function, got error."))(newRsnr)
+    }
+    pub unsafe fn setRsnrDirect(&self, newRsnr: i16) {
+        (self
+            .setRsnrDirect
+            .as_ref()
+            .expect("Expected function, got error."))(newRsnr)
+    }
+    pub unsafe fn rxSetRfMode(&self, rfModeValue: u8) {
+        (self
+            .rxSetRfMode
+            .as_ref()
+            .expect("Expected function, got error."))(rfModeValue)
+    }
+    pub unsafe fn rxGetRfMode(&self) -> u8 {
+        (self
+            .rxGetRfMode
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxSetUplinkTxPwrMw(&self, uplinkTxPwrMwValue: u16) {
+        (self
+            .rxSetUplinkTxPwrMw
+            .as_ref()
+            .expect("Expected function, got error."))(uplinkTxPwrMwValue)
+    }
+    pub unsafe fn rxGetUplinkTxPwrMw(&self) -> u16 {
+        (self
+            .rxGetUplinkTxPwrMw
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn resetAllRxChannelRangeConfigurations(
+        &self,
+        rxChannelRangeConfig: *mut rxChannelRangeConfig_t,
+    ) {
+        (self
+            .resetAllRxChannelRangeConfigurations
+            .as_ref()
+            .expect("Expected function, got error."))(rxChannelRangeConfig)
+    }
+    pub unsafe fn suspendRxSignal(&self) {
+        (self
+            .suspendRxSignal
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn resumeRxSignal(&self) {
+        (self
+            .resumeRxSignal
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxGetFrameDelta(&self, frameAgeUs: *mut timeDelta_t) -> timeDelta_t {
+        (self
+            .rxGetFrameDelta
+            .as_ref()
+            .expect("Expected function, got error."))(frameAgeUs)
+    }
+    pub unsafe fn rxFrameTimeUs(&self) -> timeUs_t {
+        (self
+            .rxFrameTimeUs
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn rxMspReadRawRC(&self, rxRuntimeState: *const rxRuntimeState_t, chan: u8) -> f32 {
+        (self
+            .rxMspReadRawRC
+            .as_ref()
+            .expect("Expected function, got error."))(rxRuntimeState, chan)
+    }
+    pub unsafe fn rxMspInit(
+        &self,
+        rxConfig: *const rxConfig_s,
+        rxRuntimeState: *mut rxRuntimeState_s,
+    ) {
+        (self
+            .rxMspInit
+            .as_ref()
+            .expect("Expected function, got error."))(rxConfig, rxRuntimeState)
+    }
+    pub unsafe fn rxMspFrameReceive(&self, frame: *mut u16, channelCount: ::std::os::raw::c_int) {
+        (self
+            .rxMspFrameReceive
+            .as_ref()
+            .expect("Expected function, got error."))(frame, channelCount)
+    }
+    pub unsafe fn nullFilterApply(&self, filter: *mut filter_t, input: f32) -> f32 {
+        (self
+            .nullFilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn pt1FilterGain(&self, f_cut: f32, dT: f32) -> f32 {
+        (self
+            .pt1FilterGain
+            .as_ref()
+            .expect("Expected function, got error."))(f_cut, dT)
+    }
+    pub unsafe fn pt1FilterInit(&self, filter: *mut pt1Filter_t, k: f32) {
+        (self
+            .pt1FilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt1FilterUpdateCutoff(&self, filter: *mut pt1Filter_t, k: f32) {
+        (self
+            .pt1FilterUpdateCutoff
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt1FilterApply(&self, filter: *mut pt1Filter_t, input: f32) -> f32 {
+        (self
+            .pt1FilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn pt2FilterGain(&self, f_cut: f32, dT: f32) -> f32 {
+        (self
+            .pt2FilterGain
+            .as_ref()
+            .expect("Expected function, got error."))(f_cut, dT)
+    }
+    pub unsafe fn pt2FilterInit(&self, filter: *mut pt2Filter_t, k: f32) {
+        (self
+            .pt2FilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt2FilterUpdateCutoff(&self, filter: *mut pt2Filter_t, k: f32) {
+        (self
+            .pt2FilterUpdateCutoff
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt2FilterApply(&self, filter: *mut pt2Filter_t, input: f32) -> f32 {
+        (self
+            .pt2FilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn pt3FilterGain(&self, f_cut: f32, dT: f32) -> f32 {
+        (self
+            .pt3FilterGain
+            .as_ref()
+            .expect("Expected function, got error."))(f_cut, dT)
+    }
+    pub unsafe fn pt3FilterInit(&self, filter: *mut pt3Filter_t, k: f32) {
+        (self
+            .pt3FilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt3FilterUpdateCutoff(&self, filter: *mut pt3Filter_t, k: f32) {
+        (self
+            .pt3FilterUpdateCutoff
+            .as_ref()
+            .expect("Expected function, got error."))(filter, k)
+    }
+    pub unsafe fn pt3FilterApply(&self, filter: *mut pt3Filter_t, input: f32) -> f32 {
+        (self
+            .pt3FilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn filterGetNotchQ(&self, centerFreq: f32, cutoffFreq: f32) -> f32 {
+        (self
+            .filterGetNotchQ
+            .as_ref()
+            .expect("Expected function, got error."))(centerFreq, cutoffFreq)
+    }
+    pub unsafe fn biquadFilterInitLPF(
+        &self,
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+    ) {
+        (self
+            .biquadFilterInitLPF
+            .as_ref()
+            .expect("Expected function, got error."))(filter, filterFreq, refreshRate)
+    }
+    pub unsafe fn biquadFilterInit(
+        &self,
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+        Q: f32,
+        filterType: biquadFilterType_e,
+        weight: f32,
+    ) {
+        (self
+            .biquadFilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(
+            filter,
+            filterFreq,
+            refreshRate,
+            Q,
+            filterType,
+            weight,
+        )
+    }
+    pub unsafe fn biquadFilterUpdate(
+        &self,
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+        Q: f32,
+        filterType: biquadFilterType_e,
+        weight: f32,
+    ) {
+        (self
+            .biquadFilterUpdate
+            .as_ref()
+            .expect("Expected function, got error."))(
+            filter,
+            filterFreq,
+            refreshRate,
+            Q,
+            filterType,
+            weight,
+        )
+    }
+    pub unsafe fn biquadFilterUpdateLPF(
+        &self,
+        filter: *mut biquadFilter_t,
+        filterFreq: f32,
+        refreshRate: u32,
+    ) {
+        (self
+            .biquadFilterUpdateLPF
+            .as_ref()
+            .expect("Expected function, got error."))(filter, filterFreq, refreshRate)
+    }
+    pub unsafe fn biquadFilterApplyDF1(&self, filter: *mut biquadFilter_t, input: f32) -> f32 {
+        (self
+            .biquadFilterApplyDF1
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn biquadFilterApplyDF1Weighted(
+        &self,
+        filter: *mut biquadFilter_t,
+        input: f32,
+    ) -> f32 {
+        (self
+            .biquadFilterApplyDF1Weighted
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn biquadFilterApply(&self, filter: *mut biquadFilter_t, input: f32) -> f32 {
+        (self
+            .biquadFilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn phaseCompInit(
+        &self,
+        filter: *mut phaseComp_t,
+        centerFreq: f32,
+        centerPhase: f32,
+        looptimeUs: u32,
+    ) {
+        (self
+            .phaseCompInit
+            .as_ref()
+            .expect("Expected function, got error."))(
+            filter, centerFreq, centerPhase, looptimeUs
+        )
+    }
+    pub unsafe fn phaseCompUpdate(
+        &self,
+        filter: *mut phaseComp_t,
+        centerFreq: f32,
+        centerPhase: f32,
+        looptimeUs: u32,
+    ) {
+        (self
+            .phaseCompUpdate
+            .as_ref()
+            .expect("Expected function, got error."))(
+            filter, centerFreq, centerPhase, looptimeUs
+        )
+    }
+    pub unsafe fn phaseCompApply(&self, filter: *mut phaseComp_t, input: f32) -> f32 {
+        (self
+            .phaseCompApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn slewFilterInit(&self, filter: *mut slewFilter_t, slewLimit: f32, threshold: f32) {
+        (self
+            .slewFilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, slewLimit, threshold)
+    }
+    pub unsafe fn slewFilterApply(&self, filter: *mut slewFilter_t, input: f32) -> f32 {
+        (self
+            .slewFilterApply
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn laggedMovingAverageInit(
+        &self,
+        filter: *mut laggedMovingAverage_t,
+        windowSize: u16,
+        buf: *mut f32,
+    ) {
+        (self
+            .laggedMovingAverageInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, windowSize, buf)
+    }
+    pub unsafe fn laggedMovingAverageUpdate(
+        &self,
+        filter: *mut laggedMovingAverage_t,
+        input: f32,
+    ) -> f32 {
+        (self
+            .laggedMovingAverageUpdate
+            .as_ref()
+            .expect("Expected function, got error."))(filter, input)
+    }
+    pub unsafe fn simpleLPFilterInit(
+        &self,
+        filter: *mut simpleLowpassFilter_t,
+        beta: i32,
+        fpShift: i32,
+    ) {
+        (self
+            .simpleLPFilterInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter, beta, fpShift)
+    }
+    pub unsafe fn simpleLPFilterUpdate(
+        &self,
+        filter: *mut simpleLowpassFilter_t,
+        newVal: i32,
+    ) -> i32 {
+        (self
+            .simpleLPFilterUpdate
+            .as_ref()
+            .expect("Expected function, got error."))(filter, newVal)
+    }
+    pub unsafe fn meanAccumulatorInit(&self, filter: *mut meanAccumulator_t) {
+        (self
+            .meanAccumulatorInit
+            .as_ref()
+            .expect("Expected function, got error."))(filter)
+    }
+    pub unsafe fn meanAccumulatorAdd(&self, filter: *mut meanAccumulator_t, newVal: i8) {
+        (self
+            .meanAccumulatorAdd
+            .as_ref()
+            .expect("Expected function, got error."))(filter, newVal)
+    }
+    pub unsafe fn meanAccumulatorCalc(
+        &self,
+        filter: *mut meanAccumulator_t,
+        defaultValue: i8,
+    ) -> i8 {
+        (self
+            .meanAccumulatorCalc
+            .as_ref()
+            .expect("Expected function, got error."))(filter, defaultValue)
+    }
+    pub unsafe fn currentMeterSourceNames(&self) -> *mut [*const ::std::os::raw::c_char; 5usize] {
+        *self
+            .currentMeterSourceNames
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentSensorADCConfig_System(&self) -> *mut currentSensorADCConfig_t {
+        *self
+            .currentSensorADCConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentSensorADCConfig_Copy(&self) -> *mut currentSensorADCConfig_t {
+        *self
+            .currentSensorADCConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentSensorVirtualConfig_System(&self) -> *mut currentSensorVirtualConfig_t {
+        *self
+            .currentSensorVirtualConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentSensorVirtualConfig_Copy(&self) -> *mut currentSensorVirtualConfig_t {
+        *self
+            .currentSensorVirtualConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentMeterReset(&self, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterReset
+            .as_ref()
+            .expect("Expected function, got error."))(meter)
+    }
+    pub unsafe fn currentMeterADCInit(&self) {
+        (self
+            .currentMeterADCInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn currentMeterADCRefresh(&self, lastUpdateAt: i32) {
+        (self
+            .currentMeterADCRefresh
+            .as_ref()
+            .expect("Expected function, got error."))(lastUpdateAt)
+    }
+    pub unsafe fn currentMeterADCRead(&self, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterADCRead
+            .as_ref()
+            .expect("Expected function, got error."))(meter)
+    }
+    pub unsafe fn currentMeterVirtualInit(&self) {
+        (self
+            .currentMeterVirtualInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn currentMeterVirtualRefresh(
+        &self,
+        lastUpdateAt: i32,
+        armed: bool,
+        throttleLowAndMotorStop: bool,
+        throttleOffset: i32,
+    ) {
+        (self
+            .currentMeterVirtualRefresh
+            .as_ref()
+            .expect("Expected function, got error."))(
+            lastUpdateAt,
+            armed,
+            throttleLowAndMotorStop,
+            throttleOffset,
+        )
+    }
+    pub unsafe fn currentMeterVirtualRead(&self, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterVirtualRead
+            .as_ref()
+            .expect("Expected function, got error."))(meter)
+    }
+    pub unsafe fn currentMeterESCInit(&self) {
+        (self
+            .currentMeterESCInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn currentMeterESCRefresh(&self, lastUpdateAt: i32) {
+        (self
+            .currentMeterESCRefresh
+            .as_ref()
+            .expect("Expected function, got error."))(lastUpdateAt)
+    }
+    pub unsafe fn currentMeterESCReadCombined(&self, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterESCReadCombined
+            .as_ref()
+            .expect("Expected function, got error."))(meter)
+    }
+    pub unsafe fn currentMeterESCReadMotor(&self, motorNumber: u8, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterESCReadMotor
+            .as_ref()
+            .expect("Expected function, got error."))(motorNumber, meter)
+    }
+    pub unsafe fn currentMeterMSPInit(&self) {
+        (self
+            .currentMeterMSPInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn currentMeterMSPRefresh(&self, currentTimeUs: timeUs_t) {
+        (self
+            .currentMeterMSPRefresh
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn currentMeterMSPRead(&self, meter: *mut currentMeter_t) {
+        (self
+            .currentMeterMSPRead
+            .as_ref()
+            .expect("Expected function, got error."))(meter)
+    }
+    pub unsafe fn currentMeterMSPSet(&self, amperage: u16, mAhDrawn: u16) {
+        (self
+            .currentMeterMSPSet
+            .as_ref()
+            .expect("Expected function, got error."))(amperage, mAhDrawn)
+    }
+    pub unsafe fn supportedCurrentMeterCount(&self) -> *mut u8 {
+        *self
+            .supportedCurrentMeterCount
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentMeterIds(&self) -> *mut [u8; 0usize] {
+        *self
+            .currentMeterIds
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn currentMeterRead(&self, id: currentMeterId_e, currentMeter: *mut currentMeter_t) {
+        (self
+            .currentMeterRead
+            .as_ref()
+            .expect("Expected function, got error."))(id, currentMeter)
+    }
+    pub unsafe fn voltageMeterSourceNames(&self) -> *mut [*const ::std::os::raw::c_char; 3usize] {
+        *self
+            .voltageMeterSourceNames
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn voltageSensorADCConfig_SystemArray(
+        &self,
+    ) -> *mut [voltageSensorADCConfig_t; 1usize] {
+        *self
+            .voltageSensorADCConfig_SystemArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn voltageSensorADCConfig_CopyArray(
+        &self,
+    ) -> *mut [voltageSensorADCConfig_t; 1usize] {
+        *self
+            .voltageSensorADCConfig_CopyArray
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn voltageMeterReset(&self, voltageMeter: *mut voltageMeter_t) {
+        (self
+            .voltageMeterReset
+            .as_ref()
+            .expect("Expected function, got error."))(voltageMeter)
+    }
+    pub unsafe fn voltageMeterGenericInit(&self) {
+        (self
+            .voltageMeterGenericInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn voltageMeterADCInit(&self) {
+        (self
+            .voltageMeterADCInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn voltageMeterADCRefresh(&self) {
+        (self
+            .voltageMeterADCRefresh
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn voltageMeterADCRead(
+        &self,
+        adcChannel: voltageSensorADC_e,
+        voltageMeter: *mut voltageMeter_t,
+    ) {
+        (self
+            .voltageMeterADCRead
+            .as_ref()
+            .expect("Expected function, got error."))(adcChannel, voltageMeter)
+    }
+    pub unsafe fn voltageMeterESCInit(&self) {
+        (self
+            .voltageMeterESCInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn voltageMeterESCRefresh(&self) {
+        (self
+            .voltageMeterESCRefresh
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn voltageMeterESCReadCombined(&self, voltageMeter: *mut voltageMeter_t) {
+        (self
+            .voltageMeterESCReadCombined
+            .as_ref()
+            .expect("Expected function, got error."))(voltageMeter)
+    }
+    pub unsafe fn voltageMeterESCReadMotor(&self, motor: u8, voltageMeter: *mut voltageMeter_t) {
+        (self
+            .voltageMeterESCReadMotor
+            .as_ref()
+            .expect("Expected function, got error."))(motor, voltageMeter)
+    }
+    pub unsafe fn voltageMeterADCtoIDMap(&self) -> *mut [u8; 1usize] {
+        *self
+            .voltageMeterADCtoIDMap
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn supportedVoltageMeterCount(&self) -> *mut u8 {
+        *self
+            .supportedVoltageMeterCount
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn voltageMeterIds(&self) -> *mut [u8; 0usize] {
+        *self
+            .voltageMeterIds
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn voltageMeterRead(&self, id: voltageMeterId_e, voltageMeter: *mut voltageMeter_t) {
+        (self
+            .voltageMeterRead
+            .as_ref()
+            .expect("Expected function, got error."))(id, voltageMeter)
+    }
+    pub unsafe fn isSagCompensationConfigured(&self) -> bool {
+        (self
+            .isSagCompensationConfigured
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn batteryConfig_System(&self) -> *mut batteryConfig_t {
+        *self
+            .batteryConfig_System
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn batteryConfig_Copy(&self) -> *mut batteryConfig_t {
+        *self
+            .batteryConfig_Copy
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn batteryInit(&self) {
+        (self
+            .batteryInit
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn batteryUpdateVoltage(&self, currentTimeUs: timeUs_t) {
+        (self
+            .batteryUpdateVoltage
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn batteryUpdatePresence(&self) {
+        (self
+            .batteryUpdatePresence
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryState(&self) -> batteryState_e {
+        (self
+            .getBatteryState
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getVoltageState(&self) -> batteryState_e {
+        (self
+            .getVoltageState
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getConsumptionState(&self) -> batteryState_e {
+        (self
+            .getConsumptionState
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryStateString(&self) -> *const ::std::os::raw::c_char {
+        (self
+            .getBatteryStateString
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn batteryUpdateStates(&self, currentTimeUs: timeUs_t) {
+        (self
+            .batteryUpdateStates
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn batteryUpdateAlarms(&self) {
+        (self
+            .batteryUpdateAlarms
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn calculateBatteryPercentageRemaining(&self) -> u8 {
+        (self
+            .calculateBatteryPercentageRemaining
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isBatteryVoltageConfigured(&self) -> bool {
+        (self
+            .isBatteryVoltageConfigured
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryVoltage(&self) -> u16 {
+        (self
+            .getBatteryVoltage
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getLegacyBatteryVoltage(&self) -> u16 {
+        (self
+            .getLegacyBatteryVoltage
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryVoltageLatest(&self) -> u16 {
+        (self
+            .getBatteryVoltageLatest
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryCellCount(&self) -> u8 {
+        (self
+            .getBatteryCellCount
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatteryAverageCellVoltage(&self) -> u16 {
+        (self
+            .getBatteryAverageCellVoltage
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getBatterySagCellVoltage(&self) -> u16 {
+        (self
+            .getBatterySagCellVoltage
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn isAmperageConfigured(&self) -> bool {
+        (self
+            .isAmperageConfigured
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getAmperage(&self) -> i32 {
+        (self
+            .getAmperage
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getAmperageLatest(&self) -> i32 {
+        (self
+            .getAmperageLatest
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getMAhDrawn(&self) -> i32 {
+        (self
+            .getMAhDrawn
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getWhDrawn(&self) -> f32 {
+        (self
+            .getWhDrawn
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn batteryUpdateCurrentMeter(&self, currentTimeUs: timeUs_t) {
+        (self
+            .batteryUpdateCurrentMeter
+            .as_ref()
+            .expect("Expected function, got error."))(currentTimeUs)
+    }
+    pub unsafe fn getLowVoltageCutoff(&self) -> *const lowVoltageCutoff_t {
+        (self
+            .getLowVoltageCutoff
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getCurrentMeter(&self) -> *mut currentMeter_t {
+        (self
+            .getCurrentMeter
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn getVoltageMeter(&self) -> *mut voltageMeter_t {
+        (self
+            .getVoltageMeter
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn setCellCount(&self, count: u8) {
+        (self
+            .setCellCount
+            .as_ref()
+            .expect("Expected function, got error."))(count)
+    }
+    pub unsafe fn requestedSensors(&self) -> *mut [u8; 5usize] {
+        *self
+            .requestedSensors
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn detectedSensors(&self) -> *mut [u8; 5usize] {
+        *self
+            .detectedSensors
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn __ctype_get_mb_cur_max(&self) -> usize {
+        (self
+            .__ctype_get_mb_cur_max
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn atof(&self, __nptr: *const ::std::os::raw::c_char) -> f64 {
+        (self.atof.as_ref().expect("Expected function, got error."))(__nptr)
+    }
+    pub unsafe fn atoi(&self, __nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int {
+        (self.atoi.as_ref().expect("Expected function, got error."))(__nptr)
+    }
+    pub unsafe fn atol(&self, __nptr: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long {
+        (self.atol.as_ref().expect("Expected function, got error."))(__nptr)
+    }
+    pub unsafe fn atoll(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_longlong {
+        (self.atoll.as_ref().expect("Expected function, got error."))(__nptr)
+    }
+    pub unsafe fn strtod(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+    ) -> f64 {
+        (self.strtod.as_ref().expect("Expected function, got error."))(__nptr, __endptr)
+    }
+    pub unsafe fn strtof(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+    ) -> f32 {
+        (self.strtof.as_ref().expect("Expected function, got error."))(__nptr, __endptr)
+    }
+    pub unsafe fn strtold(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+    ) -> u128 {
+        (self
+            .strtold
+            .as_ref()
+            .expect("Expected function, got error."))(__nptr, __endptr)
+    }
+    pub unsafe fn strtol(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_long {
+        (self.strtol.as_ref().expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn strtoul(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_ulong {
+        (self
+            .strtoul
+            .as_ref()
+            .expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn strtoq(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_longlong {
+        (self.strtoq.as_ref().expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn strtouq(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_ulonglong {
+        (self
+            .strtouq
+            .as_ref()
+            .expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn strtoll(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_longlong {
+        (self
+            .strtoll
+            .as_ref()
+            .expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn strtoull(
+        &self,
+        __nptr: *const ::std::os::raw::c_char,
+        __endptr: *mut *mut ::std::os::raw::c_char,
+        __base: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_ulonglong {
+        (self
+            .strtoull
+            .as_ref()
+            .expect("Expected function, got error."))(__nptr, __endptr, __base)
+    }
+    pub unsafe fn l64a(&self, __n: ::std::os::raw::c_long) -> *mut ::std::os::raw::c_char {
+        (self.l64a.as_ref().expect("Expected function, got error."))(__n)
+    }
+    pub unsafe fn a64l(&self, __s: *const ::std::os::raw::c_char) -> ::std::os::raw::c_long {
+        (self.a64l.as_ref().expect("Expected function, got error."))(__s)
+    }
+    pub unsafe fn select(
+        &self,
+        __nfds: ::std::os::raw::c_int,
+        __readfds: *mut fd_set,
+        __writefds: *mut fd_set,
+        __exceptfds: *mut fd_set,
+        __timeout: *mut timeval,
+    ) -> ::std::os::raw::c_int {
+        (self.select.as_ref().expect("Expected function, got error."))(
+            __nfds,
+            __readfds,
+            __writefds,
+            __exceptfds,
+            __timeout,
+        )
+    }
+    pub unsafe fn pselect(
+        &self,
+        __nfds: ::std::os::raw::c_int,
+        __readfds: *mut fd_set,
+        __writefds: *mut fd_set,
+        __exceptfds: *mut fd_set,
+        __timeout: *const timespec,
+        __sigmask: *const __sigset_t,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .pselect
+            .as_ref()
+            .expect("Expected function, got error."))(
+            __nfds,
+            __readfds,
+            __writefds,
+            __exceptfds,
+            __timeout,
+            __sigmask,
+        )
+    }
+    pub unsafe fn random(&self) -> ::std::os::raw::c_long {
+        (self.random.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn srandom(&self, __seed: ::std::os::raw::c_uint) {
+        (self
+            .srandom
+            .as_ref()
+            .expect("Expected function, got error."))(__seed)
+    }
+    pub unsafe fn initstate(
+        &self,
+        __seed: ::std::os::raw::c_uint,
+        __statebuf: *mut ::std::os::raw::c_char,
+        __statelen: usize,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .initstate
+            .as_ref()
+            .expect("Expected function, got error."))(__seed, __statebuf, __statelen)
+    }
+    pub unsafe fn setstate(
+        &self,
+        __statebuf: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .setstate
+            .as_ref()
+            .expect("Expected function, got error."))(__statebuf)
+    }
+    pub unsafe fn random_r(
+        &self,
+        __buf: *mut random_data,
+        __result: *mut i32,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .random_r
+            .as_ref()
+            .expect("Expected function, got error."))(__buf, __result)
+    }
+    pub unsafe fn srandom_r(
+        &self,
+        __seed: ::std::os::raw::c_uint,
+        __buf: *mut random_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .srandom_r
+            .as_ref()
+            .expect("Expected function, got error."))(__seed, __buf)
+    }
+    pub unsafe fn initstate_r(
+        &self,
+        __seed: ::std::os::raw::c_uint,
+        __statebuf: *mut ::std::os::raw::c_char,
+        __statelen: usize,
+        __buf: *mut random_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .initstate_r
+            .as_ref()
+            .expect("Expected function, got error."))(__seed, __statebuf, __statelen, __buf)
+    }
+    pub unsafe fn setstate_r(
+        &self,
+        __statebuf: *mut ::std::os::raw::c_char,
+        __buf: *mut random_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .setstate_r
+            .as_ref()
+            .expect("Expected function, got error."))(__statebuf, __buf)
+    }
+    pub unsafe fn rand(&self) -> ::std::os::raw::c_int {
+        (self.rand.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn srand(&self, __seed: ::std::os::raw::c_uint) {
+        (self.srand.as_ref().expect("Expected function, got error."))(__seed)
+    }
+    pub unsafe fn rand_r(&self, __seed: *mut ::std::os::raw::c_uint) -> ::std::os::raw::c_int {
+        (self.rand_r.as_ref().expect("Expected function, got error."))(__seed)
+    }
+    pub unsafe fn drand48(&self) -> f64 {
+        (self
+            .drand48
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn erand48(&self, __xsubi: *mut ::std::os::raw::c_ushort) -> f64 {
+        (self
+            .erand48
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi)
+    }
+    pub unsafe fn lrand48(&self) -> ::std::os::raw::c_long {
+        (self
+            .lrand48
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn nrand48(&self, __xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long {
+        (self
+            .nrand48
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi)
+    }
+    pub unsafe fn mrand48(&self) -> ::std::os::raw::c_long {
+        (self
+            .mrand48
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn jrand48(&self, __xsubi: *mut ::std::os::raw::c_ushort) -> ::std::os::raw::c_long {
+        (self
+            .jrand48
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi)
+    }
+    pub unsafe fn srand48(&self, __seedval: ::std::os::raw::c_long) {
+        (self
+            .srand48
+            .as_ref()
+            .expect("Expected function, got error."))(__seedval)
+    }
+    pub unsafe fn seed48(
+        &self,
+        __seed16v: *mut ::std::os::raw::c_ushort,
+    ) -> *mut ::std::os::raw::c_ushort {
+        (self.seed48.as_ref().expect("Expected function, got error."))(__seed16v)
+    }
+    pub unsafe fn lcong48(&self, __param: *mut ::std::os::raw::c_ushort) {
+        (self
+            .lcong48
+            .as_ref()
+            .expect("Expected function, got error."))(__param)
+    }
+    pub unsafe fn drand48_r(
+        &self,
+        __buffer: *mut drand48_data,
+        __result: *mut f64,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .drand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__buffer, __result)
+    }
+    pub unsafe fn erand48_r(
+        &self,
+        __xsubi: *mut ::std::os::raw::c_ushort,
+        __buffer: *mut drand48_data,
+        __result: *mut f64,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .erand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi, __buffer, __result)
+    }
+    pub unsafe fn lrand48_r(
+        &self,
+        __buffer: *mut drand48_data,
+        __result: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .lrand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__buffer, __result)
+    }
+    pub unsafe fn nrand48_r(
+        &self,
+        __xsubi: *mut ::std::os::raw::c_ushort,
+        __buffer: *mut drand48_data,
+        __result: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .nrand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi, __buffer, __result)
+    }
+    pub unsafe fn mrand48_r(
+        &self,
+        __buffer: *mut drand48_data,
+        __result: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .mrand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__buffer, __result)
+    }
+    pub unsafe fn jrand48_r(
+        &self,
+        __xsubi: *mut ::std::os::raw::c_ushort,
+        __buffer: *mut drand48_data,
+        __result: *mut ::std::os::raw::c_long,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .jrand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__xsubi, __buffer, __result)
+    }
+    pub unsafe fn srand48_r(
+        &self,
+        __seedval: ::std::os::raw::c_long,
+        __buffer: *mut drand48_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .srand48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__seedval, __buffer)
+    }
+    pub unsafe fn seed48_r(
+        &self,
+        __seed16v: *mut ::std::os::raw::c_ushort,
+        __buffer: *mut drand48_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .seed48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__seed16v, __buffer)
+    }
+    pub unsafe fn lcong48_r(
+        &self,
+        __param: *mut ::std::os::raw::c_ushort,
+        __buffer: *mut drand48_data,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .lcong48_r
+            .as_ref()
+            .expect("Expected function, got error."))(__param, __buffer)
+    }
+    pub unsafe fn arc4random(&self) -> __uint32_t {
+        (self
+            .arc4random
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn arc4random_buf(&self, __buf: *mut ::std::os::raw::c_void, __size: usize) {
+        (self
+            .arc4random_buf
+            .as_ref()
+            .expect("Expected function, got error."))(__buf, __size)
+    }
+    pub unsafe fn arc4random_uniform(&self, __upper_bound: __uint32_t) -> __uint32_t {
+        (self
+            .arc4random_uniform
+            .as_ref()
+            .expect("Expected function, got error."))(__upper_bound)
+    }
+    pub unsafe fn malloc(&self, __size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void {
+        (self.malloc.as_ref().expect("Expected function, got error."))(__size)
+    }
+    pub unsafe fn calloc(
+        &self,
+        __nmemb: ::std::os::raw::c_ulong,
+        __size: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self.calloc.as_ref().expect("Expected function, got error."))(__nmemb, __size)
+    }
+    pub unsafe fn realloc(
+        &self,
+        __ptr: *mut ::std::os::raw::c_void,
+        __size: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .realloc
+            .as_ref()
+            .expect("Expected function, got error."))(__ptr, __size)
+    }
+    pub unsafe fn free(&self, __ptr: *mut ::std::os::raw::c_void) {
+        (self.free.as_ref().expect("Expected function, got error."))(__ptr)
+    }
+    pub unsafe fn reallocarray(
+        &self,
+        __ptr: *mut ::std::os::raw::c_void,
+        __nmemb: usize,
+        __size: usize,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .reallocarray
+            .as_ref()
+            .expect("Expected function, got error."))(__ptr, __nmemb, __size)
+    }
+    pub unsafe fn alloca(&self, __size: ::std::os::raw::c_ulong) -> *mut ::std::os::raw::c_void {
+        (self.alloca.as_ref().expect("Expected function, got error."))(__size)
+    }
+    pub unsafe fn valloc(&self, __size: usize) -> *mut ::std::os::raw::c_void {
+        (self.valloc.as_ref().expect("Expected function, got error."))(__size)
+    }
+    pub unsafe fn posix_memalign(
+        &self,
+        __memptr: *mut *mut ::std::os::raw::c_void,
+        __alignment: usize,
+        __size: usize,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .posix_memalign
+            .as_ref()
+            .expect("Expected function, got error."))(__memptr, __alignment, __size)
+    }
+    pub unsafe fn aligned_alloc(
+        &self,
+        __alignment: ::std::os::raw::c_ulong,
+        __size: ::std::os::raw::c_ulong,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .aligned_alloc
+            .as_ref()
+            .expect("Expected function, got error."))(__alignment, __size)
+    }
+    pub unsafe fn abort(&self) -> ! {
+        (self.abort.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn atexit(
+        &self,
+        __func: ::std::option::Option<unsafe extern "C" fn()>,
+    ) -> ::std::os::raw::c_int {
+        (self.atexit.as_ref().expect("Expected function, got error."))(__func)
+    }
+    pub unsafe fn at_quick_exit(
+        &self,
+        __func: ::std::option::Option<unsafe extern "C" fn()>,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .at_quick_exit
+            .as_ref()
+            .expect("Expected function, got error."))(__func)
+    }
+    pub unsafe fn on_exit(
+        &self,
+        __func: ::std::option::Option<
+            unsafe extern "C" fn(
+                __status: ::std::os::raw::c_int,
+                __arg: *mut ::std::os::raw::c_void,
+            ),
+        >,
+        __arg: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .on_exit
+            .as_ref()
+            .expect("Expected function, got error."))(__func, __arg)
+    }
+    pub unsafe fn exit(&self, __status: ::std::os::raw::c_int) -> ! {
+        (self.exit.as_ref().expect("Expected function, got error."))(__status)
+    }
+    pub unsafe fn quick_exit(&self, __status: ::std::os::raw::c_int) -> ! {
+        (self
+            .quick_exit
+            .as_ref()
+            .expect("Expected function, got error."))(__status)
+    }
+    pub unsafe fn _Exit(&self, __status: ::std::os::raw::c_int) -> ! {
+        (self._Exit.as_ref().expect("Expected function, got error."))(__status)
+    }
+    pub unsafe fn getenv(
+        &self,
+        __name: *const ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.getenv.as_ref().expect("Expected function, got error."))(__name)
+    }
+    pub unsafe fn putenv(&self, __string: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int {
+        (self.putenv.as_ref().expect("Expected function, got error."))(__string)
+    }
+    pub unsafe fn setenv(
+        &self,
+        __name: *const ::std::os::raw::c_char,
+        __value: *const ::std::os::raw::c_char,
+        __replace: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self.setenv.as_ref().expect("Expected function, got error."))(__name, __value, __replace)
+    }
+    pub unsafe fn unsetenv(&self, __name: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int {
+        (self
+            .unsetenv
+            .as_ref()
+            .expect("Expected function, got error."))(__name)
+    }
+    pub unsafe fn clearenv(&self) -> ::std::os::raw::c_int {
+        (self
+            .clearenv
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn mktemp(
+        &self,
+        __template: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.mktemp.as_ref().expect("Expected function, got error."))(__template)
+    }
+    pub unsafe fn mkstemp(&self, __template: *mut ::std::os::raw::c_char) -> ::std::os::raw::c_int {
+        (self
+            .mkstemp
+            .as_ref()
+            .expect("Expected function, got error."))(__template)
+    }
+    pub unsafe fn mkstemps(
+        &self,
+        __template: *mut ::std::os::raw::c_char,
+        __suffixlen: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .mkstemps
+            .as_ref()
+            .expect("Expected function, got error."))(__template, __suffixlen)
+    }
+    pub unsafe fn mkdtemp(
+        &self,
+        __template: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .mkdtemp
+            .as_ref()
+            .expect("Expected function, got error."))(__template)
+    }
+    pub unsafe fn system(&self, __command: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int {
+        (self.system.as_ref().expect("Expected function, got error."))(__command)
+    }
+    pub unsafe fn realpath(
+        &self,
+        __name: *const ::std::os::raw::c_char,
+        __resolved: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self
+            .realpath
+            .as_ref()
+            .expect("Expected function, got error."))(__name, __resolved)
+    }
+    pub unsafe fn bsearch(
+        &self,
+        __key: *const ::std::os::raw::c_void,
+        __base: *const ::std::os::raw::c_void,
+        __nmemb: usize,
+        __size: usize,
+        __compar: __compar_fn_t,
+    ) -> *mut ::std::os::raw::c_void {
+        (self
+            .bsearch
+            .as_ref()
+            .expect("Expected function, got error."))(
+            __key, __base, __nmemb, __size, __compar
+        )
+    }
+    pub unsafe fn qsort(
+        &self,
+        __base: *mut ::std::os::raw::c_void,
+        __nmemb: usize,
+        __size: usize,
+        __compar: __compar_fn_t,
+    ) {
+        (self.qsort.as_ref().expect("Expected function, got error."))(
+            __base, __nmemb, __size, __compar,
+        )
+    }
+    pub unsafe fn abs(&self, __x: ::std::os::raw::c_int) -> ::std::os::raw::c_int {
+        (self.abs.as_ref().expect("Expected function, got error."))(__x)
+    }
+    pub unsafe fn labs(&self, __x: ::std::os::raw::c_long) -> ::std::os::raw::c_long {
+        (self.labs.as_ref().expect("Expected function, got error."))(__x)
+    }
+    pub unsafe fn llabs(&self, __x: ::std::os::raw::c_longlong) -> ::std::os::raw::c_longlong {
+        (self.llabs.as_ref().expect("Expected function, got error."))(__x)
+    }
+    pub unsafe fn div(
+        &self,
+        __numer: ::std::os::raw::c_int,
+        __denom: ::std::os::raw::c_int,
+    ) -> div_t {
+        (self.div.as_ref().expect("Expected function, got error."))(__numer, __denom)
+    }
+    pub unsafe fn ldiv(
+        &self,
+        __numer: ::std::os::raw::c_long,
+        __denom: ::std::os::raw::c_long,
+    ) -> ldiv_t {
+        (self.ldiv.as_ref().expect("Expected function, got error."))(__numer, __denom)
+    }
+    pub unsafe fn lldiv(
+        &self,
+        __numer: ::std::os::raw::c_longlong,
+        __denom: ::std::os::raw::c_longlong,
+    ) -> lldiv_t {
+        (self.lldiv.as_ref().expect("Expected function, got error."))(__numer, __denom)
+    }
+    pub unsafe fn ecvt(
+        &self,
+        __value: f64,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.ecvt.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign,
+        )
+    }
+    pub unsafe fn fcvt(
+        &self,
+        __value: f64,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.fcvt.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign,
+        )
+    }
+    pub unsafe fn gcvt(
+        &self,
+        __value: f64,
+        __ndigit: ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.gcvt.as_ref().expect("Expected function, got error."))(__value, __ndigit, __buf)
+    }
+    pub unsafe fn qecvt(
+        &self,
+        __value: u128,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.qecvt.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign,
+        )
+    }
+    pub unsafe fn qfcvt(
+        &self,
+        __value: u128,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.qfcvt.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign,
+        )
+    }
+    pub unsafe fn qgcvt(
+        &self,
+        __value: u128,
+        __ndigit: ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+    ) -> *mut ::std::os::raw::c_char {
+        (self.qgcvt.as_ref().expect("Expected function, got error."))(__value, __ndigit, __buf)
+    }
+    pub unsafe fn ecvt_r(
+        &self,
+        __value: f64,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+        __len: usize,
+    ) -> ::std::os::raw::c_int {
+        (self.ecvt_r.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign, __buf, __len,
+        )
+    }
+    pub unsafe fn fcvt_r(
+        &self,
+        __value: f64,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+        __len: usize,
+    ) -> ::std::os::raw::c_int {
+        (self.fcvt_r.as_ref().expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign, __buf, __len,
+        )
+    }
+    pub unsafe fn qecvt_r(
+        &self,
+        __value: u128,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+        __len: usize,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .qecvt_r
+            .as_ref()
+            .expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign, __buf, __len,
+        )
+    }
+    pub unsafe fn qfcvt_r(
+        &self,
+        __value: u128,
+        __ndigit: ::std::os::raw::c_int,
+        __decpt: *mut ::std::os::raw::c_int,
+        __sign: *mut ::std::os::raw::c_int,
+        __buf: *mut ::std::os::raw::c_char,
+        __len: usize,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .qfcvt_r
+            .as_ref()
+            .expect("Expected function, got error."))(
+            __value, __ndigit, __decpt, __sign, __buf, __len,
+        )
+    }
+    pub unsafe fn mblen(
+        &self,
+        __s: *const ::std::os::raw::c_char,
+        __n: usize,
+    ) -> ::std::os::raw::c_int {
+        (self.mblen.as_ref().expect("Expected function, got error."))(__s, __n)
+    }
+    pub unsafe fn mbtowc(
+        &self,
+        __pwc: *mut wchar_t,
+        __s: *const ::std::os::raw::c_char,
+        __n: usize,
+    ) -> ::std::os::raw::c_int {
+        (self.mbtowc.as_ref().expect("Expected function, got error."))(__pwc, __s, __n)
+    }
+    pub unsafe fn wctomb(
+        &self,
+        __s: *mut ::std::os::raw::c_char,
+        __wchar: wchar_t,
+    ) -> ::std::os::raw::c_int {
+        (self.wctomb.as_ref().expect("Expected function, got error."))(__s, __wchar)
+    }
+    pub unsafe fn mbstowcs(
+        &self,
+        __pwcs: *mut wchar_t,
+        __s: *const ::std::os::raw::c_char,
+        __n: usize,
+    ) -> usize {
+        (self
+            .mbstowcs
+            .as_ref()
+            .expect("Expected function, got error."))(__pwcs, __s, __n)
+    }
+    pub unsafe fn wcstombs(
+        &self,
+        __s: *mut ::std::os::raw::c_char,
+        __pwcs: *const wchar_t,
+        __n: usize,
+    ) -> usize {
+        (self
+            .wcstombs
+            .as_ref()
+            .expect("Expected function, got error."))(__s, __pwcs, __n)
+    }
+    pub unsafe fn rpmatch(
+        &self,
+        __response: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .rpmatch
+            .as_ref()
+            .expect("Expected function, got error."))(__response)
+    }
+    pub unsafe fn getsubopt(
+        &self,
+        __optionp: *mut *mut ::std::os::raw::c_char,
+        __tokens: *const *mut ::std::os::raw::c_char,
+        __valuep: *mut *mut ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .getsubopt
+            .as_ref()
+            .expect("Expected function, got error."))(__optionp, __tokens, __valuep)
+    }
+    pub unsafe fn getloadavg(
+        &self,
+        __loadavg: *mut f64,
+        __nelem: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int {
+        (self
+            .getloadavg
+            .as_ref()
+            .expect("Expected function, got error."))(__loadavg, __nelem)
+    }
+    pub unsafe fn enable_state(&self, mask: stateFlags_t) {
+        (self
+            .enable_state
+            .as_ref()
+            .expect("Expected function, got error."))(mask)
+    }
+    pub unsafe fn rc_data_cache(&self) -> *mut [u16; 16usize] {
+        *self
+            .rc_data_cache
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn rc_data_reception_time_us(&self) -> *mut u32 {
+        *self
+            .rc_data_reception_time_us
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn motorsPwm(&self) -> *mut [i16; 8usize] {
+        *self
+            .motorsPwm
+            .as_ref()
+            .expect("Expected variable, got error.")
+    }
+    pub unsafe fn ascent_init(&self, file_name: *const ::std::os::raw::c_char) {
+        (self
+            .ascent_init
+            .as_ref()
+            .expect("Expected function, got error."))(file_name)
+    }
+    pub unsafe fn update(&self, delta_time_us: u64, fc_input: FCInput) -> bool {
+        (self.update.as_ref().expect("Expected function, got error."))(delta_time_us, fc_input)
+    }
+    pub unsafe fn update_serial_ws(&self) {
+        (self
+            .update_serial_ws
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn get_armed(&self) -> bool {
+        (self
+            .get_armed
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn get_arming_disable_flags(&self) -> ::std::os::raw::c_int {
+        (self
+            .get_arming_disable_flags
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn get_beep(&self) -> bool {
+        (self
+            .get_beep
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn get_micros_passed(&self) -> u64 {
+        (self
+            .get_micros_passed
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
+    pub unsafe fn get_motor_pwm_signals(&self, signals: *mut f32) {
+        (self
+            .get_motor_pwm_signals
+            .as_ref()
+            .expect("Expected function, got error."))(signals)
+    }
+    pub unsafe fn arm(&self) {
+        (self.arm.as_ref().expect("Expected function, got error."))()
+    }
+    pub unsafe fn ascent_disarm(&self) {
+        (self
+            .ascent_disarm
+            .as_ref()
+            .expect("Expected function, got error."))()
+    }
 }

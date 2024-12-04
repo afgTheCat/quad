@@ -30,12 +30,11 @@ fn main() {
             "-D__TARGET__=\"SimITL\"",
             "-Dsitl_EXPORTS",
             "-fPIC",
-            // "-c",
-            // "-o",
         ])
         .header(bind_header_str)
         .generate_inline_functions(true) // Make all bindings public
         .generate_comments(true)
+        .dynamic_library_name("Sitl")
         .generate()
         .expect("Unable to generate bindings");
     let out_path = outdir_path.join("sitl_generated.rs");

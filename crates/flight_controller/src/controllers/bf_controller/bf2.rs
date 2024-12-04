@@ -1,52 +1,69 @@
 use crate::{
-    bindings::sitl_generated::FCInput, FlightController, FlightControllerUpdate, MotorInput,
+    bindings::sitl_generated::{FCInput, Sitl},
+    FlightController, FlightControllerUpdate, MotorInput,
 };
-use libloading::Library;
 use std::{
-    ffi::{c_char, CString},
+    cell::UnsafeCell,
+    ffi::CString,
     path::Path,
-    sync::Arc,
+    sync::{Arc, Mutex, OnceLock, RwLock},
     time::Duration,
 };
 
-type AscentInit = unsafe fn(file_name: *const c_char);
-type AscentUpdate = unsafe fn(dt: u64, fc_input: FCInput) -> bool;
-type AscentMotorPwmSignal = unsafe fn(signals: *mut f32);
-type GetArmed = unsafe fn() -> bool;
-type Scheduler = unsafe fn();
-// pub type UpdateSerialWs = unsafe fn();
-
 pub struct BFController2 {
-    pub libsitl: Arc<Library>,
     scheduler_delta: Duration,
+    counter: Arc<RwLock<u64>>,
 }
 
-impl BFController2 {
-    pub fn new() -> Self {
+#[derive(Debug)]
+struct SitlWrapper {
+    inner: UnsafeCell<Sitl>,
+}
+
+impl SitlWrapper {
+    fn new() -> Self {
         let path = Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
-        let scheduler_delta = Duration::from_micros(50);
-        let libsitl = unsafe { libloading::Library::new(path).unwrap() };
+        let sitl = unsafe { Sitl::new(path).unwrap() };
         Self {
-            libsitl: Arc::new(libsitl),
-            scheduler_delta,
+            inner: UnsafeCell::new(sitl),
         }
     }
 
-    pub fn scheduler(&self) {
-        unsafe {
-            let sched: libloading::Symbol<Scheduler> = self.libsitl.get(b"scheduler").unwrap();
-            sched();
+    // Do not leak any pointers
+    pub fn access<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&mut Sitl) -> R,
+    {
+        unsafe { f(&mut *self.inner.get()) }
+    }
+}
+
+// Living on the edge
+unsafe impl Send for SitlWrapper {}
+unsafe impl Sync for SitlWrapper {}
+
+static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
+
+// should only be constructed once for now
+impl BFController2 {
+    pub fn new() -> Self {
+        let sitl = SitlWrapper::new();
+        SITL_INSTANCE.set(Mutex::new(sitl)).unwrap();
+        let scheduler_delta = Duration::from_micros(50);
+        Self {
+            scheduler_delta,
+            counter: Arc::new(RwLock::new(0)),
         }
     }
 }
 
 impl FlightController for BFController2 {
     fn init(&self) {
-        let file_name = CString::new("eeprom.bin").expect("CString::new failed");
-        unsafe {
-            let init: libloading::Symbol<AscentInit> = self.libsitl.get(b"ascent_init").unwrap();
-            init(file_name.as_ptr());
-        }
+        let guard = SITL_INSTANCE.get().unwrap().lock().unwrap();
+        guard.access(|inner| unsafe {
+            let file_name = CString::new("eeprom.bin").expect("CString::new failed");
+            inner.ascent_init(file_name.as_ptr());
+        });
     }
 
     fn update(&self, delta_time_us: u64, fc_update: FlightControllerUpdate) -> MotorInput {
@@ -61,20 +78,20 @@ impl FlightController for BFController2 {
             angular_velocity: fc_update.gyro_update.angular_velocity.map(|x| x as f32),
             rc_data: fc_update.channels.to_bf_channels(),
         };
-        unsafe {
-            let update: libloading::Symbol<AscentUpdate> = self.libsitl.get(b"update").unwrap();
-            // let armed_fn: libloading::Symbol<GetArmed> = self.libsitl.get(b"get_armed").unwrap();
-            // let armed = armed_fn();
-            // println!("armed: {armed}");
-            let getmotors_signals: libloading::Symbol<AscentMotorPwmSignal> =
-                self.libsitl.get(b"get_motor_pwm_signals").unwrap();
-            update(delta_time_us, fc_input);
+        let guard = SITL_INSTANCE.get().unwrap().lock().unwrap();
+        let motor_input = guard.access(|inner| unsafe {
+            inner.update(delta_time_us, fc_input);
             let mut motors_signal = [0.; 4];
-            getmotors_signals(motors_signal.as_mut_ptr());
+            inner.get_motor_pwm_signals(motors_signal.as_mut_ptr());
             MotorInput {
                 input: motors_signal.map(|x| x as f64),
             }
+        });
+        if *self.counter.read().unwrap() < 1000 {
+            println!("motor input: {:?}", motor_input);
+            *self.counter.write().unwrap() += 1;
         }
+        motor_input
     }
 
     fn scheduler_delta(&self) -> Duration {
