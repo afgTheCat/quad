@@ -5,8 +5,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use libloading::Library;
-
 use crate::{
     bindings::sitl_generated::{
         armingFlags, getCurrentMeter, getVoltageMeter, imuSetAttitudeQuat, init, motorsPwm,
@@ -43,19 +41,13 @@ unsafe extern "C" fn rx_rc_frame_status(_: *mut rxRuntimeState_s) -> u8 {
 pub struct BFWorker {
     pub fc_mutex: Arc<Mutex<FCMutex>>,
     pub scheduler_delta: Duration,
-    libsitl: Library,
 }
 
 impl BFWorker {
     pub fn new(fc_mutex: Arc<Mutex<FCMutex>>, scheduler_delta: Duration) -> Self {
-        // TODO: do not hardcode things
-        let path = Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
-        let libsitl = unsafe { libloading::Library::new(path).unwrap() };
-
         Self {
             fc_mutex,
             scheduler_delta,
-            libsitl,
         }
     }
 

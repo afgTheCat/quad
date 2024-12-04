@@ -1,19 +1,23 @@
 use crate::{
-    bindings::sitl_generated::{motorsPwm, FCInput},
-    FlightController, FlightControllerUpdate, MotorInput,
+    bindings::sitl_generated::FCInput, FlightController, FlightControllerUpdate, MotorInput,
 };
 use libloading::Library;
 use std::{
     ffi::{c_char, CString},
     path::Path,
+    sync::Arc,
     time::Duration,
 };
 
 type AscentInit = unsafe fn(file_name: *const c_char);
 type AscentUpdate = unsafe fn(dt: u64, fc_input: FCInput) -> bool;
+type AscentMotorPwmSignal = unsafe fn(signals: *mut f32);
+type GetArmed = unsafe fn() -> bool;
+type Scheduler = unsafe fn();
+// pub type UpdateSerialWs = unsafe fn();
 
 pub struct BFController2 {
-    libsitl: Library,
+    pub libsitl: Arc<Library>,
     scheduler_delta: Duration,
 }
 
@@ -23,8 +27,15 @@ impl BFController2 {
         let scheduler_delta = Duration::from_micros(50);
         let libsitl = unsafe { libloading::Library::new(path).unwrap() };
         Self {
-            libsitl,
+            libsitl: Arc::new(libsitl),
             scheduler_delta,
+        }
+    }
+
+    pub fn scheduler(&self) {
+        unsafe {
+            let sched: libloading::Symbol<Scheduler> = self.libsitl.get(b"scheduler").unwrap();
+            sched();
         }
     }
 }
@@ -52,14 +63,16 @@ impl FlightController for BFController2 {
         };
         unsafe {
             let update: libloading::Symbol<AscentUpdate> = self.libsitl.get(b"update").unwrap();
+            // let armed_fn: libloading::Symbol<GetArmed> = self.libsitl.get(b"get_armed").unwrap();
+            // let armed = armed_fn();
+            // println!("armed: {armed}");
+            let getmotors_signals: libloading::Symbol<AscentMotorPwmSignal> =
+                self.libsitl.get(b"get_motor_pwm_signals").unwrap();
             update(delta_time_us, fc_input);
+            let mut motors_signal = [0.; 4];
+            getmotors_signals(motors_signal.as_mut_ptr());
             MotorInput {
-                input: [
-                    motorsPwm[0] as f64 / 1000.,
-                    motorsPwm[1] as f64 / 1000.,
-                    motorsPwm[2] as f64 / 1000.,
-                    motorsPwm[3] as f64 / 1000.,
-                ],
+                input: motors_signal.map(|x| x as f64),
             }
         }
     }
