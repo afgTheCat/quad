@@ -5,14 +5,7 @@ pub mod controllers;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MotorInput {
-    // scheduler_cycle: u64,
     input: [f64; 4],
-}
-
-impl MotorInput {
-    fn set_input(&mut self, input: [f64; 4]) {
-        self.input = input;
-    }
 }
 
 impl Index<usize> for MotorInput {
@@ -51,7 +44,7 @@ pub struct Channels {
 impl Default for Channels {
     fn default() -> Self {
         Self {
-            throttle: 0.,
+            throttle: -1.,
             roll: 0.,
             pitch: 0.,
             yaw: 0.,

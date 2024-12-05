@@ -26,7 +26,7 @@ use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use egui_extras::{Column, TableBuilder};
 use flight_controller::{
-    controllers::bf_controller::bf2::BFController2, Channels, FlightController,
+    controllers::bf_controller::bf::BFController2, Channels, FlightController,
     FlightControllerUpdate,
 };
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
