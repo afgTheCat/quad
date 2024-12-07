@@ -24,7 +24,8 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use nalgebra::{Rotation3, Vector3, Vector4};
-use sim::{handle_input, setup_drone, sim_loop, update_debug_ui};
+use replay::{replay_loop, setup_drone_replay};
+use sim::{handle_input, setup_drone_simulation, sim_loop, update_debug_ui};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use std::sync::Arc;
@@ -207,11 +208,19 @@ fn main() {
         .add_systems(Update, mode_selector.run_if(in_state(UiState::Menu)))
         .add_systems(
             Update,
-            setup_drone.run_if(in_state(VisualizerState::LiveLoading)),
+            setup_drone_simulation.run_if(in_state(VisualizerState::LiveLoading)),
+        )
+        .add_systems(
+            Update,
+            setup_drone_replay.run_if(in_state(VisualizerState::ReplayLoading)),
         )
         .add_systems(
             Update,
             sim_loop.run_if(in_state(VisualizerState::LiveRunning)),
+        )
+        .add_systems(
+            Update,
+            replay_loop.run_if(in_state(VisualizerState::ReplayRunning)),
         )
         .add_systems(
             Update,

@@ -100,7 +100,7 @@ impl BFController {
     pub fn new() -> Self {
         let id = format!("default_id");
         let sitl = SitlWrapper::new();
-        SITL_INSTANCE.set(Mutex::new(sitl)).unwrap();
+        SITL_INSTANCE.get_or_init(|| Mutex::new(sitl));
         let scheduler_delta = Duration::from_micros(50);
         Self {
             scheduler_delta,

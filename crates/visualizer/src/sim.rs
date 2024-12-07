@@ -22,7 +22,7 @@ use simulator::{
     logger::SimLogger,
     low_pass_filter::LowPassFilter,
     sample_curve::{SampleCurve, SamplePoint},
-    BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroStateTwo,
+    BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     MotorInput, RotorModel, RotorState, RotorsState, SimulationDebugInfo, SimulationFrame,
     Simulator,
 };
@@ -98,7 +98,7 @@ pub struct DebugUiContent(SimulationDebugInfo);
 /// When the drone asset is loaded, sets up the `Simulation` and sets the new `SimState` to
 /// `SimState::Running`. It will also handle setting up the `DebugUiContent`, the
 /// `PlayerControllerInput` and the spawns the scene.
-pub fn setup_drone(
+pub fn setup_drone_simulation(
     mut commands: Commands,
     drone_asset: Res<DroneAsset>,
     gltf_assets: Res<Assets<Gltf>>,
@@ -143,7 +143,7 @@ pub fn setup_drone(
         acceleration: Vector3::zeros(),
     };
 
-    let gyro_state = GyroStateTwo {
+    let gyro_state = GyroState {
         rotation: UnitQuaternion::identity(),
         acceleration: Vector3::zeros(),
         angular_velocity: Vector3::zeros(),
@@ -221,7 +221,7 @@ pub fn setup_drone(
 
     let logger = SimLogger::new(&"thing.csv", MotorInput::default());
 
-    let new_sim = Simulaton(Simulator {
+    let simulation = Simulaton(Simulator {
         drone,
         flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
@@ -231,7 +231,7 @@ pub fn setup_drone(
         logger,
     });
 
-    commands.insert_resource(new_sim);
+    commands.insert_resource(simulation);
 
     // Insert the simulation debug info
     commands.insert_resource(DebugUiContent::default());

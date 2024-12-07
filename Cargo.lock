@@ -4540,6 +4540,7 @@ dependencies = [
  "bevy_infinite_grid",
  "bevy_panorbit_camera",
  "cc",
+ "csv",
  "egui_extras",
  "flight_controller",
  "nalgebra",

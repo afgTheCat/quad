@@ -19,18 +19,18 @@ impl SimLogger {
         }
     }
 
-    fn insert_data(&mut self, current_time_step: Duration, current_input: MotorInput) {
+    pub fn insert_data(&mut self, next_time_step: Duration, next_input: MotorInput) {
         let start_seconds = self.current_time_step.as_secs_f64().to_string();
-        let end_seconds = current_time_step.as_secs_f64().to_string();
+        let end_seconds = next_time_step.as_secs_f64().to_string();
         let motor_inputs = self.current_input.input.map(|v| v.to_string());
         let csv_record = [&[start_seconds, end_seconds], &motor_inputs[..]].concat();
 
         self.wrtr.write_record(csv_record).unwrap();
-        self.current_time_step = current_time_step;
-        self.current_input = current_input;
+        self.current_time_step = next_time_step;
+        self.current_input = next_input;
     }
 
-    fn write(&mut self) {
+    pub fn write(&mut self) {
         self.wrtr.flush().unwrap();
     }
 }

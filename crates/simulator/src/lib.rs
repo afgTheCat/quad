@@ -99,7 +99,7 @@ pub struct SimulationFrame {
     pub battery_state: BatteryState,
     pub rotors_state: RotorsState,
     pub drone_state: DroneFrameState,
-    pub gyro_state: GyroStateTwo,
+    pub gyro_state: GyroState,
 }
 
 // this is probably not useful anymore
@@ -365,13 +365,13 @@ impl FrameModel for DroneModel {
 }
 
 #[derive(Debug, Clone)]
-pub struct GyroStateTwo {
+pub struct GyroState {
     pub rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
     pub acceleration: Vector3<f64>,
     pub angular_velocity: Vector3<f64>,
 }
 
-impl GyroStateTwo {
+impl GyroState {
     fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
             rotation: [
@@ -402,7 +402,7 @@ impl FrameModel for GyroModel {
         let angular_velocity =
             rotation.transpose() * Vector3::new(gyro_vel_x, gyro_vel_y, gyro_vel_z);
         let acceleration = rotation.transpose() * next_frame.drone_state.acceleration;
-        next_frame.gyro_state = GyroStateTwo {
+        next_frame.gyro_state = GyroState {
             rotation: UnitQuaternion::from(rotation),
             acceleration,
             angular_velocity,
@@ -493,6 +493,12 @@ pub struct Simulator {
     pub logger: SimLogger,
 }
 
+impl Drop for Simulator {
+    fn drop(&mut self) {
+        self.logger.write();
+    }
+}
+
 impl Simulator {
     /// Given a duration (typically 10ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt. It will also try to
@@ -513,25 +519,27 @@ impl Simulator {
                         channels,
                     },
                 );
+                self.logger.insert_data(self.time, motor_input);
                 self.drone.set_motor_pwms(motor_input);
                 self.fc_time_accu -= self.flight_controller.scheduler_delta();
             }
             self.time_accu -= self.dt;
+            self.time += self.dt;
         }
         self.drone.debug_info()
     }
 }
 
-struct Replayer {
-    drone: Drone,
-    time: Duration, // TODO: remove this
-    time_accu: Duration,
+pub struct Replayer {
+    pub drone: Drone,
+    pub time: Duration, // TODO: remove this
+    pub time_accu: Duration,
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
-    time_steps: Vec<(Range<Duration>, MotorInput)>,
-    replay_index: usize,
-    dt: Duration,
+    pub time_steps: Vec<(Range<Duration>, MotorInput)>,
+    pub replay_index: usize,
+    pub dt: Duration,
 }
 
 impl Replayer {
@@ -551,6 +559,7 @@ impl Replayer {
     pub fn replay_delta(&mut self, delta: Duration) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
+            self.drone.update(self.dt.as_secs_f64());
             let motor_input = self.get_motor_input();
             if let Some(motor_input) = motor_input {
                 self.drone.set_motor_pwms(motor_input);
