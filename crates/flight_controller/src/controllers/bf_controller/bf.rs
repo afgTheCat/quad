@@ -3,14 +3,16 @@ use crate::{
     FlightController, FlightControllerUpdate, MotorInput,
 };
 use std::{
-    cell::UnsafeCell,
+    cell::{OnceCell, UnsafeCell},
+    collections::{hash_map::Entry, HashMap},
     ffi::CString,
     path::Path,
     sync::{Mutex, OnceLock},
     time::Duration,
 };
 
-pub struct BFController2 {
+pub struct BFController {
+    id: String,
     scheduler_delta: Duration,
 }
 
@@ -42,19 +44,72 @@ impl SitlWrapper {
 unsafe impl Send for SitlWrapper {}
 unsafe impl Sync for SitlWrapper {}
 
-static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
+#[derive(Default)]
+struct SitlManager {
+    instances: HashMap<String, SitlWrapper>,
+}
 
-// should only be constructed once for now
-impl BFController2 {
+impl SitlManager {
     pub fn new() -> Self {
-        let sitl = SitlWrapper::new();
-        SITL_INSTANCE.set(Mutex::new(sitl)).unwrap();
-        let scheduler_delta = Duration::from_micros(50);
-        Self { scheduler_delta }
+        Self {
+            instances: HashMap::new(),
+        }
+    }
+
+    pub fn register_new(&mut self, instance_id: String) {
+        let entry = self.instances.entry(instance_id);
+        match entry {
+            Entry::Vacant(vacant_entry) => {
+                let sitl_wrapper = SitlWrapper::new();
+                vacant_entry.insert(sitl_wrapper);
+            }
+            Entry::Occupied(_) => {
+                todo!("Hanle collisions");
+            }
+        }
+    }
+
+    pub fn close(&mut self, instance_id: String) {
+        let removed = self.instances.remove(&instance_id);
+        if removed.is_none() {
+            todo!("Handle closing unloaded entry")
+        }
+    }
+
+    pub fn access<F, R>(&self, instance_id: &str, f: F) -> R
+    where
+        F: FnOnce(&mut Sitl) -> R,
+    {
+        match self.instances.get(instance_id) {
+            Some(entry) => entry.access(f),
+            None => todo!("Handle accessing unloaded entry"),
+        }
     }
 }
 
-impl FlightController for BFController2 {
+unsafe impl Send for SitlManager {}
+unsafe impl Sync for SitlManager {}
+
+static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
+// This is not optimal since we have to be able to access multiple instances at the same time. Will
+// see what the solution should be.
+static SITL_INSTANCE_MANAGER: OnceLock<Mutex<SitlManager>> = OnceLock::new();
+
+// should only be constructed once for now
+impl BFController {
+    pub fn new() -> Self {
+        let id = format!("default_id");
+        let sitl = SitlWrapper::new();
+        SITL_INSTANCE.set(Mutex::new(sitl)).unwrap();
+        let scheduler_delta = Duration::from_micros(50);
+        Self {
+            scheduler_delta,
+            id,
+        }
+    }
+}
+
+impl FlightController for BFController {
     fn init(&self) {
         let guard = SITL_INSTANCE.get().unwrap().lock().unwrap();
         guard.access(|inner| unsafe {

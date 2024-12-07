@@ -5,7 +5,7 @@ pub mod controllers;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MotorInput {
-    input: [f64; 4],
+    pub input: [f64; 4],
 }
 
 impl Index<usize> for MotorInput {
@@ -41,6 +41,25 @@ pub struct Channels {
     pub yaw: f64,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct FlightControllerUpdate {
+    pub battery_update: BatteryUpdate,
+    pub gyro_update: GyroUpdate,
+    pub channels: Channels,
+}
+
+pub trait FlightController: Send + Sync + 'static {
+    fn init(&self);
+    fn update(&self, delta_time_us: u64, update: FlightControllerUpdate) -> MotorInput;
+    fn scheduler_delta(&self) -> Duration;
+}
+
+impl Default for MotorInput {
+    fn default() -> Self {
+        Self { input: [0.; 4] }
+    }
+}
+
 impl Default for Channels {
     fn default() -> Self {
         Self {
@@ -65,27 +84,5 @@ impl Channels {
             0.,
             0.,
         ]
-    }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct FlightControllerUpdate {
-    pub battery_update: BatteryUpdate,
-    pub gyro_update: GyroUpdate,
-    pub channels: Channels,
-}
-
-pub trait FlightController: Send + Sync + 'static {
-    fn init(&self);
-    fn update(&self, delta_time_us: u64, update: FlightControllerUpdate) -> MotorInput;
-    fn scheduler_delta(&self) -> Duration;
-}
-
-impl Default for MotorInput {
-    fn default() -> Self {
-        Self {
-            input: [0.; 4],
-            // scheduler_cycle: 0,
-        }
     }
 }

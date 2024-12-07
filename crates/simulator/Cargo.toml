@@ -12,6 +12,8 @@ rand = "0.8.5"
 derive_more = { version = "1.0.0", features = ["full"] }
 nalgebra.workspace = true
 flight_controller.workspace = true
+csv.workspace = true
+serde.workspace = true
 
 [features]
 default = []

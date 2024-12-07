@@ -1,18 +1,23 @@
-mod constants;
+pub mod logger;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
 pub mod sample_curve;
 
-use constants::{AIR_RHO, GRAVITY, MAX_EFFECT_SPEED};
 use derive_more::derive::{Deref, DerefMut};
-use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
+pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
+use flight_controller::{Channels, FlightController, FlightControllerUpdate};
+use logger::SimLogger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
-use sample_curve::SampleCurve;
-use std::{cell::RefCell, f64::consts::PI, ops::Range};
+pub use sample_curve::{SampleCurve, SamplePoint};
+use std::{cell::RefCell, f64::consts::PI, ops::Range, sync::Arc, time::Duration};
+
+pub const MAX_EFFECT_SPEED: f64 = 18.0;
+pub const AIR_RHO: f64 = 1.225;
+pub const GRAVITY: f64 = 9.81;
 
 #[derive(Debug, Default)]
 pub struct SimulationDebugInfo {
@@ -40,11 +45,13 @@ thread_local! {
 }
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
-    RNG.with(|rng| rng.borrow_mut().gen_range(range))
+    // TODO: readd this to generate random
+    // RNG.with(|rng| rng.borrow_mut().gen_range(range))
+    range.end - range.start
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct BatteryStateTwo {
+pub struct BatteryState {
     pub capacity: f64,
     pub bat_voltage: f64,
     pub bat_voltage_sag: f64,
@@ -52,7 +59,7 @@ pub struct BatteryStateTwo {
     pub m_ah_drawn: f64,
 }
 
-impl BatteryStateTwo {
+impl BatteryState {
     pub fn battery_update(&self, cell_count: u8) -> BatteryUpdate {
         BatteryUpdate {
             cell_count,
@@ -65,7 +72,7 @@ impl BatteryStateTwo {
 }
 
 #[derive(Debug, Clone)]
-pub struct RotorStateTwo {
+pub struct RotorState {
     pub current: f64,
     pub rpm: f64,
     pub motor_torque: f64,     // the torque calculated
@@ -76,10 +83,10 @@ pub struct RotorStateTwo {
 }
 
 #[derive(Debug, Deref, DerefMut, Clone)]
-pub struct RotorsStateTwo(pub [RotorStateTwo; 4]);
+pub struct RotorsState(pub [RotorState; 4]);
 
 #[derive(Debug, Clone)]
-pub struct DroneFrameStateTwo {
+pub struct DroneFrameState {
     pub position: Vector3<f64>,
     pub rotation: Rotation3<f64>,
     pub linear_velocity: Vector3<f64>,
@@ -89,9 +96,9 @@ pub struct DroneFrameStateTwo {
 
 #[derive(Debug, Clone)]
 pub struct SimulationFrame {
-    pub battery_state: BatteryStateTwo,
-    pub rotors_state: RotorsStateTwo,
-    pub drone_state: DroneFrameStateTwo,
+    pub battery_state: BatteryState,
+    pub rotors_state: RotorsState,
+    pub drone_state: DroneFrameState,
     pub gyro_state: GyroStateTwo,
 }
 
@@ -143,7 +150,7 @@ impl FrameModel for BatteryModel {
         let current_sum: f64 = current_frame.rotors_state.iter().map(|s| s.current).sum();
         let currentm_as = f64::max(current_sum / 3.6, m_a_min);
         let capacity = state.capacity - currentm_as * dt;
-        next_frame.battery_state = BatteryStateTwo {
+        next_frame.battery_state = BatteryState {
             capacity,
             bat_voltage,
             bat_voltage_sag,
@@ -233,7 +240,7 @@ impl FrameModel for RotorModel {
             let motor_torque = self.motor_torque(armature_volt, rotor.rpm);
             let current = motor_torque * self.motor_kv / 8.3;
             let effective_thrust = self.prop_thrust(vel_up, rpm);
-            next_frame.rotors_state[i] = RotorStateTwo {
+            next_frame.rotors_state[i] = RotorState {
                 rpm,
                 current,
                 effective_thrust,
@@ -347,7 +354,7 @@ impl FrameModel for DroneModel {
             rotation,
         );
 
-        next_frame.drone_state = DroneFrameStateTwo {
+        next_frame.drone_state = DroneFrameState {
             position,
             rotation,
             linear_velocity,
@@ -413,8 +420,6 @@ pub struct Drone {
     pub rotor_model: RotorModel,
     pub drone_model: DroneModel,
     pub gyro_model: GyroModel,
-
-    pub dt: f64,
 }
 
 impl Drone {
@@ -425,15 +430,15 @@ impl Drone {
         }
     }
 
-    pub fn update(&mut self) -> DroneUpdate {
+    pub fn update(&mut self, dt: f64) -> DroneUpdate {
         self.battery_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+            .set_new_state(&self.current_frame, &mut self.next_frame, dt);
         self.rotor_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+            .set_new_state(&self.current_frame, &mut self.next_frame, dt);
         self.drone_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+            .set_new_state(&self.current_frame, &mut self.next_frame, dt);
         self.gyro_model
-            .set_new_state(&self.current_frame, &mut self.next_frame, self.dt);
+            .set_new_state(&self.current_frame, &mut self.next_frame, dt);
 
         std::mem::swap(&mut self.current_frame, &mut self.next_frame);
         DroneUpdate {
@@ -450,7 +455,6 @@ impl Drone {
         let drone_state = &self.current_frame.drone_state;
         let battery_state = &self.current_frame.battery_state;
 
-        // TODO: readd this
         let thrusts = Vector4::from_row_slice(
             &rotors_state
                 .iter()
@@ -474,5 +478,86 @@ impl Drone {
             bat_voltage: battery_state.bat_voltage,
             bat_voltage_sag: battery_state.bat_voltage_sag,
         }
+    }
+}
+
+// The simulator simulates the complete drone with a flight controller and all the neccessary aux
+// information.
+pub struct Simulator {
+    pub drone: Drone,
+    pub flight_controller: Arc<dyn FlightController>,
+    pub dt: Duration,
+    pub time: Duration,
+    pub time_accu: Duration, // the accumulated time between two steps + the correction from the
+    pub fc_time_accu: Duration,
+    pub logger: SimLogger,
+}
+
+impl Simulator {
+    /// Given a duration (typically 10ms between frames), runs the simulation until the time
+    /// accumlator is less then the simulation's dt. It will also try to
+    pub fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
+        self.time_accu += delta;
+        while self.time_accu > self.dt {
+            self.fc_time_accu += self.dt;
+            self.time += self.dt;
+            let drone_state = self.drone.update(self.dt.as_secs_f64());
+
+            // update the flight controller
+            if self.fc_time_accu > self.flight_controller.scheduler_delta() {
+                let motor_input = self.flight_controller.update(
+                    self.fc_time_accu.as_micros() as u64,
+                    FlightControllerUpdate {
+                        battery_update: drone_state.battery_update,
+                        gyro_update: drone_state.gyro_update,
+                        channels,
+                    },
+                );
+                self.drone.set_motor_pwms(motor_input);
+                self.fc_time_accu -= self.flight_controller.scheduler_delta();
+            }
+            self.time_accu -= self.dt;
+        }
+        self.drone.debug_info()
+    }
+}
+
+struct Replayer {
+    drone: Drone,
+    time: Duration, // TODO: remove this
+    time_accu: Duration,
+    // we assume that therer are not gaps in the input and the range of the input is always larger
+    // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
+    // can eliviate these issues
+    time_steps: Vec<(Range<Duration>, MotorInput)>,
+    replay_index: usize,
+    dt: Duration,
+}
+
+impl Replayer {
+    fn get_motor_input(&mut self) -> Option<MotorInput> {
+        if self.replay_index < self.time_steps.len() {
+            self.time += self.dt;
+            let (range, motor_input) = self.time_steps[self.replay_index].clone();
+            if self.time >= range.end {
+                self.replay_index += 1;
+            }
+            Some(motor_input)
+        } else {
+            None
+        }
+    }
+
+    pub fn replay_delta(&mut self, delta: Duration) -> SimulationDebugInfo {
+        self.time_accu += delta;
+        while self.time_accu > self.dt {
+            let motor_input = self.get_motor_input();
+            if let Some(motor_input) = motor_input {
+                self.drone.set_motor_pwms(motor_input);
+            }
+            self.time_accu -= self.dt;
+        }
+
+        self.drone.debug_info()
     }
 }

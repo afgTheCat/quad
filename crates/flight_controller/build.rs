@@ -12,7 +12,7 @@ fn main() {
     let libdir_path_str = libdir_path.to_str().expect("No betaflight directory");
     let bind_header_str = bind_header.to_str().expect("Bind header does not exists");
     // command line arguments are coming from bear. To generate a compile_commands.json you can
-    // run bear -- make TARGET=SITL
+    // run bear -- make
     let bindings = bindgen::Builder::default()
         .clang_args(vec![
             &format!("-I{libdir_path_str}/extern/betaflightext/src/main"),

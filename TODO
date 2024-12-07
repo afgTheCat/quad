@@ -1,3 +1,0 @@
-Currently what is happening is that the simulator pre calculates one frame of information on the latest value of the scheduler
-It kinda works, but it could be better. What we probably need is to synchronize between the simulation and the flight controller.
-I will do it once I have time.
