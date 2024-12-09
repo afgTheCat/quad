@@ -4,6 +4,7 @@
 //! meshes we want to use etc.
 mod replay;
 mod sim;
+mod ui;
 
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
@@ -21,7 +22,10 @@ use bevy::{
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
-use bevy_egui::{egui::Window as EguiWindow, EguiContexts, EguiPlugin};
+use bevy_egui::{
+    egui::{self, Window as EguiWindow},
+    EguiContexts, EguiPlugin,
+};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
@@ -162,14 +166,18 @@ pub fn mode_selector(
     mut ctx: EguiContexts,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
-    EguiWindow::new("Mode selector").show(ctx.ctx_mut(), |ui| {
-        if ui.button("Live").clicked() {
-            next_visualizer_state.set(VisualizerState::LiveLoading);
-        }
-        if ui.button("Replayer").clicked() {
-            next_visualizer_state.set(VisualizerState::ReplayLoading);
-        }
-    });
+    EguiWindow::new("Mode selector")
+        .default_size(egui::vec2(960f32, 540f32))
+        .resizable(true)
+        .show(ctx.ctx_mut(), |ui| {
+            if ui.button("Live").clicked() {
+                next_visualizer_state.set(VisualizerState::LiveLoading);
+            }
+            if ui.button("Replayer").clicked() {
+                next_visualizer_state.set(VisualizerState::ReplayLoading);
+            }
+            ui.allocate_space(ui.available_size());
+        });
 }
 
 fn absorb_egui_inputs(
