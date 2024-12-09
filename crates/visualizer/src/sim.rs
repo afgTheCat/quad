@@ -1,29 +1,20 @@
 use bevy::{
-    asset::{Assets, Handle},
+    asset::Handle,
     color::palettes::css::RED,
-    gltf::Gltf,
     input::{gamepad::GamepadEvent, keyboard::KeyboardInput, ButtonState},
     math::{Quat, Vec3},
     prelude::{
-        Commands, Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, NextState, Query,
-        Res, ResMut, Resource, Transform,
+        Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res, ResMut,
+        Resource, Transform,
     },
-    scene::{Scene, SceneBundle},
+    scene::Scene,
     time::Time,
 };
-// use bevy_egui::{egui::Window as EguiWindow, EguiContexts};
 use bevy_panorbit_camera::PanOrbitCamera;
-// use egui_extras::{Column, TableBuilder};
 use flight_controller::Channels;
-use nalgebra::{Rotation3, UnitQuaternion, Vector3};
-use simulator::{
-    low_pass_filter::LowPassFilter, BatteryState, DroneFrameState, GyroState, RotorState,
-    RotorsState, SimulationFrame,
-};
+use nalgebra::Vector3;
 
-use crate::{
-    ntb_mat3, ntb_vec3, ui::UiData, DroneAsset, Simulaton, VisualizerState, PROP_BLADE_MESH_NAMES,
-};
+use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::UiData, Simulaton};
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -81,32 +72,6 @@ pub fn handle_input(
     }
 }
 
-/// When the drone asset is loaded, sets up the `Simulation` and sets the new `SimState` to
-/// `SimState::Running`. It will also handle setting up the `DebugUiContent`, the
-/// `PlayerControllerInput` and the spawns the scene.
-pub fn setup_drone_simulation(
-    mut commands: Commands,
-    drone_asset: Res<DroneAsset>,
-    gltf_assets: Res<Assets<Gltf>>,
-    simulation: ResMut<Simulaton>,
-    mut next_state: ResMut<NextState<VisualizerState>>,
-) {
-    let Some(gltf) = gltf_assets.get(&drone_asset.0) else {
-        return;
-    };
-
-    // Insert the scene bundle
-    commands.spawn(SceneBundle {
-        scene: gltf.scenes[0].clone(),
-        ..Default::default()
-    });
-
-    simulation.init();
-
-    // Set next state
-    next_state.set(VisualizerState::Simulation);
-}
-
 /// The simulation loop.
 pub fn sim_loop(
     mut gizmos: Gizmos,
@@ -147,56 +112,13 @@ pub fn reset_drone_simulation(
     mut simulation: ResMut<Simulaton>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
 ) {
-    let rotors_state =
-        RotorsState(
-            PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir, position)| RotorState {
-                current: 0.,
-                rpm: 0.,
-                motor_torque: 0.,
-                effective_thrust: 0.,
-                pwm: 0.,
-                rotor_dir,
-                motor_pos: Vector3::new(position.x, position.y, position.z),
-                pwm_low_pass_filter: LowPassFilter::default(),
-            }),
-        );
-
-    let battery_state = BatteryState {
-        capacity: 850.,
-        bat_voltage: 4.2,
-        bat_voltage_sag: 4.2,
-        amperage: 0.,
-        m_ah_drawn: 0.,
-    };
-
-    let drone_state = DroneFrameState {
-        position: Vector3::zeros(),
-        rotation: Rotation3::identity(), // stargin position
-        linear_velocity: Vector3::zeros(),
-        angular_velocity: Vector3::new(0., 0., 0.),
-        acceleration: Vector3::zeros(),
-    };
-
-    let gyro_state = GyroState {
-        rotation: UnitQuaternion::identity(),
-        acceleration: Vector3::zeros(),
-        angular_velocity: Vector3::zeros(),
-        low_pass_filters: [
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-        ],
-    };
-
-    let initial_frame = SimulationFrame {
-        battery_state,
-        rotors_state,
-        drone_state,
-        gyro_state,
-    };
-
+    let initial_frame = initial_simulation_frame();
     simulation.reset(initial_frame);
     let (mut tranform, _) = scene_query.single_mut();
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
+}
+
+pub fn init_drone_simulation(mut simulation: ResMut<Simulaton>) {
+    simulation.init();
 }

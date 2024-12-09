@@ -5,3 +5,4 @@ Tomorrow:
   - we probably need a better way to load drones
   - we need a better format to store the data
   - we need a better ui
+  - get rid of websockets

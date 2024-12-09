@@ -8,7 +8,7 @@ mod ui;
 
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
-    asset::{AssetServer, Handle},
+    asset::{AssetServer, Assets, Handle},
     color::Color,
     gltf::Gltf,
     input::{mouse::MouseWheel, ButtonInput},
@@ -16,8 +16,10 @@ use bevy::{
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, Events,
-        IntoSystemConfigs, KeyCode, MouseButton, OnExit, Res, ResMut, Resource, States, Transform,
+        IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
+        States, Transform,
     },
+    scene::SceneBundle,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
@@ -25,18 +27,19 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
+use csv::Reader;
 use flight_controller::controllers::bf_controller::BFController;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
-use replay::{replay_loop, setup_drone_replay};
+use replay::{replay_loop, Replay};
 use sim::{
-    handle_input, reset_drone_simulation, setup_drone_simulation, sim_loop, PlayerControllerInput,
+    handle_input, init_drone_simulation, reset_drone_simulation, sim_loop, PlayerControllerInput,
 };
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
     logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
-    DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, RotorModel, RotorState,
-    RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
+    DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, Replayer, RotorModel,
+    RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
 use std::{sync::Arc, time::Duration};
 use ui::{draw_ui, UiData};
@@ -44,10 +47,9 @@ use ui::{draw_ui, UiData};
 #[derive(States, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub enum VisualizerState {
     #[default]
+    Loading,
     Menu,
-    SimulationInit,
     Simulation,
-    ReplayInit,
     Replay,
 }
 // TODO: we should not rely on the mesh names for the simulation
@@ -135,7 +137,7 @@ pub struct DroneAsset(Handle<Gltf>);
 #[derive(Resource, Deref, DerefMut)]
 pub struct Simulaton(Simulator);
 
-fn default_drone_frame() -> SimulationFrame {
+pub fn initial_simulation_frame() -> SimulationFrame {
     let rotors_state =
         RotorsState(
             PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir, position)| RotorState {
@@ -224,8 +226,9 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(UiData::default());
 
     let flight_controller = Arc::new(BFController::new());
-    let initial_frame = default_drone_frame();
+    let initial_frame = initial_simulation_frame();
 
+    // TODO: we should have this entirly read from a file
     let bat_voltage_curve = SampleCurve::new(vec![
         SamplePoint::new(-0.06, 4.4),
         SamplePoint::new(0.0, 4.2),
@@ -286,7 +289,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let logger = SimLogger::new(&"thing.csv", MotorInput::default());
 
     let simulation = Simulaton(Simulator {
-        drone,
+        drone: drone.clone(),
         flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
         time: Duration::new(0, 0),
@@ -297,8 +300,62 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.insert_resource(simulation);
 
+    let data = Reader::from_path(&"thing.csv")
+        .unwrap()
+        .records()
+        .map(|record| {
+            let csv = record
+                .unwrap()
+                .into_iter()
+                .map(|r| r.to_string())
+                .collect::<Vec<_>>();
+            let time_range = Duration::from_secs_f64(csv[0].parse().unwrap())
+                ..Duration::from_secs_f64(csv[1].parse().unwrap());
+            let motor_input = MotorInput {
+                input: [
+                    csv[2].parse().unwrap(),
+                    csv[3].parse().unwrap(),
+                    csv[4].parse().unwrap(),
+                    csv[5].parse().unwrap(),
+                ],
+            };
+            (time_range, motor_input)
+        })
+        .collect();
+
+    let replay = Replay(Replayer {
+        drone,
+        time: Duration::new(0, 0),
+        time_accu: Duration::new(0, 0),
+        time_steps: data,
+        replay_index: 0,
+        dt: Duration::from_nanos(5000), // TODO: update this
+    });
+
+    commands.insert_resource(replay);
+
     // Insert the player controller input
     commands.insert_resource(PlayerControllerInput::default());
+}
+
+fn load_drone_scene(
+    mut commands: Commands,
+    drone_asset: Res<DroneAsset>,
+    gltf_assets: Res<Assets<Gltf>>,
+    // simulation: ResMut<Simulaton>,
+    mut next_state: ResMut<NextState<VisualizerState>>,
+) {
+    let Some(gltf) = gltf_assets.get(&drone_asset.0) else {
+        return;
+    };
+
+    // Insert the scene bundle
+    commands.spawn(SceneBundle {
+        scene: gltf.scenes[0].clone(),
+        ..Default::default()
+    });
+
+    next_state.set(VisualizerState::Menu);
 }
 
 fn absorb_egui_inputs(
@@ -367,12 +424,9 @@ fn main() {
         .add_systems(Update, draw_ui)
         .add_systems(
             Update,
-            setup_drone_simulation.run_if(in_state(VisualizerState::SimulationInit)),
+            load_drone_scene.run_if(in_state(VisualizerState::Loading)),
         )
-        .add_systems(
-            Update,
-            setup_drone_replay.run_if(in_state(VisualizerState::ReplayInit)),
-        )
+        .add_systems(OnEnter(VisualizerState::Simulation), init_drone_simulation)
         .add_systems(
             Update,
             sim_loop.run_if(in_state(VisualizerState::Simulation)),

@@ -19,11 +19,14 @@ impl UiData {
 }
 
 fn menu_toggle(ui: &mut Ui, mut next_visualizer_state: ResMut<NextState<VisualizerState>>) {
+    if ui.button("Menu").clicked() {
+        next_visualizer_state.set(VisualizerState::Menu);
+    }
     if ui.button("Live").clicked() {
-        next_visualizer_state.set(VisualizerState::SimulationInit);
+        next_visualizer_state.set(VisualizerState::Simulation);
     }
     if ui.button("Replayer").clicked() {
-        next_visualizer_state.set(VisualizerState::ReplayInit);
+        next_visualizer_state.set(VisualizerState::Replay);
     }
 }
 
@@ -42,8 +45,9 @@ pub fn draw_ui(
         menu_toggle(ui, next_visualizer_state);
         // probably there is a better way
         match state {
+            VisualizerState::Loading => {}
             VisualizerState::Menu => {}
-            VisualizerState::SimulationInit | VisualizerState::Simulation => {
+            VisualizerState::Simulation => {
                 TableBuilder::new(ui)
                     .column(Column::auto().resizable(true))
                     .column(Column::remainder())
@@ -91,7 +95,7 @@ pub fn draw_ui(
                         display_debug_data!("Bat voltage sag", ui_data.sim_info.bat_voltage_sag);
                     });
             }
-            VisualizerState::Replay | VisualizerState::ReplayInit => {}
+            VisualizerState::Replay => {}
         }
         ui.allocate_space(ui.available_size());
     });

@@ -74,7 +74,7 @@ impl SitlManager {
         let mut guard = self.instances.lock().unwrap();
         let removed = guard.remove(instance_id);
         if removed.is_none() {
-            todo!("Handle closing unloaded entry")
+            // todo!("Handle closing unloaded entry")
         }
     }
 

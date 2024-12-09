@@ -162,6 +162,7 @@ impl FrameModel for BatteryModel {
 }
 
 // The rotor model
+#[derive(Debug, Clone)]
 pub struct RotorModel {
     pub prop_max_rpm: f64,
     pub pwm_low_pass_filter: [LowPassFilter; 4],
@@ -256,6 +257,7 @@ impl FrameModel for RotorModel {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct DroneModel {
     pub frame_drag_area: Vector3<f64>,
     pub frame_drag_constant: f64,
@@ -391,6 +393,7 @@ impl GyroState {
 }
 
 // we can possibly integrate things here
+#[derive(Debug, Clone)]
 pub struct GyroModel {
     // pub low_pass_filter: [LowPassFilter; 3],
 }
@@ -436,6 +439,7 @@ impl FrameModel for GyroModel {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Drone {
     // data
     pub current_frame: SimulationFrame,
@@ -560,7 +564,8 @@ impl Simulator {
         self.drone.debug_info()
     }
 
-    pub fn init(&self) {
+    pub fn init(&mut self) {
+        self.logger.init();
         self.flight_controller.init();
     }
 
