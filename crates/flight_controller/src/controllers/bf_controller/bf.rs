@@ -2,23 +2,23 @@ use crate::{
     bindings::sitl_generated::{FCInput, Sitl},
     FlightController, FlightControllerUpdate, MotorInput,
 };
+use once_cell::sync::Lazy;
 use std::{
-    cell::{OnceCell, UnsafeCell},
     collections::{hash_map::Entry, HashMap},
     ffi::CString,
     path::Path,
-    sync::{Mutex, OnceLock},
+    sync::{Arc, Mutex},
     time::Duration,
 };
 
 pub struct BFController {
-    id: String,
+    instance_id: String,
     scheduler_delta: Duration,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 struct SitlWrapper {
-    inner: UnsafeCell<Sitl>,
+    inner: Arc<Sitl>,
 }
 
 impl SitlWrapper {
@@ -26,16 +26,16 @@ impl SitlWrapper {
         let path = Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
         let sitl = unsafe { Sitl::new(path).unwrap() };
         Self {
-            inner: UnsafeCell::new(sitl),
+            inner: Arc::new(sitl),
         }
     }
 
     // Do not leak any pointers
     pub fn access<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&mut Sitl) -> R,
+        F: FnOnce(&Sitl) -> R,
     {
-        unsafe { f(&mut *self.inner.get()) }
+        f(&self.inner)
     }
 }
 
@@ -46,18 +46,19 @@ unsafe impl Sync for SitlWrapper {}
 
 #[derive(Default)]
 struct SitlManager {
-    instances: HashMap<String, SitlWrapper>,
+    instances: Arc<Mutex<HashMap<String, SitlWrapper>>>,
 }
 
 impl SitlManager {
     pub fn new() -> Self {
         Self {
-            instances: HashMap::new(),
+            instances: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub fn register_new(&mut self, instance_id: String) {
-        let entry = self.instances.entry(instance_id);
+    pub fn register_new(&self, instance_id: String) {
+        let mut guard = self.instances.lock().unwrap();
+        let entry = guard.entry(instance_id);
         match entry {
             Entry::Vacant(vacant_entry) => {
                 let sitl_wrapper = SitlWrapper::new();
@@ -69,8 +70,9 @@ impl SitlManager {
         }
     }
 
-    pub fn close(&mut self, instance_id: String) {
-        let removed = self.instances.remove(&instance_id);
+    pub fn close(&self, instance_id: &str) {
+        let mut guard = self.instances.lock().unwrap();
+        let removed = guard.remove(instance_id);
         if removed.is_none() {
             todo!("Handle closing unloaded entry")
         }
@@ -78,44 +80,42 @@ impl SitlManager {
 
     pub fn access<F, R>(&self, instance_id: &str, f: F) -> R
     where
-        F: FnOnce(&mut Sitl) -> R,
+        F: FnOnce(&Sitl) -> R,
     {
-        match self.instances.get(instance_id) {
-            Some(entry) => entry.access(f),
-            None => todo!("Handle accessing unloaded entry"),
+        let library;
+        {
+            // prevent locking
+            let guard = self.instances.lock().unwrap();
+            library = guard.get(instance_id).cloned().unwrap();
         }
+        library.access(f)
     }
 }
 
-unsafe impl Send for SitlManager {}
-unsafe impl Sync for SitlManager {}
-
-static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
+// static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
 // This is not optimal since we have to be able to access multiple instances at the same time. Will
 // see what the solution should be.
-static SITL_INSTANCE_MANAGER: OnceLock<Mutex<SitlManager>> = OnceLock::new();
+static SITL_INSTANCE_MANAGER: Lazy<SitlManager> = Lazy::new(|| SitlManager::new());
 
 // should only be constructed once for now
 impl BFController {
     pub fn new() -> Self {
-        let id = format!("default_id");
-        let sitl = SitlWrapper::new();
-        SITL_INSTANCE.get_or_init(|| Mutex::new(sitl));
+        let instance_id = format!("default_id");
+        SITL_INSTANCE_MANAGER.register_new(instance_id.clone());
         let scheduler_delta = Duration::from_micros(50);
         Self {
             scheduler_delta,
-            id,
+            instance_id,
         }
     }
 }
 
 impl FlightController for BFController {
     fn init(&self) {
-        let guard = SITL_INSTANCE.get().unwrap().lock().unwrap();
-        guard.access(|inner| unsafe {
+        SITL_INSTANCE_MANAGER.access(&self.instance_id, |sitl| unsafe {
             let file_name = CString::new("eeprom.bin").expect("CString::new failed");
-            inner.ascent_init(file_name.as_ptr());
-        });
+            sitl.ascent_init(file_name.as_ptr());
+        })
     }
 
     fn update(&self, delta_time_us: u64, fc_update: FlightControllerUpdate) -> MotorInput {
@@ -130,19 +130,24 @@ impl FlightController for BFController {
             angular_velocity: fc_update.gyro_update.angular_velocity.map(|x| x as f32),
             rc_data: fc_update.channels.to_bf_channels(),
         };
-        let guard = SITL_INSTANCE.get().unwrap().lock().unwrap();
-        let motor_input = guard.access(|inner| unsafe {
-            inner.update(delta_time_us, fc_input);
+        SITL_INSTANCE_MANAGER.access(&self.instance_id, |sitl| unsafe {
+            sitl.update(delta_time_us, fc_input);
             let mut motors_signal = [0.; 4];
-            inner.get_motor_pwm_signals(motors_signal.as_mut_ptr());
+            sitl.get_motor_pwm_signals(motors_signal.as_mut_ptr());
             MotorInput {
                 input: motors_signal.map(|x| x as f64),
             }
-        });
-        motor_input
+        })
     }
 
     fn scheduler_delta(&self) -> Duration {
         self.scheduler_delta
+    }
+}
+
+impl Drop for BFController {
+    fn drop(&mut self) {
+        // close the loaded library
+        SITL_INSTANCE_MANAGER.close(&self.instance_id);
     }
 }

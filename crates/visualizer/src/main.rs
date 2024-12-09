@@ -14,7 +14,7 @@ use bevy::{
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, IntoSystemConfigs,
-        NextState, Res, ResMut, Resource, State, States, Transform,
+        NextState, Res, ResMut, Resource, States, Transform,
     },
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
@@ -56,15 +56,6 @@ pub enum UiState {
 pub enum UiData {
     SimulationInfo(Arc<SimulationDebugInfo>),
     ReplayInfo,
-}
-
-impl UiData {
-    fn as_simulation_debug_info(&self) -> Arc<SimulationDebugInfo> {
-        let UiData::SimulationInfo(data) = self.clone() else {
-            panic!("")
-        };
-        data
-    }
 }
 
 // TODO: we should not rely on the mesh names for the simulation
