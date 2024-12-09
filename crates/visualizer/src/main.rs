@@ -32,7 +32,7 @@ use sim::{handle_input, setup_drone_simulation, sim_loop};
 use simulator::FrameCharachteristics;
 use ui::{draw_ui, UiData};
 
-#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+#[derive(States, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub enum VisualizerState {
     #[default]
     Menu,
@@ -42,17 +42,17 @@ pub enum VisualizerState {
     Replay,
 }
 
-impl VisualizerState {
-    fn to_window_name(&self) -> String {
-        match &self {
-            VisualizerState::Menu => String::from("Menu"),
-            VisualizerState::ReplayInit => String::from("ReplayInit"),
-            VisualizerState::Replay => String::from("Replay"),
-            VisualizerState::SimulationInit => String::from("SimulationInit"),
-            VisualizerState::Simulation => String::from("Simulation"),
-        }
-    }
-}
+// impl VisualizerState {
+//     fn to_window_name(&self) -> String {
+//         match &self {
+//             VisualizerState::Menu => String::from("Menu"),
+//             VisualizerState::ReplayInit => String::from("ReplayInit"),
+//             VisualizerState::Replay => String::from("Replay"),
+//             VisualizerState::SimulationInit => String::from("SimulationInit"),
+//             VisualizerState::Simulation => String::from("Simulation"),
+//         }
+//     }
+// }
 
 // TODO: we should not rely on the mesh names for the simulation
 pub const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [

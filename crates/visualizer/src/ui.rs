@@ -7,14 +7,28 @@ use bevy_egui::{
 use egui_extras::{Column, TableBuilder};
 use simulator::SimulationDebugInfo;
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct UiData {
     pub sim_info: SimulationDebugInfo,
+    pub window_name: String,
+}
+
+impl Default for UiData {
+    fn default() -> Self {
+        Self {
+            sim_info: SimulationDebugInfo::default(),
+            window_name: String::from("hmm"),
+        }
+    }
 }
 
 impl UiData {
     pub fn set_sim_info(&mut self, sim_info: SimulationDebugInfo) {
         self.sim_info = sim_info;
+    }
+
+    pub fn set_window_name(&mut self, window_name: String) {
+        self.window_name = window_name;
     }
 }
 
@@ -30,26 +44,20 @@ fn menu_toggle(ui: &mut Ui, mut next_visualizer_state: ResMut<NextState<Visualiz
 pub fn draw_ui(
     mut ctx: EguiContexts,
     state: Res<State<VisualizerState>>,
-    ui_data: Res<UiData>,
-    mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
+    ui_data: ResMut<UiData>,
+    next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
-    let mut window = EguiWindow::new(state.to_window_name())
+    let state = (*state).clone();
+    let window = EguiWindow::new("Visualizer")
         .default_size(egui::vec2(960f32, 540f32))
         .resizable(true);
-    // probably there is a better way
-    let state = (*state).clone();
-    match state {
-        VisualizerState::Menu => {
-            window.show(ctx.ctx_mut(), |ui| {
-                menu_toggle(ui, next_visualizer_state);
-                ui.allocate_space(ui.available_size());
-            });
-        }
-        VisualizerState::SimulationInit | VisualizerState::Simulation => {
-            window.show(ctx.ctx_mut(), |ui| {
-                if matches!(state, VisualizerState::Simulation) {
-                    menu_toggle(ui, next_visualizer_state);
-                }
+
+    window.show(ctx.ctx_mut(), |ui| {
+        menu_toggle(ui, next_visualizer_state);
+        // probably there is a better way
+        match state {
+            VisualizerState::Menu => {}
+            VisualizerState::SimulationInit | VisualizerState::Simulation => {
                 TableBuilder::new(ui)
                     .column(Column::auto().resizable(true))
                     .column(Column::remainder())
@@ -97,10 +105,10 @@ pub fn draw_ui(
                         display_debug_data!("Bat voltage sag", ui_data.sim_info.bat_voltage_sag);
                     });
 
-                    // TODO: switch state here
-                    ui.allocate_space(ui.available_size());
-            });
+                // TODO: switch state here
+            }
+            VisualizerState::Replay | VisualizerState::ReplayInit => {}
         }
-        VisualizerState::Replay | VisualizerState::ReplayInit => {}
-    }
+        ui.allocate_space(ui.available_size());
+    });
 }
