@@ -50,6 +50,7 @@ pub struct FlightControllerUpdate {
 
 pub trait FlightController: Send + Sync + 'static {
     fn init(&self);
+    fn deinit(&self);
     fn update(&self, delta_time_us: u64, update: FlightControllerUpdate) -> MotorInput;
     fn scheduler_delta(&self) -> Duration;
 }

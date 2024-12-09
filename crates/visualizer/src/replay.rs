@@ -37,7 +37,7 @@ pub fn setup_drone_replay(
     };
 
     // TODO: this whole drone setup should be serialized etc
-    let rotors_state = RotorsState(PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir)| {
+    let rotors_state = RotorsState(PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir, position)| {
         let node_id = gltf.named_nodes[name].id();
         let prop_asset_node = gltf_node_assets.get(node_id).unwrap().clone();
         let position = prop_asset_node.transform.translation.as_dvec3();
@@ -50,6 +50,7 @@ pub fn setup_drone_replay(
             pwm: 0.,
             rotor_dir,
             motor_pos: Vector3::new(position.x, position.y, position.z),
+            pwm_low_pass_filter: LowPassFilter::default(),
         }
     }));
 
@@ -73,6 +74,11 @@ pub fn setup_drone_replay(
         rotation: UnitQuaternion::identity(),
         acceleration: Vector3::zeros(),
         angular_velocity: Vector3::zeros(),
+        low_pass_filters: [
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+            LowPassFilter::default(),
+        ],
     };
 
     let initial_frame = SimulationFrame {
@@ -128,13 +134,7 @@ pub fn setup_drone_replay(
         inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
     };
 
-    let gyro_model = GyroModel {
-        low_pass_filter: [
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-        ],
-    };
+    let gyro_model = GyroModel {};
 
     let drone = Drone {
         current_frame: initial_frame.clone(),

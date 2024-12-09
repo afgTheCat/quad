@@ -90,8 +90,6 @@ pub fn draw_ui(
                         display_debug_data!("Bat voltage", ui_data.sim_info.bat_voltage);
                         display_debug_data!("Bat voltage sag", ui_data.sim_info.bat_voltage_sag);
                     });
-
-                // TODO: switch state here
             }
             VisualizerState::Replay | VisualizerState::ReplayInit => {}
         }

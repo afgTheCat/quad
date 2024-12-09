@@ -33,4 +33,9 @@ impl SimLogger {
     pub fn write(&mut self) {
         self.wrtr.flush().unwrap();
     }
+
+    pub fn clear(&mut self) {
+        // TODO: we probably just want to clear the writer in the future
+        self.wrtr.flush().unwrap();
+    }
 }

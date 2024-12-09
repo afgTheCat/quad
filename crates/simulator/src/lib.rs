@@ -10,7 +10,7 @@ use flight_controller::{Channels, FlightController, FlightControllerUpdate};
 use logger::SimLogger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 pub use sample_curve::{SampleCurve, SamplePoint};
 use std::{cell::RefCell, f64::consts::PI, ops::Range, sync::Arc, time::Duration};
@@ -80,6 +80,7 @@ pub struct RotorState {
     pub pwm: f64,
     pub rotor_dir: f64,
     pub motor_pos: Vector3<f64>,
+    pub pwm_low_pass_filter: LowPassFilter,
 }
 
 #[derive(Debug, Deref, DerefMut, Clone)]
@@ -105,7 +106,7 @@ pub struct SimulationFrame {
 // this is probably not useful anymore
 trait FrameModel {
     fn set_new_state(
-        &mut self,
+        &self,
         current_frame: &SimulationFrame,
         next_frame: &mut SimulationFrame,
         dt: f64,
@@ -123,7 +124,7 @@ pub struct BatteryModel {
 
 impl FrameModel for BatteryModel {
     fn set_new_state(
-        &mut self,
+        &self,
         current_frame: &SimulationFrame,
         next_frame: &mut SimulationFrame,
         dt: f64,
@@ -204,7 +205,7 @@ impl RotorModel {
 
 impl FrameModel for RotorModel {
     fn set_new_state(
-        &mut self,
+        &self,
         current_frame: &SimulationFrame,
         next_frame: &mut SimulationFrame,
         dt: f64,
@@ -219,8 +220,9 @@ impl FrameModel for RotorModel {
 
         let state = &current_frame.rotors_state;
         for (i, rotor) in state.iter().enumerate() {
-            let armature_volt = self.pwm_low_pass_filter[i].update(rotor.pwm, dt, 120.)
-                * current_frame.battery_state.bat_voltage_sag;
+            let (motor_pwm, motor_e_pow) =
+                rotor.pwm_low_pass_filter.update_two(rotor.pwm, dt, 120.);
+            let armature_volt = motor_pwm * current_frame.battery_state.bat_voltage_sag;
 
             // For this calculation we only operate with the effective thrust. I have no idea why
             // but this is the original SITL code and it seems deliberate. I suppose we could duble
@@ -248,6 +250,7 @@ impl FrameModel for RotorModel {
                 pwm: rotor.pwm,
                 rotor_dir: rotor.rotor_dir, // This is here as it will be used later on
                 motor_pos: rotor.motor_pos,
+                pwm_low_pass_filter: LowPassFilter::new(motor_pwm, motor_e_pow),
             };
         }
     }
@@ -292,7 +295,7 @@ fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
 // TODO: this could be better
 impl FrameModel for DroneModel {
     fn set_new_state(
-        &mut self,
+        &self,
         current_frame: &SimulationFrame,
         next_frame: &mut SimulationFrame,
         dt: f64,
@@ -369,6 +372,7 @@ pub struct GyroState {
     pub rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
     pub acceleration: Vector3<f64>,
     pub angular_velocity: Vector3<f64>,
+    pub low_pass_filters: [LowPassFilter; 3],
 }
 
 impl GyroState {
@@ -388,17 +392,34 @@ impl GyroState {
 
 // we can possibly integrate things here
 pub struct GyroModel {
-    pub low_pass_filter: [LowPassFilter; 3],
+    // pub low_pass_filter: [LowPassFilter; 3],
 }
 
 impl FrameModel for GyroModel {
-    fn set_new_state(&mut self, _: &SimulationFrame, next_frame: &mut SimulationFrame, dt: f64) {
+    fn set_new_state(
+        &self,
+        current_frame: &SimulationFrame,
+        next_frame: &mut SimulationFrame,
+        dt: f64,
+    ) {
         let rotation = next_frame.drone_state.rotation;
         let frame_angular_velocity = next_frame.drone_state.angular_velocity;
         let cutoff_freq = 300.;
-        let gyro_vel_x = self.low_pass_filter[0].update(frame_angular_velocity[0], dt, cutoff_freq);
-        let gyro_vel_y = self.low_pass_filter[1].update(frame_angular_velocity[1], dt, cutoff_freq);
-        let gyro_vel_z = self.low_pass_filter[2].update(frame_angular_velocity[2], dt, cutoff_freq);
+        let (gyro_vel_x, gyro_x_e_pow) = current_frame.gyro_state.low_pass_filters[0].update_two(
+            frame_angular_velocity[0],
+            dt,
+            cutoff_freq,
+        );
+        let (gyro_vel_y, gyro_y_e_pow) = current_frame.gyro_state.low_pass_filters[1].update_two(
+            frame_angular_velocity[1],
+            dt,
+            cutoff_freq,
+        );
+        let (gyro_vel_z, gyro_z_e_pow) = current_frame.gyro_state.low_pass_filters[2].update_two(
+            frame_angular_velocity[2],
+            dt,
+            cutoff_freq,
+        );
         let angular_velocity =
             rotation.transpose() * Vector3::new(gyro_vel_x, gyro_vel_y, gyro_vel_z);
         let acceleration = rotation.transpose() * next_frame.drone_state.acceleration;
@@ -406,6 +427,11 @@ impl FrameModel for GyroModel {
             rotation: UnitQuaternion::from(rotation),
             acceleration,
             angular_velocity,
+            low_pass_filters: [
+                LowPassFilter::new(gyro_vel_x, gyro_x_e_pow),
+                LowPassFilter::new(gyro_vel_y, gyro_y_e_pow),
+                LowPassFilter::new(gyro_vel_z, gyro_z_e_pow),
+            ],
         }
     }
 }
@@ -423,6 +449,11 @@ pub struct Drone {
 }
 
 impl Drone {
+    pub fn reset(&mut self, initial_frame: SimulationFrame) {
+        self.current_frame = initial_frame.clone();
+        self.next_frame = initial_frame.clone();
+    }
+
     pub fn set_motor_pwms(&mut self, pwms: MotorInput) {
         let rotor_state = &mut self.current_frame.rotors_state;
         for i in 0..4 {
@@ -527,6 +558,18 @@ impl Simulator {
             self.time += self.dt;
         }
         self.drone.debug_info()
+    }
+
+    pub fn init(&self) {
+        self.flight_controller.init();
+    }
+
+    pub fn reset(&mut self, initial_frame: SimulationFrame) {
+        self.flight_controller.deinit();
+        self.drone.reset(initial_frame);
+        self.time = Duration::new(0, 0);
+        self.time_accu = Duration::new(0, 0);
+        self.fc_time_accu = Duration::new(0, 0);
     }
 }
 

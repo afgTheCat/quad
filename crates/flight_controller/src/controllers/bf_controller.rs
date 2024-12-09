@@ -97,7 +97,7 @@ static SITL_INSTANCE_MANAGER: Lazy<SitlManager> = Lazy::new(|| SitlManager::new(
 impl BFController {
     pub fn new() -> Self {
         let instance_id = format!("default_id");
-        SITL_INSTANCE_MANAGER.register_new(instance_id.clone());
+        // SITL_INSTANCE_MANAGER.register_new(instance_id.clone());
         let scheduler_delta = Duration::from_micros(50);
         Self {
             scheduler_delta,
@@ -108,10 +108,15 @@ impl BFController {
 
 impl FlightController for BFController {
     fn init(&self) {
+        SITL_INSTANCE_MANAGER.register_new(self.instance_id.clone());
         SITL_INSTANCE_MANAGER.access(&self.instance_id, |sitl| unsafe {
             let file_name = CString::new("eeprom.bin").expect("CString::new failed");
             sitl.ascent_init(file_name.as_ptr());
         })
+    }
+
+    fn deinit(&self) {
+        SITL_INSTANCE_MANAGER.close(&self.instance_id);
     }
 
     fn update(&self, delta_time_us: u64, fc_update: FlightControllerUpdate) -> MotorInput {
