@@ -6,15 +6,17 @@ mod replay;
 mod sim;
 
 use bevy::{
-    app::{App, PluginGroup, Startup, Update},
+    app::{App, PluginGroup, PreUpdate, Startup, Update},
     asset::{AssetServer, Handle},
     color::Color,
     gltf::Gltf,
+    input::{mouse::MouseWheel, ButtonInput},
     math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, IntoSystemConfigs,
-        NextState, Res, ResMut, Resource, States, Transform,
+        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
+        IntoSystemConfigs, KeyCode, MouseButton, NextState, Res, ResMut, Resource, States,
+        Transform,
     },
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
@@ -170,6 +172,38 @@ pub fn mode_selector(
     });
 }
 
+fn absorb_egui_inputs(
+    mut contexts: EguiContexts,
+    mut mouse: ResMut<ButtonInput<MouseButton>>,
+    mut mouse_wheel: ResMut<Events<MouseWheel>>,
+    mut keyboard: ResMut<ButtonInput<KeyCode>>,
+) {
+    let ctx = contexts.ctx_mut();
+    if !(ctx.wants_pointer_input() || ctx.is_pointer_over_area()) {
+        return;
+    }
+    let modifiers = [
+        KeyCode::SuperLeft,
+        KeyCode::SuperRight,
+        KeyCode::ControlLeft,
+        KeyCode::ControlRight,
+        KeyCode::AltLeft,
+        KeyCode::AltRight,
+        KeyCode::ShiftLeft,
+        KeyCode::ShiftRight,
+    ];
+
+    let pressed = modifiers.map(|key| keyboard.pressed(key).then_some(key));
+
+    mouse.reset_all();
+    mouse_wheel.clear();
+    keyboard.reset_all();
+
+    for key in pressed.into_iter().flatten() {
+        keyboard.press(key);
+    }
+}
+
 fn main() {
     let default_plugin = DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -197,6 +231,12 @@ fn main() {
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, mode_selector.run_if(in_state(UiState::Menu)))
+        .add_systems(
+            PreUpdate,
+            absorb_egui_inputs
+                .after(bevy_egui::systems::process_input_system)
+                .before(bevy_egui::EguiSet::BeginPass),
+        )
         .add_systems(
             Update,
             setup_drone_simulation.run_if(in_state(VisualizerState::LiveLoading)),

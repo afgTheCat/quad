@@ -18,7 +18,7 @@ pub struct BFController {
 
 #[derive(Clone)]
 struct SitlWrapper {
-    inner: Arc<Sitl>,
+    sitl: Arc<Sitl>,
 }
 
 impl SitlWrapper {
@@ -26,7 +26,7 @@ impl SitlWrapper {
         let path = Path::new("/home/gabor/ascent/quad/crates/flight_controller/sitl/libsitl.so");
         let sitl = unsafe { Sitl::new(path).unwrap() };
         Self {
-            inner: Arc::new(sitl),
+            sitl: Arc::new(sitl),
         }
     }
 
@@ -35,7 +35,7 @@ impl SitlWrapper {
     where
         F: FnOnce(&Sitl) -> R,
     {
-        f(&self.inner)
+        f(&self.sitl)
     }
 }
 
@@ -92,12 +92,8 @@ impl SitlManager {
     }
 }
 
-// static SITL_INSTANCE: OnceLock<Mutex<SitlWrapper>> = OnceLock::new();
-// This is not optimal since we have to be able to access multiple instances at the same time. Will
-// see what the solution should be.
 static SITL_INSTANCE_MANAGER: Lazy<SitlManager> = Lazy::new(|| SitlManager::new());
 
-// should only be constructed once for now
 impl BFController {
     pub fn new() -> Self {
         let instance_id = format!("default_id");

@@ -16,7 +16,7 @@ use bevy::{
 use bevy_egui::{egui::Window as EguiWindow, EguiContexts};
 use bevy_panorbit_camera::PanOrbitCamera;
 use egui_extras::{Column, TableBuilder};
-use flight_controller::{controllers::bf_controller::bf::BFController, Channels, FlightController};
+use flight_controller::{controllers::bf_controller::BFController, Channels, FlightController};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use simulator::{
     logger::SimLogger,
