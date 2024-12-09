@@ -1,29 +1,24 @@
-use std::{io::Write, sync::Arc, time::Duration};
-
 use bevy::{
     asset::{Assets, Handle},
     color::palettes::css::RED,
-    gltf::{Gltf, GltfNode},
+    gltf::Gltf,
     input::{gamepad::GamepadEvent, keyboard::KeyboardInput, ButtonState},
-    math::{Quat, Vec3, VectorSpace},
+    math::{Quat, Vec3},
     prelude::{
         Commands, Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, NextState, Query,
         Res, ResMut, Resource, Transform,
     },
-    scene::{ron::de::Position, Scene, SceneBundle},
+    scene::{Scene, SceneBundle},
     time::Time,
 };
 // use bevy_egui::{egui::Window as EguiWindow, EguiContexts};
 use bevy_panorbit_camera::PanOrbitCamera;
 // use egui_extras::{Column, TableBuilder};
-use flight_controller::{controllers::bf_controller::BFController, Channels, FlightController};
-use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
+use flight_controller::Channels;
+use nalgebra::{Rotation3, UnitQuaternion, Vector3};
 use simulator::{
-    logger::SimLogger,
-    low_pass_filter::LowPassFilter,
-    sample_curve::{SampleCurve, SamplePoint},
-    BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
-    MotorInput, RotorModel, RotorState, RotorsState, SimulationFrame, Simulator,
+    low_pass_filter::LowPassFilter, BatteryState, DroneFrameState, GyroState, RotorState,
+    RotorsState, SimulationFrame,
 };
 
 use crate::{
