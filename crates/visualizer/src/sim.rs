@@ -13,9 +13,9 @@ use bevy::{
     scene::{Scene, SceneBundle},
     time::Time,
 };
-use bevy_egui::{egui::Window as EguiWindow, EguiContexts};
+// use bevy_egui::{egui::Window as EguiWindow, EguiContexts};
 use bevy_panorbit_camera::PanOrbitCamera;
-use egui_extras::{Column, TableBuilder};
+// use egui_extras::{Column, TableBuilder};
 use flight_controller::{controllers::bf_controller::BFController, Channels, FlightController};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use simulator::{
@@ -27,7 +27,7 @@ use simulator::{
     Simulator,
 };
 
-use crate::{ntb_mat3, ntb_vec3, DroneAsset, VisualizerState, PROP_BLADE_MESH_NAMES};
+use crate::{ntb_mat3, ntb_vec3, ui::UiData, DroneAsset, VisualizerState, PROP_BLADE_MESH_NAMES};
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -92,8 +92,8 @@ pub fn handle_input(
 pub struct Simulaton(Simulator);
 
 /// Holds all the relevant data that the we wish to show.
-#[derive(Resource, Deref, Default)]
-pub struct DebugUiContent(SimulationDebugInfo);
+// #[derive(Resource, Deref, Default)]
+// pub struct DebugUiContent(SimulationDebugInfo);
 
 /// When the drone asset is loaded, sets up the `Simulation` and sets the new `SimState` to
 /// `SimState::Running`. It will also handle setting up the `DebugUiContent`, the
@@ -234,7 +234,7 @@ pub fn setup_drone_simulation(
     commands.insert_resource(simulation);
 
     // Insert the simulation debug info
-    commands.insert_resource(DebugUiContent::default());
+    // commands.insert_resource(DebugUiContent::default());
 
     // Insert the player controller input
     commands.insert_resource(PlayerControllerInput::default());
@@ -246,14 +246,14 @@ pub fn setup_drone_simulation(
     });
 
     // Set next state
-    next_state.set(VisualizerState::LiveRunning);
+    next_state.set(VisualizerState::Simulation);
 }
 
 /// The simulation loop.
 pub fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut ui_info: ResMut<DebugUiContent>,
+    mut ui_info: ResMut<UiData>,
     mut simulation: ResMut<Simulaton>,
     controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
@@ -281,58 +281,6 @@ pub fn sim_loop(
         );
     }
 
-    *ui_info = DebugUiContent(debug_info);
+    ui_info.set_sim_info(debug_info);
     camera.target_focus = drone_translation;
-}
-
-/// The debug ui.
-pub fn update_debug_ui(mut ctx: EguiContexts, ui_sim_info: Res<DebugUiContent>) {
-    EguiWindow::new("Simulation info").show(ctx.ctx_mut(), |ui| {
-        TableBuilder::new(ui)
-            .column(Column::auto().resizable(true))
-            .column(Column::remainder())
-            .header(20.0, |mut header| {
-                header.col(|ui| {
-                    ui.heading("Name");
-                });
-                header.col(|ui| {
-                    ui.heading("Data");
-                });
-            })
-            .body(|mut body| {
-                // Rust macros are hygenic, so we need to declare the macro in the scope where body
-                // is already defined
-                macro_rules! display_debug_data {
-                    ($column_template:literal, $column_value:expr, $column_data_length:literal) => {
-                        for i in 0..$column_data_length {
-                            let column_name = format!($column_template, i);
-                            display_debug_data!(column_name, $column_value[i]);
-                        }
-                    };
-
-                    ($column_name:expr, $column_value:expr) => {
-                        body.row(30.0, |mut row| {
-                            row.col(|ui| {
-                                ui.label($column_name);
-                            });
-                            row.col(|ui| {
-                                ui.label(format!("{:?}", $column_value));
-                            });
-                        });
-                    };
-                }
-                // Display all the data that we want to show
-                // TODO: maybe readd this
-                // display_debug_data!("Determinant", ui_sim_info.rotation.determinant());
-                display_debug_data!("Rotation matrix", ui_sim_info.rotation);
-                display_debug_data!("Velocity", ui_sim_info.linear_velocity);
-                display_debug_data!("Acceleration", ui_sim_info.acceleration);
-                display_debug_data!("Angular velocity", ui_sim_info.angular_velocity);
-                display_debug_data!("Motor thrust {}", ui_sim_info.thrusts, 4);
-                display_debug_data!("Motor rpm {}", ui_sim_info.rpms, 4);
-                display_debug_data!("Motor pwm {}", ui_sim_info.pwms, 4);
-                display_debug_data!("Bat voltage", ui_sim_info.bat_voltage);
-                display_debug_data!("Bat voltage sag", ui_sim_info.bat_voltage_sag);
-            });
-    });
 }

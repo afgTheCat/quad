@@ -185,7 +185,7 @@ pub fn setup_drone_replay(
         ..Default::default()
     });
 
-    next_state.set(VisualizerState::ReplayRunning);
+    next_state.set(VisualizerState::Replay);
 }
 
 pub fn replay_loop(

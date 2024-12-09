@@ -1,4 +1,5 @@
-use bevy::prelude::{NextState, Res, ResMut, State, States};
+use crate::VisualizerState;
+use bevy::prelude::{NextState, Res, ResMut, Resource, State};
 use bevy_egui::{
     egui::{self, Ui, Window as EguiWindow},
     EguiContexts,
@@ -6,30 +7,15 @@ use bevy_egui::{
 use egui_extras::{Column, TableBuilder};
 use simulator::SimulationDebugInfo;
 
-#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-pub enum VisualizerState {
-    #[default]
-    Menu,
-    SimulationInit,
-    Simulation,
-    ReplayInit,
-    Replay,
-}
-
-impl VisualizerState {
-    fn to_window_name(&self) -> String {
-        match &self {
-            VisualizerState::Menu => String::from("Menu"),
-            VisualizerState::ReplayInit => String::from("ReplayInit"),
-            VisualizerState::Replay => String::from("Replay"),
-            VisualizerState::SimulationInit => String::from("SimulationInit"),
-            VisualizerState::Simulation => String::from("Simulation"),
-        }
-    }
-}
-
-struct UiData {
+#[derive(Resource, Default)]
+pub struct UiData {
     pub sim_info: SimulationDebugInfo,
+}
+
+impl UiData {
+    pub fn set_sim_info(&mut self, sim_info: SimulationDebugInfo) {
+        self.sim_info = sim_info;
+    }
 }
 
 fn menu_toggle(ui: &mut Ui, mut next_visualizer_state: ResMut<NextState<VisualizerState>>) {
@@ -44,7 +30,7 @@ fn menu_toggle(ui: &mut Ui, mut next_visualizer_state: ResMut<NextState<Visualiz
 pub fn draw_ui(
     mut ctx: EguiContexts,
     state: Res<State<VisualizerState>>,
-    ui_data: UiData,
+    ui_data: Res<UiData>,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     let mut window = EguiWindow::new(state.to_window_name())

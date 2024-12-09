@@ -16,52 +16,42 @@ use bevy::{
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
         default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
-        IntoSystemConfigs, KeyCode, MouseButton, NextState, Res, ResMut, Resource, States,
-        Transform,
+        IntoSystemConfigs, KeyCode, MouseButton, Res, ResMut, Resource, States, Transform,
     },
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
-use bevy_egui::{
-    egui::{self, Window as EguiWindow},
-    EguiContexts, EguiPlugin,
-};
+use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use nalgebra::{Rotation3, Vector3, Vector4};
+use nalgebra::{Rotation3, Vector3};
 use replay::{replay_loop, setup_drone_replay};
-use sim::{handle_input, setup_drone_simulation, sim_loop, update_debug_ui};
+use sim::{handle_input, setup_drone_simulation, sim_loop};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
-use std::sync::Arc;
-
-#[derive(Debug, Default)]
-pub struct SimulationDebugInfo {
-    pub rotation: Rotation3<f64>,
-    pub position: Vector3<f64>,
-    pub linear_velocity: Vector3<f64>,
-    pub acceleration: Vector3<f64>,
-    pub angular_velocity: Vector3<f64>,
-    pub thrusts: Vector4<f64>,
-    pub rpms: Vector4<f64>,
-    pub pwms: Vector4<f64>,
-    pub bat_voltage: f64,
-    pub bat_voltage_sag: f64,
-}
+use ui::{draw_ui, UiData};
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-pub enum UiState {
+pub enum VisualizerState {
     #[default]
     Menu,
+    SimulationInit,
     Simulation,
+    ReplayInit,
     Replay,
 }
 
-#[derive(Debug, Clone)]
-pub enum UiData {
-    SimulationInfo(Arc<SimulationDebugInfo>),
-    ReplayInfo,
+impl VisualizerState {
+    fn to_window_name(&self) -> String {
+        match &self {
+            VisualizerState::Menu => String::from("Menu"),
+            VisualizerState::ReplayInit => String::from("ReplayInit"),
+            VisualizerState::Replay => String::from("Replay"),
+            VisualizerState::SimulationInit => String::from("SimulationInit"),
+            VisualizerState::Simulation => String::from("Simulation"),
+        }
+    }
 }
 
 // TODO: we should not rely on the mesh names for the simulation
@@ -71,19 +61,6 @@ pub const PROP_BLADE_MESH_NAMES: [(&str, f64); 4] = [
     ("prop_blade.003", 1.),
     ("prop_blade.004", -1.),
 ];
-
-/// The simulation has two states: when the drone mesh is loading, and when the simulation is
-/// running. In the future we would like to implement a stopped state as well in order to enable
-/// simulation resetting
-#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
-pub enum VisualizerState {
-    #[default]
-    Unselected, // currently selecting which state should the visualizer be in
-    LiveLoading,
-    LiveRunning,
-    ReplayLoading,
-    ReplayRunning,
-}
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
@@ -160,24 +137,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_scene = asset_server.load("drone5.glb");
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
-}
-
-pub fn mode_selector(
-    mut ctx: EguiContexts,
-    mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
-) {
-    EguiWindow::new("Mode selector")
-        .default_size(egui::vec2(960f32, 540f32))
-        .resizable(true)
-        .show(ctx.ctx_mut(), |ui| {
-            if ui.button("Live").clicked() {
-                next_visualizer_state.set(VisualizerState::LiveLoading);
-            }
-            if ui.button("Replayer").clicked() {
-                next_visualizer_state.set(VisualizerState::ReplayLoading);
-            }
-            ui.allocate_space(ui.available_size());
-        });
+    commands.insert_resource(UiData::default());
 }
 
 fn absorb_egui_inputs(
@@ -235,39 +195,34 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_state(VisualizerState::default())
-        .insert_state(UiState::default())
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, mode_selector.run_if(in_state(UiState::Menu)))
         .add_systems(
             PreUpdate,
             absorb_egui_inputs
                 .after(bevy_egui::systems::process_input_system)
                 .before(bevy_egui::EguiSet::BeginPass),
         )
+        .add_systems(Update, draw_ui)
         .add_systems(
             Update,
-            setup_drone_simulation.run_if(in_state(VisualizerState::LiveLoading)),
+            setup_drone_simulation.run_if(in_state(VisualizerState::SimulationInit)),
         )
         .add_systems(
             Update,
-            setup_drone_replay.run_if(in_state(VisualizerState::ReplayLoading)),
+            setup_drone_replay.run_if(in_state(VisualizerState::ReplayInit)),
         )
         .add_systems(
             Update,
-            sim_loop.run_if(in_state(VisualizerState::LiveRunning)),
+            sim_loop.run_if(in_state(VisualizerState::Simulation)),
         )
         .add_systems(
             Update,
-            replay_loop.run_if(in_state(VisualizerState::ReplayRunning)),
+            replay_loop.run_if(in_state(VisualizerState::Replay)),
         )
         .add_systems(
             Update,
-            handle_input.run_if(in_state(VisualizerState::LiveRunning)),
-        )
-        .add_systems(
-            Update,
-            update_debug_ui.run_if(in_state(VisualizerState::LiveRunning)),
+            handle_input.run_if(in_state(VisualizerState::Simulation)),
         )
         .run();
 }
