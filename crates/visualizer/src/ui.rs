@@ -7,28 +7,14 @@ use bevy_egui::{
 use egui_extras::{Column, TableBuilder};
 use simulator::SimulationDebugInfo;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct UiData {
     pub sim_info: SimulationDebugInfo,
-    pub window_name: String,
-}
-
-impl Default for UiData {
-    fn default() -> Self {
-        Self {
-            sim_info: SimulationDebugInfo::default(),
-            window_name: String::from("hmm"),
-        }
-    }
 }
 
 impl UiData {
     pub fn set_sim_info(&mut self, sim_info: SimulationDebugInfo) {
         self.sim_info = sim_info;
-    }
-
-    pub fn set_window_name(&mut self, window_name: String) {
-        self.window_name = window_name;
     }
 }
 
