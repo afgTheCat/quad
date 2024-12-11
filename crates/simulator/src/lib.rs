@@ -4,6 +4,7 @@ pub mod low_pass_filter;
 pub mod noise;
 pub mod sample_curve;
 
+use db::FlightLog;
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
@@ -528,12 +529,6 @@ pub struct Simulator {
     pub logger: SimLogger,
 }
 
-impl Drop for Simulator {
-    fn drop(&mut self) {
-        self.logger.write();
-    }
-}
-
 impl Simulator {
     /// Given a duration (typically 10ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt. It will also try to
@@ -565,7 +560,6 @@ impl Simulator {
     }
 
     pub fn init(&mut self) {
-        self.logger.init();
         self.flight_controller.init();
     }
 
@@ -585,7 +579,7 @@ pub struct Replayer {
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
-    pub time_steps: Vec<(Range<Duration>, MotorInput)>,
+    pub time_steps: Vec<FlightLog>,
     pub replay_index: usize,
     pub dt: Duration,
 }
@@ -594,7 +588,7 @@ impl Replayer {
     fn get_motor_input(&mut self) -> Option<MotorInput> {
         if self.replay_index < self.time_steps.len() {
             self.time += self.dt;
-            let (range, motor_input) = self.time_steps[self.replay_index].clone();
+            let FlightLog { range, motor_input } = self.time_steps[self.replay_index].clone();
             if self.time >= range.end {
                 self.replay_index += 1;
             }

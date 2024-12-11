@@ -1,0 +1,10 @@
+[package]
+name = "db"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+rusqlite.workspace = true
+flight_controller.workspace = true
+

@@ -1,3 +1,4 @@
+use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::UiData, Simulaton, DB};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -13,8 +14,6 @@ use bevy::{
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::Channels;
 use nalgebra::Vector3;
-
-use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::UiData, Simulaton};
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -110,15 +109,20 @@ pub fn sim_loop(
 
 pub fn reset_drone_simulation(
     mut simulation: ResMut<Simulaton>,
+    db: Res<DB>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
 ) {
     let initial_frame = initial_simulation_frame();
     simulation.reset(initial_frame);
     let (mut tranform, _) = scene_query.single_mut();
+
+    // write data
+    db.write_flight_log(&simulation.logger.simulation_id, &simulation.logger.data);
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
 }
 
+// TODO: this probbaly needs to be handled in the simulation
 pub fn init_drone_simulation(mut simulation: ResMut<Simulaton>) {
     simulation.init();
 }

@@ -27,7 +27,7 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use csv::Reader;
+use db::AscentDb;
 use flight_controller::controllers::bf_controller::BFController;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use replay::{replay_loop, Replay};
@@ -43,6 +43,7 @@ use simulator::{
 };
 use std::{sync::Arc, time::Duration};
 use ui::{draw_ui, UiData};
+use uuid::Uuid;
 
 #[derive(States, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub enum VisualizerState {
@@ -130,6 +131,9 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 /// The drone asset wrapper. It is used to query for the drone asset within the gltf assets.
 #[derive(Resource, Clone, Deref)]
 pub struct DroneAsset(Handle<Gltf>);
+
+#[derive(Resource, Deref)]
+struct DB(AscentDb);
 
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
@@ -224,6 +228,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
     commands.insert_resource(UiData::default());
+    let db = AscentDb::new();
 
     let flight_controller = Arc::new(BFController::new());
     let initial_frame = initial_simulation_frame();
@@ -286,7 +291,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         gyro_model,
     };
 
-    let logger = SimLogger::new(&"thing.csv", MotorInput::default());
+    let logger = SimLogger::new(MotorInput::default(), Uuid::new_v4().to_string());
 
     let simulation = Simulaton(Simulator {
         drone: drone.clone(),
@@ -300,28 +305,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.insert_resource(simulation);
 
-    let data = Reader::from_path(&"thing.csv")
-        .unwrap()
-        .records()
-        .map(|record| {
-            let csv = record
-                .unwrap()
-                .into_iter()
-                .map(|r| r.to_string())
-                .collect::<Vec<_>>();
-            let time_range = Duration::from_secs_f64(csv[0].parse().unwrap())
-                ..Duration::from_secs_f64(csv[1].parse().unwrap());
-            let motor_input = MotorInput {
-                input: [
-                    csv[2].parse().unwrap(),
-                    csv[3].parse().unwrap(),
-                    csv[4].parse().unwrap(),
-                    csv[5].parse().unwrap(),
-                ],
-            };
-            (time_range, motor_input)
-        })
-        .collect();
+    let data = db.get_simuation_data();
 
     let replay = Replay(Replayer {
         drone,
@@ -336,6 +320,8 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     // Insert the player controller input
     commands.insert_resource(PlayerControllerInput::default());
+
+    commands.insert_resource(DB(db));
 }
 
 fn load_drone_scene(

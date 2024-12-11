@@ -14,6 +14,9 @@ nalgebra.workspace = true
 flight_controller.workspace = true
 csv.workspace = true
 serde.workspace = true
+rusqlite.workspace = true
+uuid.workspace = true
+db.workspace = true
 
 [features]
 default = []
