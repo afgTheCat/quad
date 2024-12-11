@@ -1,8 +1,8 @@
-use crate::{ntb_mat3, ntb_vec3};
+use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::SimData, DB};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
-    math::Quat,
+    math::{Quat, Vec3},
     prelude::{Deref, DerefMut, Gizmos, Query, Res, ResMut, Resource, Transform},
     scene::Scene,
     time::Time,
@@ -43,4 +43,28 @@ pub fn replay_loop(
         );
     }
     camera.target_focus = drone_translation;
+}
+
+pub fn enter_replay(sim_data: ResMut<SimData>, mut replay: ResMut<Replay>, db: Res<DB>) {
+    if let Some(simulation_id) = &sim_data.selected_simulation_id {
+        let sim_logs = db.get_simuation_data(&simulation_id);
+        replay.time_steps = sim_logs;
+    }
+}
+
+pub fn exit_replay(
+    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut replay: ResMut<Replay>,
+    mut camera_query: Query<&mut PanOrbitCamera>,
+) {
+    let (mut tranform, _) = scene_query.single_mut();
+    let mut camera = camera_query.single_mut();
+
+    tranform.rotation = Quat::IDENTITY;
+    tranform.translation = Vec3::ZERO;
+
+    let initial_frame = initial_simulation_frame();
+    replay.reset(initial_frame);
+
+    camera.target_focus = tranform.translation;
 }

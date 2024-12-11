@@ -8,32 +8,42 @@ use egui_extras::{Column, TableBuilder};
 use simulator::SimulationDebugInfo;
 
 #[derive(Resource, Default)]
-pub struct UiData {
+pub struct SimData {
     pub sim_info: SimulationDebugInfo,
+    pub simulation_ids: Vec<String>,
+    pub selected_simulation_id: Option<String>,
 }
 
-impl UiData {
+impl SimData {
     pub fn set_sim_info(&mut self, sim_info: SimulationDebugInfo) {
         self.sim_info = sim_info;
     }
 }
 
-fn menu_toggle(ui: &mut Ui, mut next_visualizer_state: ResMut<NextState<VisualizerState>>) {
+fn menu_toggle(
+    ui: &mut Ui,
+    sim_data: &mut SimData,
+    mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
+) {
     if ui.button("Menu").clicked() {
         next_visualizer_state.set(VisualizerState::Menu);
     }
     if ui.button("Live").clicked() {
         next_visualizer_state.set(VisualizerState::Simulation);
     }
-    if ui.button("Replayer").clicked() {
-        next_visualizer_state.set(VisualizerState::Replay);
+    ui.heading("Replays");
+    for sim_id in &sim_data.simulation_ids {
+        if ui.button(sim_id).clicked() {
+            next_visualizer_state.set(VisualizerState::Replay);
+            sim_data.selected_simulation_id = Some(sim_id.to_string());
+        }
     }
 }
 
 pub fn draw_ui(
     mut ctx: EguiContexts,
     state: Res<State<VisualizerState>>,
-    ui_data: ResMut<UiData>,
+    mut sim_data: ResMut<SimData>,
     next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     let state = (*state).clone();
@@ -42,7 +52,7 @@ pub fn draw_ui(
         .resizable(true);
 
     window.show(ctx.ctx_mut(), |ui| {
-        menu_toggle(ui, next_visualizer_state);
+        menu_toggle(ui, sim_data.as_mut(), next_visualizer_state);
         // probably there is a better way
         match state {
             VisualizerState::Loading => {}
@@ -84,15 +94,15 @@ pub fn draw_ui(
                         // Display all the data that we want to show
                         // TODO: maybe readd this
                         // display_debug_data!("Determinant", ui_data.sim_info.rotation.determinant());
-                        display_debug_data!("Rotation matrix", ui_data.sim_info.rotation);
-                        display_debug_data!("Velocity", ui_data.sim_info.linear_velocity);
-                        display_debug_data!("Acceleration", ui_data.sim_info.acceleration);
-                        display_debug_data!("Angular velocity", ui_data.sim_info.angular_velocity);
-                        display_debug_data!("Motor thrust {}", ui_data.sim_info.thrusts, 4);
-                        display_debug_data!("Motor rpm {}", ui_data.sim_info.rpms, 4);
-                        display_debug_data!("Motor pwm {}", ui_data.sim_info.pwms, 4);
-                        display_debug_data!("Bat voltage", ui_data.sim_info.bat_voltage);
-                        display_debug_data!("Bat voltage sag", ui_data.sim_info.bat_voltage_sag);
+                        display_debug_data!("Rotation matrix", sim_data.sim_info.rotation);
+                        display_debug_data!("Velocity", sim_data.sim_info.linear_velocity);
+                        display_debug_data!("Acceleration", sim_data.sim_info.acceleration);
+                        display_debug_data!("Angular velocity", sim_data.sim_info.angular_velocity);
+                        display_debug_data!("Motor thrust {}", sim_data.sim_info.thrusts, 4);
+                        display_debug_data!("Motor rpm {}", sim_data.sim_info.rpms, 4);
+                        display_debug_data!("Motor pwm {}", sim_data.sim_info.pwms, 4);
+                        display_debug_data!("Bat voltage", sim_data.sim_info.bat_voltage);
+                        display_debug_data!("Bat voltage sag", sim_data.sim_info.bat_voltage_sag);
                     });
             }
             VisualizerState::Replay => {}

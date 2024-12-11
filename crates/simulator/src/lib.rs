@@ -559,16 +559,20 @@ impl Simulator {
         self.drone.debug_info()
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, simulation_id: String) {
+        self.logger.init(simulation_id);
         self.flight_controller.init();
     }
 
+    // TODO: It would be cleaner to load the simulation on demand from the db and deinit the flight
+    // controller using the Drop trait
     pub fn reset(&mut self, initial_frame: SimulationFrame) {
         self.flight_controller.deinit();
         self.drone.reset(initial_frame);
         self.time = Duration::new(0, 0);
         self.time_accu = Duration::new(0, 0);
         self.fc_time_accu = Duration::new(0, 0);
+        self.logger.deinit();
     }
 }
 
@@ -610,5 +614,12 @@ impl Replayer {
         }
 
         self.drone.debug_info()
+    }
+
+    pub fn reset(&mut self, initial_frame: SimulationFrame) {
+        self.drone.reset(initial_frame);
+        self.time = Duration::new(0, 0);
+        self.time_accu = Duration::new(0, 0);
+        self.replay_index = 0;
     }
 }

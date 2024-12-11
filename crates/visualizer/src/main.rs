@@ -30,10 +30,8 @@ use core::f64;
 use db::AscentDb;
 use flight_controller::controllers::bf_controller::BFController;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
-use replay::{replay_loop, Replay};
-use sim::{
-    handle_input, init_drone_simulation, reset_drone_simulation, sim_loop, PlayerControllerInput,
-};
+use replay::{enter_replay, exit_replay, replay_loop, Replay};
+use sim::{enter_simulation, exit_simulation, handle_input, sim_loop, PlayerControllerInput};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
@@ -42,8 +40,7 @@ use simulator::{
     RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
 use std::{sync::Arc, time::Duration};
-use ui::{draw_ui, UiData};
-use uuid::Uuid;
+use ui::{draw_ui, SimData};
 
 #[derive(States, Clone, Default, Eq, PartialEq, Hash, Debug)]
 pub enum VisualizerState {
@@ -53,7 +50,9 @@ pub enum VisualizerState {
     Simulation,
     Replay,
 }
-// TODO: we should not rely on the mesh names for the simulation
+
+// TODO: we should not rely on the mesh names for the simulation but the other way around, it would
+// be nice to load and adjust the correct mesh to the simulations configuration
 pub const PROP_BLADE_MESH_NAMES: [(&str, f64, DVec3); 4] = [
     (
         "prop_blade.001",
@@ -227,8 +226,13 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_scene = asset_server.load("drone5.glb");
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
-    commands.insert_resource(UiData::default());
+
     let db = AscentDb::new();
+    let simulation_ids = db.get_all_simulation_ids();
+    commands.insert_resource(SimData {
+        simulation_ids,
+        ..Default::default()
+    });
 
     let flight_controller = Arc::new(BFController::new());
     let initial_frame = initial_simulation_frame();
@@ -291,7 +295,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         gyro_model,
     };
 
-    let logger = SimLogger::new(MotorInput::default(), Uuid::new_v4().to_string());
+    let logger = SimLogger::new(MotorInput::default());
 
     let simulation = Simulaton(Simulator {
         drone: drone.clone(),
@@ -305,13 +309,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.insert_resource(simulation);
 
-    let data = db.get_simuation_data();
-
     let replay = Replay(Replayer {
         drone,
         time: Duration::new(0, 0),
         time_accu: Duration::new(0, 0),
-        time_steps: data,
+        time_steps: vec![],
         replay_index: 0,
         dt: Duration::from_nanos(5000), // TODO: update this
     });
@@ -412,19 +414,21 @@ fn main() {
             Update,
             load_drone_scene.run_if(in_state(VisualizerState::Loading)),
         )
-        .add_systems(OnEnter(VisualizerState::Simulation), init_drone_simulation)
+        .add_systems(OnEnter(VisualizerState::Simulation), enter_simulation)
         .add_systems(
             Update,
             sim_loop.run_if(in_state(VisualizerState::Simulation)),
-        )
-        .add_systems(OnExit(VisualizerState::Simulation), reset_drone_simulation)
-        .add_systems(
-            Update,
-            replay_loop.run_if(in_state(VisualizerState::Replay)),
         )
         .add_systems(
             Update,
             handle_input.run_if(in_state(VisualizerState::Simulation)),
         )
+        .add_systems(OnExit(VisualizerState::Simulation), exit_simulation)
+        .add_systems(OnEnter(VisualizerState::Replay), enter_replay)
+        .add_systems(
+            Update,
+            replay_loop.run_if(in_state(VisualizerState::Replay)),
+        )
+        .add_systems(OnExit(VisualizerState::Replay), exit_replay)
         .run();
 }

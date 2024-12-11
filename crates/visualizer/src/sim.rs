@@ -1,4 +1,4 @@
-use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::UiData, Simulaton, DB};
+use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::SimData, Simulaton, DB};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -8,12 +8,14 @@ use bevy::{
         Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res, ResMut,
         Resource, Transform,
     },
+    reflect::List,
     scene::Scene,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::Channels;
 use nalgebra::Vector3;
+use uuid::Uuid;
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -75,7 +77,7 @@ pub fn handle_input(
 pub fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut ui_info: ResMut<UiData>,
+    mut sim_data: ResMut<SimData>,
     mut simulation: ResMut<Simulaton>,
     controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
@@ -103,26 +105,43 @@ pub fn sim_loop(
         );
     }
 
-    ui_info.set_sim_info(debug_info);
+    sim_data.set_sim_info(debug_info);
     camera.target_focus = drone_translation;
 }
 
-pub fn reset_drone_simulation(
-    mut simulation: ResMut<Simulaton>,
-    db: Res<DB>,
-    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
-) {
-    let initial_frame = initial_simulation_frame();
-    simulation.reset(initial_frame);
-    let (mut tranform, _) = scene_query.single_mut();
-
-    // write data
-    db.write_flight_log(&simulation.logger.simulation_id, &simulation.logger.data);
-    tranform.rotation = Quat::IDENTITY;
-    tranform.translation = Vec3::ZERO;
+pub fn enter_simulation(mut simulation: ResMut<Simulaton>) {
+    let simulation_id = Uuid::new_v4().to_string();
+    simulation.init(simulation_id);
 }
 
-// TODO: this probbaly needs to be handled in the simulation
-pub fn init_drone_simulation(mut simulation: ResMut<Simulaton>) {
-    simulation.init();
+pub fn exit_simulation(
+    mut simulation: ResMut<Simulaton>,
+    mut sim_data: ResMut<SimData>,
+    db: Res<DB>,
+    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut camera_query: Query<&mut PanOrbitCamera>,
+) {
+    let (mut tranform, _) = scene_query.single_mut();
+    let mut camera = camera_query.single_mut();
+
+    tranform.rotation = Quat::IDENTITY;
+    tranform.translation = Vec3::ZERO;
+
+    let simulation_id = simulation
+        .logger
+        .simulation_id
+        .as_ref()
+        .unwrap()
+        .to_string();
+
+    // write data
+    db.write_flight_log(&simulation_id, &simulation.logger.data);
+
+    // insert siumulation id
+    sim_data.simulation_ids.push(simulation_id);
+
+    let initial_frame = initial_simulation_frame();
+    simulation.reset(initial_frame);
+
+    camera.target_focus = tranform.translation;
 }

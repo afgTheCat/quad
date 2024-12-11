@@ -25,6 +25,8 @@ SELECT start_seconds, end_seconds, motor_input_1, motor_input_2, motor_input_3, 
 where simulation_id = ?1 ORDER BY start_seconds
 ";
 
+const SELECT_SIMULATION_IDS: &str = "SELECT DISTINCT simulation_id FROM flight_log";
+
 #[derive(Debug, Clone)]
 
 pub struct FlightLog {
@@ -81,13 +83,9 @@ impl AscentDb {
     }
 
     // TODO: add the simulation id here
-    pub fn get_simuation_data(&self) -> Vec<FlightLog> {
-        let Some(simulation_id) = self.get_simulation_id() else {
-            return vec![];
-        };
+    pub fn get_simuation_data(&self, simulation_id: &str) -> Vec<FlightLog> {
         let conn = self.conn.lock().unwrap();
         let mut statement = conn.prepare(SELECT_FLIGHT_LOGS_QUERY).unwrap();
-        // let simulation_id = "c12ab1de-d0ba-4b4e-b096-00f5ad712c31";
         statement
             .query_map([simulation_id], |r| {
                 let start_secs = Duration::from_secs_f64(r.get(0)?);
@@ -103,6 +101,16 @@ impl AscentDb {
             .map(Result::unwrap)
             .collect::<Vec<_>>()
     }
+
+    pub fn get_all_simulation_ids(&self) -> Vec<String> {
+        let conn = self.conn.lock().unwrap();
+        let mut statement = conn.prepare(SELECT_SIMULATION_IDS).unwrap();
+        statement
+            .query_map([], |r| Ok(r.get(0)?))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect::<Vec<_>>()
+    }
 }
 
 #[cfg(test)]
@@ -112,7 +120,7 @@ mod test {
     #[test]
     fn thing() {
         let db = AscentDb::new();
-        let data = db.get_simuation_data();
+        let data = db.get_all_simulation_ids();
         println!("{data:?}");
     }
 }
