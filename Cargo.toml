@@ -8,6 +8,7 @@ visualizer = { path = "crates/visualizer" }
 simulator = { path = "crates/simulator" }
 flight_controller = { path = "crates/flight_controller" }
 db = { path = "crates/db" }
+res = { path = "crates/res" }
 
 # external
 nalgebra = "0.33.0"
