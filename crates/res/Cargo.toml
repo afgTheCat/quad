@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 resolver = "2"
 
-
 [dependencies]
 nalgebra.workspace = true
+matfile = { version = "0.5.0", features = ["ndarray"] } 
+rand = "0.8.5"
+pyo3.workspace = true
+
+[lib]
+name = "res"
+crate-type = ["cdylib"]

@@ -36,8 +36,8 @@ use sim::{enter_simulation, exit_simulation, handle_input, sim_loop, PlayerContr
 use simulator::FrameCharachteristics;
 use simulator::{
     logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, BatteryUpdate,
-    Drone, DroneFrameState, DroneModel, GyroModel, GyroState, GyroUpdate, MotorInput, Replayer,
-    RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
+    Drone, DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, Replayer, RotorModel,
+    RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
 use std::{sync::Arc, time::Duration};
 use ui::{draw_ui, SimData};
@@ -341,7 +341,6 @@ fn load_drone_scene(
     mut commands: Commands,
     drone_asset: Res<DroneAsset>,
     gltf_assets: Res<Assets<Gltf>>,
-    // simulation: ResMut<Simulaton>,
     mut next_state: ResMut<NextState<VisualizerState>>,
 ) {
     let Some(gltf) = gltf_assets.get(&drone_asset.0) else {
