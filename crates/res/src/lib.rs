@@ -231,3 +231,12 @@ fn res(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // m.add_class::<MultiModel>()?;
     Ok(())
 }
+
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn reproduce_test() {
+
+    }
+}
