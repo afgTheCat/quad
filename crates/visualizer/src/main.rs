@@ -28,15 +28,15 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use db::AscentDb;
-use flight_controller::controllers::bf_controller::BFController;
+use flight_controller::{controllers::bf_controller::BFController, Channels};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop, Replay};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop, PlayerControllerInput};
 #[cfg(feature = "noise")]
 use simulator::FrameCharachteristics;
 use simulator::{
-    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
-    DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, Replayer, RotorModel,
+    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, BatteryUpdate,
+    Drone, DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, Replayer, RotorModel,
     RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
 use std::{sync::Arc, time::Duration};
@@ -289,13 +289,24 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone = Drone {
         current_frame: initial_frame.clone(),
         next_frame: initial_frame.clone(),
-        battery_model,
+        battery_model: battery_model.clone(),
         rotor_model,
         drone_model,
         gyro_model,
     };
 
-    let logger = SimLogger::new(MotorInput::default());
+    let logger = SimLogger::new(
+        MotorInput::default(),
+        BatteryUpdate {
+            bat_voltage_sag: initial_frame.battery_state.bat_voltage_sag,
+            bat_voltage: initial_frame.battery_state.bat_voltage,
+            amperage: initial_frame.battery_state.amperage,
+            m_ah_drawn: initial_frame.battery_state.m_ah_drawn,
+            cell_count: battery_model.quad_bat_cell_count,
+        },
+        initial_frame.gyro_state.gyro_update(),
+        Channels::default(),
+    );
 
     let simulation = Simulaton(Simulator {
         drone: drone.clone(),
@@ -330,7 +341,6 @@ fn load_drone_scene(
     mut commands: Commands,
     drone_asset: Res<DroneAsset>,
     gltf_assets: Res<Assets<Gltf>>,
-    // simulation: ResMut<Simulaton>,
     mut next_state: ResMut<NextState<VisualizerState>>,
 ) {
     let Some(gltf) = gltf_assets.get(&drone_asset.0) else {

@@ -379,7 +379,7 @@ pub struct GyroState {
 }
 
 impl GyroState {
-    fn gyro_update(&self) -> GyroUpdate {
+    pub fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
             rotation: [
                 self.rotation.w,
@@ -549,7 +549,13 @@ impl Simulator {
                         channels,
                     },
                 );
-                self.logger.insert_data(self.time, motor_input);
+                self.logger.insert_data(
+                    self.time,
+                    motor_input,
+                    drone_state.battery_update,
+                    drone_state.gyro_update,
+                    channels,
+                );
                 self.drone.set_motor_pwms(motor_input);
                 self.fc_time_accu -= self.flight_controller.scheduler_delta();
             }
@@ -592,7 +598,9 @@ impl Replayer {
     fn get_motor_input(&mut self) -> Option<MotorInput> {
         if self.replay_index < self.time_steps.len() {
             self.time += self.dt;
-            let FlightLog { range, motor_input } = self.time_steps[self.replay_index].clone();
+            let FlightLog {
+                range, motor_input, ..
+            } = self.time_steps[self.replay_index].clone();
             if self.time >= range.end {
                 self.replay_index += 1;
             }

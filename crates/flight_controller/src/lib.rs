@@ -1,4 +1,4 @@
-use std::{f64, ops::Index, time::Duration};
+use std::{ops::Index, time::Duration};
 
 pub mod bindings;
 pub mod controllers;

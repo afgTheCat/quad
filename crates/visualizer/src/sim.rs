@@ -135,7 +135,7 @@ pub fn exit_simulation(
         .to_string();
 
     // write data
-    db.write_flight_log(&simulation_id, &simulation.logger.data);
+    db.write_flight_logs(&simulation_id, &simulation.logger.data);
 
     // insert siumulation id
     sim_data.simulation_ids.push(simulation_id);
