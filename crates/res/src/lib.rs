@@ -1,11 +1,7 @@
-use core::f64;
+mod esn;
+mod ridge;
+
 use nalgebra::{clamp, DMatrix, DVector};
-use pyo3::prelude::*;
-use rand::{
-    distributions::{Bernoulli, Uniform},
-    prelude::Distribution,
-    thread_rng,
-};
 
 pub struct GenericModelCore {
     pub a: DVector<f64>,
@@ -143,100 +139,5 @@ impl MultiModelCore {
             voltages.push((state.v.clone(), firings));
         }
         voltages
-    }
-}
-
-// TODO: const generics
-#[pyclass]
-pub struct ClassicESNModel {
-    internal_weights: DMatrix<f64>,
-    input_weights: Option<DMatrix<f64>>,
-    bias_vector: DVector<f64>,
-}
-
-impl ClassicESNModel {
-    // This is pretty much the reservoir
-    fn integrate(&self, input: DVector<f64>, state: DVector<f64>) -> DVector<f64> {
-        let Some(input_weights) = self.input_weights.as_ref() else {
-            panic!()
-        };
-        let state_before_tanh = &self.internal_weights * state.transpose()
-            + input_weights * input.transpose()
-            + &self.bias_vector;
-        state_before_tanh.map(|e| e.tanh())
-    }
-
-    fn initialize_internal_weights(
-        n_internal_units: usize,
-        connectivity: f64,
-        spectral_radius: f64,
-    ) -> DMatrix<f64> {
-        assert!(
-            connectivity > 0.0 && connectivity <= 1.0,
-            "Connectivity must be in (0, 1]."
-        );
-
-        // Generate a random sparse matrix with connectivity
-        let mut rng = thread_rng();
-        let uniform_dist = Uniform::new(-0.5, 0.5);
-        let bernoulli = Bernoulli::new(connectivity).unwrap();
-        let mut internal_weights = DMatrix::from_fn(n_internal_units, n_internal_units, |_, _| {
-            if bernoulli.sample(&mut rng) {
-                uniform_dist.sample(&mut rng)
-            } else {
-                0.0
-            }
-        });
-
-        // Compute eigenvalues to find the spectral radius
-        let eigenvalues = internal_weights.clone().symmetric_eigen().eigenvalues;
-        let max_eigenvalue = eigenvalues
-            .iter()
-            .cloned()
-            .map(f64::abs)
-            .fold(f64::NEG_INFINITY, f64::max);
-
-        // Scale matrix to match the desired spectral radius
-        internal_weights /= max_eigenvalue / spectral_radius;
-
-        internal_weights
-    }
-}
-
-#[pymethods]
-impl ClassicESNModel {
-    #[new]
-    fn new(n_internal_units: usize) -> PyResult<Self> {
-        let internal_weights = Self::initialize_internal_weights(n_internal_units, 0.3, 0.99);
-        let bias_vector = DVector::<f64>::zeros(n_internal_units);
-        Ok(Self {
-            internal_weights,
-            bias_vector,
-            input_weights: None,
-        })
-    }
-
-    fn next(&self, input: Vec<f64>, state: Vec<f64>) -> PyResult<Vec<f64>> {
-        let input = DVector::from_vec(input);
-        let state = DVector::from_vec(state);
-        let new_state = self.integrate(input, state);
-        Ok(new_state.data.as_vec().clone())
-    }
-}
-
-#[pymodule]
-fn res(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // pyo3_log::init();
-    m.add_class::<ClassicESNModel>()?;
-    // m.add_class::<MultiModel>()?;
-    Ok(())
-}
-
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn reproduce_test() {
-
     }
 }

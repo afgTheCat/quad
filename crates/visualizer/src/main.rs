@@ -406,6 +406,7 @@ fn main() {
         }),
         ..default()
     });
+
     App::new()
         .add_plugins(default_plugin)
         .add_plugins(EguiPlugin)
