@@ -1,19 +1,26 @@
 use core::f64;
 
-use nalgebra::{DMatrix, DVector, Dyn, RawStorage, SVD};
+use nalgebra::{DMatrix, DVector, RawStorage, SVD};
+
+#[derive(Debug)]
+struct RidgeRegressionSol {
+    coeff: DMatrix<f64>,
+    intercept: DVector<f64>,
+}
 
 // Super basic ridge regression model using svd
 #[derive(Debug)]
 pub struct RidgeRegression {
     alpha: f64,
+    sol: Option<RidgeRegressionSol>,
 }
 
 impl RidgeRegression {
     pub fn new(alpha: f64) -> Self {
-        Self { alpha }
+        Self { alpha, sol: None }
     }
 
-    fn fit(&self, X: &DMatrix<f64>, y: DVector<f64>) -> (DVector<f64>, f64) {
+    pub fn fit(&mut self, X: &DMatrix<f64>, y: DVector<f64>, save: bool) -> (DVector<f64>, f64) {
         // TODO: this is bad
         let y_mean = y.mean();
         // TODO: investigate why DVector::col_mean does not work
@@ -35,22 +42,59 @@ impl RidgeRegression {
             * d.zip_map(&(u.unwrap().transpose() * y_centered), |x, y| x * y);
         let intercept = y_mean - x_mean.dot(&coeff);
 
+        if save {
+            self.sol = Some(RidgeRegressionSol {
+                coeff: DMatrix::from_rows(&[coeff.transpose()]),
+                intercept: DVector::from_element(1, intercept),
+            })
+        }
+
         (coeff, intercept)
     }
 
     // y is a column vector containing stuff
-    fn fit_multiple(&self, X: DMatrix<f64>, y: DMatrix<f64>) -> (DMatrix<f64>, DVector<f64>) {
+    pub fn fit_multiple(
+        &mut self,
+        X: DMatrix<f64>,
+        y: DMatrix<f64>,
+    ) -> (DMatrix<f64>, DVector<f64>) {
         let (_, data_features) = X.data.shape();
         let (_, target_dim) = y.data.shape();
         let mut coeff_mult: DMatrix<f64> = DMatrix::zeros(target_dim.0, data_features.0);
         let mut intercept_mult: DVector<f64> = DVector::zeros(target_dim.0);
 
         for (i, col) in y.column_iter().enumerate() {
-            let (coeff, intercept) = self.fit(&X, col.into_owned());
+            let (coeff, intercept) = self.fit(&X, col.into_owned(), false);
             coeff_mult.set_row(i, &coeff.transpose());
             intercept_mult[i] = intercept;
         }
+        self.sol = Some(RidgeRegressionSol {
+            coeff: coeff_mult.clone(),
+            intercept: intercept_mult.clone(),
+        });
         (coeff_mult, intercept_mult)
+    }
+
+    // makes a prediction
+    pub fn predict(&self, X: DMatrix<f64>) -> DMatrix<f64> {
+        let Some(RidgeRegressionSol { coeff, intercept }) = self.sol.as_ref() else {
+            panic!()
+        };
+
+        DMatrix::from_rows(
+            &X.row_iter()
+                .map(|data_point| {
+                    DVector::from(
+                        intercept
+                            .iter()
+                            .zip(coeff.row_iter())
+                            .map(|(ic, c)| ic + data_point.dot(&c))
+                            .collect::<Vec<_>>(),
+                    )
+                    .transpose()
+                })
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -170,8 +214,10 @@ mod test {
             22.81954351,
         ]);
 
-        let ridge_regression = RidgeRegression::new(10.);
-        ridge_regression.fit(&X, y);
+        let mut ridge_regression = RidgeRegression::new(10.);
+        ridge_regression.fit(&X, y, true);
+        let thing = ridge_regression.predict(X);
+        println!("{}", thing);
     }
 
     #[test]
@@ -840,8 +886,9 @@ mod test {
             ],
         );
 
-        let rr = RidgeRegression::new(10.);
-        let (coeff, intercept) = rr.fit_multiple(X, y);
+        let mut rr = RidgeRegression::new(10.);
+        let (coeff, intercept) = rr.fit_multiple(X.clone(), y);
         println!("coeff: {coeff} {intercept}");
+        println!("{}", rr.predict(X));
     }
 }

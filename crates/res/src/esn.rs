@@ -1,4 +1,6 @@
-use nalgebra::{DMatrix, DVector, RawStorage};
+use core::f64;
+
+use nalgebra::{DMatrix, DVector};
 use pyo3::prelude::*;
 use rand::{
     distributions::{Bernoulli, Uniform},
@@ -126,16 +128,17 @@ struct RcModel {
     connectivity: f64,
     spectral_radius: f64,
     input_scaling: f64,
-    // episodes: Vec<DMatrix<f64>>,
     embedding: RidgeRegression,
+    readout: RidgeRegression,
 }
 
 impl RcModel {
-    fn compute_state_matricies(&self, input: ModelInput) -> Vec<DMatrix<f64>> {
-        let mut states = vec![];
+    // TODO: kinda slow, we can improve it
+    fn compute_state_matricies(&self, input: &ModelInput) -> Vec<DMatrix<f64>> {
+        let mut states: Vec<DMatrix<f64>> =
+            vec![DMatrix::zeros(input.time, self.n_internal_units); input.episodes];
         let mut previous_state: DMatrix<f64> =
             DMatrix::zeros(input.episodes, self.n_internal_units);
-
         let internal_weights = ClassicESNModel::internal_weights(
             self.n_internal_units,
             self.connectivity,
@@ -149,16 +152,79 @@ impl RcModel {
             let state_before_tanh = &internal_weights * previous_state.transpose()
                 + &input_weights * current_input.transpose();
             previous_state = state_before_tanh.map(|e| e.tanh()).transpose();
-            states.push(previous_state.clone());
+            for ep in 0..input.episodes {
+                states[ep].set_row(t, &state_before_tanh.transpose().row(ep));
+            }
         }
 
         states
     }
 
-    fn fit(&self, input: ModelInput) {
-        let mut coeff_tr: Vec<Vec<f64>> = vec![];
-        let mut biass_tr: Vec<Vec<f64>> = vec![];
-        let res_states = self.compute_state_matricies(input);
+    fn fit(&mut self, input: ModelInput, categories: DMatrix<f64>) {
+        let mut coeff_tr = vec![];
+        let mut biases_tr = vec![];
+        let res_states = self.compute_state_matricies(&input);
+        // Episode?
+        for (x, res_state) in input.inputs.iter().zip(res_states) {
+            let (coeff, intercept) = self.embedding.fit_multiple(
+                res_state.rows(0, input.time - 1).into_owned(),
+                x.rows(1, input.time - 1).into_owned(),
+            );
+            coeff_tr.push(DVector::from(coeff.as_slice().to_vec()).transpose());
+            biases_tr.push(intercept.transpose());
+        }
+        let coeff_tr = DMatrix::from_rows(&coeff_tr);
+        let biases_tr = DMatrix::from_rows(&biases_tr);
+
+        // TODO: chatgpt solution, prob bad
+        let input_repr = DMatrix::from_fn(
+            coeff_tr.nrows(),
+            coeff_tr.ncols() + biases_tr.ncols(),
+            |r, c| {
+                if c < coeff_tr.ncols() {
+                    coeff_tr[(r, c)]
+                } else {
+                    biases_tr[(r, c - coeff_tr.ncols())]
+                }
+            },
+        );
+
+        self.readout.fit_multiple(input_repr, categories);
+    }
+
+    fn predict(&mut self, input: ModelInput) -> Vec<usize> {
+        let mut coeff_tr = vec![];
+        let mut biases_tr = vec![];
+        let res_states = self.compute_state_matricies(&input);
+
+        for (x, res_state) in input.inputs.iter().zip(res_states) {
+            let (coeff, intercept) = self.embedding.fit_multiple(
+                res_state.rows(0, input.time - 1).into_owned(),
+                x.rows(1, input.time - 1).into_owned(),
+            );
+            coeff_tr.push(DVector::from(coeff.as_slice().to_vec()).transpose());
+            biases_tr.push(intercept.transpose());
+        }
+        let coeff_tr = DMatrix::from_rows(&coeff_tr);
+        let biases_tr = DMatrix::from_rows(&biases_tr);
+
+        let input_repr = DMatrix::from_fn(
+            coeff_tr.nrows(),
+            coeff_tr.ncols() + biases_tr.ncols(),
+            |r, c| {
+                if c < coeff_tr.ncols() {
+                    coeff_tr[(r, c)]
+                } else {
+                    biases_tr[(r, c - coeff_tr.ncols())]
+                }
+            },
+        );
+
+        let logits = self.readout.predict(input_repr);
+        logits
+            .row_iter()
+            .map(|row| row.transpose().argmax().0)
+            .collect::<Vec<_>>()
     }
 }
 
@@ -172,12 +238,11 @@ fn res(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 #[cfg(test)]
 mod test {
-    use core::f64;
-
     use super::ModelInput;
     use crate::{esn::RcModel, ridge::RidgeRegression};
     use matfile::{Array, NumericData};
     use nalgebra::DMatrix;
+    use smartcore::preprocessing::categorical::OneHotEncoder;
 
     fn extract_double(data: Option<&Array>) -> Vec<f64> {
         let data = data.unwrap();
@@ -213,6 +278,17 @@ mod test {
         }
     }
 
+    // kinda retarded but whatever
+    fn one_hot_encode(input: Vec<f64>) -> DMatrix<f64> {
+        let categories = input.iter().map(|i| i.round() as u64).collect::<Vec<_>>();
+        let max_category = *categories.iter().max().unwrap();
+        let mut encoded: DMatrix<f64> = DMatrix::zeros(categories.len(), max_category as usize);
+        for (i, c) in categories.iter().enumerate() {
+            encoded.row_mut(i)[*c as usize - 1] = 1.;
+        }
+        return encoded;
+    }
+
     // This example reproduces the classification example from the Multivariate classification
     // example. Ridge regression is also implemented by hand as I do not trust the already existing
     // implementations
@@ -227,16 +303,21 @@ mod test {
         let Ytr = extract_double(mat_file.find_by_name("Y"));
         let Yte = extract_double(mat_file.find_by_name("Yte"));
 
-        let rc_model = RcModel {
+        let mut rc_model = RcModel {
             n_internal_units: 500,
             connectivity: 0.3,
             spectral_radius: 0.99,
             input_scaling: 0.2,
             embedding: RidgeRegression::new(1.),
+            readout: RidgeRegression::new(1.),
         };
 
-        let res_states = rc_model.compute_state_matricies(Xtr);
-        let mut coeff_tr: Vec<Vec<f64>> = vec![];
-        let mut biass_tr: Vec<Vec<f64>> = vec![];
+        let Ytr = one_hot_encode(Ytr);
+        let Yte = one_hot_encode(Yte);
+        rc_model.fit(Xtr, Ytr);
+        let pred = rc_model.predict(Xte);
+        println!("{pred:?}");
+
+        // println!("{Yte:?}");
     }
 }
