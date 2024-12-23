@@ -26,10 +26,13 @@ mod test {
     use crate::{esn::rc::RcModel, ridge::RidgeRegression};
     use matfile::{Array, NumericData};
     use nalgebra::{DMatrix, DVector};
+    use smartcore::{
+        linalg::basic::arrays::Array1,
+        metrics::{f1::F1, Metrics},
+    };
 
     fn extract_double(data: Option<&Array>) -> Vec<f64> {
         let data = data.unwrap();
-        let size = data.size();
         let NumericData::Double { real, .. } = data.data() else {
             panic!()
         };
@@ -118,13 +121,14 @@ mod test {
         rc_model.esn_model.set_input_weights(&Xtr);
 
         let Ytr = one_hot_encode(Ytr);
-        let Yte = one_hot_encode(Yte);
 
         rc_model.fit(Xtr, Ytr);
-
-        let pred = rc_model.predict(Xte);
-        println!("{pred:?}");
-
-        // println!("{Yte:?}");
+        let pred = rc_model
+            .predict(Xte)
+            .iter()
+            .map(|x| *x as f64 + 1.)
+            .collect::<Vec<_>>();
+        let f1 = F1::new_with(1.).get_score(&Yte, &pred);
+        println!("f1: {f1:?}");
     }
 }
