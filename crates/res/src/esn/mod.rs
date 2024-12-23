@@ -25,7 +25,7 @@ mod test {
     use super::ModelInput;
     use crate::{esn::rc::RcModel, ridge::RidgeRegression};
     use matfile::{Array, NumericData};
-    use nalgebra::DMatrix;
+    use nalgebra::{DMatrix, DVector};
 
     fn extract_double(data: Option<&Array>) -> Vec<f64> {
         let data = data.unwrap();
@@ -43,12 +43,29 @@ mod test {
             panic!()
         };
 
-        let inputs = (0..size[0])
+        let idx = real
+            .iter()
+            .enumerate()
+            .find(|(_, x)| **x == 0.8872544827535088);
+
+        let total_ep = size[0];
+        let total_time = size[1];
+        let total_vars = size[2];
+
+        // This is bad
+        let inputs = (0..total_ep)
             .map(|ep| {
-                DMatrix::from_row_slice(
-                    size[1],
-                    size[2],
-                    &real[ep * size[1] * size[2]..(ep + 1) * size[1] * size[2]],
+                DMatrix::from_rows(
+                    &(0..total_time)
+                        .map(|t| {
+                            DVector::from_iterator(
+                                total_vars,
+                                (0..total_vars)
+                                    .map(|v| real[v * total_ep * total_time + t * total_ep + ep]),
+                            )
+                            .transpose()
+                        })
+                        .collect::<Vec<_>>(),
                 )
             })
             .collect::<Vec<_>>();
@@ -83,6 +100,8 @@ mod test {
         // [T]
         let Xtr = extract_model_input(mat_file.find_by_name("X"));
         let Ytr = extract_double(mat_file.find_by_name("Y"));
+
+        // println!("{:?}", Xtr.inputs[0].shape());
 
         let Xte = extract_model_input(mat_file.find_by_name("Xte"));
         let Yte = extract_double(mat_file.find_by_name("Yte"));

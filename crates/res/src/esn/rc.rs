@@ -41,9 +41,6 @@ impl RcModel {
 
         for t in 0..input.time {
             let current_input = input.input_at_time(t);
-            if t == 0 {
-                println!("{}", current_input.row(0));
-            }
             previous_state = self.esn_model.integrate(current_input, previous_state);
             for ep in 0..input.episodes {
                 states[ep].set_row(t, &previous_state.row(ep));
