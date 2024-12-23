@@ -1,4 +1,4 @@
-mod esn;
+pub mod esn;
 mod ridge;
 
 use nalgebra::{clamp, DMatrix, DVector};

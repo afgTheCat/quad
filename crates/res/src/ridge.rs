@@ -21,7 +21,6 @@ impl RidgeRegression {
     }
 
     pub fn fit(&mut self, X: &DMatrix<f64>, y: DVector<f64>, save: bool) -> (DVector<f64>, f64) {
-        // TODO: this is bad
         let y_mean = y.mean();
         // TODO: investigate why DVector::col_mean does not work
         let x_mean = DVector::from(X.column_iter().map(|col| col.mean()).collect::<Vec<_>>());
