@@ -1,33 +1,33 @@
-use core::f64;
-
+use crate::ridge::RidgeRegression;
 use nalgebra::{DMatrix, DVector};
-use pyo3::prelude::*;
 use rand::{
     distributions::{Bernoulli, Uniform},
     prelude::Distribution,
     thread_rng,
 };
 
-use crate::ridge::RidgeRegression;
-
-// TODO: const generics
-#[pyclass]
 pub struct ClassicESNModel {
+    n_internal_units: usize,
+    input_scaling: f64,
     internal_weights: DMatrix<f64>,
     input_weights: Option<DMatrix<f64>>,
-    bias_vector: DVector<f64>,
 }
 
 impl ClassicESNModel {
-    // This is pretty much the reservoir
-    pub fn integrate(&self, input: DVector<f64>, state: DVector<f64>) -> DVector<f64> {
-        let Some(input_weights) = self.input_weights.as_ref() else {
-            panic!()
-        };
-        let state_before_tanh = &self.internal_weights * state.transpose()
-            + input_weights * input.transpose()
-            + &self.bias_vector;
-        state_before_tanh.map(|e| e.tanh())
+    fn new(
+        n_internal_units: usize,
+        connectivity: f64,
+        spectral_radius: f64,
+        input_scaling: f64,
+    ) -> Self {
+        let internal_weights =
+            Self::internal_weights(n_internal_units, connectivity, spectral_radius);
+        Self {
+            input_scaling,
+            n_internal_units,
+            internal_weights,
+            input_weights: None,
+        }
     }
 
     fn internal_weights(
@@ -81,26 +81,23 @@ impl ClassicESNModel {
             }
         })
     }
-}
 
-#[pymethods]
-impl ClassicESNModel {
-    #[new]
-    fn new(n_internal_units: usize) -> PyResult<Self> {
-        let internal_weights = Self::internal_weights(n_internal_units, 0.3, 0.99);
-        let bias_vector = DVector::<f64>::zeros(n_internal_units);
-        Ok(Self {
-            internal_weights,
-            bias_vector,
-            input_weights: None,
-        })
+    fn set_input_weights(&mut self, input: &ModelInput) {
+        self.input_weights = Some(Self::input_weights(
+            self.n_internal_units,
+            input.vars,
+            self.input_scaling,
+        ));
     }
 
-    fn next(&self, input: Vec<f64>, state: Vec<f64>) -> PyResult<Vec<f64>> {
-        let input = DVector::from_vec(input);
-        let state = DVector::from_vec(state);
-        let new_state = self.integrate(input, state);
-        Ok(new_state.data.as_vec().clone())
+    fn integrate(
+        &mut self,
+        current_input: DMatrix<f64>,
+        previous_state: DMatrix<f64>,
+    ) -> DMatrix<f64> {
+        let state_before_tanh = &self.internal_weights * previous_state.transpose()
+            + self.input_weights.as_ref().unwrap() * current_input.transpose();
+        state_before_tanh.map(|e| e.tanh()).transpose()
     }
 }
 
@@ -124,36 +121,46 @@ impl ModelInput {
 
 // TODO: we should be able to reproduce this
 struct RcModel {
-    n_internal_units: usize,
-    connectivity: f64,
-    spectral_radius: f64,
-    input_scaling: f64,
+    esn_model: ClassicESNModel,
     embedding: RidgeRegression,
     readout: RidgeRegression,
 }
 
 impl RcModel {
-    // TODO: kinda slow, we can improve it
-    fn compute_state_matricies(&self, input: &ModelInput) -> Vec<DMatrix<f64>> {
-        let mut states: Vec<DMatrix<f64>> =
-            vec![DMatrix::zeros(input.time, self.n_internal_units); input.episodes];
-        let mut previous_state: DMatrix<f64> =
-            DMatrix::zeros(input.episodes, self.n_internal_units);
-        let internal_weights = ClassicESNModel::internal_weights(
-            self.n_internal_units,
-            self.connectivity,
-            self.spectral_radius,
+    fn new(
+        n_internal_units: usize,
+        connectivity: f64,
+        spectral_radius: f64,
+        input_scaling: f64,
+        embedding: RidgeRegression,
+        readout: RidgeRegression,
+    ) -> Self {
+        let esn_model = ClassicESNModel::new(
+            n_internal_units,
+            connectivity,
+            spectral_radius,
+            input_scaling,
         );
-        let input_weights =
-            ClassicESNModel::input_weights(self.n_internal_units, input.vars, self.input_scaling);
+        Self {
+            esn_model,
+            embedding,
+            readout,
+        }
+    }
+
+    // TODO: kinda slow, we can improve it
+    fn compute_state_matricies(&mut self, input: &ModelInput) -> Vec<DMatrix<f64>> {
+        let n_internal_units = self.esn_model.n_internal_units;
+        let mut states: Vec<DMatrix<f64>> =
+            vec![DMatrix::zeros(input.time, n_internal_units); input.episodes];
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(input.episodes, n_internal_units);
+        self.esn_model.set_input_weights(input);
 
         for t in 0..input.time {
             let current_input = input.input_at_time(t);
-            let state_before_tanh = &internal_weights * previous_state.transpose()
-                + &input_weights * current_input.transpose();
-            previous_state = state_before_tanh.map(|e| e.tanh()).transpose();
+            previous_state = self.esn_model.integrate(current_input, previous_state);
             for ep in 0..input.episodes {
-                states[ep].set_row(t, &state_before_tanh.transpose().row(ep));
+                states[ep].set_row(t, &previous_state.row(ep));
             }
         }
 
@@ -228,21 +235,12 @@ impl RcModel {
     }
 }
 
-#[pymodule]
-fn res(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // pyo3_log::init();
-    m.add_class::<ClassicESNModel>()?;
-    // m.add_class::<MultiModel>()?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod test {
     use super::ModelInput;
     use crate::{esn::RcModel, ridge::RidgeRegression};
     use matfile::{Array, NumericData};
     use nalgebra::DMatrix;
-    use smartcore::preprocessing::categorical::OneHotEncoder;
 
     fn extract_double(data: Option<&Array>) -> Vec<f64> {
         let data = data.unwrap();
@@ -299,22 +297,25 @@ mod test {
 
         // [T]
         let Xtr = extract_model_input(mat_file.find_by_name("X"));
-        let Xte = extract_model_input(mat_file.find_by_name("Xte"));
         let Ytr = extract_double(mat_file.find_by_name("Y"));
+
+        let Xte = extract_model_input(mat_file.find_by_name("Xte"));
         let Yte = extract_double(mat_file.find_by_name("Yte"));
 
-        let mut rc_model = RcModel {
-            n_internal_units: 500,
-            connectivity: 0.3,
-            spectral_radius: 0.99,
-            input_scaling: 0.2,
-            embedding: RidgeRegression::new(1.),
-            readout: RidgeRegression::new(1.),
-        };
+        let mut rc_model = RcModel::new(
+            500,
+            0.3,
+            0.99,
+            0.2,
+            RidgeRegression::new(1.),
+            RidgeRegression::new(1.),
+        );
 
         let Ytr = one_hot_encode(Ytr);
         let Yte = one_hot_encode(Yte);
+
         rc_model.fit(Xtr, Ytr);
+
         let pred = rc_model.predict(Xte);
         println!("{pred:?}");
 
