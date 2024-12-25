@@ -1,5 +1,7 @@
 use std::{ops::Index, time::Duration};
 
+use nalgebra::DVector;
+
 pub mod bindings;
 pub mod controllers;
 
@@ -46,6 +48,54 @@ pub struct FlightControllerUpdate {
     pub battery_update: BatteryUpdate,
     pub gyro_update: GyroUpdate,
     pub channels: Channels,
+}
+
+impl FlightControllerUpdate {
+    pub fn to_rc_input(&self) -> DVector<f64> {
+        let FlightControllerUpdate {
+            battery_update:
+                BatteryUpdate {
+                    bat_voltage_sag,
+                    bat_voltage,
+                    amperage,
+                    m_ah_drawn,
+                    ..
+                },
+            gyro_update:
+                GyroUpdate {
+                    rotation,
+                    linear_acc,
+                    angular_velocity,
+                },
+            channels:
+                Channels {
+                    throttle,
+                    roll,
+                    pitch,
+                    yaw,
+                },
+        } = self;
+        DVector::from_row_slice(&[
+            *bat_voltage_sag,
+            *bat_voltage,
+            *amperage,
+            *m_ah_drawn,
+            rotation[0],
+            rotation[1],
+            rotation[2],
+            rotation[3],
+            linear_acc[0],
+            linear_acc[1],
+            linear_acc[2],
+            angular_velocity[0],
+            angular_velocity[1],
+            angular_velocity[2],
+            *throttle,
+            *roll,
+            *yaw,
+            *pitch,
+        ])
+    }
 }
 
 pub trait FlightController: Send + Sync + 'static {

@@ -1,5 +1,8 @@
 pub mod rc;
+pub mod readout;
+pub mod representation;
 pub mod reservoir;
+
 use nalgebra::DMatrix;
 
 pub struct ModelInput {
@@ -10,7 +13,7 @@ pub struct ModelInput {
 }
 
 impl ModelInput {
-    // return dim: [EPISIDES, VARS]
+    // return dim: [EPISODES, VARS]
     fn input_at_time(&self, t: usize) -> DMatrix<f64> {
         let mut input_at_t: DMatrix<f64> = DMatrix::zeros(self.episodes, self.vars);
         for (i, ep) in self.inputs.iter().enumerate() {
@@ -18,6 +21,18 @@ impl ModelInput {
         }
         input_at_t
     }
+}
+
+pub trait RcInput {
+    // number of episodes, time steps and vars
+    fn shape(&self) -> (usize, usize, usize);
+    // input at time t
+    fn input_at_time(&self, t: usize) -> DMatrix<f64>;
+}
+
+struct ReservoirStates {
+    pub states: Vec<DMatrix<f64>>,
+    pub time: usize,
 }
 
 #[cfg(test)]
@@ -46,16 +61,10 @@ mod test {
             panic!()
         };
 
-        let idx = real
-            .iter()
-            .enumerate()
-            .find(|(_, x)| **x == 0.8872544827535088);
-
         let total_ep = size[0];
         let total_time = size[1];
         let total_vars = size[2];
 
-        // This is bad
         let inputs = (0..total_ep)
             .map(|ep| {
                 DMatrix::from_rows(
@@ -97,28 +106,19 @@ mod test {
     // implementations
     #[test]
     fn reproduce_test() {
-        let file = std::fs::File::open("/home/gaborfeher/ascent/quad/data/JpVow.mat").unwrap();
+        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
         // [T]
         let Xtr = extract_model_input(mat_file.find_by_name("X"));
         let Ytr = extract_double(mat_file.find_by_name("Y"));
 
-        // println!("{:?}", Xtr.inputs[0].shape());
-
         let Xte = extract_model_input(mat_file.find_by_name("Xte"));
         let Yte = extract_double(mat_file.find_by_name("Yte"));
 
-        let mut rc_model = RcModel::new(
-            500,
-            0.3,
-            0.99,
-            0.2,
-            RidgeRegression::new(1.),
-            RidgeRegression::new(1.),
-        );
+        let mut rc_model = RcModel::new(500, 0.3, 0.99, 0.2, 1., RidgeRegression::new(1.));
 
-        rc_model.esn_model.set_input_weights(&Xtr);
+        rc_model.esn.set_input_weights(&Xtr);
 
         let Ytr = one_hot_encode(Ytr);
 
