@@ -97,19 +97,41 @@ impl Reservoir {
             + self.input_weights.as_ref().unwrap() * current_input.transpose();
         state_before_tanh.map(|e| e.tanh()).transpose()
     }
+
+    pub fn compute_state_matricies(&mut self, input: &ModelInput) -> Vec<DMatrix<f64>> {
+        let n_internal_units = self.n_internal_units;
+        let mut states: Vec<DMatrix<f64>> =
+            vec![DMatrix::zeros(input.time, n_internal_units); input.episodes];
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(input.episodes, n_internal_units);
+
+        for t in 0..input.time {
+            let current_input = input.input_at_time(t);
+            previous_state = self.integrate(current_input, previous_state);
+            for ep in 0..input.episodes {
+                states[ep].set_row(t, &previous_state.row(ep));
+            }
+        }
+
+        states
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::esn::ModelInput;
+    use crate::esn::{extract_model_input, ModelInput};
 
     #[test]
     fn misintegration_test() {
-        let intput = ModelInput {
-            episodes: 1,
-            time: 1,
-            vars: 5,
-            inputs: vec![],
-        };
+        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
+        let mat_file = matfile::MatFile::parse(file).unwrap();
+
+        // [T]
+        let Xtr = extract_model_input(mat_file.find_by_name("X"));
+        // let intput = ModelInput {
+        //     episodes: 1,
+        //     time: 1,
+        //     vars: 5,
+        //     inputs: vec![],
+        // };
     }
 }

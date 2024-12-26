@@ -1,5 +1,5 @@
 use super::{
-    representation::{self, LastStateRepr, OutputRepr, Repr},
+    representation::{LastStateRepr, Repr},
     reservoir::Reservoir,
     ModelInput,
 };
@@ -38,31 +38,14 @@ impl RcModel {
         }
     }
 
-    fn compute_state_matricies(&mut self, input: &ModelInput) -> Vec<DMatrix<f64>> {
-        let n_internal_units = self.esn.n_internal_units;
-        let mut states: Vec<DMatrix<f64>> =
-            vec![DMatrix::zeros(input.time, n_internal_units); input.episodes];
-        let mut previous_state: DMatrix<f64> = DMatrix::zeros(input.episodes, n_internal_units);
-
-        for t in 0..input.time {
-            let current_input = input.input_at_time(t);
-            previous_state = self.esn.integrate(current_input, previous_state);
-            for ep in 0..input.episodes {
-                states[ep].set_row(t, &previous_state.row(ep));
-            }
-        }
-
-        states
-    }
-
     pub fn fit(&mut self, input: ModelInput, categories: DMatrix<f64>) {
-        let res_states = self.compute_state_matricies(&input);
+        let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
         self.readout.fit_multiple(input_repr, categories);
     }
 
     pub fn predict(&mut self, input: ModelInput) -> Vec<usize> {
-        let res_states = self.compute_state_matricies(&input);
+        let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
         let logits = self.readout.predict(input_repr);
         logits

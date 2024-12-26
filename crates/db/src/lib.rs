@@ -241,10 +241,5 @@ mod test {
             channels: Channels::default(),
         };
         db.write_flight_logs("02855edd-0e00-467e-b352-36b9e8b323b4", &vec![flight_log])
-
-        // let data = db.get_simuation_data("02855edd-0e00-467e-b352-36b9e8b323b4");
-        // println!("{data:?}");
     }
 }
-
-// 1|02855edd-0e00-467e-b352-36b9e8b323b4|0.0|0.0|0.0|0.0|4.2|4.2|0.0|0.0|0.0|4.0|1|0.0|0.0|0.0|0.0|0.0|0.0|0.0|0.0|0.0|-1.0|0.0|0.0|0.0|
