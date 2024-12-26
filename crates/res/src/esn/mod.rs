@@ -10,6 +10,7 @@ pub struct ModelInput {
     pub episodes: usize,
     pub time: usize,
     pub vars: usize,
+    // per episode
     pub inputs: Vec<DMatrix<f64>>,
 }
 
@@ -21,6 +22,11 @@ impl ModelInput {
             input_at_t.set_row(i, &ep.row(t));
         }
         input_at_t
+    }
+
+    pub fn truncate(&mut self) {
+        self.episodes = 1;
+        self.inputs = vec![self.inputs[0].clone()];
     }
 }
 
@@ -93,7 +99,6 @@ fn one_hot_encode(input: Vec<f64>) -> DMatrix<f64> {
 
 #[cfg(test)]
 mod test {
-    use super::ModelInput;
     use crate::{
         esn::{extract_double, extract_model_input, one_hot_encode, rc::RcModel},
         ridge::RidgeRegression,
@@ -109,7 +114,9 @@ mod test {
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
         // [T]
-        let Xtr = extract_model_input(mat_file.find_by_name("X"));
+        let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
+        // NOTE:
+        Xtr.truncate();
         let Ytr = extract_double(mat_file.find_by_name("Y"));
 
         let Xte = extract_model_input(mat_file.find_by_name("Xte"));
@@ -117,17 +124,17 @@ mod test {
 
         let mut rc_model = RcModel::new(500, 0.3, 0.99, 0.2, 1., RidgeRegression::new(1.));
 
-        rc_model.esn.set_input_weights(&Xtr);
+        rc_model.esn.set_input_weights(Xtr.vars);
 
         let Ytr = one_hot_encode(Ytr);
 
         rc_model.fit(Xtr, Ytr);
-        let pred = rc_model
-            .predict(Xte)
-            .iter()
-            .map(|x| *x as f64 + 1.)
-            .collect::<Vec<_>>();
-        let f1 = F1::new_with(1.).get_score(&Yte, &pred);
-        println!("f1: {f1:?}");
+        // let pred = rc_model
+        //     .predict(Xte)
+        //     .iter()
+        //     .map(|x| *x as f64 + 1.)
+        //     .collect::<Vec<_>>();
+        // let f1 = F1::new_with(1.).get_score(&Yte, &pred);
+        // println!("f1: {f1:?}");
     }
 }

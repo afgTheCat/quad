@@ -80,14 +80,15 @@ impl Reservoir {
         })
     }
 
-    pub fn set_input_weights(&mut self, input: &ModelInput) {
+    pub fn set_input_weights(&mut self, nvars: usize) {
         self.input_weights = Some(Self::input_weights(
             self.n_internal_units,
-            input.vars,
+            nvars,
             self.input_scaling,
         ));
     }
 
+    // current input [episodes, vars]
     pub fn integrate(
         &mut self,
         current_input: DMatrix<f64>,
@@ -110,6 +111,7 @@ impl Reservoir {
             for ep in 0..input.episodes {
                 states[ep].set_row(t, &previous_state.row(ep));
             }
+            println!("{previous_state}")
         }
 
         states
@@ -118,20 +120,21 @@ impl Reservoir {
 
 #[cfg(test)]
 mod test {
-    use crate::esn::{extract_model_input, ModelInput};
+    use super::Reservoir;
+    use nalgebra::DMatrix;
 
     #[test]
     fn misintegration_test() {
-        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
-        let mat_file = matfile::MatFile::parse(file).unwrap();
-
-        // [T]
-        let Xtr = extract_model_input(mat_file.find_by_name("X"));
-        // let intput = ModelInput {
-        //     episodes: 1,
-        //     time: 1,
-        //     vars: 5,
-        //     inputs: vec![],
-        // };
+        let mut res = Reservoir::new(500, 0.2, 0.99, 0.2);
+        res.set_input_weights(10);
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(1, 500);
+        let current_input = DMatrix::zeros(1, 10).map(|x: f64| 10.);
+        let mut states = vec![];
+        for t in 0..29 {
+            let state = res.integrate(current_input.clone(), previous_state);
+            states.push(state.clone());
+            previous_state = state;
+        }
+        println!("{}", states[15]);
     }
 }
