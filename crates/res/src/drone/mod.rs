@@ -1,14 +1,11 @@
-use crate::{
-    esn::{reservoir::Reservoir, RcInput},
-    ridge::RidgeRegression,
-};
+use crate::{esn::Reservoir, input::RcInput};
 use flight_controller::FlightControllerUpdate;
-use nalgebra::{DMatrix, DVector};
+use nalgebra::DMatrix;
 
 pub struct DroneRc {
     pub esn: Reservoir,
-    pub embedding: RidgeRegression,
-    pub readout: RidgeRegression,
+    // pub embedding: RidgeRegression,
+    // pub readout: RidgeRegression,
 }
 
 // All the data that belong to a flight trajectory. [T, V]
@@ -47,8 +44,8 @@ impl DroneRc {
         connectivity: f64,
         spectral_radius: f64,
         input_scaling: f64,
-        embedding: RidgeRegression,
-        readout: RidgeRegression,
+        // embedding: RidgeRegression,
+        // readout: RidgeRegression,
     ) -> Self {
         let esn_model = Reservoir::new(
             n_internal_units,
@@ -58,8 +55,8 @@ impl DroneRc {
         );
         Self {
             esn: esn_model,
-            embedding,
-            readout,
+            // embedding,
+            // readout,
         }
     }
 

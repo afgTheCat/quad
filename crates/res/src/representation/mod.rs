@@ -1,5 +1,5 @@
-use super::ModelInput;
 use crate::ridge::RidgeRegression;
+use crate::ModelInput;
 use nalgebra::DMatrix;
 use nalgebra::DVector;
 
@@ -62,9 +62,7 @@ impl Repr for LastStateRepr {
             .iter()
             .map(|ep| ep.row(input.time - 1))
             .collect::<Vec<_>>();
-
-        let ok = DMatrix::from_rows(&last_states);
-        ok
+        DMatrix::from_rows(&last_states)
     }
 }
 

@@ -1,110 +1,182 @@
-pub mod rc;
-pub mod readout;
-pub mod representation;
-pub mod reservoir;
+use nalgebra::{Complex, ComplexField, DMatrix};
+use rand::thread_rng;
+use rand_distr::{Bernoulli, Distribution, Uniform};
 
-use matfile::{Array, NumericData};
-use nalgebra::{DMatrix, DVector};
+use crate::{
+    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
+    ridge::RidgeRegression,
+    ModelInput,
+};
 
-pub struct ModelInput {
-    pub episodes: usize,
-    pub time: usize,
-    pub vars: usize,
-    // per episode
-    pub inputs: Vec<DMatrix<f64>>,
+pub struct Reservoir {
+    pub n_internal_units: usize,
+    pub input_scaling: f64,
+    pub internal_weights: DMatrix<f64>,
+    pub input_weights: Option<DMatrix<f64>>,
 }
 
-impl ModelInput {
-    // return dim: [EPISODES, VARS]
-    fn input_at_time(&self, t: usize) -> DMatrix<f64> {
-        let mut input_at_t: DMatrix<f64> = DMatrix::zeros(self.episodes, self.vars);
-        for (i, ep) in self.inputs.iter().enumerate() {
-            input_at_t.set_row(i, &ep.row(t));
+impl Reservoir {
+    pub fn new(
+        n_internal_units: usize,
+        connectivity: f64,
+        spectral_radius: f64,
+        input_scaling: f64,
+    ) -> Self {
+        let internal_weights =
+            Self::internal_weights(n_internal_units, connectivity, spectral_radius);
+        Self {
+            input_scaling,
+            n_internal_units,
+            internal_weights,
+            input_weights: None,
         }
-        input_at_t
     }
 
-    pub fn truncate(&mut self) {
-        self.episodes = 1;
-        self.inputs = vec![self.inputs[0].clone()];
+    fn internal_weights(
+        n_internal_units: usize,
+        connectivity: f64,
+        spectral_radius: f64,
+    ) -> DMatrix<f64> {
+        assert!(
+            connectivity > 0.0 && connectivity <= 1.0,
+            "Connectivity must be in (0, 1]."
+        );
+
+        // Generate a random sparse matrix with connectivity
+        let mut rng = thread_rng();
+        let uniform_dist = Uniform::new(-0.5, 0.5);
+        let bernoulli = Bernoulli::new(connectivity).unwrap();
+        let mut internal_weights = DMatrix::from_fn(n_internal_units, n_internal_units, |_, _| {
+            if bernoulli.sample(&mut rng) {
+                uniform_dist.sample(&mut rng)
+            } else {
+                0.0
+            }
+        });
+
+        // Compute eigenvalues to find the spectral radius
+        // let eigenvalues = internal_weights.clone().eigenvalues().unwrap();
+        let eigenvalues = internal_weights.clone().schur().complex_eigenvalues();
+        let max_eigenvalue = eigenvalues
+            .iter()
+            .cloned()
+            .map(Complex::abs)
+            .fold(f64::NEG_INFINITY, f64::max);
+
+        // Scale matrix to match the desired spectral radius
+        internal_weights /= max_eigenvalue / spectral_radius;
+
+        internal_weights
     }
-}
 
-pub trait RcInput {
-    // number of episodes, time steps and vars
-    fn shape(&self) -> (usize, usize, usize);
-    // input at time t
-    fn input_at_time(&self, t: usize) -> DMatrix<f64>;
-}
-
-struct ReservoirStates {
-    pub states: Vec<DMatrix<f64>>,
-    pub time: usize,
-}
-
-fn extract_double(data: Option<&Array>) -> Vec<f64> {
-    let data = data.unwrap();
-    let NumericData::Double { real, .. } = data.data() else {
-        panic!()
-    };
-    real.clone()
-}
-
-fn extract_model_input(data: Option<&Array>) -> ModelInput {
-    let data = data.unwrap();
-    let size = data.size();
-    let NumericData::Double { real, .. } = data.data() else {
-        panic!()
-    };
-
-    let total_ep = size[0];
-    let total_time = size[1];
-    let total_vars = size[2];
-
-    let inputs = (0..total_ep)
-        .map(|ep| {
-            DMatrix::from_rows(
-                &(0..total_time)
-                    .map(|t| {
-                        DVector::from_iterator(
-                            total_vars,
-                            (0..total_vars)
-                                .map(|v| real[v * total_ep * total_time + t * total_ep + ep]),
-                        )
-                        .transpose()
-                    })
-                    .collect::<Vec<_>>(),
-            )
+    fn input_weights(
+        n_internal_units: usize,
+        variables: usize,
+        input_scaling: f64,
+    ) -> DMatrix<f64> {
+        let mut rng = thread_rng();
+        let bernoulli = Bernoulli::new(0.5).unwrap();
+        DMatrix::from_fn(n_internal_units, variables, |_, _| {
+            if bernoulli.sample(&mut rng) {
+                1.0 * input_scaling
+            } else {
+                -1. * input_scaling
+            }
         })
-        .collect::<Vec<_>>();
+    }
 
-    ModelInput {
-        episodes: size[0],
-        time: size[1],
-        vars: size[2],
-        inputs,
+    pub fn set_input_weights(&mut self, nvars: usize) {
+        self.input_weights = Some(Self::input_weights(
+            self.n_internal_units,
+            nvars,
+            self.input_scaling,
+        ));
+    }
+
+    // current input [episodes, vars]
+    pub fn integrate(
+        &mut self,
+        current_input: DMatrix<f64>,
+        previous_state: DMatrix<f64>,
+    ) -> DMatrix<f64> {
+        let state_before_tanh = &self.internal_weights * previous_state.transpose()
+            + self.input_weights.as_ref().unwrap() * current_input.transpose();
+        state_before_tanh.map(|e| e.tanh()).transpose()
+    }
+
+    pub fn compute_state_matricies(&mut self, input: &ModelInput) -> Vec<DMatrix<f64>> {
+        let n_internal_units = self.n_internal_units;
+        let mut states: Vec<DMatrix<f64>> =
+            vec![DMatrix::zeros(input.time, n_internal_units); input.episodes];
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(input.episodes, n_internal_units);
+
+        for t in 0..input.time {
+            let current_input = input.input_at_time(t);
+            previous_state = self.integrate(current_input, previous_state);
+            for ep in 0..input.episodes {
+                states[ep].set_row(t, &previous_state.row(ep));
+            }
+        }
+
+        states
     }
 }
 
-// kinda retarded but whatever
-fn one_hot_encode(input: Vec<f64>) -> DMatrix<f64> {
-    let categories = input.iter().map(|i| i.round() as u64).collect::<Vec<_>>();
-    let max_category = *categories.iter().max().unwrap();
-    let mut encoded: DMatrix<f64> = DMatrix::zeros(categories.len(), max_category as usize);
-    for (i, c) in categories.iter().enumerate() {
-        encoded.row_mut(i)[*c as usize - 1] = 1.;
+pub struct RcModel {
+    pub esn: Reservoir,
+    representation: Box<dyn Repr>,
+    pub readout: RidgeRegression,
+}
+
+// Recresation of 'Reservoir computing approaches for representation and classification of multivariate time series'
+impl RcModel {
+    pub fn new(
+        n_internal_units: usize,
+        connectivity: f64,
+        spectral_radius: f64,
+        input_scaling: f64,
+        representation: RepresentationType,
+        readout: RidgeRegression,
+    ) -> Self {
+        let esn = Reservoir::new(
+            n_internal_units,
+            connectivity,
+            spectral_radius,
+            input_scaling,
+        );
+        let representation: Box<dyn Repr> = match representation {
+            RepresentationType::LastState => Box::new(LastStateRepr::new()),
+            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        };
+        Self {
+            esn,
+            representation,
+            readout,
+        }
     }
-    return encoded;
+
+    pub fn fit(&mut self, input: ModelInput, categories: DMatrix<f64>) {
+        let res_states = self.esn.compute_state_matricies(&input);
+        let input_repr = self.representation.repr(input, res_states);
+        self.readout.fit_multiple(input_repr, categories);
+    }
+
+    pub fn predict(&mut self, input: ModelInput) -> Vec<usize> {
+        let res_states = self.esn.compute_state_matricies(&input);
+        let input_repr = self.representation.repr(input, res_states);
+        let logits = self.readout.predict(input_repr);
+        logits
+            .row_iter()
+            .map(|row| row.transpose().argmax().0)
+            .collect::<Vec<_>>()
+    }
 }
 
 #[cfg(test)]
 mod test {
     use crate::{
-        esn::{
-            extract_double, extract_model_input, one_hot_encode, rc::RcModel,
-            representation::RepresentationType,
-        },
-        ridge::RidgeRegression,
+        esn::RcModel, extract_double, extract_model_input, one_hot_encode,
+        representation::RepresentationType, ridge::RidgeRegression,
     };
     use smartcore::metrics::{f1::F1, Metrics};
 
@@ -128,7 +200,8 @@ mod test {
             0.3,
             0.99,
             0.2,
-            RepresentationType::Output(1.),
+            // RepresentationType::Output(1.),
+            RepresentationType::LastState,
             RidgeRegression::new(1.),
         );
 
