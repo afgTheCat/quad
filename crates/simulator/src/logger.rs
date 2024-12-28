@@ -1,4 +1,4 @@
-use db::FlightLog;
+use db::FlightLogEvent;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use std::time::Duration;
 
@@ -9,7 +9,7 @@ pub struct SimLogger {
     current_gyro: GyroUpdate,
     current_channels: Channels,
     pub simulation_id: Option<String>,
-    pub data: Vec<FlightLog>, // start_seconds, end_seconds, motor_input_1, motor_input_2, motor_input_3, motor_input_4
+    pub data: Vec<FlightLogEvent>, // start_seconds, end_seconds, motor_input_1, motor_input_2, motor_input_3, motor_input_4
 }
 
 impl SimLogger {
@@ -43,7 +43,7 @@ impl SimLogger {
         next_gyro_udpate: GyroUpdate,
         next_channels: Channels,
     ) {
-        self.data.push(FlightLog {
+        self.data.push(FlightLogEvent {
             range: self.current_time_step..next_time_step,
             motor_input: self.current_input.clone(),
             battery_update: self.current_battery_update.clone(),

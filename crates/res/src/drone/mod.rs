@@ -1,4 +1,5 @@
 use crate::{esn::Reservoir, input::RcInput};
+use db::{FlightLog, FlightLogEvent};
 use flight_controller::FlightControllerUpdate;
 use nalgebra::DMatrix;
 
@@ -80,3 +81,5 @@ impl DroneRc {
 
     pub fn fit(&mut self, input: Box<dyn RcInput>) {}
 }
+
+pub fn fit_and_predict(flight_logs: FlightLog) {}

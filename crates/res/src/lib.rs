@@ -6,32 +6,9 @@ pub mod readout;
 pub mod representation;
 mod ridge;
 
+use input::ModelInput;
 use matfile::{Array, NumericData};
 use nalgebra::{DMatrix, DVector};
-
-pub struct ModelInput {
-    pub episodes: usize,
-    pub time: usize,
-    pub vars: usize,
-    // per episode
-    pub inputs: Vec<DMatrix<f64>>,
-}
-
-impl ModelInput {
-    // return dim: [EPISODES, VARS]
-    fn input_at_time(&self, t: usize) -> DMatrix<f64> {
-        let mut input_at_t: DMatrix<f64> = DMatrix::zeros(self.episodes, self.vars);
-        for (i, ep) in self.inputs.iter().enumerate() {
-            input_at_t.set_row(i, &ep.row(t));
-        }
-        input_at_t
-    }
-
-    pub fn truncate(&mut self) {
-        self.episodes = 1;
-        self.inputs = vec![self.inputs[0].clone()];
-    }
-}
 
 fn extract_double(data: Option<&Array>) -> Vec<f64> {
     let data = data.unwrap();

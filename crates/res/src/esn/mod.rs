@@ -1,11 +1,16 @@
+use matfile::MatFile;
 use nalgebra::{Complex, ComplexField, DMatrix};
 use rand::thread_rng;
 use rand_distr::{Bernoulli, Distribution, Uniform};
+use smartcore::metrics::{f1::F1, Metrics};
 
 use crate::{
+    extract_double,
+    extract_model_input,
+    input::RcInput,
+    one_hot_encode,
     representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
-    ridge::RidgeRegression,
-    ModelInput,
+    ridge::RidgeRegression, // ModelInput,
 };
 
 pub struct Reservoir {
@@ -104,16 +109,16 @@ impl Reservoir {
         state_before_tanh.map(|e| e.tanh()).transpose()
     }
 
-    pub fn compute_state_matricies(&mut self, input: &ModelInput) -> Vec<DMatrix<f64>> {
+    pub fn compute_state_matricies(&mut self, input: &Box<dyn RcInput>) -> Vec<DMatrix<f64>> {
+        let (eps, time, _) = input.shape();
         let n_internal_units = self.n_internal_units;
-        let mut states: Vec<DMatrix<f64>> =
-            vec![DMatrix::zeros(input.time, n_internal_units); input.episodes];
-        let mut previous_state: DMatrix<f64> = DMatrix::zeros(input.episodes, n_internal_units);
+        let mut states: Vec<DMatrix<f64>> = vec![DMatrix::zeros(time, n_internal_units); eps];
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(eps, n_internal_units);
 
-        for t in 0..input.time {
+        for t in 0..time {
             let current_input = input.input_at_time(t);
             previous_state = self.integrate(current_input, previous_state);
-            for ep in 0..input.episodes {
+            for ep in 0..eps {
                 states[ep].set_row(t, &previous_state.row(ep));
             }
         }
@@ -155,13 +160,13 @@ impl RcModel {
         }
     }
 
-    pub fn fit(&mut self, input: ModelInput, categories: DMatrix<f64>) {
+    pub fn fit(&mut self, input: Box<dyn RcInput>, categories: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
         self.readout.fit_multiple(input_repr, categories);
     }
 
-    pub fn predict(&mut self, input: ModelInput) -> Vec<usize> {
+    pub fn predict(&mut self, input: Box<dyn RcInput>) -> Vec<usize> {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
         let logits = self.readout.predict(input_repr);
@@ -172,13 +177,28 @@ impl RcModel {
     }
 }
 
+// I guess we should have this a bit better
+pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) -> f64 {
+    let xtr = extract_model_input(mat_file.find_by_name("X"));
+    let ytr = one_hot_encode(extract_double(mat_file.find_by_name("Y")));
+
+    let xte = extract_model_input(mat_file.find_by_name("Xte"));
+    let yte = extract_double(mat_file.find_by_name("Yte"));
+
+    model.esn.set_input_weights(xtr.vars);
+    model.fit(Box::new(xtr), ytr);
+    let pred = model
+        .predict(Box::new(xte))
+        .iter()
+        .map(|x| *x as f64 + 1.)
+        .collect::<Vec<_>>();
+    F1::new_with(1.).get_score(&yte, &pred)
+}
+
 #[cfg(test)]
 mod test {
-    use crate::{
-        esn::RcModel, extract_double, extract_model_input, one_hot_encode,
-        representation::RepresentationType, ridge::RidgeRegression,
-    };
-    use smartcore::metrics::{f1::F1, Metrics};
+    use super::fit_and_predict;
+    use crate::{esn::RcModel, representation::RepresentationType, ridge::RidgeRegression};
 
     // This example reproduces the classification example from the Multivariate classification
     // example. Ridge regression is also implemented by hand as I do not trust the already existing
@@ -188,34 +208,17 @@ mod test {
         let file = std::fs::File::open("/home/gabor/ascent/quad/data/JpVow.mat").unwrap();
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
-        // [T]
-        let xtr = extract_model_input(mat_file.find_by_name("X"));
-        let ytr = extract_double(mat_file.find_by_name("Y"));
-
-        let xte = extract_model_input(mat_file.find_by_name("Xte"));
-        let yte = extract_double(mat_file.find_by_name("Yte"));
-
         let mut rc_model = RcModel::new(
             500,
             0.3,
             0.99,
             0.2,
             // RepresentationType::Output(1.),
-            RepresentationType::LastState,
+            RepresentationType::Output(1.),
             RidgeRegression::new(1.),
         );
 
-        rc_model.esn.set_input_weights(xtr.vars);
-
-        let ytr = one_hot_encode(ytr);
-
-        rc_model.fit(xtr, ytr);
-        let pred = rc_model
-            .predict(xte)
-            .iter()
-            .map(|x| *x as f64 + 1.)
-            .collect::<Vec<_>>();
-        let f1 = F1::new_with(1.).get_score(&yte, &pred);
+        let f1 = fit_and_predict(&mut rc_model, mat_file);
         println!("f1: {f1:?}");
     }
 }

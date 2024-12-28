@@ -3,6 +3,7 @@
 //! TODO: we probably want to autogenerate this at one point
 
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
+use nalgebra::DVector;
 use rusqlite::{params, Connection};
 use std::{ops::Range, sync::Mutex, time::Duration};
 
@@ -100,13 +101,72 @@ from flight_log where simulation_id = ?1 ORDER BY start_seconds
 const SELECT_SIMULATION_IDS: &str = "SELECT DISTINCT simulation_id FROM flight_log";
 
 #[derive(Debug, Clone)]
-pub struct FlightLog {
+pub struct FlightLogEvent {
     pub range: Range<Duration>,
     pub motor_input: MotorInput,
     pub battery_update: BatteryUpdate,
     pub gyro_update: GyroUpdate,
     pub channels: Channels,
 }
+
+impl FlightLogEvent {
+    pub fn to_rc_input(&self) -> DVector<f64> {
+        let FlightLogEvent {
+            battery_update:
+                BatteryUpdate {
+                    bat_voltage_sag,
+                    bat_voltage,
+                    amperage,
+                    m_ah_drawn,
+                    ..
+                },
+            gyro_update:
+                GyroUpdate {
+                    rotation,
+                    linear_acc,
+                    angular_velocity,
+                },
+            channels:
+                Channels {
+                    throttle,
+                    roll,
+                    pitch,
+                    yaw,
+                },
+            ..
+        } = self;
+        DVector::from_row_slice(&[
+            *bat_voltage_sag,
+            *bat_voltage,
+            *amperage,
+            *m_ah_drawn,
+            rotation[0],
+            rotation[1],
+            rotation[2],
+            rotation[3],
+            linear_acc[0],
+            linear_acc[1],
+            linear_acc[2],
+            angular_velocity[0],
+            angular_velocity[1],
+            angular_velocity[2],
+            *throttle,
+            *roll,
+            *yaw,
+            *pitch,
+        ])
+    }
+
+    pub fn to_rc_output(&self) -> DVector<f64> {
+        let FlightLogEvent {
+            motor_input: MotorInput { input },
+            ..
+        } = self;
+        DVector::from_row_slice(input)
+    }
+}
+
+pub struct FlightLog(Vec<FlightLogEvent>);
 
 pub struct AscentDb {
     conn: Mutex<Connection>,
@@ -121,7 +181,7 @@ impl AscentDb {
         }
     }
 
-    pub fn write_flight_logs(&self, simulation_id: &str, flight_logs: &[FlightLog]) {
+    pub fn write_flight_logs(&self, simulation_id: &str, flight_logs: &[FlightLogEvent]) {
         let mut conn = self.conn.lock().unwrap();
         // should be fast enough, but in the future we can do batch insert
         let tx = conn.transaction().unwrap();
@@ -175,14 +235,14 @@ impl AscentDb {
     }
 
     // TODO: add the simulation id here
-    pub fn get_simuation_data(&self, simulation_id: &str) -> Vec<FlightLog> {
+    pub fn get_simuation_data(&self, simulation_id: &str) -> FlightLog {
         let conn = self.conn.lock().unwrap();
         let mut statement = conn.prepare(SELECT_FLIGHT_LOGS_QUERY).unwrap();
-        statement
+        let events = statement
             .query_map([simulation_id], |r| {
                 let start_secs = Duration::from_secs_f64(r.get(0)?);
                 let end_secs = Duration::from_secs_f64(r.get(1)?);
-                Ok(FlightLog {
+                Ok(FlightLogEvent {
                     range: start_secs..end_secs,
                     motor_input: MotorInput {
                         input: [r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?],
@@ -209,7 +269,8 @@ impl AscentDb {
             })
             .unwrap()
             .map(Result::unwrap)
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+        FlightLog(events)
     }
 
     pub fn get_all_simulation_ids(&self) -> Vec<String> {
@@ -221,19 +282,23 @@ impl AscentDb {
             .map(Result::unwrap)
             .collect::<Vec<_>>()
     }
+
+    pub fn get_first_simulation(&self) -> FlightLog {
+        let simulation_ids = self.get_all_simulation_ids();
+        self.get_simuation_data(&simulation_ids[0])
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::{AscentDb, FlightLogEvent};
     use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
-
-    use crate::{AscentDb, FlightLog};
     use std::time::Duration;
 
     #[test]
     fn thing() {
         let db = AscentDb::new();
-        let flight_log = FlightLog {
+        let flight_log = FlightLogEvent {
             range: Duration::new(0, 0)..Duration::new(0, 0),
             motor_input: MotorInput::default(),
             battery_update: BatteryUpdate::default(),
