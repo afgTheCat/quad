@@ -94,6 +94,7 @@ impl Reservoir {
         current_input: DMatrix<f64>,
         previous_state: DMatrix<f64>,
     ) -> DMatrix<f64> {
+        let internal = &self.internal_weights * previous_state.transpose();
         let state_before_tanh = &self.internal_weights * previous_state.transpose()
             + self.input_weights.as_ref().unwrap() * current_input.transpose();
         state_before_tanh.map(|e| e.tanh()).transpose()
@@ -120,6 +121,8 @@ impl Reservoir {
 
 #[cfg(test)]
 mod test {
+    use crate::esn::extract_model_input;
+
     use super::Reservoir;
     use nalgebra::DMatrix;
 
@@ -136,5 +139,28 @@ mod test {
             previous_state = state;
         }
         println!("{}", states[15]);
+    }
+
+    #[test]
+    fn misintegration_test_two() {
+        let mut res = Reservoir::new(500, 0.2, 0.99, 0.2);
+        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
+        let mat_file = matfile::MatFile::parse(file).unwrap();
+        let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
+        Xtr.truncate();
+        res.set_input_weights(Xtr.vars);
+        let mut states = vec![];
+        let mut previous_state: DMatrix<f64> = DMatrix::zeros(1, 500);
+        for t in 0..29 {
+            let current_input = Xtr.input_at_time(t);
+            let state = res.integrate(current_input.clone(), previous_state);
+            states.push(state.clone());
+            previous_state = state;
+        }
+
+        for t in 0..29 {
+            println!("{t} ---");
+            println!("{:?}", states[t].data)
+        }
     }
 }

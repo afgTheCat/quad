@@ -4,7 +4,7 @@ use super::{
     ModelInput,
 };
 use crate::ridge::RidgeRegression;
-use nalgebra::{DMatrix, DVector};
+use nalgebra::DMatrix;
 
 // TODO: we should be able to reproduce this
 pub struct RcModel {

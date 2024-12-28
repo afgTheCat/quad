@@ -115,8 +115,6 @@ mod test {
 
         // [T]
         let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
-        // NOTE:
-        Xtr.truncate();
         let Ytr = extract_double(mat_file.find_by_name("Y"));
 
         let Xte = extract_model_input(mat_file.find_by_name("Xte"));
@@ -129,12 +127,26 @@ mod test {
         let Ytr = one_hot_encode(Ytr);
 
         rc_model.fit(Xtr, Ytr);
-        // let pred = rc_model
-        //     .predict(Xte)
-        //     .iter()
-        //     .map(|x| *x as f64 + 1.)
-        //     .collect::<Vec<_>>();
-        // let f1 = F1::new_with(1.).get_score(&Yte, &pred);
-        // println!("f1: {f1:?}");
+        let pred = rc_model
+            .predict(Xte)
+            .iter()
+            .map(|x| *x as f64 + 1.)
+            .collect::<Vec<_>>();
+        let f1 = F1::new_with(1.).get_score(&Yte, &pred);
+        println!("f1: {f1:?}");
+    }
+
+    #[test]
+    fn reduced_repr_test() {
+        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
+        let mat_file = matfile::MatFile::parse(file).unwrap();
+
+        let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
+        let Ytr = extract_double(mat_file.find_by_name("Y"));
+
+        let Xte = extract_model_input(mat_file.find_by_name("Xte"));
+        let Yte = extract_double(mat_file.find_by_name("Yte"));
+
+        let rc_model = RcModel::new(500, 0.3, 0.99, 0.2, 1., RidgeRegression::new(1.));
     }
 }
