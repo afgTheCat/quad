@@ -110,35 +110,35 @@ mod test {
     // implementations
     #[test]
     fn reproduce_test() {
-        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
+        let file = std::fs::File::open("/home/gabor/ascent/quad/data/JpVow.mat").unwrap();
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
         // [T]
-        let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
-        let Ytr = extract_double(mat_file.find_by_name("Y"));
+        let xtr = extract_model_input(mat_file.find_by_name("X"));
+        let ytr = extract_double(mat_file.find_by_name("Y"));
 
-        let Xte = extract_model_input(mat_file.find_by_name("Xte"));
-        let Yte = extract_double(mat_file.find_by_name("Yte"));
+        let xte = extract_model_input(mat_file.find_by_name("Xte"));
+        let yte = extract_double(mat_file.find_by_name("Yte"));
 
         let mut rc_model = RcModel::new(500, 0.3, 0.99, 0.2, 1., RidgeRegression::new(1.));
 
-        rc_model.esn.set_input_weights(Xtr.vars);
+        rc_model.esn.set_input_weights(xtr.vars);
 
-        let Ytr = one_hot_encode(Ytr);
+        let ytr = one_hot_encode(ytr);
 
-        rc_model.fit(Xtr, Ytr);
+        rc_model.fit(xtr, ytr);
         let pred = rc_model
-            .predict(Xte)
+            .predict(xte)
             .iter()
             .map(|x| *x as f64 + 1.)
             .collect::<Vec<_>>();
-        let f1 = F1::new_with(1.).get_score(&Yte, &pred);
+        let f1 = F1::new_with(1.).get_score(&yte, &pred);
         println!("f1: {f1:?}");
     }
 
     #[test]
     fn reduced_repr_test() {
-        let file = std::fs::File::open("/Users/afgthecat/projects/quad/data/JpVow.mat").unwrap();
+        let file = std::fs::File::open("/home/gabor/ascent/quad/data/JpVow.mat").unwrap();
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
         let mut Xtr = extract_model_input(mat_file.find_by_name("X"));
