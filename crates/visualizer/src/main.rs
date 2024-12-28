@@ -27,7 +27,7 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use db::AscentDb;
+use db::{AscentDb, FlightLog};
 use flight_controller::{controllers::bf_controller::BFController, Channels};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop, Replay};
@@ -324,7 +324,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         drone,
         time: Duration::new(0, 0),
         time_accu: Duration::new(0, 0),
-        time_steps: vec![],
+        time_steps: FlightLog::default(),
         replay_index: 0,
         dt: Duration::from_nanos(5000), // TODO: update this
     });

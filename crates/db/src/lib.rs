@@ -2,6 +2,7 @@
 //! We probably need to revisit once we are more mature
 //! TODO: we probably want to autogenerate this at one point
 
+use derive_more::derive::Deref;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use nalgebra::DVector;
 use rusqlite::{params, Connection};
@@ -166,6 +167,7 @@ impl FlightLogEvent {
     }
 }
 
+#[derive(Debug, Deref, Default)]
 pub struct FlightLog(Vec<FlightLogEvent>);
 
 pub struct AscentDb {

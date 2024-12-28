@@ -4,7 +4,7 @@ pub mod low_pass_filter;
 pub mod noise;
 pub mod sample_curve;
 
-use db::FlightLogEvent;
+use db::{FlightLog, FlightLogEvent};
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
@@ -589,7 +589,7 @@ pub struct Replayer {
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
-    pub time_steps: Vec<FlightLogEvent>,
+    pub time_steps: FlightLog,
     pub replay_index: usize,
     pub dt: Duration,
 }
