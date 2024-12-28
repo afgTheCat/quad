@@ -3,6 +3,11 @@ use crate::ridge::RidgeRegression;
 use nalgebra::DMatrix;
 use nalgebra::DVector;
 
+pub enum RepresentationType {
+    LastState,
+    Output(f64),
+}
+
 pub trait Repr {
     fn repr(&mut self, input: ModelInput, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64>;
 }

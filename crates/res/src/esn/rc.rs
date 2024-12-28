@@ -1,5 +1,5 @@
 use super::{
-    representation::{LastStateRepr, Repr},
+    representation::{self, LastStateRepr, OutputRepr, Repr, RepresentationType},
     reservoir::Reservoir,
     ModelInput,
 };
@@ -20,7 +20,7 @@ impl RcModel {
         connectivity: f64,
         spectral_radius: f64,
         input_scaling: f64,
-        embedding: f64,
+        representation: RepresentationType,
         readout: RidgeRegression,
     ) -> Self {
         let esn = Reservoir::new(
@@ -29,11 +29,13 @@ impl RcModel {
             spectral_radius,
             input_scaling,
         );
-        // let representation = OutputRepr::new(embedding);
-        let representation = LastStateRepr::new();
+        let representation: Box<dyn Repr> = match representation {
+            RepresentationType::LastState => Box::new(LastStateRepr::new()),
+            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        };
         Self {
             esn,
-            representation: Box::new(representation),
+            representation,
             readout,
         }
     }
