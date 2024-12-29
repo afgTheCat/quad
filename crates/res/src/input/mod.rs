@@ -1,4 +1,8 @@
-use nalgebra::DMatrix;
+use std::f64;
+
+use db::{FlightLog, FlightLogEvent};
+use matfile::{Array, NumericData};
+use nalgebra::{DMatrix, DVector};
 
 pub trait RcInput {
     // number of episodes, time steps and vars
@@ -9,7 +13,7 @@ pub trait RcInput {
     fn inputs(&self) -> &Vec<DMatrix<f64>>;
 }
 
-pub struct ModelInput {
+pub struct TSInput {
     pub episodes: usize,
     pub time: usize,
     pub vars: usize,
@@ -17,14 +21,49 @@ pub struct ModelInput {
     pub inputs: Vec<DMatrix<f64>>,
 }
 
-impl ModelInput {
+impl TSInput {
     pub fn truncate(&mut self) {
         self.episodes = 1;
         self.inputs = vec![self.inputs[0].clone()];
     }
+
+    pub fn from_mat_array(data: &Array) -> Self {
+        let size = data.size();
+        let NumericData::Double { real, .. } = data.data() else {
+            panic!()
+        };
+
+        let total_ep = size[0];
+        let total_time = size[1];
+        let total_vars = size[2];
+
+        let inputs = (0..total_ep)
+            .map(|ep| {
+                DMatrix::from_rows(
+                    &(0..total_time)
+                        .map(|t| {
+                            DVector::from_iterator(
+                                total_vars,
+                                (0..total_vars)
+                                    .map(|v| real[v * total_ep * total_time + t * total_ep + ep]),
+                            )
+                            .transpose()
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        TSInput {
+            episodes: size[0],
+            time: size[1],
+            vars: size[2],
+            inputs,
+        }
+    }
 }
 
-impl RcInput for ModelInput {
+impl RcInput for TSInput {
     fn shape(&self) -> (usize, usize, usize) {
         (self.episodes, self.time, self.vars)
     }
@@ -39,5 +78,56 @@ impl RcInput for ModelInput {
 
     fn inputs(&self) -> &Vec<DMatrix<f64>> {
         &self.inputs
+    }
+}
+
+// The thing is that they are variable in size => each episode is going to be each time step
+pub struct FlightInput {
+    episodes: usize,
+    time: usize, // configure how many esns we want here OR just
+    vars: usize, // I guess this can be something else
+    data: Vec<DMatrix<f64>>,
+}
+
+impl FlightInput {
+    pub fn new(flight_logs: Vec<FlightLog>) -> Self {
+        let episodes = flight_logs.len();
+        let time = flight_logs.iter().map(FlightLog::len).max().unwrap();
+        let data = flight_logs
+            .iter()
+            .map(|fl| {
+                let columns = fl
+                    .iter()
+                    .map(FlightLogEvent::to_rc_input)
+                    .collect::<Vec<_>>();
+                let m = DMatrix::from_columns(&columns).transpose();
+                println!("{:?}", m.shape());
+                m
+            })
+            .collect();
+        Self {
+            episodes,
+            time,
+            vars: 18, // TODO: do not hardcode in the future
+            data,
+        }
+    }
+}
+
+impl RcInput for FlightInput {
+    fn shape(&self) -> (usize, usize, usize) {
+        (self.episodes, self.time, self.vars)
+    }
+
+    fn input_at_time(&self, t: usize) -> DMatrix<f64> {
+        let mut input_at_t: DMatrix<f64> = DMatrix::zeros(self.episodes, self.vars);
+        for (i, ep) in self.data.iter().enumerate() {
+            input_at_t.set_row(i, &ep.row(t));
+        }
+        input_at_t
+    }
+
+    fn inputs(&self) -> &Vec<DMatrix<f64>> {
+        &self.data
     }
 }

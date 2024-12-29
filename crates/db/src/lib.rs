@@ -70,7 +70,7 @@ INSERT INTO flight_log (
 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26)";
 
 const SELECT_FLIGHT_LOGS_QUERY: &str = "
-SELECT 
+SELECT
     start_seconds,
     end_seconds,
     motor_input_1,
@@ -167,16 +167,22 @@ impl FlightLogEvent {
     }
 }
 
-#[derive(Debug, Deref, Default)]
+#[derive(Debug, Deref, Default, Clone)]
 pub struct FlightLog(Vec<FlightLogEvent>);
+
+impl FlightLog {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
 
 pub struct AscentDb {
     conn: Mutex<Connection>,
 }
 
 impl AscentDb {
-    pub fn new() -> Self {
-        let conn = Connection::open("data.db").unwrap();
+    pub fn new(db_file: &str) -> Self {
+        let conn = Connection::open(db_file).unwrap();
         conn.execute(ENSURE_FLIGHT_LOGS_QUERY, []).unwrap();
         Self {
             conn: Mutex::new(conn),
@@ -298,8 +304,8 @@ mod test {
     use std::time::Duration;
 
     #[test]
-    fn thing() {
-        let db = AscentDb::new();
+    fn insert_flight_log() {
+        let db = AscentDb::new("data.db");
         let flight_log = FlightLogEvent {
             range: Duration::new(0, 0)..Duration::new(0, 0),
             motor_input: MotorInput::default(),

@@ -6,8 +6,7 @@ use smartcore::metrics::{f1::F1, Metrics};
 
 use crate::{
     extract_double,
-    extract_model_input,
-    input::RcInput,
+    input::{RcInput, TSInput},
     one_hot_encode,
     representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
     ridge::RidgeRegression, // ModelInput,
@@ -179,10 +178,10 @@ impl RcModel {
 
 // I guess we should have this a bit better
 pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) -> f64 {
-    let xtr = extract_model_input(mat_file.find_by_name("X"));
+    let xtr = TSInput::from_mat_array(mat_file.find_by_name("X").unwrap());
     let ytr = one_hot_encode(extract_double(mat_file.find_by_name("Y")));
 
-    let xte = extract_model_input(mat_file.find_by_name("Xte"));
+    let xte = TSInput::from_mat_array(mat_file.find_by_name("Xte").unwrap());
     let yte = extract_double(mat_file.find_by_name("Yte"));
 
     model.esn.set_input_weights(xtr.vars);

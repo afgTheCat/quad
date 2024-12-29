@@ -227,7 +227,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
 
-    let db = AscentDb::new();
+    let db = AscentDb::new("data.db");
     let simulation_ids = db.get_all_simulation_ids();
     commands.insert_resource(SimData {
         simulation_ids,

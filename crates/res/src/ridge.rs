@@ -54,16 +54,16 @@ impl RidgeRegression {
     // y is a column vector containing stuff
     pub fn fit_multiple(
         &mut self,
-        X: DMatrix<f64>,
+        x: DMatrix<f64>,
         y: DMatrix<f64>,
     ) -> (DMatrix<f64>, DVector<f64>) {
-        let (_, data_features) = X.data.shape();
+        let (_, data_features) = x.data.shape();
         let (_, target_dim) = y.data.shape();
         let mut coeff_mult: DMatrix<f64> = DMatrix::zeros(target_dim.0, data_features.0);
         let mut intercept_mult: DVector<f64> = DVector::zeros(target_dim.0);
 
         for (i, col) in y.column_iter().enumerate() {
-            let (coeff, intercept) = self.fit(&X, col.into_owned(), false);
+            let (coeff, intercept) = self.fit(&x, col.into_owned(), false);
             coeff_mult.set_row(i, &coeff.transpose());
             intercept_mult[i] = intercept;
         }
@@ -75,13 +75,13 @@ impl RidgeRegression {
     }
 
     // makes a prediction
-    pub fn predict(&self, X: DMatrix<f64>) -> DMatrix<f64> {
+    pub fn predict(&self, x: DMatrix<f64>) -> DMatrix<f64> {
         let Some(RidgeRegressionSol { coeff, intercept }) = self.sol.as_ref() else {
             panic!()
         };
 
         DMatrix::from_rows(
-            &X.row_iter()
+            &x.row_iter()
                 .map(|data_point| {
                     DVector::from(
                         intercept

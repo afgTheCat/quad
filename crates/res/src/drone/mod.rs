@@ -1,12 +1,17 @@
-use crate::{esn::Reservoir, input::RcInput};
-use db::{FlightLog, FlightLogEvent};
+use crate::{
+    esn::Reservoir,
+    input::RcInput,
+    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
+    ridge::RidgeRegression,
+};
+use db::FlightLog;
 use flight_controller::FlightControllerUpdate;
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, DVector};
 
 pub struct DroneRc {
     pub esn: Reservoir,
-    // pub embedding: RidgeRegression,
-    // pub readout: RidgeRegression,
+    representation: Box<dyn Repr>,
+    readout: RidgeRegression,
 }
 
 // All the data that belong to a flight trajectory. [T, V]
@@ -45,19 +50,24 @@ impl DroneRc {
         connectivity: f64,
         spectral_radius: f64,
         input_scaling: f64,
-        // embedding: RidgeRegression,
-        // readout: RidgeRegression,
+        representation: RepresentationType,
+        readout: RidgeRegression,
     ) -> Self {
-        let esn_model = Reservoir::new(
+        let esn = Reservoir::new(
             n_internal_units,
             connectivity,
             spectral_radius,
             input_scaling,
         );
+        let representation: Box<dyn Repr> = match representation {
+            RepresentationType::LastState => Box::new(LastStateRepr::new()),
+            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        };
+
         Self {
-            esn: esn_model,
-            // embedding,
-            // readout,
+            esn,
+            representation,
+            readout,
         }
     }
 
@@ -79,7 +89,49 @@ impl DroneRc {
         states
     }
 
-    pub fn fit(&mut self, input: Box<dyn RcInput>) {}
+    // this is kinda different, but should be ok
+    pub fn fit(&mut self, input: Box<dyn RcInput>, data_points: DMatrix<f64>) {
+        let res_states = self.esn.compute_state_matricies(&input);
+        let input_repr = self.representation.repr(input, res_states);
+        self.readout.fit_multiple(input_repr, data_points);
+    }
+
+    pub fn predict(&mut self, input: Box<dyn RcInput>) -> DMatrix<f64> {
+        let res_states = self.esn.compute_state_matricies(&input);
+        let input_repr = self.representation.repr(input, res_states);
+        self.readout.predict(input_repr)
+    }
 }
 
-pub fn fit_and_predict(flight_logs: FlightLog) {}
+#[cfg(test)]
+mod test {
+    use super::DroneRc;
+    use crate::{input::FlightInput, representation::RepresentationType, ridge::RidgeRegression};
+    use db::{AscentDb, FlightLogEvent};
+    use nalgebra::DMatrix;
+
+    #[test]
+    fn train_thing() {
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.db");
+        let flight_log = db.get_simuation_data(&"7076b699-65d7-40b1-9ecb-0e58d664faf3");
+        let mut drone_rc = DroneRc::new(
+            500,
+            0.3,
+            0.99,
+            0.2,
+            RepresentationType::Output(1.),
+            RidgeRegression::new(1.),
+        );
+        drone_rc.esn.set_input_weights(18);
+        let input = FlightInput::new(vec![flight_log.clone()]);
+        let data_points = DMatrix::from_columns(
+            &flight_log
+                .iter()
+                .map(FlightLogEvent::to_rc_output)
+                .collect::<Vec<_>>(),
+        )
+        .transpose();
+
+        drone_rc.fit(Box::new(input), data_points);
+    }
+}
