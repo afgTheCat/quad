@@ -6,12 +6,13 @@ resolver = "2"
 
 [dependencies]
 nalgebra.workspace = true
+nalgebra-lapack = "0.25.0"
 db.workspace = true
 matfile = { version = "0.5.0", features = ["ndarray"] } 
 rand = "0.8.5"
 rand_distr = "0.4.3"
 pyo3.workspace = true
-smartcore = "0.4.0"
+smartcore = { version = "0.4.0" }
 flight_controller.workspace = true
 
 [lib]
