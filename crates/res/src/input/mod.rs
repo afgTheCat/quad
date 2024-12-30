@@ -82,6 +82,7 @@ impl RcInput for TSInput {
 }
 
 // The thing is that they are variable in size => each episode is going to be each time step
+#[derive(Debug, Clone)]
 pub struct FlightInput {
     episodes: usize,
     time: usize, // configure how many esns we want here OR just

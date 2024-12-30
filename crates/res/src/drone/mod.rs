@@ -70,35 +70,16 @@ impl DroneRc {
         }
     }
 
-    fn compute_state_matricies(&mut self, input: Box<dyn RcInput>) -> Vec<DMatrix<f64>> {
-        let n_internal_units = self.esn.n_internal_units;
-        let (episodes, time_steps, _) = input.shape();
-        let mut states: Vec<DMatrix<f64>> =
-            vec![DMatrix::zeros(time_steps, n_internal_units); episodes];
-        let mut previous_state: DMatrix<f64> = DMatrix::zeros(episodes, n_internal_units);
-
-        for t in 0..time_steps {
-            let current_input = input.input_at_time(t);
-            previous_state = self.esn.integrate(current_input, previous_state);
-            for ep in 0..episodes {
-                states[ep].set_row(t, &previous_state.row(ep));
-            }
-        }
-
-        states
-    }
-
     // this is kinda different, but should be ok
     pub fn fit(&mut self, input: Box<dyn RcInput>, data_points: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
-        let input_repr = self.representation.repr(input, res_states);
-        self.readout.fit_multiple_svd3(input_repr, &data_points);
+        self.readout
+            .fit_multiple_svd(res_states[0].clone(), &data_points);
     }
 
     pub fn predict(&mut self, input: Box<dyn RcInput>) -> DMatrix<f64> {
         let res_states = self.esn.compute_state_matricies(&input);
-        let input_repr = self.representation.repr(input, res_states);
-        self.readout.predict(input_repr)
+        self.readout.predict(res_states[0].clone())
     }
 }
 
@@ -107,6 +88,7 @@ mod test {
     use super::DroneRc;
     use crate::{input::FlightInput, representation::RepresentationType, ridge::RidgeRegression};
     use db::{AscentDb, FlightLogEvent};
+    use flight_controller::MotorInput;
     use nalgebra::DMatrix;
 
     #[test]
@@ -131,6 +113,32 @@ mod test {
         )
         .transpose();
 
-        drone_rc.fit(Box::new(input), data_points);
+        drone_rc.fit(Box::new(input.clone()), data_points);
+        let predicted_points = drone_rc.predict(Box::new(input));
+        for col in predicted_points.row_iter().skip(10000).take(1000) {
+            // let asd = col.get(0);
+            println!("predicted motor input: {}", col);
+        }
+
+        // TODO: lets not concern ourselfs with this
+        // let new_flight_log = flight_log
+        //     .iter()
+        //     .zip(predicted_points.row_iter())
+        //     .map(|(fl, pp)| FlightLogEvent {
+        //         range: fl.range.clone(),
+        //         motor_input: MotorInput {
+        //             input: [
+        //                 f64::clamp(*pp.get(0).unwrap(), 0., 1.),
+        //                 f64::clamp(*pp.get(1).unwrap(), 0., 1.),
+        //                 f64::clamp(*pp.get(2).unwrap(), 0., 1.),
+        //                 f64::clamp(*pp.get(3).unwrap(), 0., 1.),
+        //             ],
+        //         },
+        //         battery_update: fl.battery_update.clone(),
+        //         gyro_update: fl.gyro_update.clone(),
+        //         channels: fl.channels.clone(),
+        //     })
+        //     .collect::<Vec<_>>();
+        // db.write_flight_logs("fake_simulation", &new_flight_log);
     }
 }
