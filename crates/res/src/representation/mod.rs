@@ -23,9 +23,9 @@ impl Repr for OutputRepr {
         let (_, time_steps, _) = input.shape();
 
         for (x, res_state) in input.inputs().iter().zip(res_states) {
-            let (coeff, intercept) = self.embedding.fit_multiple(
-                res_state.rows(0, time_steps - 1).into_owned(),
-                x.rows(1, time_steps - 1).into_owned(),
+            let (coeff, intercept) = self.embedding.fit_multiple_svd2(
+                res_state.rows(0, time_steps - 1).into(),
+                &x.rows(1, time_steps - 1).into(),
             );
             coeff_tr.push(DVector::from(coeff.as_slice().to_vec()).transpose());
             biases_tr.push(intercept.transpose());

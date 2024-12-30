@@ -93,7 +93,7 @@ impl DroneRc {
     pub fn fit(&mut self, input: Box<dyn RcInput>, data_points: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
-        self.readout.fit_multiple(input_repr, data_points);
+        self.readout.fit_multiple_svd2(input_repr, &data_points);
     }
 
     pub fn predict(&mut self, input: Box<dyn RcInput>) -> DMatrix<f64> {

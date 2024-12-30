@@ -162,7 +162,7 @@ impl RcModel {
     pub fn fit(&mut self, input: Box<dyn RcInput>, categories: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
-        self.readout.fit_multiple_cholesky2(input_repr, categories);
+        self.readout.fit_multiple_svd(&input_repr, &categories);
     }
 
     pub fn predict(&mut self, input: Box<dyn RcInput>) -> Vec<usize> {
@@ -177,7 +177,7 @@ impl RcModel {
 }
 
 // I guess we should have this a bit better
-pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) -> f64 {
+pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) {
     let xtr = TSInput::from_mat_array(mat_file.find_by_name("X").unwrap());
     let ytr = one_hot_encode(extract_double(mat_file.find_by_name("Y")));
 
@@ -191,7 +191,8 @@ pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) -> f64 {
         .iter()
         .map(|x| *x as f64 + 1.)
         .collect::<Vec<_>>();
-    F1::new_with(1.).get_score(&yte, &pred)
+    let f1 = F1::new_with(1.).get_score(&yte, &pred);
+    println!("f1: {f1:?}");
 }
 
 #[cfg(test)]
@@ -212,12 +213,10 @@ mod test {
             0.3,
             0.99,
             0.2,
-            // RepresentationType::Output(1.),
             RepresentationType::Output(1.),
             RidgeRegression::new(1.),
         );
 
-        let f1 = fit_and_predict(&mut rc_model, mat_file);
-        println!("f1: {f1:?}");
+        fit_and_predict(&mut rc_model, mat_file);
     }
 }
