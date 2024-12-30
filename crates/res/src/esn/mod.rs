@@ -162,7 +162,7 @@ impl RcModel {
     pub fn fit(&mut self, input: Box<dyn RcInput>, categories: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
-        self.readout.fit_multiple_svd(&input_repr, &categories);
+        self.readout.fit_multiple_svd3(input_repr, &categories);
     }
 
     pub fn predict(&mut self, input: Box<dyn RcInput>) -> Vec<usize> {
