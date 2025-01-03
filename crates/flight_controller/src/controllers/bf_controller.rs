@@ -74,7 +74,7 @@ impl SitlManager {
         let mut guard = self.instances.lock().unwrap();
         let removed = guard.remove(instance_id);
         if removed.is_none() {
-            // todo!("Handle closing unloaded entry")
+            todo!("Handle closing unloaded entry")
         }
     }
 
@@ -110,7 +110,8 @@ impl FlightController for BFController {
     fn init(&self) {
         SITL_INSTANCE_MANAGER.register_new(self.instance_id.clone());
         SITL_INSTANCE_MANAGER.access(&self.instance_id, |sitl| unsafe {
-            let file_name = CString::new("eeprom.bin").expect("CString::new failed");
+            let file_name =
+                CString::new("/home/gabor/ascent/quad/eeprom.bin").expect("CString::new failed");
             sitl.ascent_init(file_name.as_ptr());
         })
     }

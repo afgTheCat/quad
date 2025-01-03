@@ -8,7 +8,6 @@ use bevy::{
         Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res, ResMut,
         Resource, Transform,
     },
-    reflect::List,
     scene::Scene,
     time::Time,
 };
@@ -21,7 +20,7 @@ use uuid::Uuid;
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
 /// each frame.
 /// TODO: do we even need this? I assume that betaflight will handle storing the inputs.
-#[derive(Resource, Deref, DerefMut, Default)]
+#[derive(Resource, Deref, DerefMut, Default, Debug)]
 pub struct PlayerControllerInput(Channels);
 
 impl PlayerControllerInput {
@@ -134,7 +133,8 @@ pub fn exit_simulation(
         .unwrap()
         .to_string();
 
-    // write data
+    // TODO: this is kinda awkward, we would ideally not have the db as a resource but part of the
+    // logger
     db.write_flight_logs(&simulation_id, &simulation.logger.data);
 
     // insert siumulation id

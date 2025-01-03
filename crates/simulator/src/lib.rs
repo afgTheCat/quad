@@ -1,3 +1,4 @@
+mod input_gen;
 pub mod logger;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]
@@ -536,7 +537,6 @@ impl Simulator {
         self.time_accu += delta;
         while self.time_accu > self.dt {
             self.fc_time_accu += self.dt;
-            self.time += self.dt;
             let drone_state = self.drone.update(self.dt.as_secs_f64());
 
             // update the flight controller
@@ -617,6 +617,8 @@ impl Replayer {
             let motor_input = self.get_motor_input();
             if let Some(motor_input) = motor_input {
                 self.drone.set_motor_pwms(motor_input);
+            } else {
+                self.drone.set_motor_pwms(MotorInput::default());
             }
             self.time_accu -= self.dt;
         }
