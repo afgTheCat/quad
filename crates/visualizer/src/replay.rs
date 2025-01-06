@@ -47,7 +47,7 @@ pub fn replay_loop(
 
 pub fn enter_replay(sim_data: ResMut<SimData>, mut replay: ResMut<Replay>, db: Res<DB>) {
     if let Some(simulation_id) = &sim_data.selected_simulation_id {
-        let sim_logs = db.get_simuation_data(&simulation_id);
+        let sim_logs = db.get_simulation_data(&simulation_id);
         replay.time_steps = sim_logs;
     }
 }

@@ -1,4 +1,4 @@
-mod input_gen;
+pub mod input_gen;
 pub mod logger;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]

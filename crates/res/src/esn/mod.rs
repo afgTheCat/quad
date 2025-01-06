@@ -12,6 +12,7 @@ use crate::{
     ridge::RidgeRegression, // ModelInput,
 };
 
+// TODO: serialize this
 pub struct Reservoir {
     pub n_internal_units: usize,
     pub input_scaling: f64,

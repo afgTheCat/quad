@@ -9,3 +9,5 @@ rusqlite.workspace = true
 flight_controller.workspace = true
 nalgebra.workspace = true
 derive_more = { version = "1.0.0", features = ["full"] }
+diesel = {version = "2.2.6", features = ["sqlite"]}
+

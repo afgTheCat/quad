@@ -1,2 +1,0 @@
-[env]
-CARGO_FEATURE_SYSTEM = "1" # in order for lapack to link aganist system libraries

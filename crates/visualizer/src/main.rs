@@ -27,7 +27,7 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use db::{AscentDb, FlightLog};
+use db::{AscentDb2, FlightLog};
 use flight_controller::{controllers::bf_controller::BFController, Channels};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop, Replay};
@@ -132,7 +132,7 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 pub struct DroneAsset(Handle<Gltf>);
 
 #[derive(Resource, Deref)]
-struct DB(AscentDb);
+struct DB(AscentDb2);
 
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
@@ -227,7 +227,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
 
-    let db = AscentDb::new("data.db");
+    let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
     let simulation_ids = db.get_all_simulation_ids();
     commands.insert_resource(SimData {
         simulation_ids,

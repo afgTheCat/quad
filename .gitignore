@@ -1,4 +1,4 @@
 **/target
 **/*.csv
-data.db
+data.sqlite
 # assets
