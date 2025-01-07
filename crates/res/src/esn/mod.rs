@@ -13,6 +13,7 @@ use crate::{
 };
 
 // TODO: serialize this
+#[derive(Debug)]
 pub struct Reservoir {
     pub n_internal_units: usize,
     pub input_scaling: f64,

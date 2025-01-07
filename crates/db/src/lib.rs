@@ -42,6 +42,18 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
         pitch REAL NOT NULL,
         yaw REAL NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS rc_model (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        rc_id TEXT NOT NULL,
+        n_internal_units INTEGER NOT NULL,
+        input_scaling REAL NOT NULL,
+        internal_weights TEXT NOT NULL,
+        input_weights TEXT,
+        alpha REAL NOT NULL,
+        readout_coeff TEXT,
+        readout_intercept TEXT
+    );
 ";
 
 pub struct AscentDb2 {

@@ -80,7 +80,7 @@ impl FlightLogEvent {
 }
 
 #[derive(Debug, Deref, Default, Clone)]
-pub struct FlightLog(Vec<FlightLogEvent>);
+pub struct FlightLog(pub Vec<FlightLogEvent>);
 
 impl FlightLog {
     pub fn len(&self) -> usize {
