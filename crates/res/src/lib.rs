@@ -4,7 +4,7 @@ pub mod input;
 pub mod izhikevich;
 pub mod readout;
 pub mod representation;
-mod ridge;
+pub mod ridge;
 
 use matfile::{Array, NumericData};
 use nalgebra::DMatrix;

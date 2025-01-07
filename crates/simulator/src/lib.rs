@@ -5,7 +5,7 @@ pub mod low_pass_filter;
 pub mod noise;
 pub mod sample_curve;
 
-use db::{FlightLog, FlightLogEvent};
+use db::simulation::DBFlightLog;
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
@@ -589,7 +589,7 @@ pub struct Replayer {
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
-    pub time_steps: FlightLog,
+    pub time_steps: Vec<DBFlightLog>,
     pub replay_index: usize,
     pub dt: Duration,
 }
@@ -598,13 +598,20 @@ impl Replayer {
     fn get_motor_input(&mut self) -> Option<MotorInput> {
         if self.replay_index < self.time_steps.len() {
             self.time += self.dt;
-            let FlightLogEvent {
-                range, motor_input, ..
-            } = self.time_steps[self.replay_index].clone();
-            if self.time >= range.end {
+            let DBFlightLog {
+                end_seconds,
+                motor_input_1,
+                motor_input_2,
+                motor_input_3,
+                motor_input_4,
+                ..
+            } = self.time_steps[self.replay_index];
+            if self.time.as_secs_f64() >= end_seconds {
                 self.replay_index += 1;
             }
-            Some(motor_input)
+            Some(MotorInput {
+                input: [motor_input_1, motor_input_2, motor_input_3, motor_input_4],
+            })
         } else {
             None
         }

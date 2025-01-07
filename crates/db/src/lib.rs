@@ -9,7 +9,7 @@ use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
 pub use reservoir::{DBRcData, NewDBRcData};
 use rusqlite::Connection;
-pub use simulation::{FlightLog, FlightLogEvent};
+// pub use simulation::{FlightLog, FlightLogEvent};
 use std::sync::Mutex;
 
 const ENSURE_FLIGHT_LOGS_QUERY: &str = "

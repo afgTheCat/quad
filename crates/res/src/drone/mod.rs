@@ -6,9 +6,6 @@ use crate::{
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
 use db::{AscentDb2, DBRcData, NewDBRcData};
-use flight_controller::{
-    bindings::sitl_generated::dshotBitbangMode_e_DSHOT_BITBANG_AUTO, FlightControllerUpdate,
-};
 use nalgebra::DMatrix;
 
 // TODO: serialize this
@@ -17,36 +14,6 @@ pub struct DroneRc {
     pub esn: Reservoir,
     // representation: Box<dyn Repr>,
     pub readout: RidgeRegression,
-}
-
-// All the data that belong to a flight trajectory. [T, V]
-struct FlightControllerInputs(DMatrix<f64>);
-
-impl FlightControllerInputs {
-    fn from_flight_controller_updates(update: &[FlightControllerUpdate]) -> Self {
-        let rows = update
-            .iter()
-            .map(|up| up.to_rc_input().transpose())
-            .collect::<Vec<_>>();
-        FlightControllerInputs(DMatrix::from_rows(&rows))
-    }
-}
-
-struct DroneInputSteps {
-    episodes: usize,
-    time: usize,
-    vars: usize,
-    updates: Vec<FlightControllerInputs>,
-}
-
-impl DroneInputSteps {
-    fn input_at_time(&self, t: usize) -> DMatrix<f64> {
-        let mut input_at_t: DMatrix<f64> = DMatrix::zeros(self.episodes, self.vars);
-        for (i, ep) in self.updates.iter().enumerate() {
-            input_at_t.set_row(i, &ep.0.row(t));
-        }
-        input_at_t
-    }
 }
 
 impl DroneRc {
@@ -158,104 +125,5 @@ impl DroneRc {
     pub fn save_model_to_db(&self, reservoir_id: String, db: &AscentDb2) {
         let new_db_rc_data = self.to_new_db(reservoir_id);
         db.insert_reservoir(new_db_rc_data);
-    }
-}
-
-#[cfg(test)]
-mod test {
-
-    use super::DroneRc;
-    use crate::{input::FlightInput, representation::RepresentationType, ridge::RidgeRegression};
-    use db::{AscentDb2, FlightLogEvent};
-    use flight_controller::MotorInput;
-    use nalgebra::DMatrix;
-
-    #[test]
-    fn train_thing() {
-        let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
-        let flight_log = db.get_simulation_data(&"86a9dd7f-f730-40cb-8fe8-e5a076867545");
-        let mut drone_rc = DroneRc::new(
-            500,
-            0.3,
-            0.99,
-            0.2,
-            RepresentationType::Output(1.),
-            RidgeRegression::new(1.),
-        );
-        drone_rc.esn.set_input_weights(18);
-        println!("ehhh {:?}", drone_rc.esn.input_weights.as_ref().unwrap());
-        let input = FlightInput::new(vec![flight_log.clone()]);
-        let data_points = DMatrix::from_columns(
-            &flight_log
-                .iter()
-                .map(FlightLogEvent::to_rc_output)
-                .collect::<Vec<_>>(),
-        )
-        .transpose();
-
-        drone_rc.fit(Box::new(input.clone()), data_points);
-        drone_rc.save_model_to_db("only_up".into(), &db);
-
-        let mut new_rc_mode = DroneRc::read_from_db("only_up", &db).unwrap();
-        let predicted_points = new_rc_mode.predict(Box::new(input));
-        let mut rec_flight_logs = vec![];
-        for (i, out) in predicted_points.row_iter().enumerate() {
-            let motor_input = MotorInput {
-                input: [
-                    *out.get(0).unwrap(),
-                    *out.get(1).unwrap(),
-                    *out.get(2).unwrap(),
-                    *out.get(3).unwrap(),
-                ],
-            };
-            let fl = FlightLogEvent {
-                range: flight_log[i].range.clone(),
-                motor_input,
-                battery_update: flight_log[i].battery_update,
-                gyro_update: flight_log[i].gyro_update,
-                channels: flight_log[i].channels,
-            };
-            rec_flight_logs.push(fl);
-        }
-
-        db.write_flight_logs("rec", &rec_flight_logs);
-    }
-
-    #[test]
-    fn train_on_many() {
-        let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
-        let simulation_id = db.get_all_simulation_ids();
-        let tr_ids = simulation_id
-            .iter()
-            .filter(|id| id.starts_with("ds_id_1_tr"))
-            .cloned()
-            .collect::<Vec<_>>();
-        let te_ids = simulation_id
-            .iter()
-            .filter(|id| id.starts_with("ds_id_1_te"))
-            .cloned()
-            .collect::<Vec<_>>();
-
-        let mut drone_rc = DroneRc::new(
-            500,
-            0.3,
-            0.99,
-            0.2,
-            RepresentationType::Output(1.),
-            RidgeRegression::new(1.),
-        );
-        drone_rc.esn.set_input_weights(18);
-        for tr_id in tr_ids {
-            let flight_log = db.get_simulation_data(&tr_id);
-            let input = FlightInput::new(vec![flight_log.clone()]);
-            let data_points = DMatrix::from_columns(
-                &flight_log
-                    .iter()
-                    .map(FlightLogEvent::to_rc_output)
-                    .collect::<Vec<_>>(),
-            )
-            .transpose();
-            drone_rc.fit(Box::new(input.clone()), data_points);
-        }
     }
 }
