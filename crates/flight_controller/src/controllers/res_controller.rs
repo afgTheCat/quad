@@ -84,6 +84,7 @@ mod test {
 
         let mut new_rc_mode = DroneRc::read_from_db("only_up", &db).unwrap();
         let predicted_points = new_rc_mode.predict(Box::new(input));
+        println!("{:#?}", predicted_points);
 
         let mut rec_flight_logs = vec![];
         for (i, out) in predicted_points.row_iter().enumerate() {
