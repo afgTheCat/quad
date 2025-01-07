@@ -86,7 +86,7 @@ impl RcInput for TSInput {
 #[derive(Debug, Clone)]
 pub struct FlightInput {
     episodes: usize,
-    time: usize, // configure how many esns we want here OR just
+    time: usize, // configure how many esns we want here OR just something similiar
     vars: usize, // I guess this can be something else
     data: Vec<DMatrix<f64>>,
 }
@@ -115,7 +115,7 @@ pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
 }
 
 impl FlightInput {
-    pub fn new(flight_logs: Vec<Vec<DBFlightLog>>) -> Self {
+    pub fn new_from_db_fl_log(flight_logs: Vec<Vec<DBFlightLog>>) -> Self {
         let episodes = flight_logs.len();
         let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
         let data = flight_logs
@@ -123,6 +123,26 @@ impl FlightInput {
             .map(|fl| {
                 let columns = fl.iter().map(db_fl_to_rc_input).collect::<Vec<_>>();
                 let m = DMatrix::from_columns(&columns).transpose();
+                println!("{:?}", m.shape());
+                m
+            })
+            .collect();
+        Self {
+            episodes,
+            time,
+            vars: 18, // TODO: do not hardcode in the future
+            data,
+        }
+    }
+
+    pub fn new_from_rc_input(flight_logs: Vec<Vec<DVector<f64>>>) -> Self {
+        let episodes = flight_logs.len();
+        let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
+        let data = flight_logs
+            .iter()
+            .map(|fl| {
+                // let columns = fl.iter().map(db_fl_to_rc_input).collect::<Vec<_>>();
+                let m = DMatrix::from_columns(&fl).transpose();
                 println!("{:?}", m.shape());
                 m
             })

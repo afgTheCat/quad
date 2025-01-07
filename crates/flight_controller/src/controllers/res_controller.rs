@@ -1,7 +1,53 @@
-use res::esn::RcModel;
+use db::AscentDb2;
+use std::{sync::Mutex, time::Duration};
+// This is going to be the rc based flight controller after training
+use res::{drone::DroneRc, input::FlightInput};
+
+use crate::{FlightController, MotorInput};
 
 pub struct ResController {
-    model: RcModel,
+    model: Mutex<DroneRc>,
+}
+
+impl FlightController for ResController {
+    // TODO: set the reservoir states to zeros
+    fn init(&self) {}
+
+    // TODO: set the reservoir states to zeros
+    fn deinit(&self) {}
+
+    // TODO: consider the delta time us
+    fn update(
+        &self,
+        delta_time_us: u64,
+        update: crate::FlightControllerUpdate,
+    ) -> crate::MotorInput {
+        let rc_input = update.to_rc_input();
+        let input = FlightInput::new_from_rc_input(vec![vec![rc_input]]);
+        let mut model = self.model.lock().unwrap();
+
+        let pr = model.predict(Box::new(input));
+        let motor_input_1 = f64::clamp(*pr.row(0).get(0).unwrap(), 0., 1.);
+        let motor_input_2 = f64::clamp(*pr.row(0).get(1).unwrap(), 0., 1.);
+        let motor_input_3 = f64::clamp(*pr.row(0).get(2).unwrap(), 0., 1.);
+        let motor_input_4 = f64::clamp(*pr.row(0).get(3).unwrap(), 0., 1.);
+        MotorInput {
+            input: [motor_input_1, motor_input_2, motor_input_3, motor_input_4],
+        }
+    }
+
+    fn scheduler_delta(&self) -> std::time::Duration {
+        Duration::from_millis(5)
+    }
+}
+
+impl ResController {
+    fn from_db(db: AscentDb2, id: &str) -> Self {
+        let drone_rc = DroneRc::read_from_db(id, &db).unwrap();
+        Self {
+            model: Mutex::new(drone_rc),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -28,8 +74,7 @@ mod test {
             RidgeRegression::new(1.),
         );
         drone_rc.esn.set_input_weights(18);
-        println!("ehhh {:?}", drone_rc.esn.input_weights.as_ref().unwrap());
-        let input = FlightInput::new(vec![flight_log.clone()]);
+        let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
         let data_points =
             DMatrix::from_columns(&flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>())
                 .transpose();
@@ -39,6 +84,7 @@ mod test {
 
         let mut new_rc_mode = DroneRc::read_from_db("only_up", &db).unwrap();
         let predicted_points = new_rc_mode.predict(Box::new(input));
+
         let mut rec_flight_logs = vec![];
         for (i, out) in predicted_points.row_iter().enumerate() {
             let fl = DBNewFlightLog {
@@ -101,7 +147,7 @@ mod test {
         drone_rc.esn.set_input_weights(18);
         for tr_id in tr_ids {
             let flight_log = db.get_simulation_data(&tr_id);
-            let input = FlightInput::new(vec![flight_log.clone()]);
+            let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
             let data_points = DMatrix::from_columns(
                 &flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>(),
             )
