@@ -1,19 +1,20 @@
 // What we want to do is to have the 4 degrees of freedom
 // explored in a semi realistic manner => then generate data from it
 
+use crate::{
+    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
+    DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel, RotorState, RotorsState,
+    SampleCurve, SamplePoint, SimulationFrame, Simulator,
+};
 use db::AscentDb2;
 use flight_controller::{
     controllers::bf_controller::BFController, BatteryUpdate, Channels, MotorInput,
 };
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::{fmt::format, sync::Arc, thread, time::Duration, usize};
-
-use crate::{
-    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
-    DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel, RotorState, RotorsState,
-    SampleCurve, SamplePoint, SimulationFrame, Simulator,
-};
 
 pub const PROP_BLADE_MESH_NAMES: [(f64, Vector3<f64>); 4] = [
     (
@@ -249,6 +250,23 @@ pub fn build_data_set2(
     for handle in handles {
         handle.join().unwrap();
     }
+}
+
+// Use thread pooling to increase the efficency of things
+pub fn build_data_set3(
+    data_set_id: String,
+    training_duration: Duration,
+    training_size: usize,
+    test_size: usize,
+) {
+    let db = Arc::new(AscentDb2::new("/home/gabor/ascent/quad/data.sqlite"));
+    let episode_ids = (0..training_size)
+        .map(|ep| format!("{}_tr_{}", data_set_id, ep))
+        .chain((0..test_size).map(|ep| format!("{}_te_{}", data_set_id, ep)))
+        .collect::<Vec<_>>();
+    episode_ids.par_iter().for_each(|episode_id| {
+        build_episode(db.clone(), episode_id.clone(), training_duration);
+    });
 }
 
 // TODO: we could do this on multiple threads as well!

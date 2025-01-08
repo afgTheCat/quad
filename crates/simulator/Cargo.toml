@@ -17,6 +17,7 @@ serde.workspace = true
 rusqlite.workspace = true
 uuid.workspace = true
 db.workspace = true
+rayon = "1.10.0"
 
 [features]
 default = []
