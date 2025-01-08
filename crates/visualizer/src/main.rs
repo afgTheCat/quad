@@ -28,7 +28,10 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use db::AscentDb2;
-use flight_controller::{controllers::bf_controller::BFController, Channels};
+use flight_controller::{
+    controllers::{bf_controller::BFController, res_controller::ResController},
+    Channels,
+};
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop, Replay};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop, PlayerControllerInput};
@@ -234,7 +237,9 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
 
-    let flight_controller = Arc::new(BFController::new());
+    // let flight_controller = Arc::new(BFController::new());
+    // TODO: this is horrible xd
+    let flight_controller = Arc::new(ResController::from_db(&db, "only_up"));
     let initial_frame = initial_simulation_frame();
 
     // TODO: we should have this entirly read from a file

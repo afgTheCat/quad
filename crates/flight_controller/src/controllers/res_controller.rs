@@ -42,7 +42,7 @@ impl FlightController for ResController {
 }
 
 impl ResController {
-    fn from_db(db: AscentDb2, id: &str) -> Self {
+    pub fn from_db(db: &AscentDb2, id: &str) -> Self {
         let drone_rc = DroneRc::read_from_db(id, &db).unwrap();
         Self {
             model: Mutex::new(drone_rc),
@@ -56,7 +56,7 @@ mod test {
     use nalgebra::DMatrix;
     use res::{
         drone::DroneRc,
-        input::{db_fl_to_rc_input, FlightInput},
+        input::{db_fl_to_rc_input, db_fl_to_rc_output, FlightInput},
         representation::RepresentationType,
         ridge::RidgeRegression,
     };
@@ -75,16 +75,19 @@ mod test {
         );
         drone_rc.esn.set_input_weights(18);
         let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
-        let data_points =
-            DMatrix::from_columns(&flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>())
-                .transpose();
+        let data_points = DMatrix::from_columns(
+            &flight_log
+                .iter()
+                .map(db_fl_to_rc_output)
+                .collect::<Vec<_>>(),
+        )
+        .transpose();
 
         drone_rc.fit(Box::new(input.clone()), data_points);
         drone_rc.save_model_to_db("only_up".into(), &db);
 
         let mut new_rc_mode = DroneRc::read_from_db("only_up", &db).unwrap();
         let predicted_points = new_rc_mode.predict(Box::new(input));
-        println!("{:#?}", predicted_points);
 
         let mut rec_flight_logs = vec![];
         for (i, out) in predicted_points.row_iter().enumerate() {

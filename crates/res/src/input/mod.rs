@@ -114,6 +114,15 @@ pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
     ])
 }
 
+pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
+    DVector::from_row_slice(&[
+        fl.motor_input_1,
+        fl.motor_input_2,
+        fl.motor_input_3,
+        fl.motor_input_4,
+    ])
+}
+
 impl FlightInput {
     pub fn new_from_db_fl_log(flight_logs: Vec<Vec<DBFlightLog>>) -> Self {
         let episodes = flight_logs.len();
