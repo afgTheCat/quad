@@ -218,6 +218,8 @@ pub fn generate_all_axis(duration: Duration) -> Vec<Channels> {
         .collect()
 }
 
+fn build_episode() {}
+
 // TODO: we could do this on multiple threads as well!
 pub fn build_data_set(
     data_set_id: String,

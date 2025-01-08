@@ -9,6 +9,7 @@ use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
 pub use reservoir::{DBRcData, NewDBRcData};
 use rusqlite::Connection;
+use std::sync::Arc;
 use std::sync::Mutex;
 
 const ENSURE_FLIGHT_LOGS_QUERY: &str = "
@@ -57,9 +58,9 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
 
 pub struct AscentDb2 {
     // Diesel conn for type safty
-    diesel_conn: Mutex<SqliteConnection>,
+    diesel_conn: Arc<Mutex<SqliteConnection>>,
     // Rusqlte conn for speed
-    rusqlite_conn: Mutex<Connection>,
+    rusqlite_conn: Arc<Mutex<Connection>>,
 }
 
 impl AscentDb2 {
@@ -69,8 +70,8 @@ impl AscentDb2 {
         rusqlite_conn.execute(ENSURE_FLIGHT_LOGS_QUERY, []).unwrap();
         // TODO: ensure flight logs
         Self {
-            diesel_conn: Mutex::new(diesel_conn),
-            rusqlite_conn: Mutex::new(rusqlite_conn),
+            diesel_conn: Arc::new(Mutex::new(diesel_conn)),
+            rusqlite_conn: Arc::new(Mutex::new(rusqlite_conn)),
         }
     }
 }
