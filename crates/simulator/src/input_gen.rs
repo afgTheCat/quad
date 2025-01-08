@@ -7,7 +7,7 @@ use flight_controller::{
 };
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
-use std::{sync::Arc, time::Duration, usize};
+use std::{fmt::format, sync::Arc, thread, time::Duration, usize};
 
 use crate::{
     logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
@@ -218,7 +218,38 @@ pub fn generate_all_axis(duration: Duration) -> Vec<Channels> {
         .collect()
 }
 
-fn build_episode() {}
+fn build_episode(db: Arc<AscentDb2>, episode_name: String, training_duration: Duration) {
+    let inputs = generate_all_axis(training_duration);
+    // TODO: we should pool instead of just creating a simulation each time
+    let mut simulation = set_up_simulation();
+    simulation.init(episode_name.clone());
+    // TODO: we may want to better controll this
+    for input in inputs {
+        simulation.simulate_delta(Duration::from_millis(1), input);
+    }
+    db.write_flight_logs(&episode_name, &simulation.logger.data);
+}
+
+pub fn build_data_set2(
+    data_set_id: String,
+    training_duration: Duration,
+    training_size: usize,
+    test_size: usize,
+) {
+    let db = Arc::new(AscentDb2::new("/home/gabor/ascent/quad/data.sqlite"));
+    let handles = (0..training_size)
+        .map(|ep| format!("{}_tr_{}", data_set_id, ep))
+        .chain((0..test_size).map(|ep| format!("{}_te_{}", data_set_id, ep)))
+        .map(|id| {
+            let ep_db = db.clone();
+            thread::spawn(move || build_episode(ep_db, id, training_duration))
+        })
+        .collect::<Vec<_>>();
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+}
 
 // TODO: we could do this on multiple threads as well!
 pub fn build_data_set(
