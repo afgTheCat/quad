@@ -17,6 +17,7 @@ bincode = "1.3.3"
 serde = "1.0.217"
 # flight_controller.workspace = true
 base64 = "0.22.1"
+# candle.workspace = true
 
 # [lib]
 # name = "res"

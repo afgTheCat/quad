@@ -1,7 +1,9 @@
-use db::AscentDb2;
+use db::AscentDb;
 use std::{sync::Mutex, time::Duration};
 // This is going to be the rc based flight controller after training
-use res::{drone::DroneRc, input::FlightInput};
+use res::{
+    drone::DroneRc, input::FlightInput, representation::RepresentationType, ridge::RidgeRegression,
+};
 
 use crate::{FlightController, MotorInput};
 
@@ -42,17 +44,33 @@ impl FlightController for ResController {
 }
 
 impl ResController {
-    pub fn from_db(db: &AscentDb2, id: &str) -> Self {
+    pub fn from_db(db: &AscentDb, id: &str) -> Self {
         let drone_rc = DroneRc::read_from_db(id, &db).unwrap();
         Self {
             model: Mutex::new(drone_rc),
         }
     }
+
+    pub fn train(db: &AscentDb, simulation_ids: Vec<String>) {
+        let flight_logs = simulation_ids
+            .iter()
+            .map(|sim_id| db.get_simulation_data(sim_id))
+            .collect::<Vec<_>>();
+        let mut drone_rc = DroneRc::new(
+            500,
+            0.3,
+            0.99,
+            0.2,
+            RepresentationType::Output(1.),
+            RidgeRegression::new(1.),
+        );
+        drone_rc.esn.set_input_weights(18);
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use db::{simulation::DBNewFlightLog, AscentDb2};
+    use db::{simulation::DBNewFlightLog, AscentDb};
     use nalgebra::DMatrix;
     use res::{
         drone::DroneRc,
@@ -63,7 +81,7 @@ mod test {
 
     #[test]
     fn train_thing() {
-        let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let flight_log = db.get_simulation_data(&"86a9dd7f-f730-40cb-8fe8-e5a076867545");
         let mut drone_rc = DroneRc::new(
             500,
@@ -127,7 +145,7 @@ mod test {
 
     #[test]
     fn train_on_many() {
-        let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let simulation_id = db.get_all_simulation_ids();
         let tr_ids = simulation_id
             .iter()

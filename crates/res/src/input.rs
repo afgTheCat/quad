@@ -1,7 +1,4 @@
-use std::f64;
-
 use db::simulation::DBFlightLog;
-// use db::{FlightLog, FlightLogEvent};
 use matfile::{Array, NumericData};
 use nalgebra::{DMatrix, DVector};
 

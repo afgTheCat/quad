@@ -1,5 +1,5 @@
 use crate::schema::flight_log;
-use crate::AscentDb2;
+use crate::AscentDb;
 use diesel::ExpressionMethods;
 use diesel::{
     prelude::{Insertable, Queryable},
@@ -88,7 +88,7 @@ const INSERT_FLIGHT_LOGS_QUERY: &str = "
     )
 ";
 
-impl AscentDb2 {
+impl AscentDb {
     // We use rusqlite here because diesel is just too slow. What makes this fast is that we are
     // preparing a repetetive statement and use it in a transaction. I don't see a faster way as
     // things stand now

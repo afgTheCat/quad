@@ -1,17 +1,14 @@
 use crate::{
-    esn::Reservoir,
-    input::RcInput,
-    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
-    ridge::{RidgeRegression, RidgeRegressionSol},
+    input::RcInput, representation::{LastStateRepr, OutputRepr, Repr, RepresentationType}, reservoir::Esn, ridge::{RidgeRegression, RidgeRegressionSol}
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
-use db::{AscentDb2, DBRcData, NewDBRcData};
+use db::{AscentDb, DBRcData, NewDBRcData};
 use nalgebra::DMatrix;
 
 // TODO: serialize this
 #[derive(Debug)]
 pub struct DroneRc {
-    pub esn: Reservoir,
+    pub esn: Esn,
     // representation: Box<dyn Repr>,
     pub readout: RidgeRegression,
 }
@@ -25,7 +22,7 @@ impl DroneRc {
         representation: RepresentationType,
         readout: RidgeRegression,
     ) -> Self {
-        let esn = Reservoir::new(
+        let esn = Esn::new(
             n_internal_units,
             connectivity,
             spectral_radius,
@@ -35,7 +32,6 @@ impl DroneRc {
             RepresentationType::LastState => Box::new(LastStateRepr::new()),
             RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
         };
-
         Self {
             esn,
             // representation,
@@ -65,7 +61,7 @@ impl DroneRc {
         } else {
             None
         };
-        let esn = Reservoir {
+        let esn = Esn {
             n_internal_units: db_data.n_internal_units as usize,
             input_scaling: db_data.input_scaling,
             internal_weights,
@@ -89,7 +85,7 @@ impl DroneRc {
         DroneRc { esn, readout }
     }
 
-    pub fn read_from_db(reservoir_id: &str, db: &AscentDb2) -> Option<Self> {
+    pub fn read_from_db(reservoir_id: &str, db: &AscentDb) -> Option<Self> {
         let db_data = db.select_reservoir(reservoir_id)?;
         Some(Self::from_db(db_data))
     }
@@ -122,7 +118,7 @@ impl DroneRc {
         }
     }
 
-    pub fn save_model_to_db(&self, reservoir_id: String, db: &AscentDb2) {
+    pub fn save_model_to_db(&self, reservoir_id: String, db: &AscentDb) {
         let new_db_rc_data = self.to_new_db(reservoir_id);
         db.insert_reservoir(new_db_rc_data);
     }

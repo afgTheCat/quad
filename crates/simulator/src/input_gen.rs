@@ -6,7 +6,7 @@ use crate::{
     DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel, RotorState, RotorsState,
     SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
-use db::AscentDb2;
+use db::AscentDb;
 use flight_controller::{
     controllers::bf_controller::BFController, BatteryUpdate, Channels, MotorInput,
 };
@@ -219,7 +219,7 @@ pub fn generate_all_axis(duration: Duration) -> Vec<Channels> {
         .collect()
 }
 
-fn build_episode(db: Arc<AscentDb2>, episode_name: String, training_duration: Duration) {
+fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Duration) {
     let inputs = generate_all_axis(training_duration);
     // TODO: we should pool instead of just creating a simulation each time
     let mut simulation = set_up_simulation();
@@ -237,7 +237,7 @@ pub fn build_data_set2(
     training_size: usize,
     test_size: usize,
 ) {
-    let db = Arc::new(AscentDb2::new("/home/gabor/ascent/quad/data.sqlite"));
+    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
     let handles = (0..training_size)
         .map(|ep| format!("{}_tr_{}", data_set_id, ep))
         .chain((0..test_size).map(|ep| format!("{}_te_{}", data_set_id, ep)))
@@ -259,7 +259,7 @@ pub fn build_data_set3(
     training_size: usize,
     test_size: usize,
 ) {
-    let db = Arc::new(AscentDb2::new("/home/gabor/ascent/quad/data.sqlite"));
+    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
     let episode_ids = (0..training_size)
         .map(|ep| format!("{}_tr_{}", data_set_id, ep))
         .chain((0..test_size).map(|ep| format!("{}_te_{}", data_set_id, ep)))
@@ -276,7 +276,7 @@ pub fn build_data_set(
     training_size: usize,
     test_size: usize,
 ) {
-    let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
+    let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
     let training_inputs = (0..training_size)
         .map(|_| generate_all_axis(training_duration))
         .collect::<Vec<_>>();
@@ -309,7 +309,7 @@ pub fn build_data_set(
 #[cfg(test)]
 mod test {
     use super::{build_data_set, generate_all_axis, set_up_simulation};
-    use db::AscentDb2;
+    use db::AscentDb;
     use std::time::Duration;
 
     #[test]
@@ -323,7 +323,7 @@ mod test {
 
     #[test]
     fn generate_fake_flight() {
-        let db = AscentDb2::new("/home/gabor/ascent/quad/data.sqlite");
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let mut simulation = set_up_simulation();
         let duration = Duration::from_secs(5);
         simulation.init("test_generated_simulation".into());

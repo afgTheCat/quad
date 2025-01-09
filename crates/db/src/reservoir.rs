@@ -1,4 +1,4 @@
-use crate::{schema::rc_model, AscentDb2};
+use crate::{schema::rc_model, AscentDb};
 use diesel::{
     prelude::{Insertable, Queryable},
     query_dsl::methods::FilterDsl,
@@ -35,7 +35,7 @@ pub struct NewDBRcData {
     pub readout_intercept: Option<String>,
 }
 
-impl AscentDb2 {
+impl AscentDb {
     pub fn insert_reservoir(&self, res: NewDBRcData) {
         let mut conn = self.diesel_conn.lock().unwrap();
         diesel::insert_into(rc_model::table)

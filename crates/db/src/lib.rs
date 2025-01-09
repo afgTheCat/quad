@@ -56,14 +56,14 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
     );
 ";
 
-pub struct AscentDb2 {
+pub struct AscentDb {
     // Diesel conn for type safty
     diesel_conn: Arc<Mutex<SqliteConnection>>,
     // Rusqlte conn for speed
     rusqlite_conn: Arc<Mutex<Connection>>,
 }
 
-impl AscentDb2 {
+impl AscentDb {
     pub fn new(db_file: &str) -> Self {
         let diesel_conn = SqliteConnection::establish(db_file).unwrap();
         let rusqlite_conn = Connection::open(db_file).unwrap();
