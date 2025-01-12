@@ -1,17 +1,16 @@
-use matfile::MatFile;
-use nalgebra::{Complex, ComplexField, DMatrix};
-use rand::thread_rng;
-use rand_distr::{Bernoulli, Distribution, Uniform};
-use smartcore::metrics::{f1::F1, Metrics};
-use nalgebra::{clamp, DVector};
 use crate::{
     extract_double,
     input::{RcInput, TSInput},
     one_hot_encode,
     representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
-    ridge::RidgeRegression, // ModelInput,
+    ridge::RidgeRegression,
 };
-
+use matfile::MatFile;
+use nalgebra::{clamp, DVector};
+use nalgebra::{Complex, ComplexField, DMatrix};
+use rand::thread_rng;
+use rand_distr::{Bernoulli, Distribution, Uniform};
+use smartcore::metrics::{f1::F1, Metrics};
 
 pub struct GenericModelCore {
     pub a: DVector<f64>,
@@ -153,7 +152,7 @@ impl MultiModelCore {
 }
 
 // TODO: serialize this
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Esn {
     pub n_internal_units: usize,
     pub input_scaling: f64,
@@ -240,8 +239,9 @@ impl Esn {
     }
 
     // current input [episodes, vars]
+    // NOTE: This is pure, time less and multiple episodes can be integrated
     pub fn integrate(
-        &mut self,
+        &self,
         current_input: DMatrix<f64>,
         previous_state: DMatrix<f64>,
     ) -> DMatrix<f64> {
@@ -250,7 +250,7 @@ impl Esn {
         state_before_tanh.map(|e| e.tanh()).transpose()
     }
 
-    pub fn compute_state_matricies(&mut self, input: &Box<dyn RcInput>) -> Vec<DMatrix<f64>> {
+    pub fn compute_state_matricies(&self, input: &Box<dyn RcInput>) -> Vec<DMatrix<f64>> {
         let (eps, time, _) = input.shape();
         let n_internal_units = self.n_internal_units;
         let mut states: Vec<DMatrix<f64>> = vec![DMatrix::zeros(time, n_internal_units); eps];

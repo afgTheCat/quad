@@ -1,8 +1,12 @@
 use db::AscentDb;
+use nalgebra::DMatrix;
 use std::{sync::Mutex, time::Duration};
 // This is going to be the rc based flight controller after training
 use res::{
-    drone::DroneRc, input::FlightInput, representation::RepresentationType, ridge::RidgeRegression,
+    drone::DroneRc,
+    input::{db_fl_to_rc_output, FlightInput, RcInput},
+    representation::RepresentationType,
+    ridge::RidgeRegression,
 };
 
 use crate::{FlightController, MotorInput};
@@ -51,7 +55,7 @@ impl ResController {
         }
     }
 
-    pub fn train(db: &AscentDb, simulation_ids: Vec<String>) {
+    pub fn train(db: &AscentDb, simulation_ids: Vec<String>, model_name: &str) {
         let flight_logs = simulation_ids
             .iter()
             .map(|sim_id| db.get_simulation_data(sim_id))
@@ -65,6 +69,57 @@ impl ResController {
             RidgeRegression::new(1.),
         );
         drone_rc.esn.set_input_weights(18);
+
+        // TODO: we need this
+        let flight_log = flight_logs[0].clone();
+        let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
+        let data_points = DMatrix::from_columns(
+            &flight_log
+                .iter()
+                .map(db_fl_to_rc_output)
+                .collect::<Vec<_>>(),
+        )
+        .transpose();
+
+        drone_rc.fit(Box::new(input.clone()), data_points);
+        drone_rc.save_model_to_db(model_name.into(), &db);
+    }
+
+    pub fn train2(db: &AscentDb, simulation_ids: Vec<String>, model_name: &str) {
+        let flight_logs = simulation_ids
+            .iter()
+            .map(|sim_id| db.get_simulation_data(sim_id))
+            .collect::<Vec<_>>();
+        let mut drone_rc = DroneRc::new(
+            500,
+            0.3,
+            0.99,
+            0.2,
+            RepresentationType::Output(1.),
+            RidgeRegression::new(1.),
+        );
+        drone_rc.esn.set_input_weights(18);
+        // TODO: we should probably do this parallel! Probably won't even need threads just have n
+        // reservoirs that need to be run parallel. This is however not really feasable
+        let reservoir_inputs: Box<dyn RcInput> =
+            Box::new(FlightInput::new_from_db_fl_log(flight_logs));
+        let res_states = drone_rc.esn.compute_state_matricies(&reservoir_inputs);
+        let (tr_len, internal_units) = res_states[0].shape();
+
+        // [ep, time, res] -> [ep * time, res]
+        let flattened_res_states: DMatrix<f64> = res_states.iter().fold(
+            DMatrix::zeros(res_states.len() * tr_len, internal_units),
+            |acc, elem| todo!(),
+        );
+
+        // let res_states = flight_logs
+        //     .iter()
+        //     .map(|ep| {
+        //         let input: Box<dyn RcInput> =
+        //             Box::new(FlightInput::new_from_db_fl_log(vec![ep.clone()]));
+        //         let states = drone_rc.esn.compute_state_matricies(&input);
+        //     })
+        //     .collect::<Vec<_>>();
     }
 }
 
@@ -146,7 +201,7 @@ mod test {
     #[test]
     fn train_on_many() {
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
-        let simulation_id = db.get_all_simulation_ids();
+        let simulation_id = db.select_simulation_ids();
         let tr_ids = simulation_id
             .iter()
             .filter(|id| id.starts_with("ds_id_1_tr"))

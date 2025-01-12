@@ -1,9 +1,16 @@
-use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::SimData, DB};
+use std::time::Duration;
+
+use crate::{
+    drone::get_base_model,
+    ntb_mat3, ntb_vec3,
+    state::{SelectionConfig, VisualizerData},
+    DB,
+};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
     math::{Quat, Vec3},
-    prelude::{Deref, DerefMut, Gizmos, Query, Res, ResMut, Resource, Transform},
+    prelude::{Commands, Deref, DerefMut, Gizmos, Query, Res, ResMut, Resource, Transform},
     scene::Scene,
     time::Time,
 };
@@ -45,26 +52,38 @@ pub fn replay_loop(
     camera.target_focus = drone_translation;
 }
 
-pub fn enter_replay(sim_data: ResMut<SimData>, mut replay: ResMut<Replay>, db: Res<DB>) {
-    if let Some(simulation_id) = &sim_data.selected_simulation_id {
-        let sim_logs = db.get_simulation_data(&simulation_id);
-        replay.time_steps = sim_logs;
-    }
+pub fn enter_replay(sim_data: ResMut<VisualizerData>, db: Res<DB>, mut commands: Commands) {
+    let SelectionConfig::Replay {
+        replay_id: Some(simulation_id),
+        controller, // TODO: use this
+    } = &sim_data.selection_config
+    else {
+        unreachable!()
+    };
+
+    let sim_logs = db.get_simulation_data(simulation_id);
+    let drone = get_base_model();
+    let replay = Replay(Replayer {
+        drone,
+        time: Duration::new(0, 0),
+        time_accu: Duration::new(0, 0),
+        time_steps: sim_logs,
+        replay_index: 0,
+        dt: Duration::from_nanos(5000), // TODO: update this
+    });
+    commands.insert_resource(replay);
 }
 
 pub fn exit_replay(
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
-    mut replay: ResMut<Replay>,
     mut camera_query: Query<&mut PanOrbitCamera>,
+    mut commands: Commands,
 ) {
     let (mut tranform, _) = scene_query.single_mut();
     let mut camera = camera_query.single_mut();
-
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
-
-    let initial_frame = initial_simulation_frame();
-    replay.reset(initial_frame);
-
     camera.target_focus = tranform.translation;
+
+    commands.remove_resource::<Replay>();
 }

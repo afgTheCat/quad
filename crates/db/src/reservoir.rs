@@ -1,7 +1,7 @@
 use crate::{schema::rc_model, AscentDb};
 use diesel::{
     prelude::{Insertable, Queryable},
-    query_dsl::methods::FilterDsl,
+    query_dsl::methods::{FilterDsl, SelectDsl},
     ExpressionMethods, RunQueryDsl, Selectable,
 };
 use std::ops::DerefMut;
@@ -57,5 +57,15 @@ impl AscentDb {
         } else {
             None
         }
+    }
+
+    pub fn select_reservoir_ids(&self) -> Vec<String> {
+        use self::rc_model::dsl::*;
+
+        let mut conn = self.diesel_conn.lock().unwrap();
+        rc_model
+            .select(rc_id)
+            .load::<String>(conn.deref_mut())
+            .unwrap()
     }
 }

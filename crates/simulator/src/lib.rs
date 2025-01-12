@@ -5,7 +5,7 @@ pub mod low_pass_filter;
 pub mod noise;
 pub mod sample_curve;
 
-use db::simulation::DBFlightLog;
+use db::{simulation::DBFlightLog, AscentDb};
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
@@ -579,6 +579,10 @@ impl Simulator {
         self.time_accu = Duration::new(0, 0);
         self.fc_time_accu = Duration::new(0, 0);
         self.logger.deinit();
+    }
+
+    pub fn write_logs(&self, db: &AscentDb) {
+        self.logger.write_logs(db);
     }
 }
 

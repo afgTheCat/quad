@@ -1,20 +1,28 @@
-use crate::{initial_simulation_frame, ntb_mat3, ntb_vec3, ui::SimData, Simulaton, DB};
+use crate::{drone::get_base_model, ntb_mat3, ntb_vec3, state::VisualizerData, DB};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
     input::{gamepad::GamepadEvent, keyboard::KeyboardInput, ButtonState},
     math::{Quat, Vec3},
     prelude::{
-        Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res, ResMut,
-        Resource, Transform,
+        Commands, Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res,
+        ResMut, Resource, Transform,
     },
     scene::Scene,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use flight_controller::Channels;
+use flight_controller::{controllers::bf_controller::BFController, Channels};
 use nalgebra::Vector3;
+use simulator::{logger::SimLogger, BatteryUpdate, MotorInput, Simulator};
+use std::{sync::Arc, time::Duration};
 use uuid::Uuid;
+
+// Since we currently only support a single simulation, we should use a resource for the drone and
+// all the auxulary information. In the future, if we include a multi drone setup/collisions and
+// other things, it might make sense to have entities/components
+#[derive(Resource, Deref, DerefMut)]
+pub struct Simulaton(Simulator);
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -76,7 +84,7 @@ pub fn handle_input(
 pub fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut sim_data: ResMut<SimData>,
+    mut sim_data: ResMut<VisualizerData>,
     mut simulation: ResMut<Simulaton>,
     controller_input: Res<PlayerControllerInput>,
     mut camera_query: Query<&mut PanOrbitCamera>,
@@ -108,40 +116,57 @@ pub fn sim_loop(
     camera.target_focus = drone_translation;
 }
 
-pub fn enter_simulation(mut simulation: ResMut<Simulaton>) {
+// TODO: set it up according to the menu
+pub fn enter_simulation(mut commands: Commands, mut sim_data: ResMut<VisualizerData>) {
+    let drone = get_base_model();
+    let flight_controller = Arc::new(BFController::new());
+    let battery_state = &drone.current_frame.battery_state;
+    let logger = SimLogger::new(
+        MotorInput::default(),
+        BatteryUpdate {
+            bat_voltage_sag: battery_state.bat_voltage_sag,
+            bat_voltage: battery_state.bat_voltage,
+            amperage: battery_state.amperage,
+            m_ah_drawn: battery_state.m_ah_drawn,
+            cell_count: drone.battery_model.quad_bat_cell_count,
+        },
+        drone.current_frame.gyro_state.gyro_update(),
+        Channels::default(),
+    );
+    let mut simulation = Simulaton(Simulator {
+        drone: drone.clone(),
+        flight_controller: flight_controller.clone(),
+        time_accu: Duration::default(),
+        time: Duration::new(0, 0),
+        dt: Duration::from_nanos(5000), // TODO: update this
+        fc_time_accu: Duration::default(),
+        logger,
+    });
+
     let simulation_id = Uuid::new_v4().to_string();
     simulation.init(simulation_id);
+    commands.insert_resource(simulation);
+    commands.insert_resource(PlayerControllerInput::default());
 }
 
 pub fn exit_simulation(
-    mut simulation: ResMut<Simulaton>,
-    mut sim_data: ResMut<SimData>,
+    simulation: ResMut<Simulaton>,
     db: Res<DB>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
+    mut commands: Commands,
 ) {
+    // reset transform
     let (mut tranform, _) = scene_query.single_mut();
     let mut camera = camera_query.single_mut();
-
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
-
-    let simulation_id = simulation
-        .logger
-        .simulation_id
-        .as_ref()
-        .unwrap()
-        .to_string();
-
-    // TODO: this is kinda awkward, we would ideally not have the db as a resource but part of the
-    // logger
-    db.write_flight_logs(&simulation_id, &simulation.logger.data);
-
-    // insert siumulation id
-    sim_data.simulation_ids.push(simulation_id);
-
-    let initial_frame = initial_simulation_frame();
-    simulation.reset(initial_frame);
-
     camera.target_focus = tranform.translation;
+
+    // Write the logs, should be a trait eventually
+    simulation.write_logs(&db);
+
+    // Remove the simulation
+    commands.remove_resource::<Simulaton>();
+    commands.remove_resource::<PlayerControllerInput>();
 }

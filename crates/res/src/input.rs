@@ -83,7 +83,7 @@ impl RcInput for TSInput {
 #[derive(Debug, Clone)]
 pub struct FlightInput {
     episodes: usize,
-    time: usize, // configure how many esns we want here OR just something similiar
+    time: usize,
     vars: usize, // I guess this can be something else
     data: Vec<DMatrix<f64>>,
 }

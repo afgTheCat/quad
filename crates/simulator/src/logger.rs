@@ -1,6 +1,6 @@
 // TODO: clean this up
 
-use db::simulation::DBNewFlightLog;
+use db::{simulation::DBNewFlightLog, AscentDb};
 // use db::FlightLogEvent;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use std::time::Duration;
@@ -84,5 +84,9 @@ impl SimLogger {
 
     pub fn deinit(&mut self) {
         self.simulation_id = None
+    }
+
+    pub fn write_logs(&self, db: &AscentDb) {
+        db.write_flight_logs(&self.simulation_id.as_ref().unwrap(), &self.data);
     }
 }

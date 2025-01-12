@@ -2,22 +2,24 @@
 //! contfigurations may affect the drone and it's behaviour. This software is super early in
 //! development, expect a lot of changes, including to how configurations are stored, what drone
 //! meshes we want to use etc.
+mod drone;
 mod replay;
 mod sim;
-mod ui;
+mod state;
 
+use crate::state::VisualizerState;
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
     asset::{AssetServer, Assets, Handle},
     color::Color,
     gltf::Gltf,
     input::{mouse::MouseWheel, ButtonInput},
-    math::{DVec3, EulerRot, Mat3, Quat, Vec3},
+    math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, Events,
+        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
         IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
-        States, Transform,
+        Transform,
     },
     scene::SceneBundle,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
@@ -28,72 +30,10 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use db::AscentDb;
-use flight_controller::{
-    controllers::{bf_controller::BFController, res_controller::ResController},
-    Channels,
-};
-use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
-use replay::{enter_replay, exit_replay, replay_loop, Replay};
-use sim::{enter_simulation, exit_simulation, handle_input, sim_loop, PlayerControllerInput};
-#[cfg(feature = "noise")]
-use simulator::FrameCharachteristics;
-use simulator::{
-    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, BatteryUpdate,
-    Drone, DroneFrameState, DroneModel, GyroModel, GyroState, MotorInput, Replayer, RotorModel,
-    RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
-};
-use std::{sync::Arc, time::Duration};
-use ui::{draw_ui, SimData};
-
-#[derive(States, Clone, Default, Eq, PartialEq, Hash, Debug)]
-pub enum VisualizerState {
-    #[default]
-    Loading,
-    Menu,
-    Simulation,
-    Replay,
-}
-
-// TODO: we should not rely on the mesh names for the simulation but the other way around, it would
-// be nice to load and adjust the correct mesh to the simulations configuration
-pub const PROP_BLADE_MESH_NAMES: [(&str, f64, DVec3); 4] = [
-    (
-        "prop_blade.001",
-        -1.,
-        DVec3::new(
-            0.14055216312408447,
-            0.013523973524570465,
-            0.11647607386112213,
-        ),
-    ),
-    (
-        "prop_blade.002",
-        1.,
-        DVec3::new(
-            0.14055214822292328,
-            0.013523973524570465,
-            -0.11647609621286392,
-        ),
-    ),
-    (
-        "prop_blade.003",
-        1.,
-        DVec3::new(
-            -0.14055216312408447,
-            0.013523973524570465,
-            0.11647608131170273,
-        ),
-    ),
-    (
-        "prop_blade.004",
-        -1.,
-        DVec3::new(
-            -0.14055216312408447,
-            0.013523973524570465,
-            -0.11647607386112213,
-        ),
-    ),
-];
+use nalgebra::{Rotation3, Vector3};
+use replay::{enter_replay, exit_replay, replay_loop};
+use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
+use state::{draw_ui, prefetch_menu_items, VisualizerData};
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
@@ -137,62 +77,6 @@ pub struct DroneAsset(Handle<Gltf>);
 #[derive(Resource, Deref)]
 struct DB(AscentDb);
 
-// Since we currently only support a single simulation, we should use a resource for the drone and
-// all the auxulary information. In the future, if we include a multi drone setup/collisions and
-// other things, it might make sense to have entities/components
-#[derive(Resource, Deref, DerefMut)]
-pub struct Simulaton(Simulator);
-
-pub fn initial_simulation_frame() -> SimulationFrame {
-    let rotors_state =
-        RotorsState(
-            PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir, position)| RotorState {
-                current: 0.,
-                rpm: 0.,
-                motor_torque: 0.,
-                effective_thrust: 0.,
-                pwm: 0.,
-                rotor_dir,
-                motor_pos: Vector3::new(position.x, position.y, position.z),
-                pwm_low_pass_filter: LowPassFilter::default(),
-            }),
-        );
-
-    let battery_state = BatteryState {
-        capacity: 850.,
-        bat_voltage: 4.2,
-        bat_voltage_sag: 4.2,
-        amperage: 0.,
-        m_ah_drawn: 0.,
-    };
-
-    let drone_state = DroneFrameState {
-        position: Vector3::zeros(),
-        rotation: Rotation3::identity(), // stargin position
-        linear_velocity: Vector3::zeros(),
-        angular_velocity: Vector3::new(0., 0., 0.),
-        acceleration: Vector3::zeros(),
-    };
-
-    let gyro_state = GyroState {
-        rotation: UnitQuaternion::identity(),
-        acceleration: Vector3::zeros(),
-        angular_velocity: Vector3::zeros(),
-        low_pass_filters: [
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-        ],
-    };
-
-    SimulationFrame {
-        battery_state,
-        rotors_state,
-        drone_state,
-        gyro_state,
-    }
-}
-
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
 /// initialize the flight controller and start the simulation
@@ -229,116 +113,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_scene = asset_server.load("drone5.glb");
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset.clone());
-
-    let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
-    let simulation_ids = db.get_all_simulation_ids();
-    commands.insert_resource(SimData {
-        simulation_ids,
+    commands.insert_resource(VisualizerData {
         ..Default::default()
     });
 
-    // let flight_controller = Arc::new(BFController::new());
-    // TODO: this is horrible xd
-    let flight_controller = Arc::new(ResController::from_db(&db, "only_up"));
-    let initial_frame = initial_simulation_frame();
-
-    // TODO: we should have this entirly read from a file
-    let bat_voltage_curve = SampleCurve::new(vec![
-        SamplePoint::new(-0.06, 4.4),
-        SamplePoint::new(0.0, 4.2),
-        SamplePoint::new(0.01, 4.05),
-        SamplePoint::new(0.04, 3.97),
-        SamplePoint::new(0.30, 3.82),
-        SamplePoint::new(0.40, 3.7),
-        SamplePoint::new(1.0, 3.49),
-        SamplePoint::new(1.01, 3.4),
-        SamplePoint::new(1.03, 3.3),
-        SamplePoint::new(1.06, 3.0),
-        SamplePoint::new(1.08, 0.0),
-    ]);
-
-    let battery_model = BatteryModel {
-        quad_bat_capacity: 850.,
-        bat_voltage_curve,
-        quad_bat_cell_count: 4,
-        quad_bat_capacity_charged: 850.,
-        max_voltage_sag: 1.4,
-    };
-
-    let rotor_model = RotorModel {
-        prop_max_rpm: 36000.0,
-        pwm_low_pass_filter: [
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-            LowPassFilter::default(),
-        ],
-        motor_kv: 3200., // kv
-        motor_r: 0.13,   // resistence
-        motor_io: 0.23,  // idle current
-        prop_thrust_factor: Vector3::new(-5e-05, -0.0025, 4.75),
-        prop_torque_factor: 0.0056,
-        prop_a_factor: 7.43e-10,
-        prop_inertia: 3.5e-07,
-    };
-
-    let drone_model = DroneModel {
-        frame_drag_area: Vector3::new(0.0082, 0.0077, 0.0082),
-        frame_drag_constant: 1.45,
-        mass: 0.2972,
-        inv_tensor: Matrix3::from_diagonal(&Vector3::new(750., 5150.0, 750.0)),
-    };
-
-    let gyro_model = GyroModel {};
-
-    let drone = Drone {
-        current_frame: initial_frame.clone(),
-        next_frame: initial_frame.clone(),
-        battery_model: battery_model.clone(),
-        rotor_model,
-        drone_model,
-        gyro_model,
-    };
-
-    let logger = SimLogger::new(
-        MotorInput::default(),
-        BatteryUpdate {
-            bat_voltage_sag: initial_frame.battery_state.bat_voltage_sag,
-            bat_voltage: initial_frame.battery_state.bat_voltage,
-            amperage: initial_frame.battery_state.amperage,
-            m_ah_drawn: initial_frame.battery_state.m_ah_drawn,
-            cell_count: battery_model.quad_bat_cell_count,
-        },
-        initial_frame.gyro_state.gyro_update(),
-        Channels::default(),
-    );
-
-    let simulation = Simulaton(Simulator {
-        drone: drone.clone(),
-        flight_controller: flight_controller.clone(),
-        time_accu: Duration::default(),
-        time: Duration::new(0, 0),
-        dt: Duration::from_nanos(5000), // TODO: update this
-        fc_time_accu: Duration::default(),
-        logger,
-    });
-
-    commands.insert_resource(simulation);
-
-    let replay = Replay(Replayer {
-        drone,
-        time: Duration::new(0, 0),
-        time_accu: Duration::new(0, 0),
-        time_steps: vec![],
-        replay_index: 0,
-        dt: Duration::from_nanos(5000), // TODO: update this
-    });
-
-    commands.insert_resource(replay);
-
-    // Insert the player controller input
-    commands.insert_resource(PlayerControllerInput::default());
-
+    let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
     commands.insert_resource(DB(db));
 }
 
@@ -416,7 +195,7 @@ fn main() {
         .add_plugins(default_plugin)
         .add_plugins(EguiPlugin)
         .add_plugins(PanOrbitCameraPlugin)
-        .insert_state(VisualizerState::default())
+        .insert_state(VisualizerState::Loading)
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
         .add_systems(
@@ -426,6 +205,7 @@ fn main() {
                 .before(bevy_egui::EguiSet::BeginPass),
         )
         .add_systems(Update, draw_ui)
+        .add_systems(OnEnter(VisualizerState::Menu), prefetch_menu_items)
         .add_systems(
             Update,
             load_drone_scene.run_if(in_state(VisualizerState::Loading)),

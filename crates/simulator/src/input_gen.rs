@@ -14,7 +14,7 @@ use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use std::{fmt::format, sync::Arc, thread, time::Duration, usize};
+use std::{sync::Arc, thread, time::Duration, usize};
 
 pub const PROP_BLADE_MESH_NAMES: [(f64, Vector3<f64>); 4] = [
     (

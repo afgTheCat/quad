@@ -41,7 +41,9 @@ impl DroneRc {
 
     // this is kinda different, but should be ok
     pub fn fit(&mut self, input: Box<dyn RcInput>, data_points: DMatrix<f64>) {
+        // Vec<DMatrix<f64>> where DMatrix<f64> is a sequence of episodes
         let res_states = self.esn.compute_state_matricies(&input);
+        // We are training a single thing
         self.readout
             .fit_multiple_svd(res_states[0].clone(), &data_points);
     }

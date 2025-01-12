@@ -126,45 +126,6 @@ impl RidgeRegression {
         (xty, intercept)
     }
 
-    // pub fn fit_cholesky2(
-    //     &mut self,
-    //     x: &DMatrix<f64>,
-    //     y: DVector<f64>,
-    //     save: bool,
-    // ) -> (DVector<f64>, f64) {
-    //     // Calculate means for centering
-    //     let y_mean = y.mean();
-    //     let x_mean = DVector::from(x.column_iter().map(|col| col.mean()).collect::<Vec<_>>());
-    //
-    //     // Center the data
-    //     let y_centered = y.map(|val| val - y_mean);
-    //     let mut x_centered = x.clone();
-    //     for (i, mut col) in x_centered.column_iter_mut().enumerate() {
-    //         col.add_scalar_mut(-x_mean[i]);
-    //     }
-    //
-    //     let xtx = x_centered.transpose() * &x_centered; // X^T * X
-    //     let identity = DMatrix::identity(xtx.nrows(), xtx.ncols()); // Identity matrix
-    //     let xtx_regularized = xtx + self.alpha * identity; // X^T * X + αI
-    //
-    //     let mut xty = x_centered.transpose() * y_centered; // X^T * y
-    //     let cholesky = Cholesky::new(xtx_regularized).unwrap();
-    //     cholesky.solve_mut(&mut xty);
-    //
-    //     // Compute intercept
-    //     let intercept = y_mean - x_mean.dot(&xty);
-    //
-    //     // Save the solution if required
-    //     if save {
-    //         self.sol = Some(RidgeRegressionSol {
-    //             coeff: DMatrix::from_rows(&[xty.transpose()]),
-    //             intercept: DVector::from_element(1, intercept),
-    //         });
-    //     }
-    //
-    //     (xty, intercept)
-    // }
-
     pub fn fit_multiple_svd(
         &mut self,
         mut x: DMatrix<f64>,
@@ -203,42 +164,6 @@ impl RidgeRegression {
         (coeff_mult, intercept_mult)
     }
 
-    // TODO: fix this
-    // pub fn fit_multiple_lapack_svd(
-    //     &mut self,
-    //     mut x: DMatrix<f64>,
-    //     y: &DMatrix<f64>,
-    // ) -> (DMatrix<f64>, DVector<f64>) {
-    //     let (_, data_features) = x.data.shape();
-    //     let (_, target_dim) = y.data.shape();
-    //     let mut coeff_mult: DMatrix<f64> = DMatrix::zeros(target_dim.0, data_features.0);
-    //     let mut intercept_mult: DVector<f64> = DVector::zeros(target_dim.0);
-    //
-    //     let x_mean = DVector::from(x.column_iter().map(|col| col.mean()).collect::<Vec<_>>());
-    //     for (i, mut col) in x.column_iter_mut().enumerate() {
-    //         col.add_scalar_mut(-x_mean[i]);
-    //     }
-    //
-    //     let SVD2 {
-    //         u,
-    //         vt,
-    //         singular_values,
-    //     } = SVD2::new(x).unwrap();
-    //
-    //     let d = singular_values.map(|sig| sig / (sig.powi(2) + self.alpha));
-    //     for (i, col) in y.column_iter().enumerate() {
-    //         let (coeff, intercept) =
-    //             self.fit_on_decomposed_svd(&u, &vt, &d, col.into(), &x_mean, false);
-    //         coeff_mult.set_row(i, &coeff.transpose());
-    //         intercept_mult[i] = intercept;
-    //     }
-    //     self.sol = Some(RidgeRegressionSol {
-    //         coeff: coeff_mult.clone(),
-    //         intercept: intercept_mult.clone(),
-    //     });
-    //     (coeff_mult, intercept_mult)
-    // }
-
     pub fn fit_multiple_cholesky(
         &mut self,
         x: DMatrix<f64>,
@@ -260,28 +185,6 @@ impl RidgeRegression {
         });
         (coeff_mult, intercept_mult)
     }
-
-    // pub fn fit_multiple_cholesky2(
-    //     &mut self,
-    //     x: DMatrix<f64>,
-    //     y: DMatrix<f64>,
-    // ) -> (DMatrix<f64>, DVector<f64>) {
-    //     let (_, data_features) = x.data.shape();
-    //     let (_, target_dim) = y.data.shape();
-    //     let mut coeff_mult: DMatrix<f64> = DMatrix::zeros(target_dim.0, data_features.0);
-    //     let mut intercept_mult: DVector<f64> = DVector::zeros(target_dim.0);
-    //
-    //     for (i, col) in y.column_iter().enumerate() {
-    //         let (coeff, intercept) = self.fit_cholesky2(&x, col.into_owned(), false);
-    //         coeff_mult.set_row(i, &coeff.transpose());
-    //         intercept_mult[i] = intercept;
-    //     }
-    //     self.sol = Some(RidgeRegressionSol {
-    //         coeff: coeff_mult.clone(),
-    //         intercept: intercept_mult.clone(),
-    //     });
-    //     (coeff_mult, intercept_mult)
-    // }
 
     // makes a prediction
     pub fn predict(&self, x: DMatrix<f64>) -> DMatrix<f64> {
@@ -1096,16 +999,6 @@ mod test {
         println!("{}", thing);
     }
 
-    // #[test]
-    // fn test_cholesky2() {
-    //     let x = DMatrix::from_row_slice(50, 1, &X);
-    //     let y = DVector::from_row_slice(&Y);
-    //
-    //     let mut ridge_regression = RidgeRegression::new(10.);
-    //     ridge_regression.fit_cholesky2(&x, y, true);
-    //     let thing = ridge_regression.predict(x);
-    //     println!("{}", thing);
-    // }
 
     #[test]
     fn fit_mutliple_svd() {
@@ -1117,16 +1010,4 @@ mod test {
         println!("coeff: {coeff} {intercept}");
         println!("{}", rr.predict(x));
     }
-
-    // TODO: readd this
-    // #[test]
-    // fn fit_mutliple_svd_lapack() {
-    //     let x = DMatrix::from_row_slice(50, 10, &X2);
-    //     let y = DMatrix::from_row_slice(50, 3, &Y2);
-    //
-    //     let mut rr = RidgeRegression::new(10.);
-    //     let (coeff, intercept) = rr.fit_multiple_lapack_svd(x.clone(), &y);
-    //     println!("coeff: {coeff} {intercept}");
-    //     println!("{}", rr.predict(x));
-    // }
 }

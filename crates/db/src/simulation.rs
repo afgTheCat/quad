@@ -134,7 +134,7 @@ impl AscentDb {
         tx.commit().unwrap();
     }
 
-    pub fn get_all_simulation_ids(&self) -> Vec<String> {
+    pub fn select_simulation_ids(&self) -> Vec<String> {
         use self::flight_log::dsl::*;
         let mut conn = self.diesel_conn.lock().unwrap();
 
