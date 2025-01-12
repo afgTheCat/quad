@@ -1,9 +1,4 @@
-Tomorrow:
-  - we need to figure out the precise ordering of things
-  - we need to fix the replayer ordering
-  - we need to add the manager to handle things
-  - we probably need a better way to load drones
-  - we need a better format to store the data
-  - we need a better ui
-  - get rid of websockets
-  - better replay ui etc
+TODO:
+  - state management fixes [DONE]
+  - rerun logger
+  - gym env

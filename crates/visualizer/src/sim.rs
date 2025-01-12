@@ -1,4 +1,9 @@
-use crate::{drone::get_base_model, ntb_mat3, ntb_vec3, state::VisualizerData, DB};
+use crate::{
+    drone::get_base_model,
+    ntb_mat3, ntb_vec3,
+    state::{Controller, SelectionConfig, VisualizerData},
+    DB,
+};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -12,10 +17,17 @@ use bevy::{
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use flight_controller::{controllers::bf_controller::BFController, Channels};
+use flight_controller::{
+    controllers::{bf_controller::BFController, res_controller::ResController},
+    Channels, FlightController,
+};
 use nalgebra::Vector3;
-use simulator::{logger::SimLogger, BatteryUpdate, MotorInput, Simulator};
-use std::{sync::Arc, time::Duration};
+use simulator::loggers::Logger;
+use simulator::{loggers::DBLogger, BatteryUpdate, MotorInput, Simulator};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 use uuid::Uuid;
 
 // Since we currently only support a single simulation, we should use a resource for the drone and
@@ -117,11 +129,24 @@ pub fn sim_loop(
 }
 
 // TODO: set it up according to the menu
-pub fn enter_simulation(mut commands: Commands, mut sim_data: ResMut<VisualizerData>) {
+pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>, db: Res<DB>) {
+    let simulation_id = Uuid::new_v4().to_string();
     let drone = get_base_model();
-    let flight_controller = Arc::new(BFController::new());
+    let SelectionConfig::Simulation {
+        logger,
+        controller: Some(controller),
+    } = &sim_data.selection_config
+    else {
+        unreachable!()
+    };
+
+    let flight_controller: Arc<dyn FlightController> = match controller {
+        Controller::Betafligt => Arc::new(BFController::new()),
+        Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, &res_id)),
+    };
     let battery_state = &drone.current_frame.battery_state;
-    let logger = SimLogger::new(
+    let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(DBLogger::new(
+        simulation_id,
         MotorInput::default(),
         BatteryUpdate {
             bat_voltage_sag: battery_state.bat_voltage_sag,
@@ -132,7 +157,8 @@ pub fn enter_simulation(mut commands: Commands, mut sim_data: ResMut<VisualizerD
         },
         drone.current_frame.gyro_state.gyro_update(),
         Channels::default(),
-    );
+        db.clone(),
+    )));
     let mut simulation = Simulaton(Simulator {
         drone: drone.clone(),
         flight_controller: flight_controller.clone(),
@@ -143,8 +169,7 @@ pub fn enter_simulation(mut commands: Commands, mut sim_data: ResMut<VisualizerD
         logger,
     });
 
-    let simulation_id = Uuid::new_v4().to_string();
-    simulation.init(simulation_id);
+    simulation.init();
     commands.insert_resource(simulation);
     commands.insert_resource(PlayerControllerInput::default());
 }
@@ -164,7 +189,7 @@ pub fn exit_simulation(
     camera.target_focus = tranform.translation;
 
     // Write the logs, should be a trait eventually
-    simulation.write_logs(&db);
+    simulation.write_remaining_logs();
 
     // Remove the simulation
     commands.remove_resource::<Simulaton>();

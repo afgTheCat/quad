@@ -8,6 +8,7 @@ resolver = "2"
 rand_xoshiro = "0.6.0"
 pyo3.workspace = true
 pyo3-log.workspace = true 
+rerun.workspace = true
 rand = "0.8.5"
 derive_more = { version = "1.0.0", features = ["full"] }
 nalgebra.workspace = true

@@ -1,8 +1,9 @@
 // What we want to do is to have the 4 degrees of freedom
 // explored in a semi realistic manner => then generate data from it
 
+// use crate::loggers::Logger;
 use crate::{
-    logger::SimLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
+    loggers::DBLogger, low_pass_filter::LowPassFilter, BatteryModel, BatteryState, Drone,
     DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel, RotorState, RotorsState,
     SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
@@ -14,6 +15,7 @@ use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use std::sync::Mutex;
 use std::{sync::Arc, thread, time::Duration, usize};
 
 pub const PROP_BLADE_MESH_NAMES: [(f64, Vector3<f64>); 4] = [
@@ -51,7 +53,7 @@ pub const PROP_BLADE_MESH_NAMES: [(f64, Vector3<f64>); 4] = [
     ),
 ];
 
-fn set_up_simulation() -> Simulator {
+fn set_up_simulation(db: Arc<AscentDb>, simulation_id: String) -> Simulator {
     let rotors_state =
         RotorsState(
             PROP_BLADE_MESH_NAMES.map(|(rotor_dir, motor_pos)| RotorState {
@@ -148,7 +150,8 @@ fn set_up_simulation() -> Simulator {
         prop_inertia: 3.5e-07,
     };
 
-    let logger = SimLogger::new(
+    let logger = Arc::new(Mutex::new(DBLogger::new(
+        simulation_id,
         MotorInput::default(),
         BatteryUpdate {
             bat_voltage_sag: initial_frame.battery_state.bat_voltage_sag,
@@ -159,7 +162,8 @@ fn set_up_simulation() -> Simulator {
         },
         initial_frame.gyro_state.gyro_update(),
         Channels::default(),
-    );
+        db,
+    )));
 
     let drone = Drone {
         current_frame: initial_frame.clone(),
@@ -222,13 +226,14 @@ pub fn generate_all_axis(duration: Duration) -> Vec<Channels> {
 fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Duration) {
     let inputs = generate_all_axis(training_duration);
     // TODO: we should pool instead of just creating a simulation each time
-    let mut simulation = set_up_simulation();
-    simulation.init(episode_name.clone());
+    let mut simulation = set_up_simulation(db.clone(), episode_name);
+    simulation.init();
+
     // TODO: we may want to better controll this
     for input in inputs {
         simulation.simulate_delta(Duration::from_millis(1), input);
     }
-    db.write_flight_logs(&episode_name, &simulation.logger.data);
+    simulation.write_remaining_logs();
 }
 
 pub fn build_data_set2(
@@ -276,7 +281,7 @@ pub fn build_data_set(
     training_size: usize,
     test_size: usize,
 ) {
-    let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
     let training_inputs = (0..training_size)
         .map(|_| generate_all_axis(training_duration))
         .collect::<Vec<_>>();
@@ -286,23 +291,21 @@ pub fn build_data_set(
 
     // TODO: do this on multiple cores
     for (ep, inputs) in training_inputs.into_iter().enumerate() {
-        let tr_id = format!("{}_tr_{}", data_set_id, ep);
-        let mut simulation = set_up_simulation();
-        simulation.init(tr_id.clone());
+        let mut simulation = set_up_simulation(db.clone(), format!("{}_tr_{}", data_set_id, ep));
+        simulation.init(); // tr_id.clone()
         for input in inputs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        db.write_flight_logs(&tr_id, &simulation.logger.data);
+        simulation.write_remaining_logs();
     }
 
     for (ep, inputs) in test_inputs.into_iter().enumerate() {
-        let tr_id = format!("{}_te_{}", data_set_id, ep);
-        let mut simulation = set_up_simulation();
-        simulation.init(tr_id.clone());
+        let mut simulation = set_up_simulation(db.clone(), format!("{}_te_{}", data_set_id, ep));
+        simulation.init(); // tr_id.clone()
         for input in inputs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        db.write_flight_logs(&tr_id, &simulation.logger.data);
+        simulation.write_remaining_logs();
     }
 }
 
@@ -310,7 +313,7 @@ pub fn build_data_set(
 mod test {
     use super::{build_data_set, generate_all_axis, set_up_simulation};
     use db::AscentDb;
-    use std::time::Duration;
+    use std::{sync::Arc, time::Duration};
 
     #[test]
     fn build_data_set_1() {
@@ -323,20 +326,14 @@ mod test {
 
     #[test]
     fn generate_fake_flight() {
-        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
-        let mut simulation = set_up_simulation();
+        let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
+        let mut simulation = set_up_simulation(db.clone(), "test_generated_simulation".into());
         let duration = Duration::from_secs(5);
-        simulation.init("test_generated_simulation".into());
+        simulation.init();
         let inputs_per_milisecs = generate_all_axis(duration);
         for input in inputs_per_milisecs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        let simulation_id = simulation
-            .logger
-            .simulation_id
-            .as_ref()
-            .unwrap()
-            .to_string();
-        db.write_flight_logs(&simulation_id, &simulation.logger.data);
+        simulation.write_remaining_logs();
     }
 }

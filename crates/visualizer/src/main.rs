@@ -34,6 +34,7 @@ use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
 use state::{draw_ui, prefetch_menu_items, VisualizerData};
+use std::sync::Arc;
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
@@ -75,7 +76,7 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 pub struct DroneAsset(Handle<Gltf>);
 
 #[derive(Resource, Deref)]
-struct DB(AscentDb);
+struct DB(Arc<AscentDb>);
 
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
@@ -117,7 +118,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
 
-    let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
     commands.insert_resource(DB(db));
 }
 

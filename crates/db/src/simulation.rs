@@ -18,7 +18,7 @@ pub struct DBFlightLog {
     pub id: i64,
     pub simulation_id: String,
     pub start_seconds: f64,
-    pub end_seconds: f64,
+    pub end_seconds: f64, // TODO: do we need this? probbaly not
     pub motor_input_1: f64,
     pub motor_input_2: f64,
     pub motor_input_3: f64,
@@ -50,7 +50,7 @@ pub struct DBFlightLog {
 pub struct DBNewFlightLog {
     pub simulation_id: String,
     pub start_seconds: f64,
-    pub end_seconds: f64,
+    pub end_seconds: f64, // TODO: do we need this? probbaly not
     pub motor_input_1: f64,
     pub motor_input_2: f64,
     pub motor_input_3: f64,

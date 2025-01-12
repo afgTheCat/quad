@@ -1,21 +1,27 @@
 pub mod input_gen;
-pub mod logger;
+pub mod loggers;
 pub mod low_pass_filter;
 #[cfg(feature = "noise")]
 pub mod noise;
 pub mod sample_curve;
 
-use db::{simulation::DBFlightLog, AscentDb};
+use db::simulation::DBFlightLog;
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
-use logger::SimLogger;
+use loggers::Logger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::SeedableRng;
 use rand_xoshiro::Xoshiro256PlusPlus;
 pub use sample_curve::{SampleCurve, SamplePoint};
-use std::{cell::RefCell, f64::consts::PI, ops::Range, sync::Arc, time::Duration};
+use std::{
+    cell::RefCell,
+    f64::consts::PI,
+    ops::Range,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 pub const MAX_EFFECT_SPEED: f64 = 18.0;
 pub const AIR_RHO: f64 = 1.225;
@@ -35,13 +41,6 @@ pub struct SimulationDebugInfo {
     pub bat_voltage_sag: f64,
 }
 
-#[derive(Debug, Clone)]
-pub struct DroneUpdate {
-    // TODO: rename this to imu
-    pub gyro_update: GyroUpdate,
-    pub battery_update: BatteryUpdate,
-}
-
 thread_local! {
     static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
 }
@@ -59,18 +58,6 @@ pub struct BatteryState {
     pub bat_voltage_sag: f64,
     pub amperage: f64,
     pub m_ah_drawn: f64,
-}
-
-impl BatteryState {
-    pub fn battery_update(&self, cell_count: u8) -> BatteryUpdate {
-        BatteryUpdate {
-            cell_count,
-            bat_voltage_sag: self.bat_voltage_sag,
-            bat_voltage: self.bat_voltage,
-            amperage: self.amperage,
-            m_ah_drawn: self.m_ah_drawn,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -467,7 +454,7 @@ impl Drone {
         }
     }
 
-    pub fn update(&mut self, dt: f64) -> DroneUpdate {
+    pub fn update(&mut self, dt: f64) {
         self.battery_model
             .set_new_state(&self.current_frame, &mut self.next_frame, dt);
         self.rotor_model
@@ -478,13 +465,6 @@ impl Drone {
             .set_new_state(&self.current_frame, &mut self.next_frame, dt);
 
         std::mem::swap(&mut self.current_frame, &mut self.next_frame);
-        DroneUpdate {
-            gyro_update: self.current_frame.gyro_state.gyro_update(),
-            battery_update: self
-                .current_frame
-                .battery_state
-                .battery_update(self.battery_model.quad_bat_cell_count),
-        }
     }
 
     pub fn debug_info(&self) -> SimulationDebugInfo {
@@ -516,6 +496,34 @@ impl Drone {
             bat_voltage_sag: battery_state.bat_voltage_sag,
         }
     }
+
+    pub fn battery_update(&self) -> BatteryUpdate {
+        let cell_count = self.battery_model.quad_bat_cell_count;
+        let battery_state = &self.current_frame.battery_state;
+        BatteryUpdate {
+            cell_count,
+            bat_voltage_sag: battery_state.bat_voltage_sag,
+            bat_voltage: battery_state.bat_voltage,
+            amperage: battery_state.amperage,
+            m_ah_drawn: battery_state.m_ah_drawn,
+        }
+    }
+
+    pub fn motor_input(&self) -> MotorInput {
+        let rotor_state = &self.current_frame.rotors_state;
+        MotorInput {
+            input: [
+                rotor_state.0[0].pwm,
+                rotor_state.0[0].pwm,
+                rotor_state.0[0].pwm,
+                rotor_state.0[0].pwm,
+            ],
+        }
+    }
+
+    pub fn position(&self) -> Vector3<f64> {
+        self.current_frame.drone_state.position
+    }
 }
 
 // The simulator simulates the complete drone with a flight controller and all the neccessary aux
@@ -527,37 +535,42 @@ pub struct Simulator {
     pub time: Duration,
     pub time_accu: Duration, // the accumulated time between two steps + the correction from the
     pub fc_time_accu: Duration,
-    pub logger: SimLogger,
+    pub logger: Arc<Mutex<dyn Logger>>, // needs to be mutable
 }
 
 impl Simulator {
+    pub fn insert_log_data(&self, channels: Channels) {
+        let mut logger = self.logger.lock().unwrap();
+        logger.insert_data(self.time, &self.drone, channels);
+    }
+
+    pub fn write_remaining_logs(&self) {
+        let logger = self.logger.lock().unwrap();
+        logger.write_remaining_logs();
+    }
+
     /// Given a duration (typically 10ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt. It will also try to
     pub fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
         self.time_accu += delta;
         while self.time_accu > self.dt {
             self.fc_time_accu += self.dt;
-            let drone_state = self.drone.update(self.dt.as_secs_f64());
+            self.drone.update(self.dt.as_secs_f64());
 
             // update the flight controller
             if self.fc_time_accu > self.flight_controller.scheduler_delta() {
                 let motor_input = self.flight_controller.update(
                     self.fc_time_accu.as_micros() as u64,
                     FlightControllerUpdate {
-                        battery_update: drone_state.battery_update,
-                        gyro_update: drone_state.gyro_update,
+                        battery_update: self.drone.battery_update(),
+                        gyro_update: self.drone.current_frame.gyro_state.gyro_update(),
                         channels,
                     },
                 );
-                self.logger.insert_data(
-                    self.time,
-                    motor_input,
-                    drone_state.battery_update,
-                    drone_state.gyro_update,
-                    channels,
-                );
                 self.drone.set_motor_pwms(motor_input);
                 self.fc_time_accu -= self.flight_controller.scheduler_delta();
+
+                self.insert_log_data(channels);
             }
             self.time_accu -= self.dt;
             self.time += self.dt;
@@ -565,24 +578,9 @@ impl Simulator {
         self.drone.debug_info()
     }
 
-    pub fn init(&mut self, simulation_id: String) {
-        self.logger.init(simulation_id);
+    pub fn init(&mut self) {
+        // self.logger.init(simulation_id);
         self.flight_controller.init();
-    }
-
-    // TODO: It would be cleaner to load the simulation on demand from the db and deinit the flight
-    // controller using the Drop trait
-    pub fn reset(&mut self, initial_frame: SimulationFrame) {
-        self.flight_controller.deinit();
-        self.drone.reset(initial_frame);
-        self.time = Duration::new(0, 0);
-        self.time_accu = Duration::new(0, 0);
-        self.fc_time_accu = Duration::new(0, 0);
-        self.logger.deinit();
-    }
-
-    pub fn write_logs(&self, db: &AscentDb) {
-        self.logger.write_logs(db);
     }
 }
 
