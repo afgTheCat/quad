@@ -1,7 +1,7 @@
 use crate::{
     drone::get_base_model,
     ntb_mat3, ntb_vec3,
-    state::{Controller, SelectionConfig, VisualizerData},
+    state::{Controller, Logger, SelectionConfig, VisualizerData},
     DB,
 };
 use bevy::{
@@ -22,7 +22,7 @@ use flight_controller::{
     Channels, FlightController,
 };
 use nalgebra::Vector3;
-use simulator::loggers::Logger;
+use simulator::loggers::{Logger as LoggerTrait, RerunLogger};
 use simulator::{loggers::DBLogger, BatteryUpdate, MotorInput, Simulator};
 use std::{
     sync::{Arc, Mutex},
@@ -133,7 +133,7 @@ pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>
     let simulation_id = Uuid::new_v4().to_string();
     let drone = get_base_model();
     let SelectionConfig::Simulation {
-        logger,
+        logger: Some(logger),
         controller: Some(controller),
     } = &sim_data.selection_config
     else {
@@ -145,20 +145,24 @@ pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>
         Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, &res_id)),
     };
     let battery_state = &drone.current_frame.battery_state;
-    let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(DBLogger::new(
-        simulation_id,
-        MotorInput::default(),
-        BatteryUpdate {
-            bat_voltage_sag: battery_state.bat_voltage_sag,
-            bat_voltage: battery_state.bat_voltage,
-            amperage: battery_state.amperage,
-            m_ah_drawn: battery_state.m_ah_drawn,
-            cell_count: drone.battery_model.quad_bat_cell_count,
-        },
-        drone.current_frame.gyro_state.gyro_update(),
-        Channels::default(),
-        db.clone(),
-    )));
+
+    let logger: Arc<Mutex<dyn LoggerTrait>> = match logger {
+        Logger::DBLogger => Arc::new(Mutex::new(DBLogger::new(
+            simulation_id,
+            MotorInput::default(),
+            BatteryUpdate {
+                bat_voltage_sag: battery_state.bat_voltage_sag,
+                bat_voltage: battery_state.bat_voltage,
+                amperage: battery_state.amperage,
+                m_ah_drawn: battery_state.m_ah_drawn,
+                cell_count: drone.battery_model.quad_bat_cell_count,
+            },
+            drone.current_frame.gyro_state.gyro_update(),
+            Channels::default(),
+            db.clone(),
+        ))),
+        Logger::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
+    };
     let mut simulation = Simulaton(Simulator {
         drone: drone.clone(),
         flight_controller: flight_controller.clone(),

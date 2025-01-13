@@ -3,6 +3,7 @@ use crate::{
     FlightController, FlightControllerUpdate, MotorInput,
 };
 use once_cell::sync::Lazy;
+use std::fmt::Debug;
 use std::{
     collections::{hash_map::Entry, HashMap},
     ffi::CString,
@@ -19,6 +20,13 @@ pub struct BFController {
 #[derive(Clone)]
 struct SitlWrapper {
     sitl: Arc<Sitl>,
+}
+
+impl Debug for SitlWrapper {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // let's ignore the sitl field for now
+        f.debug_struct("SitlWrapper").finish()
+    }
 }
 
 impl SitlWrapper {

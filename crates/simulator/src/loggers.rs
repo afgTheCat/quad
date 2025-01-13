@@ -3,17 +3,13 @@
 use crate::Drone;
 use db::{simulation::DBNewFlightLog, AscentDb};
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
-use rerun::RecordingStream;
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use rerun::{external::glam::Vec3, Points3D, Position3D, RecordingStream};
+use std::{sync::Arc, time::Duration};
 
 pub trait Logger: Sync + Send {
-    // Ideally this should be either async or have a dedicated thread
     fn insert_data(&mut self, next_time_step: Duration, drone: &Drone, channels: Channels);
-    fn write_remaining_logs(&self); // TODO: I geuss we don't techincally need this, it would be
-                                    // better to have this in the drop implementation
+    // TODO: I geuss we don't techincally need this, it would be better to have this in the drop implementation
+    fn write_remaining_logs(&self);
 }
 
 struct DBCurrentLog {
@@ -125,15 +121,12 @@ impl Logger for RerunLogger {
             self.rec
                 .set_time_nanos("stable_time", next_time_step.as_nanos() as i64);
             let position = drone.position();
+
+            let point = Vec3::new(position.x as f32, position.z as f32, position.y as f32);
+            let points = Points3D::new(vec![point]);
+
             self.rec
-                .log_static(
-                    "drone/pos",
-                    &rerun::Position3D::new(
-                        position.x as f32,
-                        position.y as f32,
-                        position.z as f32,
-                    ),
-                )
+                .log("drone/pos", &points.with_radii([0.8]))
                 .unwrap();
             self.counter = 1000;
         } else {
@@ -153,6 +146,7 @@ impl RerunLogger {
             .spawn()
             .unwrap();
         rec.set_time_seconds("stable_time", 0f64);
+
         Self {
             counter: 1000, // just because we have a bunch of data
             rec,
