@@ -579,7 +579,6 @@ impl Simulator {
     }
 
     pub fn init(&mut self) {
-        // self.logger.init(simulation_id);
         self.flight_controller.init();
     }
 }

@@ -3,7 +3,7 @@
 use crate::Drone;
 use db::{simulation::DBNewFlightLog, AscentDb};
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
-use rerun::{external::glam::Vec3, Points3D, Position3D, RecordingStream};
+use rerun::{external::glam::Vec3, Points3D, RecordingStream};
 use std::{sync::Arc, time::Duration};
 
 pub trait Logger: Sync + Send {
