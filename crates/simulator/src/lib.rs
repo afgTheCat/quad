@@ -27,20 +27,6 @@ pub const MAX_EFFECT_SPEED: f64 = 18.0;
 pub const AIR_RHO: f64 = 1.225;
 pub const GRAVITY: f64 = 9.81;
 
-#[derive(Debug, Default)]
-pub struct SimulationDebugInfo {
-    pub rotation: Rotation3<f64>,
-    pub position: Vector3<f64>,
-    pub linear_velocity: Vector3<f64>,
-    pub acceleration: Vector3<f64>,
-    pub angular_velocity: Vector3<f64>,
-    pub thrusts: Vector4<f64>,
-    pub rpms: Vector4<f64>,
-    pub pwms: Vector4<f64>,
-    pub bat_voltage: f64,
-    pub bat_voltage_sag: f64,
-}
-
 thread_local! {
     static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
 }
@@ -467,36 +453,6 @@ impl Drone {
         std::mem::swap(&mut self.current_frame, &mut self.next_frame);
     }
 
-    pub fn debug_info(&self) -> SimulationDebugInfo {
-        let rotors_state = &self.current_frame.rotors_state;
-        let drone_state = &self.current_frame.drone_state;
-        let battery_state = &self.current_frame.battery_state;
-
-        let thrusts = Vector4::from_row_slice(
-            &rotors_state
-                .iter()
-                .map(|r| r.effective_thrust)
-                .collect::<Vec<f64>>(),
-        );
-        let rpms =
-            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
-        let pwms =
-            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
-
-        SimulationDebugInfo {
-            rotation: drone_state.rotation,
-            position: drone_state.position,
-            linear_velocity: drone_state.linear_velocity,
-            acceleration: drone_state.acceleration,
-            angular_velocity: drone_state.angular_velocity,
-            thrusts,
-            rpms,
-            pwms,
-            bat_voltage: battery_state.bat_voltage,
-            bat_voltage_sag: battery_state.bat_voltage_sag,
-        }
-    }
-
     pub fn battery_update(&self) -> BatteryUpdate {
         let cell_count = self.battery_model.quad_bat_cell_count;
         let battery_state = &self.current_frame.battery_state;
@@ -526,6 +482,21 @@ impl Drone {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct SimulationObservation {
+    pub simulation_time: Duration,
+    pub rotation: Rotation3<f64>,
+    pub position: Vector3<f64>,
+    pub linear_velocity: Vector3<f64>,
+    pub acceleration: Vector3<f64>,
+    pub angular_velocity: Vector3<f64>,
+    pub thrusts: Vector4<f64>,
+    pub rpms: Vector4<f64>,
+    pub pwms: Vector4<f64>,
+    pub bat_voltage: f64,
+    pub bat_voltage_sag: f64,
+}
+
 // The simulator simulates the complete drone with a flight controller and all the neccessary aux
 // information.
 pub struct Simulator {
@@ -549,9 +520,42 @@ impl Simulator {
         logger.write_remaining_logs();
     }
 
+    pub fn simulation_info(&self) -> SimulationObservation {
+        let current_frame = &self.drone.current_frame;
+
+        let rotors_state = &current_frame.rotors_state;
+        let drone_state = &current_frame.drone_state;
+        let battery_state = &current_frame.battery_state;
+
+        let thrusts = Vector4::from_row_slice(
+            &rotors_state
+                .iter()
+                .map(|r| r.effective_thrust)
+                .collect::<Vec<f64>>(),
+        );
+        let rpms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+        let pwms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+
+        SimulationObservation {
+            simulation_time: self.time,
+            rotation: drone_state.rotation,
+            position: drone_state.position,
+            linear_velocity: drone_state.linear_velocity,
+            acceleration: drone_state.acceleration,
+            angular_velocity: drone_state.angular_velocity,
+            thrusts,
+            rpms,
+            pwms,
+            bat_voltage: battery_state.bat_voltage,
+            bat_voltage_sag: battery_state.bat_voltage_sag,
+        }
+    }
+
     /// Given a duration (typically 10ms between frames), runs the simulation until the time
     /// accumlator is less then the simulation's dt. It will also try to
-    pub fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationDebugInfo {
+    pub fn simulate_delta(&mut self, delta: Duration, channels: Channels) -> SimulationObservation {
         self.time_accu += delta;
         while self.time_accu > self.dt {
             self.fc_time_accu += self.dt;
@@ -575,12 +579,15 @@ impl Simulator {
             self.time_accu -= self.dt;
             self.time += self.dt;
         }
-        self.drone.debug_info()
+
+        self.simulation_info()
     }
 
     pub fn init(&mut self) {
         self.flight_controller.init();
     }
+
+    pub fn reset(&self) {}
 }
 
 pub struct Replayer {
@@ -618,7 +625,40 @@ impl Replayer {
         }
     }
 
-    pub fn replay_delta(&mut self, delta: Duration) -> SimulationDebugInfo {
+    pub fn simulation_info(&self) -> SimulationObservation {
+        let current_frame = &self.drone.current_frame;
+
+        let rotors_state = &current_frame.rotors_state;
+        let drone_state = &current_frame.drone_state;
+        let battery_state = &current_frame.battery_state;
+
+        let thrusts = Vector4::from_row_slice(
+            &rotors_state
+                .iter()
+                .map(|r| r.effective_thrust)
+                .collect::<Vec<f64>>(),
+        );
+        let rpms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+        let pwms =
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+
+        SimulationObservation {
+            simulation_time: self.time,
+            rotation: drone_state.rotation,
+            position: drone_state.position,
+            linear_velocity: drone_state.linear_velocity,
+            acceleration: drone_state.acceleration,
+            angular_velocity: drone_state.angular_velocity,
+            thrusts,
+            rpms,
+            pwms,
+            bat_voltage: battery_state.bat_voltage,
+            bat_voltage_sag: battery_state.bat_voltage_sag,
+        }
+    }
+
+    pub fn replay_delta(&mut self, delta: Duration) -> SimulationObservation {
         self.time_accu += delta;
         while self.time_accu > self.dt {
             self.drone.update(self.dt.as_secs_f64());
@@ -631,7 +671,7 @@ impl Replayer {
             self.time_accu -= self.dt;
         }
 
-        self.drone.debug_info()
+        self.simulation_info()
     }
 
     pub fn reset(&mut self, initial_frame: SimulationFrame) {

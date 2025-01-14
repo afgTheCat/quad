@@ -3362,6 +3362,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "environment"
+version = "0.1.0"
+dependencies = [
+ "flight_controller",
+ "nalgebra",
+ "pyo3",
+ "pyo3-log",
+ "simulator",
+]
+
+[[package]]
 name = "epaint"
 version = "0.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

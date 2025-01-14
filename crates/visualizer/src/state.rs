@@ -1,13 +1,12 @@
 use bevy::prelude::{NextState, Res, ResMut, Resource, State, States};
 use bevy_egui::{
     egui::{
-        self, epaint::RectShape, pos2, Color32, Frame, Rect, Rounding, Shape, Stroke, Ui,
-        UiBuilder, Window as EguiWindow,
+        self, epaint::RectShape, pos2, Color32, Frame, Rect, Rounding, Shape, Stroke, Ui, UiBuilder,
     },
     EguiContexts,
 };
 use egui_extras::{Column, TableBuilder};
-use simulator::SimulationDebugInfo;
+use simulator::SimulationObservation;
 
 use crate::DB;
 
@@ -161,7 +160,7 @@ impl SelectionConfig {
 // Global data for everything related to the visualizer
 #[derive(Resource, Default)]
 pub struct VisualizerData {
-    pub sim_info: SimulationDebugInfo,
+    pub sim_info: SimulationObservation,
     // pub selected_simulation_id: Option<String>,
     pub simulation_ids: Vec<String>,
     pub reservoir_ids: Vec<String>,
@@ -174,7 +173,7 @@ pub struct VisualizerData {
 pub struct ReplayInfo {}
 
 impl VisualizerData {
-    pub fn set_sim_info(&mut self, sim_info: SimulationDebugInfo) {
+    pub fn set_sim_info(&mut self, sim_info: SimulationObservation) {
         self.sim_info = sim_info;
     }
 }

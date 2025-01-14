@@ -4,6 +4,7 @@
 mod reservoir;
 mod schema;
 pub mod simulation;
+mod simulation_frame;
 
 use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
@@ -53,6 +54,61 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
         alpha REAL NOT NULL,
         readout_coeff TEXT,
         readout_intercept TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS low_pass_filter (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        output DOUBLE NOT NULL,
+        e_pow DOUBLE NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS rotor_state (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        current DOUBLE NOT NULL,
+        rpm DOUBLE NOT NULL,
+        motor_torque DOUBLE NOT NULL,
+        effective_thrust DOUBLE NOT NULL,
+        pwm DOUBLE NOT NULL,
+        rotor_dir DOUBLE NOT NULL,
+        motor_pos_x DOUBLE NOT NULL,
+        motor_pos_y DOUBLE NOT NULL,
+        motor_pos_z DOUBLE NOT NULL,
+        pwm_low_pass_filter INTEGER NOT NULL references low_pass_filter (id)
+    );
+
+    CREATE TABLE IF NOT EXISTS simulation_frame (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+        capacity DOUBLE NOT NULL,
+        bat_voltage DOUBLE NOT NULL,
+        bat_voltage_sag DOUBLE NOT NULL,
+        amperage DOUBLE NOT NULL,
+        m_ah_drawn DOUBLE NOT NULL,
+        rotor_1_state INTEGER NOT NULL references rotor_state (id),
+        rotor_2_state INTEGER NOT NULL references rotor_state (id),
+        rotor_3_state INTEGER NOT NULL references rotor_state (id),
+        rotor_4_state INTEGER NOT NULL references rotor_state (id),
+
+        position_x DOUBLE NOT NULL,
+        position_y DOUBLE NOT NULL,
+        position_z DOUBLE NOT NULL,
+
+        rotation_x DOUBLE NOT NULL,
+        rotation_y DOUBLE NOT NULL,
+        rotation_z DOUBLE NOT NULL,
+        rotation_w DOUBLE NOT NULL,
+
+        linear_velocity_x DOUBLE NOT NULL,
+        linear_velocity_y DOUBLE NOT NULL,
+        linear_velocity_z DOUBLE NOT NULL,
+
+        angular_velocity_x DOUBLE NOT NULL,
+        angular_velocity_y DOUBLE NOT NULL,
+        angular_velocity_z DOUBLE NOT NULL,
+
+        acceleration_x DOUBLE NOT NULL,
+        acceleration_y DOUBLE NOT NULL,
+        acceleration_z DOUBLE NOT NULL
     );
 ";
 
