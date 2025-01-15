@@ -1,6 +1,5 @@
-use std::{ops::Index, time::Duration};
-
 use nalgebra::DVector;
+use std::{ops::Index, time::Duration};
 
 pub mod bindings;
 pub mod controllers;

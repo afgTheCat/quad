@@ -1,6 +1,3 @@
-[submodule "crates/flight_controller/sitl"]
-	path = crates/flight_controller/sitl
-	url = git@gitlab.com:ascent-simulator/sitl.git
 [submodule "crates/flight_controller/virtual_bf"]
 	path = crates/flight_controller/virtual_bf
 	url = git@gitlab.com:azakura-systems/sora-simulator/virtual-betaflight.git

@@ -235,6 +235,7 @@ impl FlightController for BFController2 {
             let file_name =
                 CString::new("/home/gabor/ascent/quad/eeprom.bin").expect("CString::new failed");
             virtual_bf.vbf_init(file_name.as_ptr());
+            virtual_bf.vbf_arm();
         })
     }
 
