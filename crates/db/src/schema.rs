@@ -119,6 +119,24 @@ diesel::table! {
         acceleration_x -> Double,
         acceleration_y -> Double,
         acceleration_z -> Double,
+
+        gyro_rotation_x -> Double,
+        gyro_rotation_y -> Double,
+        gyro_rotation_z -> Double,
+        gyro_rotation_w -> Double,
+
+        gyro_acceleration_x -> Double,
+        gyro_acceleration_y -> Double,
+        gyro_acceleration_z -> Double,
+
+        gyro_angular_velocity_x -> Double,
+        gyro_angular_velocity_y -> Double,
+        gyro_angular_velocity_z -> Double,
+
+        gyro_low_pass_filter_1 -> BigInt, // references low pass filter
+        gyro_low_pass_filter_2 -> BigInt, // references low pass filter
+        gyro_low_pass_filter_3 -> BigInt, // references low pass filter
+
     }
 }
 
@@ -155,10 +173,13 @@ diesel::table! {
     }
 }
 
-// diesel::joinable!(rotor_state -> low_pass_filter (pwm_low_pass_filter));
-// diesel::joinable!(simulation_frame -> rotor_state (rotor_1_state));
-// diesel::joinable!(simulation_frame -> rotor_state (rotor_2_state));
-// diesel::joinable!(simulation_frame -> rotor_state (rotor_3_state));
-// diesel::joinable!(simulation_frame -> rotor_state (rotor_4_state));
+diesel::joinable!(rotor_state -> low_pass_filter (pwm_low_pass_filter));
+diesel::joinable!(simulation_frame -> low_pass_filter (gyro_low_pass_filter_1));
 
-// diesel::allow_tables_to_appear_in_same_query!(low_pass_filter, rotor_state, simulation_frame,);
+diesel::allow_tables_to_appear_in_same_query!(
+    flight_log,
+    low_pass_filter,
+    rc_model,
+    rotor_state,
+    simulation_frame,
+);

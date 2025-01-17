@@ -8,6 +8,7 @@ use crate::{
     SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
 use db::AscentDb;
+use flight_controller::controllers::bf_controller2::BFController2;
 use flight_controller::{
     controllers::bf_controller::BFController, BatteryUpdate, Channels, MotorInput,
 };
@@ -184,7 +185,7 @@ pub fn set_up_simulation(db: Arc<AscentDb>, simulation_id: String, logger: LogTy
         LogType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
     };
 
-    let flight_controller = Arc::new(BFController::new());
+    let flight_controller = Arc::new(BFController2::new());
 
     Simulator {
         drone: drone.clone(),
@@ -243,7 +244,7 @@ fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Dur
     for input in inputs {
         simulation.simulate_delta(Duration::from_millis(1), input);
     }
-    simulation.write_remaining_logs();
+    // simulation.write_remaining_logs();
 }
 
 pub fn build_data_set2(
@@ -310,7 +311,6 @@ pub fn build_data_set(
         for input in inputs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        simulation.write_remaining_logs();
     }
 
     for (ep, inputs) in test_inputs.into_iter().enumerate() {
@@ -323,7 +323,6 @@ pub fn build_data_set(
         for input in inputs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        simulation.write_remaining_logs();
     }
 }
 
@@ -356,6 +355,5 @@ mod test {
         for input in inputs_per_milisecs {
             simulation.simulate_delta(Duration::from_millis(1), input);
         }
-        simulation.write_remaining_logs();
     }
 }

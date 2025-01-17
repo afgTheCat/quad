@@ -1,5 +1,3 @@
-// TODO: clean this up
-
 use crate::Drone;
 use db::{simulation::DBNewFlightLog, AscentDb};
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
@@ -7,9 +5,8 @@ use rerun::{external::glam::Vec3, Points3D, RecordingStream};
 use std::{sync::Arc, time::Duration};
 
 pub trait Logger: Sync + Send {
-    fn insert_data(&mut self, next_time_step: Duration, drone: &Drone, channels: Channels);
-    // TODO: I geuss we don't techincally need this, it would be better to have this in the drop implementation
-    fn write_remaining_logs(&self);
+    // process the current state of the simulation
+    fn process_state(&mut self, time: Duration, drone: &Drone, channels: Channels, fc_called: bool);
 }
 
 struct DBCurrentLog {
@@ -55,31 +52,39 @@ impl DBCurrentLog {
 
 pub struct DBLogger {
     db_current_log: DBCurrentLog,
-    pub simulation_id: String,
-
-    // get the latest value
-    pub data: Vec<DBNewFlightLog>,
+    simulation_id: String,
+    data: Vec<DBNewFlightLog>,
     db: Arc<AscentDb>,
 }
 
 impl Logger for DBLogger {
-    fn insert_data(&mut self, next_time_step: Duration, drone: &Drone, channels: Channels) {
+    fn process_state(
+        &mut self,
+        time: Duration,
+        drone: &Drone,
+        channels: Channels,
+        fc_called: bool,
+    ) {
+        if !fc_called {
+            return;
+        }
         let current_step = std::mem::replace(
             &mut self.db_current_log,
             DBCurrentLog {
-                start_seconds: next_time_step.as_secs_f64(),
+                start_seconds: time.as_secs_f64(),
                 current_input: drone.motor_input(),
                 current_battery_update: drone.battery_update(),
                 current_gyro: drone.current_frame.gyro_state.gyro_update(),
                 current_channels: channels,
             },
         );
-        self.data.push(
-            current_step.to_db_log(self.simulation_id.to_owned(), next_time_step.as_secs_f64()),
-        );
+        self.data
+            .push(current_step.to_db_log(self.simulation_id.to_owned(), time.as_secs_f64()));
     }
+}
 
-    fn write_remaining_logs(&self) {
+impl Drop for DBLogger {
+    fn drop(&mut self) {
         self.db.write_flight_logs(&self.simulation_id, &self.data);
     }
 }
@@ -116,10 +121,13 @@ pub struct RerunLogger {
 }
 
 impl Logger for RerunLogger {
-    fn insert_data(&mut self, next_time_step: Duration, drone: &Drone, _: Channels) {
+    fn process_state(&mut self, time: Duration, drone: &Drone, _: Channels, fc_called: bool) {
+        if !fc_called {
+            return;
+        }
         if self.counter == 0 {
             self.rec
-                .set_time_nanos("stable_time", next_time_step.as_nanos() as i64);
+                .set_time_nanos("stable_time", time.as_nanos() as i64);
             let position = drone.position();
 
             let point = Vec3::new(position.x as f32, position.z as f32, position.y as f32);
@@ -133,8 +141,10 @@ impl Logger for RerunLogger {
             self.counter -= 1;
         }
     }
+}
 
-    fn write_remaining_logs(&self) {
+impl Drop for RerunLogger {
+    fn drop(&mut self) {
         self.rec.flush_blocking();
     }
 }

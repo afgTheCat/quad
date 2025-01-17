@@ -4,7 +4,7 @@
 mod reservoir;
 mod schema;
 pub mod simulation;
-mod simulation_frame;
+pub mod simulation_frame;
 
 use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
@@ -108,7 +108,24 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
 
         acceleration_x DOUBLE NOT NULL,
         acceleration_y DOUBLE NOT NULL,
-        acceleration_z DOUBLE NOT NULL
+        acceleration_z DOUBLE NOT NULL,
+
+        gyro_rotation_x DOUBLE NOT NULL,
+        gyro_rotation_y DOUBLE NOT NULL,
+        gyro_rotation_z DOUBLE NOT NULL,
+        gyro_rotation_w DOUBLE NOT NULL,
+
+        gyro_acceleration_x DOUBLE NOT NULL,
+        gyro_acceleration_y DOUBLE NOT NULL,
+        gyro_acceleration_z DOUBLE NOT NULL,
+
+        gyro_angular_velocity_x DOUBLE NOT NULL,
+        gyro_angular_velocity_y DOUBLE NOT NULL,
+        gyro_angular_velocity_z DOUBLE NOT NULL,
+
+        gyro_low_pass_filter_1 INTEGER NOT NULL references low_pass_filter (id),
+        gyro_low_pass_filter_2 INTEGER NOT NULL references low_pass_filter (id),
+        gyro_low_pass_filter_3 INTEGER NOT NULL references low_pass_filter (id)
     );
 ";
 

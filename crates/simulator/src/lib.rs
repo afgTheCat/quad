@@ -1,8 +1,6 @@
 pub mod input_gen;
 pub mod loggers;
 pub mod low_pass_filter;
-#[cfg(feature = "noise")]
-pub mod noise;
 pub mod sample_curve;
 
 use db::simulation::DBFlightLog;
@@ -12,8 +10,7 @@ use flight_controller::{Channels, FlightController, FlightControllerUpdate};
 use loggers::Logger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
-use rand::SeedableRng;
-use rand_xoshiro::Xoshiro256PlusPlus;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 pub use sample_curve::{SampleCurve, SamplePoint};
 use std::{
     cell::RefCell,
@@ -28,13 +25,14 @@ pub const AIR_RHO: f64 = 1.225;
 pub const GRAVITY: f64 = 9.81;
 
 thread_local! {
-    static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
+    // static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
+    static RNG: RefCell<StdRng> = RefCell::new(StdRng::from_entropy());
 }
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
     // TODO: readd this to generate random
-    // RNG.with(|rng| rng.borrow_mut().gen_range(range))
-    range.end - range.start
+    RNG.with(|rng| rng.borrow_mut().gen_range(range))
+    // range.end - range.start
 }
 
 #[derive(Debug, Clone, Default)]
@@ -510,16 +508,6 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn insert_log_data(&self, channels: Channels) {
-        let mut logger = self.logger.lock().unwrap();
-        logger.insert_data(self.time, &self.drone, channels);
-    }
-
-    pub fn write_remaining_logs(&self) {
-        let logger = self.logger.lock().unwrap();
-        logger.write_remaining_logs();
-    }
-
     pub fn simulation_info(&self) -> SimulationObservation {
         let current_frame = &self.drone.current_frame;
 
@@ -561,8 +549,10 @@ impl Simulator {
             self.fc_time_accu += self.dt;
             self.drone.update(self.dt.as_secs_f64());
 
+            let call_fc = self.fc_time_accu > self.flight_controller.scheduler_delta();
+
             // update the flight controller
-            if self.fc_time_accu > self.flight_controller.scheduler_delta() {
+            if call_fc {
                 let motor_input = self.flight_controller.update(
                     self.fc_time_accu.as_micros() as u64,
                     FlightControllerUpdate {
@@ -573,9 +563,11 @@ impl Simulator {
                 );
                 self.drone.set_motor_pwms(motor_input);
                 self.fc_time_accu -= self.flight_controller.scheduler_delta();
-
-                self.insert_log_data(channels);
             }
+
+            let mut logger = self.logger.lock().unwrap();
+            logger.process_state(self.time, &self.drone, channels, call_fc);
+
             self.time_accu -= self.dt;
             self.time += self.dt;
         }
@@ -586,8 +578,6 @@ impl Simulator {
     pub fn init(&mut self) {
         self.flight_controller.init();
     }
-
-    pub fn reset(&self) {}
 }
 
 pub struct Replayer {
@@ -679,5 +669,24 @@ impl Replayer {
         self.time = Duration::new(0, 0);
         self.time_accu = Duration::new(0, 0);
         self.replay_index = 0;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::input_gen::{set_up_simulation, LogType};
+    use db::AscentDb;
+    use flight_controller::Channels;
+    use std::{sync::Arc, time::Duration};
+
+    #[test]
+    fn t_benchmark() {
+        let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
+        for _ in 0..10 {
+            let mut simulation =
+                set_up_simulation(db.clone(), "test_generated_simulation".into(), LogType::DB);
+            simulation.init();
+            simulation.simulate_delta(Duration::from_secs(50), Channels::default());
+        }
     }
 }

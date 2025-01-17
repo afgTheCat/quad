@@ -1,5 +1,5 @@
 use crate::{
-    drone::get_base_model,
+    drone::{get_base_model, get_base_model2},
     ntb_mat3, ntb_vec3,
     state::{Controller, Logger, SelectionConfig, VisualizerData},
     DB,
@@ -133,7 +133,7 @@ pub fn sim_loop(
 // TODO: set it up according to the menu
 pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>, db: Res<DB>) {
     let simulation_id = Uuid::new_v4().to_string();
-    let drone = get_base_model();
+    let drone = get_base_model2(&db);
     let SelectionConfig::Simulation {
         logger: Some(logger),
         controller: Some(controller),
@@ -196,7 +196,7 @@ pub fn exit_simulation(
     camera.target_focus = tranform.translation;
 
     // Write the logs, should be a trait eventually
-    simulation.write_remaining_logs();
+    // simulation.write_remaining_logs();
 
     // Remove the simulation
     commands.remove_resource::<Simulaton>();
