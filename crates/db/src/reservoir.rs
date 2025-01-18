@@ -48,15 +48,11 @@ impl AscentDb {
         use self::rc_model::dsl::*;
 
         let mut conn = self.diesel_conn.lock().unwrap();
-        let db_reservoir = rc_model
+        rc_model
             .filter(rc_id.eq(model_id))
             .load::<DBRcData>(conn.deref_mut())
-            .unwrap();
-        if db_reservoir.len() == 1 {
-            Some(db_reservoir[0].clone())
-        } else {
-            None
-        }
+            .unwrap()
+            .pop()
     }
 
     pub fn select_reservoir_ids(&self) -> Vec<String> {

@@ -1,7 +1,7 @@
 use crate::{
     ntb_mat3, ntb_vec3,
     state::{Controller, Logger, SelectionConfig, VisualizerData},
-    DB,
+    Loader, DB,
 };
 use bevy::{
     asset::Handle,
@@ -21,7 +21,9 @@ use flight_controller::{
     Channels, FlightController,
 };
 use nalgebra::Vector3;
-use simulator::{loggers::DBLogger, BatteryUpdate, MotorInput, Simulator};
+use simulator::{
+    loader::SimulationLoader, loggers::DBLogger, BatteryUpdate, MotorInput, Simulator,
+};
 use simulator::{
     loggers::{Logger as LoggerTrait, RerunLogger},
     Drone,
@@ -131,9 +133,14 @@ pub fn sim_loop(
 }
 
 // TODO: set it up according to the menu
-pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>, db: Res<DB>) {
+pub fn enter_simulation(
+    mut commands: Commands,
+    sim_data: ResMut<VisualizerData>,
+    db: Res<DB>,
+    loader: Res<Loader>,
+) {
     let simulation_id = Uuid::new_v4().to_string();
-    let drone = Drone::from_db(&db);
+    let drone = loader.load_drone(1);
     let SelectionConfig::Simulation {
         logger: Some(logger),
         controller: Some(controller),

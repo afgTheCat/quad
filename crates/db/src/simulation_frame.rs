@@ -89,7 +89,7 @@ impl AscentDb {
     // WOW, this is just ugly. We really wanna move towards a better db/config storage
     pub fn select_simulation_frame(
         &self,
-        simulation_id: i64,
+        frame_id: i64,
     ) -> Option<(
         DBSimulationFrame,
         DBRotorState,
@@ -198,6 +198,6 @@ impl AscentDb {
             .unwrap()
             // TODO: would be nice to filter as part of the dsl, but fuck it
             .into_iter()
-            .find(|(sim_frame, ..)| sim_frame.id == simulation_id)
+            .find(|(sim_frame, ..)| sim_frame.id == frame_id)
     }
 }

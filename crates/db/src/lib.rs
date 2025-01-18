@@ -128,6 +128,43 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
         gyro_low_pass_filter_2 INTEGER NOT NULL references low_pass_filter (id),
         gyro_low_pass_filter_3 INTEGER NOT NULL references low_pass_filter (id)
     );
+
+    CREATE TABLE IF NOT EXISTS sample_point (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        drone_model_id INTEGER NOT NULL references drone_model,
+        discharge DOUBLE NOT NULL,
+        voltage DOUBLE NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS drone_model (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        quad_bat_capacity DOUBLE NOT NULL,
+        quad_bat_cell_count INTEGER NOT NULL,
+        quad_bat_capacity_charged DOUBLE NOT NULL,
+        max_voltage_sag DOUBLE NOT NULL,
+        prop_max_rpm DOUBLE NOT NULL,
+        motor_1_lpf INTEGER NOT NULL,
+        motor_2_lpf INTEGER NOT NULL,
+        motor_3_lpf INTEGER NOT NULL,
+        motor_4_lpf INTEGER NOT NULL,
+        motor_kv DOUBLE NOT NULL,
+        motor_r DOUBLE NOT NULL,
+        motor_io DOUBLE NOT NULL,
+        prop_thrust_factor1 DOUBLE NOT NULL,
+        prop_thrust_factor2 DOUBLE NOT NULL,
+        prop_thrust_factor3 DOUBLE NOT NULL,
+        prop_torque_factor DOUBLE NOT NULL,
+        prop_a_factor DOUBLE NOT NULL,
+        prop_inertia DOUBLE NOT NULL,
+        frame_drag_area1 DOUBLE NOT NULL,
+        frame_drag_area2 DOUBLE NOT NULL,
+        frame_drag_area3 DOUBLE NOT NULL,
+        frame_drag_constant DOUBLE NOT NULL,
+        mass DOUBLE NOT NULL,
+        inv_tensor_diag1 DOUBLE NOT NULL,
+        inv_tensor_diag2 DOUBLE NOT NULL,
+        inv_tensor_diag3 DOUBLE NOT NULL
+    );
 ";
 
 pub struct AscentDb {

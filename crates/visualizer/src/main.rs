@@ -33,6 +33,7 @@ use db::AscentDb;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
+use simulator::loader::SimLoader;
 use state::{draw_ui, prefetch_menu_items, VisualizerData};
 use std::sync::Arc;
 
@@ -78,6 +79,9 @@ pub struct DroneAsset(Handle<Gltf>);
 #[derive(Resource, Deref)]
 struct DB(Arc<AscentDb>);
 
+#[derive(Resource, Deref)]
+struct Loader(SimLoader);
+
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
 /// initialize the flight controller and start the simulation
@@ -119,7 +123,9 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
-    commands.insert_resource(DB(db));
+    commands.insert_resource(DB(db.clone()));
+    let sim_loader = SimLoader::new(db);
+    commands.insert_resource(Loader(sim_loader));
 }
 
 fn load_drone_scene(

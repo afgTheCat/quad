@@ -9,11 +9,8 @@ pub struct SamplePoint {
 }
 
 impl SamplePoint {
-    pub fn new(capacity: f64, voltage: f64) -> Self {
-        Self {
-            discharge: capacity,
-            voltage,
-        }
+    pub fn new(discharge: f64, voltage: f64) -> Self {
+        Self { discharge, voltage }
     }
 }
 

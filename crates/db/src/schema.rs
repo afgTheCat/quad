@@ -46,17 +46,9 @@ diesel::table! {
 }
 
 diesel::table! {
-    sample_curve(id) {
-        id -> BigInt,
-        min_discharge_point -> Double,
-        max_discharge_point -> Double
-    }
-}
-
-diesel::table! {
     sample_point(id) {
         id -> BigInt,
-        sample_curve_id -> BigInt, // references sample curve
+        drone_model_id -> BigInt, // references sample curve
         discharge -> Double,
         voltage -> Double
     }
@@ -136,7 +128,6 @@ diesel::table! {
         gyro_low_pass_filter_1 -> BigInt, // references low pass filter
         gyro_low_pass_filter_2 -> BigInt, // references low pass filter
         gyro_low_pass_filter_3 -> BigInt, // references low pass filter
-
     }
 }
 
@@ -144,7 +135,6 @@ diesel::table! {
     drone_model(id) {
         id -> BigInt,
         quad_bat_capacity -> Double,
-        bat_voltage_curve -> BigInt, // references sample curve
         quad_bat_cell_count -> BigInt,
         quad_bat_capacity_charged -> Double,
         max_voltage_sag -> Double,
@@ -175,6 +165,7 @@ diesel::table! {
 
 diesel::joinable!(rotor_state -> low_pass_filter (pwm_low_pass_filter));
 diesel::joinable!(simulation_frame -> low_pass_filter (gyro_low_pass_filter_1));
+diesel::joinable!(drone_model -> low_pass_filter (motor_1_lpf));
 
 diesel::allow_tables_to_appear_in_same_query!(
     flight_log,
@@ -182,4 +173,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     rc_model,
     rotor_state,
     simulation_frame,
+    drone_model,
 );
