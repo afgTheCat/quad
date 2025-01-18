@@ -1,6 +1,7 @@
 //! Used to log in the db
 //! We probably need to revisit once we are more mature
 //! TODO: we probably want to autogenerate this at one point
+pub mod model;
 mod reservoir;
 mod schema;
 pub mod simulation;

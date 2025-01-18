@@ -2,7 +2,7 @@
 //! contfigurations may affect the drone and it's behaviour. This software is super early in
 //! development, expect a lot of changes, including to how configurations are stored, what drone
 //! meshes we want to use etc.
-mod drone;
+// mod drone;
 mod replay;
 mod sim;
 mod state;

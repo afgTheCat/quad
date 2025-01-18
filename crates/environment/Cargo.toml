@@ -9,4 +9,4 @@ pyo3-log.workspace = true
 pyo3.workspace = true
 nalgebra.workspace = true
 flight_controller.workspace = true
-
+db.workspace = true

@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use crate::{
-    drone::get_base_model,
     ntb_mat3, ntb_vec3,
     state::{SelectionConfig, VisualizerData},
     DB,
@@ -16,7 +15,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use nalgebra::Vector3;
-use simulator::Replayer;
+use simulator::{Drone, Replayer};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct Replay(pub Replayer);
@@ -62,7 +61,7 @@ pub fn enter_replay(sim_data: ResMut<VisualizerData>, db: Res<DB>, mut commands:
     };
 
     let sim_logs = db.get_simulation_data(simulation_id);
-    let drone = get_base_model();
+    let drone = Drone::from_db(&db);
     let replay = Replay(Replayer {
         drone,
         time: Duration::new(0, 0),

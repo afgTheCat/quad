@@ -62,6 +62,8 @@ pub struct Environment {
 }
 
 impl Environment {
+    fn new() {}
+
     // Step method
     pub fn step(
         &mut self,

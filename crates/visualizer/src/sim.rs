@@ -1,5 +1,4 @@
 use crate::{
-    drone::{get_base_model, get_base_model2},
     ntb_mat3, ntb_vec3,
     state::{Controller, Logger, SelectionConfig, VisualizerData},
     DB,
@@ -18,14 +17,15 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{
-    controllers::{
-        bf_controller::BFController, bf_controller2::BFController2, res_controller::ResController,
-    },
+    controllers::{bf_controller2::BFController2, res_controller::ResController},
     Channels, FlightController,
 };
 use nalgebra::Vector3;
-use simulator::loggers::{Logger as LoggerTrait, RerunLogger};
 use simulator::{loggers::DBLogger, BatteryUpdate, MotorInput, Simulator};
+use simulator::{
+    loggers::{Logger as LoggerTrait, RerunLogger},
+    Drone,
+};
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -133,7 +133,7 @@ pub fn sim_loop(
 // TODO: set it up according to the menu
 pub fn enter_simulation(mut commands: Commands, sim_data: ResMut<VisualizerData>, db: Res<DB>) {
     let simulation_id = Uuid::new_v4().to_string();
-    let drone = get_base_model2(&db);
+    let drone = Drone::from_db(&db);
     let SelectionConfig::Simulation {
         logger: Some(logger),
         controller: Some(controller),

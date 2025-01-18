@@ -3365,6 +3365,7 @@ dependencies = [
 name = "environment"
 version = "0.1.0"
 dependencies = [
+ "db",
  "flight_controller",
  "nalgebra",
  "pyo3",
