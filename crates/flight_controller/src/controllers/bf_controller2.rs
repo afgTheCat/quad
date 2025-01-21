@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-pub struct BFController2 {
+pub struct BFController {
     instance_id: String,
     scheduler_delta: Duration,
 }
@@ -217,7 +217,7 @@ impl ViratulBFManager {
 
 static VIRTUAL_BF_INSTANCE_MANAGER: Lazy<ViratulBFManager> = Lazy::new(|| ViratulBFManager::new());
 
-impl BFController2 {
+impl BFController {
     pub fn new() -> Self {
         let instance_id = format!("default_id");
         let scheduler_delta = Duration::from_micros(50);
@@ -228,7 +228,7 @@ impl BFController2 {
     }
 }
 
-impl FlightController for BFController2 {
+impl FlightController for BFController {
     fn init(&self) {
         VIRTUAL_BF_INSTANCE_MANAGER.register_new(self.instance_id.clone());
         VIRTUAL_BF_INSTANCE_MANAGER.access(&self.instance_id, |virtual_bf| unsafe {
@@ -279,9 +279,25 @@ impl FlightController for BFController2 {
     }
 }
 
-impl Drop for BFController2 {
+impl Drop for BFController {
     fn drop(&mut self) {
         // close the loaded library
         VIRTUAL_BF_INSTANCE_MANAGER.close(&self.instance_id);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::VIRTUAL_BF_INSTANCE_MANAGER;
+
+    // laods and unloads bf 100.000 times
+    #[test]
+    fn test_mem_leak() {
+        let counter = 0;
+        for _ in 0..10000000 {
+            let instance_id = counter.to_string();
+            VIRTUAL_BF_INSTANCE_MANAGER.register_new(instance_id.clone());
+            VIRTUAL_BF_INSTANCE_MANAGER.close(&instance_id);
+        }
     }
 }

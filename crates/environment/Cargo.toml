@@ -3,6 +3,10 @@ name = "environment"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "environment"
+crate-type = ["cdylib"]
+
 [dependencies]
 simulator.workspace = true
 pyo3-log.workspace = true 
@@ -10,3 +14,6 @@ pyo3.workspace = true
 nalgebra.workspace = true
 flight_controller.workspace = true
 db.workspace = true
+
+# [package.metadata.maturin]
+# python_source = "python"

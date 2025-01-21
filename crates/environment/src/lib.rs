@@ -15,11 +15,15 @@
 //!     - :attr:`np_random` - The random number generator for the environment. This is automatically assigned during
 //!       ``super().reset(seed=seed)`` and when assessing :attr:`np_random`.
 
+use db::AscentDb;
 use flight_controller::Channels;
-use nalgebra::Vector3;
-use pyo3::pyclass;
-use simulator::{SimulationObservation, Simulator};
-use std::{collections::HashMap, f64, time::Duration};
+use nalgebra::{UnitQuaternion, Vector3};
+use pyo3::prelude::*;
+use simulator::{
+    SimulationObservation, Simulator,
+    loader::{SimLoader, SimulationLoader},
+};
+use std::{f64, sync::Arc, time::Duration};
 
 // TODO: we can implement a bunch more things on this
 struct Target {
@@ -49,8 +53,85 @@ impl Target {
     }
 }
 
+// all that seems useful for now
+#[pyclass]
+pub struct Observation {
+    rotation: Vec<f64>,
+    position: Vec<f64>,
+    velocity: Vec<f64>,
+    acceleration: Vec<f64>,
+    angular_velocity: Vec<f64>,
+    thrusts: Vec<f64>,
+    bat_voltage: f64,
+}
+
+impl Observation {
+    fn from_sim_observation(observation: SimulationObservation) -> Observation {
+        let rotation = UnitQuaternion::from(observation.rotation);
+        Observation {
+            rotation: vec![
+                rotation.coords.x,
+                rotation.coords.y,
+                rotation.coords.z,
+                rotation.coords.w,
+            ],
+            position: vec![
+                observation.position[0],
+                observation.position[1],
+                observation.position[2],
+            ],
+            velocity: vec![
+                observation.linear_velocity[0],
+                observation.linear_velocity[1],
+                observation.linear_velocity[2],
+            ],
+            acceleration: vec![
+                observation.acceleration[0],
+                observation.acceleration[1],
+                observation.acceleration[2],
+            ],
+            angular_velocity: vec![
+                observation.angular_velocity[0],
+                observation.angular_velocity[1],
+                observation.angular_velocity[2],
+            ],
+            thrusts: vec![
+                observation.thrusts[0],
+                observation.thrusts[1],
+                observation.thrusts[2],
+                observation.thrusts[3],
+            ],
+            bat_voltage: observation.bat_voltage,
+        }
+    }
+}
+
+#[pymethods]
+impl Observation {
+    // TODO: I super hate how I have to define all the getters here. Probably there are better
+    // solutions like returning a hashmap. This whole thing is temporary though
+    #[getter]
+    fn position(&self) -> PyResult<Vec<f64>> {
+        Ok(self.position.clone())
+    }
+
+    pub fn flatten(&self) -> Vec<f64> {
+        self.rotation
+            .iter()
+            .chain(self.position.iter())
+            .chain(self.velocity.iter())
+            .chain(self.acceleration.iter())
+            .chain(self.angular_velocity.iter())
+            .chain(self.thrusts.iter())
+            .chain(vec![self.bat_voltage].iter())
+            .cloned()
+            .collect()
+    }
+}
+
 #[pyclass]
 pub struct Environment {
+    sim_loader: Box<dyn SimulationLoader>,
     /// Controls how the step function will act
     delta_t: Duration,
     /// The simulator
@@ -61,43 +142,59 @@ pub struct Environment {
     max_ep_len: Duration,
 }
 
+#[pymethods]
 impl Environment {
-    fn new() {}
+    // just for testing
+    #[staticmethod]
+    fn default() -> Self {
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+        let sim_loader = SimLoader::new(Arc::new(db));
+        let mut simulator = sim_loader.load_simulation(1);
+        simulator.init();
+        Self {
+            sim_loader: Box::new(sim_loader),
+            delta_t: Duration::from_millis(10),
+            simulator,
+            target: Target::new(Vector3::new(10., 10., 10.), 1.),
+            max_ep_len: Duration::from_secs(20),
+        }
+    }
 
-    // Step method
-    pub fn step(
-        &mut self,
-        action: Channels,
-    ) -> (
-        SimulationObservation,
-        f64,
-        bool,
-        bool,
-        HashMap<String, String>,
-    ) {
-        let observation = self.simulator.simulate_delta(self.delta_t, action);
-        let terminated = self.target.hit(observation.position);
-        let reward = 1. / self.target.distance_to_point(observation.position);
-        let trauncuated = self.max_ep_len < observation.simulation_time;
-        (
-            observation,
-            reward,
-            terminated,
-            trauncuated,
-            HashMap::default(),
-        )
+    pub fn step(&mut self, action: Vec<f64>, delta_t: f64) -> Observation {
+        let action = Channels {
+            throttle: action[0],
+            roll: action[1],
+            pitch: action[2],
+            yaw: action[3],
+        };
+        let observation = self
+            .simulator
+            .simulate_delta(Duration::from_secs_f64(delta_t), action);
+        Observation::from_sim_observation(observation)
     }
 
     // TODO: when we have the machinary we should do a real reset
-    pub fn reset(&mut self) {
-        todo!()
+    pub fn reset(&mut self) -> Observation {
+        let mut simulator = self.sim_loader.load_simulation(1);
+        simulator.init();
+        self.simulator = simulator;
+        let observation = self.simulator.simulation_info();
+        Observation::from_sim_observation(observation)
     }
 
     pub fn render(&self) {
-        todo!()
+        // TODO: what we can do is log things with the logger
     }
 
     pub fn close(&self) {
-        todo!()
+        // Just drop everything
     }
+}
+
+#[pymodule]
+fn environment(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    pyo3_log::init(); // I guess we could supress this in the future
+    m.add_class::<Observation>()?;
+    m.add_class::<Environment>()?;
+    Ok(())
 }

@@ -1,7 +1,7 @@
 // This trait is only here as an API proposal. We also have an implementation. NOTE:  HIGHTLY IN PROGRESS
 
 use crate::{
-    loggers::{Logger, RerunLogger},
+    loggers::{EmptyLogger, Logger},
     low_pass_filter::LowPassFilter,
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
@@ -10,7 +10,7 @@ use db::{
     simulation_frame::{DBLowPassFilter, DBRotorState},
     AscentDb,
 };
-use flight_controller::{controllers::bf_controller2::BFController2, FlightController};
+use flight_controller::{controllers::bf_controller2::BFController, FlightController};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},
@@ -19,7 +19,7 @@ use std::{
 
 // This is the prmary API that we wish to use. Loading a drone is straight forward, however using
 // the appropriate logger is a question to be awnsered
-pub trait SimulationLoader {
+pub trait SimulationLoader: Send + Sync {
     fn load_simulation(&self, drone_id: i64) -> Simulator;
     fn load_drone(&self, drone_id: i64) -> Drone;
 }
@@ -235,10 +235,12 @@ impl SimulationLoader for SimLoader {
         }
     }
 
+    // This should be a configuration id. Suppose I want to load in some custom logger. How should
+    // that work?
     fn load_simulation(&self, drone_id: i64) -> Simulator {
         let drone = self.load_drone(drone_id);
-        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController2::new());
-        let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(RerunLogger::new("sim".into())));
+        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::new());
+        let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::new()));
         let time = Duration::default();
         let dt = Duration::from_nanos(5000);
         let fc_time_accu = Duration::default();

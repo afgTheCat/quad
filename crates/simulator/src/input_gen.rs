@@ -5,7 +5,7 @@ use crate::loader::{SimLoader, SimulationLoader};
 use crate::loggers::{Logger, RerunLogger};
 use crate::{loggers::DBLogger, Simulator};
 use db::AscentDb;
-use flight_controller::controllers::bf_controller2::BFController2;
+use flight_controller::controllers::bf_controller2::BFController;
 use flight_controller::{Channels, MotorInput};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
@@ -40,7 +40,7 @@ pub fn set_up_simulation(
         LogType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
     };
 
-    let flight_controller = Arc::new(BFController2::new());
+    let flight_controller = Arc::new(BFController::new());
 
     Simulator {
         drone: drone.clone(),

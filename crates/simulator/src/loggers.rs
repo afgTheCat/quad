@@ -164,3 +164,17 @@ impl RerunLogger {
         }
     }
 }
+
+pub struct EmptyLogger {}
+
+impl EmptyLogger {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Logger for EmptyLogger {
+    fn process_state(&mut self, _: Duration, _: &Drone, _: Channels, _: bool) {
+        // To nothing
+    }
+}
