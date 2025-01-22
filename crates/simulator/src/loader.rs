@@ -1,5 +1,5 @@
-// This trait is only here as an API proposal. We also have an implementation. NOTE:  HIGHTLY IN PROGRESS
-
+// NOTE:  HIGHTLY IN PROGRESS
+// This trait is only here as an API proposal. We also have an implementation.
 use crate::{
     loggers::{EmptyLogger, Logger},
     low_pass_filter::LowPassFilter,
@@ -10,7 +10,7 @@ use db::{
     simulation_frame::{DBLowPassFilter, DBRotorState},
     AscentDb,
 };
-use flight_controller::{controllers::bf_controller2::BFController, FlightController};
+use flight_controller::{controllers::bf_controller::BFController, FlightController};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},
@@ -20,8 +20,8 @@ use std::{
 // This is the prmary API that we wish to use. Loading a drone is straight forward, however using
 // the appropriate logger is a question to be awnsered
 pub trait SimulationLoader: Send + Sync {
-    fn load_simulation(&self, drone_id: i64) -> Simulator;
-    fn load_drone(&self, drone_id: i64) -> Drone;
+    fn load_drone(&self, config_id: i64) -> Drone;
+    fn load_simulation(&self, config_id: i64, fc_id: String) -> Simulator;
 }
 
 pub struct SimLoader {
@@ -55,7 +55,7 @@ fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilter) -
 }
 
 impl SimulationLoader for SimLoader {
-    fn load_drone(&self, drone_id: i64) -> Drone {
+    fn load_drone(&self, config_id: i64) -> Drone {
         let (
             db_sim_frame,
             rotor_1_state,
@@ -69,7 +69,7 @@ impl SimulationLoader for SimLoader {
             gyro_filter_1,
             gyro_filter_2,
             gyro_filter_3,
-        ) = self.db.select_simulation_frame(drone_id).unwrap();
+        ) = self.db.select_simulation_frame(config_id).unwrap();
         let rotor1 = db_to_rotor_state(rotor_1_state, pwm_filter_1_state);
         let rotor2 = db_to_rotor_state(rotor_2_state, pwm_filter_2_state);
         let rotor3 = db_to_rotor_state(rotor_3_state, pwm_filter_3_state);
@@ -158,8 +158,8 @@ impl SimulationLoader for SimLoader {
             motor_low_pass_filter_2,
             motor_low_pass_filter_3,
             motor_low_pass_filter_4,
-        ) = self.db.select_drone_model(drone_id).unwrap();
-        let sample_points = self.db.select_sample_points(drone_id);
+        ) = self.db.select_drone_model(config_id).unwrap();
+        let sample_points = self.db.select_sample_points(config_id);
 
         let bat_voltage_curve = SampleCurve::new(
             sample_points
@@ -237,9 +237,9 @@ impl SimulationLoader for SimLoader {
 
     // This should be a configuration id. Suppose I want to load in some custom logger. How should
     // that work?
-    fn load_simulation(&self, drone_id: i64) -> Simulator {
-        let drone = self.load_drone(drone_id);
-        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::new());
+    fn load_simulation(&self, config_id: i64, fc_id: String) -> Simulator {
+        let drone = self.load_drone(config_id);
+        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::new(fc_id));
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::new()));
         let time = Duration::default();
         let dt = Duration::from_nanos(5000);
@@ -254,5 +254,22 @@ impl SimulationLoader for SimLoader {
             fc_time_accu,
             time_accu,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{SimLoader, SimulationLoader};
+    use db::AscentDb;
+    use std::sync::Arc;
+
+    #[test]
+    fn reload_thing() {
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+        let sim_loader = SimLoader::new(Arc::new(db));
+        let mut simulator = sim_loader.load_simulation(1, "def_id".into());
+        simulator.init();
+        simulator = sim_loader.load_simulation(1, "def_id".into());
+        simulator.init();
     }
 }

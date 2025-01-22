@@ -9,6 +9,7 @@ use std::{
     time::Duration,
 };
 
+#[derive(Debug)]
 pub struct BFController {
     instance_id: String,
     scheduler_delta: Duration,
@@ -31,6 +32,7 @@ type VBFSetAccelData = unsafe extern "C" fn(*const f32);
 type VBFSetBattery = unsafe extern "C" fn(u8, f32, f32, f64, f64);
 type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
 
+#[derive(Debug)]
 struct VirtualBF {
     lib: Library,
     vbf_init: Result<VBFInit, libloading::Error>,
@@ -139,7 +141,7 @@ impl VirtualBF {
     impl_virtual_bf_fn!(vbf_set_gps_data, lat: i32, lon: i32, alt: i32, gound_speed: u16);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct VirtualBFWrapper {
     virtual_bf: Arc<VirtualBF>,
 }
@@ -218,8 +220,7 @@ impl ViratulBFManager {
 static VIRTUAL_BF_INSTANCE_MANAGER: Lazy<ViratulBFManager> = Lazy::new(|| ViratulBFManager::new());
 
 impl BFController {
-    pub fn new() -> Self {
-        let instance_id = format!("default_id");
+    pub fn new(instance_id: String) -> Self {
         let scheduler_delta = Duration::from_micros(50);
         Self {
             scheduler_delta,
@@ -283,21 +284,5 @@ impl Drop for BFController {
     fn drop(&mut self) {
         // close the loaded library
         VIRTUAL_BF_INSTANCE_MANAGER.close(&self.instance_id);
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::VIRTUAL_BF_INSTANCE_MANAGER;
-
-    // laods and unloads bf 100.000 times
-    #[test]
-    fn test_mem_leak() {
-        let counter = 0;
-        for _ in 0..10000000 {
-            let instance_id = counter.to_string();
-            VIRTUAL_BF_INSTANCE_MANAGER.register_new(instance_id.clone());
-            VIRTUAL_BF_INSTANCE_MANAGER.close(&instance_id);
-        }
     }
 }

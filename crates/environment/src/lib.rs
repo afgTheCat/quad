@@ -131,6 +131,11 @@ impl Observation {
 
 #[pyclass]
 pub struct Environment {
+    /// Config id
+    config_id: i64,
+    /// Next simulation id
+    fc_id: u64,
+    /// Loads the simulation
     sim_loader: Box<dyn SimulationLoader>,
     /// Controls how the step function will act
     delta_t: Duration,
@@ -149,9 +154,13 @@ impl Environment {
     fn default() -> Self {
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let sim_loader = SimLoader::new(Arc::new(db));
-        let mut simulator = sim_loader.load_simulation(1);
+        let config_id = 1;
+        let fc_id = 0;
+        let mut simulator = sim_loader.load_simulation(config_id, fc_id.to_string());
         simulator.init();
         Self {
+            config_id,
+            fc_id,
             sim_loader: Box::new(sim_loader),
             delta_t: Duration::from_millis(10),
             simulator,
@@ -175,7 +184,10 @@ impl Environment {
 
     // TODO: when we have the machinary we should do a real reset
     pub fn reset(&mut self) -> Observation {
-        let mut simulator = self.sim_loader.load_simulation(1);
+        self.fc_id += 1;
+        let mut simulator = self
+            .sim_loader
+            .load_simulation(self.config_id, self.fc_id.to_string());
         simulator.init();
         self.simulator = simulator;
         let observation = self.simulator.simulation_info();

@@ -17,7 +17,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{
-    controllers::{bf_controller2::BFController, res_controller::ResController},
+    controllers::{bf_controller::BFController, res_controller::ResController},
     Channels, FlightController,
 };
 use nalgebra::Vector3;
@@ -148,7 +148,7 @@ pub fn enter_simulation(
 
     let flight_controller: Arc<dyn FlightController> = match controller {
         // Controller::Betafligt => Arc::new(BFController::new()),
-        Controller::Betafligt => Arc::new(BFController::new()),
+        Controller::Betafligt => Arc::new(BFController::new("defualt_controller".into())),
         Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, &res_id)),
     };
     let battery_state = &drone.current_frame.battery_state;
@@ -186,8 +186,6 @@ pub fn enter_simulation(
 }
 
 pub fn exit_simulation(
-    simulation: ResMut<Simulaton>,
-    db: Res<DB>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut commands: Commands,

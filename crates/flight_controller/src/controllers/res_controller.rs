@@ -11,6 +11,7 @@ use res::{
 
 use crate::{FlightController, MotorInput};
 
+#[derive(Debug)]
 pub struct ResController {
     model: Mutex<DroneRc>,
 }
