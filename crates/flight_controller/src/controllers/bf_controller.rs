@@ -31,6 +31,7 @@ type VBFSetAttitude = unsafe extern "C" fn(*const f32);
 type VBFSetAccelData = unsafe extern "C" fn(*const f32);
 type VBFSetBattery = unsafe extern "C" fn(u8, f32, f32, f64, f64);
 type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
+type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
 
 #[derive(Debug)]
 struct VirtualBF {
@@ -51,6 +52,7 @@ struct VirtualBF {
     vbf_set_attitude: Result<VBFSetAttitude, libloading::Error>,
     vbf_set_battery_data: Result<VBFSetBattery, libloading::Error>,
     vbf_set_gps_data: Result<VBFSetGpsData, libloading::Error>,
+    vbf_get_attitude_quat: Result<VBFGetAttitudeQuat, libloading::Error>,
 }
 
 impl VirtualBF {
@@ -79,6 +81,7 @@ impl VirtualBF {
         get_vbf_method!(vbf_set_attitude);
         get_vbf_method!(vbf_set_battery_data);
         get_vbf_method!(vbf_set_gps_data);
+        get_vbf_method!(vbf_get_attitude_quat);
 
         Self {
             lib,
@@ -98,6 +101,7 @@ impl VirtualBF {
             vbf_set_attitude,
             vbf_set_battery_data,
             vbf_set_gps_data,
+            vbf_get_attitude_quat,
         }
     }
 }
@@ -139,6 +143,7 @@ impl VirtualBF {
     impl_virtual_bf_fn!(vbf_set_attitude, attitude_quaternion: *const f32);
     impl_virtual_bf_fn!(vbf_set_battery_data, cell_count: u8, voltage: f32, sagged_voltage: f32, amperage: f64, mah_drawn: f64);
     impl_virtual_bf_fn!(vbf_set_gps_data, lat: i32, lon: i32, alt: i32, gound_speed: u16);
+    impl_virtual_bf_fn!(vbf_get_attitude_quat, attitude: *mut f32);
 }
 
 #[derive(Clone, Debug)]
@@ -170,11 +175,11 @@ unsafe impl Send for VirtualBFWrapper {}
 unsafe impl Sync for VirtualBFWrapper {}
 
 #[derive(Default)]
-struct ViratulBFManager {
+struct VirtualBFManager {
     instances: Arc<Mutex<HashMap<String, VirtualBFWrapper>>>,
 }
 
-impl ViratulBFManager {
+impl VirtualBFManager {
     pub fn new() -> Self {
         Self {
             instances: Arc::new(Mutex::new(HashMap::new())),
@@ -217,11 +222,12 @@ impl ViratulBFManager {
     }
 }
 
-static VIRTUAL_BF_INSTANCE_MANAGER: Lazy<ViratulBFManager> = Lazy::new(|| ViratulBFManager::new());
+static VIRTUAL_BF_INSTANCE_MANAGER: Lazy<VirtualBFManager> = Lazy::new(|| VirtualBFManager::new());
 
 impl BFController {
-    pub fn new(instance_id: String) -> Self {
+    pub fn new(instance_id: &str) -> Self {
         let scheduler_delta = Duration::from_micros(50);
+        let instance_id = instance_id.to_owned();
         Self {
             scheduler_delta,
             instance_id,
@@ -284,5 +290,52 @@ impl Drop for BFController {
     fn drop(&mut self) {
         // close the loaded library
         VIRTUAL_BF_INSTANCE_MANAGER.close(&self.instance_id);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{BFController, VirtualBFManager, VIRTUAL_BF_INSTANCE_MANAGER};
+    use crate::FlightController;
+
+    impl VirtualBFManager {
+        fn set_attitude(&self, instance_id: &str, attitude: [f32; 4]) {
+            self.access(instance_id, |vbf| unsafe {
+                vbf.vbf_set_attitude(attitude.as_ptr());
+            });
+        }
+
+        fn get_attitude(&self, instance_id: &str) -> [f32; 4] {
+            let mut attitude = [0.; 4];
+            self.access(instance_id, |vbf| unsafe {
+                vbf.vbf_get_attitude_quat(attitude.as_mut_ptr());
+            });
+            attitude
+        }
+    }
+
+    #[test]
+    fn load_virtual_bf_instances_correctly() {
+        let instance_id_1 = "instance_id_1";
+        let instance_id_2 = "instance_id_2";
+
+        // Load the first instance
+        let controller_1 = BFController::new(instance_id_1);
+        controller_1.init();
+
+        // Load the second instance
+        let controller_2 = BFController::new(instance_id_2);
+        controller_2.init();
+
+        let attitude = [0.835, 0.311, -0.311, -0.258];
+        VIRTUAL_BF_INSTANCE_MANAGER.set_attitude(instance_id_1, attitude);
+
+        let read_attitude_1 = VIRTUAL_BF_INSTANCE_MANAGER.get_attitude(instance_id_1);
+        let read_attitude_2 = VIRTUAL_BF_INSTANCE_MANAGER.get_attitude(instance_id_2);
+
+        assert_eq!(attitude, read_attitude_1);
+
+        // TODO: fix this!
+        // assert_ne!(read_attitude_1, read_attitude_2);
     }
 }

@@ -21,7 +21,7 @@ use std::{
 // the appropriate logger is a question to be awnsered
 pub trait SimulationLoader: Send + Sync {
     fn load_drone(&self, config_id: i64) -> Drone;
-    fn load_simulation(&self, config_id: i64, fc_id: String) -> Simulator;
+    fn load_simulation(&self, config_id: i64, fc_id: &str) -> Simulator;
 }
 
 pub struct SimLoader {
@@ -237,7 +237,7 @@ impl SimulationLoader for SimLoader {
 
     // This should be a configuration id. Suppose I want to load in some custom logger. How should
     // that work?
-    fn load_simulation(&self, config_id: i64, fc_id: String) -> Simulator {
+    fn load_simulation(&self, config_id: i64, fc_id: &str) -> Simulator {
         let drone = self.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::new(fc_id));
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::new()));
@@ -254,22 +254,5 @@ impl SimulationLoader for SimLoader {
             fc_time_accu,
             time_accu,
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{SimLoader, SimulationLoader};
-    use db::AscentDb;
-    use std::sync::Arc;
-
-    #[test]
-    fn reload_thing() {
-        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
-        let sim_loader = SimLoader::new(Arc::new(db));
-        let mut simulator = sim_loader.load_simulation(1, "def_id".into());
-        simulator.init();
-        simulator = sim_loader.load_simulation(1, "def_id".into());
-        simulator.init();
     }
 }

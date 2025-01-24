@@ -3628,6 +3628,7 @@ dependencies = [
  "nalgebra",
  "once_cell",
  "res",
+ "uuid",
 ]
 
 [[package]]
