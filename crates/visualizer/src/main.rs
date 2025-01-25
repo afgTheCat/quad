@@ -5,9 +5,8 @@
 // mod drone;
 mod replay;
 mod sim;
-mod state;
+mod ui;
 
-use crate::state::VisualizerState;
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
     asset::{AssetServer, Assets, Handle},
@@ -19,7 +18,7 @@ use bevy::{
     prelude::{
         default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
         IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
-        Transform,
+        States, Transform,
     },
     scene::SceneBundle,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
@@ -33,9 +32,38 @@ use db::AscentDb;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-use simulator::loader::SimLoader;
-use state::{draw_ui, prefetch_menu_items, VisualizerData};
+use simulator::{loader::SimLoader, SimulationObservation};
 use std::sync::Arc;
+use ui::{draw_ui, menu::SelectionConfig, prefetch_menu_items};
+
+// Controll the visualizer state. It controls which systems are going to run.
+#[derive(States, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum VisualizerState {
+    Loading,
+    Menu,
+    Simulation,
+    Replay,
+}
+
+// Global data for everything related to the visualizer
+#[derive(Resource, Default)]
+pub struct VisualizerData {
+    pub sim_info: SimulationObservation,
+    pub simulation_ids: Vec<String>,
+    pub reservoir_ids: Vec<String>,
+    pub selection_config: SelectionConfig,
+}
+
+// replay info
+// TODO: figure this out!
+#[derive(Resource, Default)]
+pub struct ReplayInfo {}
+
+impl VisualizerData {
+    pub fn set_sim_info(&mut self, sim_info: SimulationObservation) {
+        self.sim_info = sim_info;
+    }
+}
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {

@@ -1,7 +1,7 @@
 use crate::{
     ntb_mat3, ntb_vec3,
-    state::{Controller, Logger, SelectionConfig, VisualizerData},
-    Loader, DB,
+    ui::menu::{Controller, Logger, SelectionConfig},
+    Loader, VisualizerData, DB,
 };
 use bevy::{
     asset::Handle,
@@ -17,9 +17,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{
-    controllers::{
-        bf_controller::BFController, manager::BFController2, res_controller::ResController,
-    },
+    controllers::{bf_controller::BFController, res_controller::ResController},
     Channels, FlightController,
 };
 use nalgebra::Vector3;

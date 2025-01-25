@@ -1,10 +1,6 @@
 use std::time::Duration;
 
-use crate::{
-    ntb_mat3, ntb_vec3,
-    state::{SelectionConfig, VisualizerData},
-    Loader, DB,
-};
+use crate::{ntb_mat3, ntb_vec3, ui::menu::SelectionConfig, Loader, VisualizerData, DB};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -15,7 +11,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use nalgebra::Vector3;
-use simulator::{loader::SimulationLoader, Drone, Replayer};
+use simulator::{loader::SimulationLoader, Replayer};
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct Replay(pub Replayer);
