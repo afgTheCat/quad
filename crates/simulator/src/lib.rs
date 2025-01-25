@@ -8,7 +8,7 @@ use db::simulation::DBFlightLog;
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
-use loggers::Logger;
+use loggers::{DBLogger, Logger};
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -27,7 +27,7 @@ pub const GRAVITY: f64 = 9.81;
 
 thread_local! {
     // static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
-    static RNG: RefCell<StdRng> = RefCell::new(StdRng::from_entropy());
+    static RNG: RefCell<StdRng> = RefCell::new(StdRng::seed_from_u64(0));
 }
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
@@ -468,9 +468,9 @@ impl Drone {
         MotorInput {
             input: [
                 rotor_state.0[0].pwm,
-                rotor_state.0[0].pwm,
-                rotor_state.0[0].pwm,
-                rotor_state.0[0].pwm,
+                rotor_state.0[1].pwm,
+                rotor_state.0[2].pwm,
+                rotor_state.0[3].pwm,
             ],
         }
     }

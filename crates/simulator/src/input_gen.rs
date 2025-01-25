@@ -2,11 +2,12 @@
 // explored in a semi realistic manner => then generate data from it
 
 use crate::loader::{SimLoader, SimulationLoader};
-use crate::loggers::{Logger, RerunLogger};
+use crate::loggers::{EmptyLogger, Logger, RerunLogger};
 use crate::{loggers::DBLogger, Simulator};
 use db::AscentDb;
 use flight_controller::controllers::bf_controller::BFController;
 use flight_controller::{Channels, FlightController, MotorInput};
+use nalgebra::RealField;
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
@@ -14,14 +15,14 @@ use std::sync::Mutex;
 use std::{sync::Arc, thread, time::Duration, usize};
 
 pub enum LogType {
-    DB,
-    Rerun,
+    DB { sim_id: String },
+    Rerun { sim_id: String },
+    Empty,
 }
 
 pub fn set_up_simulation(
     db: Arc<AscentDb>,
     loader: &impl SimulationLoader,
-    simulation_id: String,
     logger: LogType,
     flight_controller: impl FlightController,
 ) -> Simulator {
@@ -30,15 +31,16 @@ pub fn set_up_simulation(
     let current_gyro = drone.current_frame.gyro_state.gyro_update();
 
     let logger: Arc<Mutex<dyn Logger>> = match logger {
-        LogType::DB => Arc::new(Mutex::new(DBLogger::new(
-            simulation_id,
+        LogType::DB { sim_id } => Arc::new(Mutex::new(DBLogger::new(
+            sim_id.clone(),
             MotorInput::default(),
             current_battery_update,
             current_gyro,
             Channels::default(),
             db.clone(),
         ))),
-        LogType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
+        LogType::Rerun { sim_id } => Arc::new(Mutex::new(RerunLogger::new(sim_id.clone()))),
+        LogType::Empty => Arc::new(Mutex::new(EmptyLogger::new())),
     };
 
     let flight_controller = Arc::new(flight_controller);
@@ -70,6 +72,7 @@ fn generate_axis(milisecs: u128) -> Vec<f64> {
             pos = f64::min(f64::max(pos, -1000.), 1000.);
             vel = 0.;
         }
+        pos = pos.clamp(-1., 1.);
         all_pos.push(pos);
         (pos, vel, all_pos)
     });
@@ -97,8 +100,9 @@ fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Dur
     let mut simulation = set_up_simulation(
         db.clone(),
         &sim_loader,
-        episode_name,
-        LogType::DB,
+        LogType::DB {
+            sim_id: episode_name,
+        },
         BFController::new("default_id".into()),
     );
     simulation.init();
@@ -169,8 +173,9 @@ pub fn build_data_set(
         let mut simulation = set_up_simulation(
             db.clone(),
             &sim_loader,
-            format!("{}_tr_{}", data_set_id, ep),
-            LogType::DB,
+            LogType::DB {
+                sim_id: format!("{}_tr_{}", data_set_id, ep),
+            },
             BFController::new("default_id".into()),
         );
         simulation.init(); // tr_id.clone()
@@ -183,8 +188,9 @@ pub fn build_data_set(
         let mut simulation = set_up_simulation(
             db.clone(),
             &sim_loader,
-            format!("{}_te_{}", data_set_id, ep),
-            LogType::DB,
+            LogType::DB {
+                sim_id: format!("{}_te_{}", data_set_id, ep),
+            },
             BFController::new("default_id".into()),
         );
         simulation.init(); // tr_id.clone()
@@ -197,12 +203,14 @@ pub fn build_data_set(
 #[cfg(test)]
 mod test {
     use super::{build_data_set, generate_all_axis, set_up_simulation};
-    use crate::loader::SimLoader;
+    use crate::{input_gen::LogType, loader::SimLoader};
     use db::AscentDb;
     use flight_controller::controllers::{
         bf_controller::BFController,
         manager::{BFController2, VIRTUAL_BF_MANAGER_2},
     };
+    use rayon::iter::IntoParallelRefMutIterator;
+    use rayon::iter::ParallelIterator;
     use std::{sync::Arc, time::Duration};
 
     #[test]
@@ -222,8 +230,9 @@ mod test {
         let mut simulation = set_up_simulation(
             db.clone(),
             &sim_loader,
-            "test_generated_simulation".into(),
-            super::LogType::DB,
+            LogType::DB {
+                sim_id: "test_generated_simulation".into(),
+            },
             BFController::new("default_id".into()),
         );
         let duration = Duration::from_secs(5);
@@ -239,6 +248,7 @@ mod test {
         let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
         let sim_loader = SimLoader::new(db.clone());
 
+        let reference_controller = BFController2::new();
         let controller1 = BFController2::new();
         let controller2 = BFController2::new();
 
@@ -249,32 +259,64 @@ mod test {
 
         assert_ne!(lib_handle1, lib_handle2);
 
-        let duration = Duration::from_secs(5);
-        let input2 = generate_all_axis(duration);
+        let test_flight_duration = Duration::from_secs(5);
+        let inputs = generate_all_axis(test_flight_duration);
+
+        let mut reference_simulation = set_up_simulation(
+            db.clone(),
+            &sim_loader,
+            LogType::DB {
+                sim_id: "reference_sim".into(),
+            },
+            reference_controller,
+        );
+        reference_simulation.init();
+
+        for input in &inputs {
+            reference_simulation.simulate_delta(Duration::from_millis(1), input.clone());
+        }
 
         let mut simulation1 = set_up_simulation(
             db.clone(),
             &sim_loader,
-            "generated_sim1".into(),
-            super::LogType::Rerun,
+            LogType::DB {
+                sim_id: "generated_sim1".into(),
+            },
             controller1,
         );
         simulation1.init();
-        let input1 = generate_all_axis(duration);
-        for input in input1 {
-            simulation1.simulate_delta(Duration::from_millis(1), input);
-        }
 
         let mut simulation2 = set_up_simulation(
             db.clone(),
             &sim_loader,
-            "generated_sim2".into(),
-            super::LogType::Rerun,
+            LogType::DB {
+                sim_id: "generated_sim2".into(),
+            },
             controller2,
         );
         simulation2.init();
-        for input in input2 {
-            simulation2.simulate_delta(Duration::from_millis(1), input);
+
+        [&mut simulation1, &mut simulation2]
+            .par_iter_mut()
+            .for_each(|sim| {
+                for input in &inputs {
+                    sim.simulate_delta(Duration::from_millis(1), input.clone());
+                }
+            });
+
+        let ref_data = reference_simulation.logger.lock().unwrap().get_data();
+        let sim1_data = simulation1.logger.lock().unwrap().get_data();
+        let sim2_data = simulation2.logger.lock().unwrap().get_data();
+
+        assert_eq!(ref_data.len(), sim1_data.len());
+        assert_eq!(ref_data.len(), sim2_data.len());
+
+        for (ref_dp, sim_dp) in ref_data.iter().zip(sim1_data.iter()) {
+            assert!(ref_dp.data_eq(sim_dp), "{ref_dp:#?}\n, {sim_dp:#?}");
+        }
+
+        for (ref_dp, sim_dp) in ref_data.iter().zip(sim2_data.iter()) {
+            assert!(ref_dp.data_eq(sim_dp), "{ref_dp:#?}\n, {sim_dp:#?}");
         }
     }
 }

@@ -2,14 +2,16 @@ use crate::Drone;
 use db::{simulation::DBNewFlightLog, AscentDb};
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use rerun::{external::glam::Vec3, Points3D, RecordingStream};
-use std::{sync::Arc, time::Duration};
+use std::{any::Any, sync::Arc, time::Duration};
 
-pub trait Logger: Sync + Send {
+pub trait Logger: Sync + Send + Any {
     // process the current state of the simulation
     fn process_state(&mut self, time: Duration, drone: &Drone, channels: Channels, fc_called: bool);
+    fn get_data(&self) -> Vec<DBNewFlightLog>;
 }
 
-struct DBCurrentLog {
+#[derive(Clone)]
+pub struct DBCurrentLog {
     start_seconds: f64,
     current_input: MotorInput,
     current_battery_update: BatteryUpdate,
@@ -50,11 +52,12 @@ impl DBCurrentLog {
     }
 }
 
+#[derive(Clone)]
 pub struct DBLogger {
-    db_current_log: DBCurrentLog,
-    simulation_id: String,
-    data: Vec<DBNewFlightLog>,
-    db: Arc<AscentDb>,
+    pub db_current_log: DBCurrentLog,
+    pub simulation_id: String,
+    pub data: Vec<DBNewFlightLog>,
+    pub db: Arc<AscentDb>,
 }
 
 impl Logger for DBLogger {
@@ -80,6 +83,10 @@ impl Logger for DBLogger {
         );
         self.data
             .push(current_step.to_db_log(self.simulation_id.to_owned(), time.as_secs_f64()));
+    }
+
+    fn get_data(&self) -> Vec<DBNewFlightLog> {
+        self.data.clone()
     }
 }
 
@@ -114,6 +121,7 @@ impl DBLogger {
     }
 }
 
+#[derive(Clone)]
 pub struct RerunLogger {
     counter: usize,
     rec: RecordingStream,
@@ -141,6 +149,10 @@ impl Logger for RerunLogger {
             self.counter -= 1;
         }
     }
+
+    fn get_data(&self) -> Vec<DBNewFlightLog> {
+        unreachable!()
+    }
 }
 
 impl Drop for RerunLogger {
@@ -165,6 +177,7 @@ impl RerunLogger {
     }
 }
 
+#[derive(Clone)]
 pub struct EmptyLogger {}
 
 impl EmptyLogger {
@@ -176,5 +189,9 @@ impl EmptyLogger {
 impl Logger for EmptyLogger {
     fn process_state(&mut self, _: Duration, _: &Drone, _: Channels, _: bool) {
         // To nothing
+    }
+
+    fn get_data(&self) -> Vec<DBNewFlightLog> {
+        unreachable!()
     }
 }

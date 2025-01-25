@@ -44,7 +44,7 @@ pub struct DBFlightLog {
     pub yaw: f64,
 }
 
-#[derive(Insertable, Default)]
+#[derive(Insertable, Default, Clone, Debug)]
 #[diesel(table_name = crate::schema::flight_log)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DBNewFlightLog {
@@ -74,6 +74,18 @@ pub struct DBNewFlightLog {
     pub roll: f64,
     pub pitch: f64,
     pub yaw: f64,
+}
+
+impl DBNewFlightLog {
+    // only calculate the motor inputs
+    pub fn data_eq(&self, other: &Self) -> bool {
+        (self.start_seconds == other.start_seconds)
+            && (self.end_seconds == other.end_seconds)
+            && (self.motor_input_1 == other.motor_input_1)
+            && (self.motor_input_2 == other.motor_input_2)
+            && (self.motor_input_3 == other.motor_input_3)
+            && (self.motor_input_4 == other.motor_input_4)
+    }
 }
 
 const INSERT_FLIGHT_LOGS_QUERY: &str = "
