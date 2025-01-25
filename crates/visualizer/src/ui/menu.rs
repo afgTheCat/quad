@@ -262,7 +262,7 @@ pub fn main_menu_toggle(
 
 pub fn menu_ui(
     mut ctx: EguiContexts,
-    mut sim_data: ResMut<VisualizerData>,
+    sim_data: &mut VisualizerData,
     next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     let frame = Frame {
@@ -293,7 +293,7 @@ pub fn menu_ui(
             );
             let info_box = Rect::from_min_max(info_box_min, info_box_max);
             ui.allocate_new_ui(UiBuilder::new().max_rect(info_box), |ui| {
-                main_menu_toggle(ui, sim_data.as_mut(), next_visualizer_state);
+                main_menu_toggle(ui, sim_data, next_visualizer_state);
             });
         });
 }

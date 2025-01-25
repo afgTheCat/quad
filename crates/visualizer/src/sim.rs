@@ -21,9 +21,12 @@ use flight_controller::{
     Channels, FlightController,
 };
 use nalgebra::Vector3;
-use simulator::loggers::{Logger as LoggerTrait, RerunLogger};
 use simulator::{
     loader::SimulationLoader, loggers::DBLogger, BatteryUpdate, MotorInput, Simulator,
+};
+use simulator::{
+    loggers::{Logger as LoggerTrait, RerunLogger},
+    SimulationObservation,
 };
 use std::{
     sync::{Arc, Mutex},
@@ -40,21 +43,20 @@ pub struct Simulaton(Simulator);
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
 /// each frame.
-/// TODO: do we even need this? I assume that betaflight will handle storing the inputs.
-#[derive(Resource, Deref, DerefMut, Default, Debug)]
-pub struct PlayerControllerInput(Channels);
+// #[derive(Resource, Deref, DerefMut, Default, Debug)]
+// pub struct PlayerControllerInput(Channels);
 
-impl PlayerControllerInput {
-    fn to_channels(&self) -> Channels {
-        self.0
-    }
+#[derive(Resource, Default, Debug)]
+pub struct SimulationData {
+    pub channels: Channels,
+    pub sim_info: SimulationObservation,
 }
 
 /// Handles the input.
 pub fn handle_input(
     mut evr_gamepad: EventReader<GamepadEvent>,
     mut evr_kbd: EventReader<KeyboardInput>, // TODO: just for debugging
-    mut controller_input: ResMut<PlayerControllerInput>,
+    mut sim_data: ResMut<SimulationData>,
 ) {
     for ev in evr_gamepad.read() {
         let &GamepadEvent::Axis(ax) = &ev else {
@@ -64,31 +66,31 @@ pub fn handle_input(
         let ax_val = ax.value as f64;
 
         match ax.axis_type {
-            GamepadAxisType::LeftZ => controller_input.throttle = ax_val,
+            GamepadAxisType::LeftZ => sim_data.channels.throttle = ax_val,
             GamepadAxisType::RightStickX => {
-                controller_input.yaw = if ax_val > -0.96 { ax_val } else { -1. }
+                sim_data.channels.yaw = if ax_val > -0.96 { ax_val } else { -1. }
             }
-            GamepadAxisType::LeftStickX => controller_input.roll = ax_val,
-            GamepadAxisType::LeftStickY => controller_input.pitch = -ax_val,
+            GamepadAxisType::LeftStickX => sim_data.channels.roll = ax_val,
+            GamepadAxisType::LeftStickY => sim_data.channels.pitch = -ax_val,
             _ => {}
         }
     }
 
     for ev in evr_kbd.read() {
         if let (KeyCode::Space, ButtonState::Pressed) = (ev.key_code, ev.state) {
-            controller_input.throttle = 1.;
+            sim_data.channels.throttle = 1.;
         }
 
         if let (KeyCode::Space, ButtonState::Released) = (ev.key_code, ev.state) {
-            controller_input.throttle = -1.;
+            sim_data.channels.throttle = -1.;
         }
 
         if let (KeyCode::ArrowLeft, ButtonState::Pressed) = (ev.key_code, ev.state) {
-            controller_input.yaw -= 0.01;
+            sim_data.channels.yaw -= 0.01;
         }
 
         if let (KeyCode::ArrowRight, ButtonState::Pressed) = (ev.key_code, ev.state) {
-            controller_input.yaw += 0.01;
+            sim_data.channels.yaw += 0.01;
         }
     }
 }
@@ -97,15 +99,14 @@ pub fn handle_input(
 pub fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut sim_data: ResMut<VisualizerData>,
     mut simulation: ResMut<Simulaton>,
-    controller_input: Res<PlayerControllerInput>,
+    mut sim_data: ResMut<SimulationData>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
 ) {
     let (mut tranform, _) = scene_query.single_mut();
     let mut camera = camera_query.single_mut();
-    let debug_info = simulation.simulate_delta(timer.delta(), controller_input.to_channels());
+    let debug_info = simulation.simulate_delta(timer.delta(), sim_data.channels);
 
     let drone_translation = ntb_vec3(debug_info.position);
     let drone_rotation = Quat::from_mat3(&ntb_mat3(debug_info.rotation));
@@ -125,7 +126,7 @@ pub fn sim_loop(
         );
     }
 
-    sim_data.set_sim_info(debug_info);
+    sim_data.sim_info = debug_info;
     camera.target_focus = drone_translation;
 }
 
@@ -181,7 +182,7 @@ pub fn enter_simulation(
 
     simulation.init();
     commands.insert_resource(simulation);
-    commands.insert_resource(PlayerControllerInput::default());
+    commands.insert_resource(SimulationData::default());
 }
 
 pub fn exit_simulation(
@@ -201,5 +202,5 @@ pub fn exit_simulation(
 
     // Remove the simulation
     commands.remove_resource::<Simulaton>();
-    commands.remove_resource::<PlayerControllerInput>();
+    commands.remove_resource::<SimulationData>();
 }

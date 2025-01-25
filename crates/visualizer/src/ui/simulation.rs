@@ -1,20 +1,24 @@
-use crate::{VisualizerData, VisualizerState};
-use bevy::prelude::{NextState, ResMut};
+use crate::{sim::SimulationData, VisualizerState};
+use bevy::prelude::{NextState, Res, ResMut};
 use bevy_egui::{egui, EguiContexts};
 use egui_extras::{Column, TableBuilder};
 
 pub fn simulation_ui(
     mut ctx: EguiContexts,
-    sim_data: ResMut<VisualizerData>,
+    sim_data: &SimulationData,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
-    egui::SidePanel::left("Simulation").show(ctx.ctx_mut(), |ui| {
-        if ui.button("Back to menu").clicked() {
-            next_visualizer_state.set(VisualizerState::Menu);
-        }
+    // let side_panel = egui::SidePanel::left("Simulation").default_width(100.);
+    egui::SidePanel::left("Simulation")
+        // .default_width(500.)
+        .min_width(300.)
+        .show(ctx.ctx_mut(), |ui| {
+            if ui.button("Back to menu").clicked() {
+                next_visualizer_state.set(VisualizerState::Menu);
+            }
 
-        // TODO: make this more modern
-        TableBuilder::new(ui)
+            // TODO: make this more modern
+            TableBuilder::new(ui)
             .column(Column::auto().resizable(true))
             .column(Column::remainder())
             .header(20.0, |mut header| {
@@ -42,7 +46,7 @@ pub fn simulation_ui(
                                 ui.label($column_name);
                             });
                             row.col(|ui| {
-                                ui.label(format!("{:?}", $column_value));
+                                ui.label(format!("{:.2?}", $column_value));
                             });
                         });
                     };
@@ -50,7 +54,8 @@ pub fn simulation_ui(
                 // Display all the data that we want to show
                 // TODO: maybe readd this
                 // display_debug_data!("Determinant", ui_data.sim_info.rotation.determinant());
-                display_debug_data!("Rotation matrix", sim_data.sim_info.rotation);
+
+                // display_debug_data!("Rotation matrix", sim_data.sim_info.rotation);
                 display_debug_data!("Velocity", sim_data.sim_info.linear_velocity);
                 display_debug_data!("Acceleration", sim_data.sim_info.acceleration);
                 display_debug_data!("Angular velocity", sim_data.sim_info.angular_velocity);
@@ -59,6 +64,12 @@ pub fn simulation_ui(
                 display_debug_data!("Motor pwm {}", sim_data.sim_info.pwms, 4);
                 display_debug_data!("Bat voltage", sim_data.sim_info.bat_voltage);
                 display_debug_data!("Bat voltage sag", sim_data.sim_info.bat_voltage_sag);
+                display_debug_data!("Thrust", sim_data.sim_info.bat_voltage_sag);
+
+                display_debug_data!("Throttle", sim_data.channels.throttle);
+                display_debug_data!("Yaw", sim_data.channels.yaw);
+                display_debug_data!("Pitch", sim_data.channels.pitch);
+                display_debug_data!("Roll", sim_data.channels.roll);
             });
-    });
+        });
 }

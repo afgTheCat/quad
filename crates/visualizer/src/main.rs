@@ -48,7 +48,6 @@ pub enum VisualizerState {
 // Global data for everything related to the visualizer
 #[derive(Resource, Default)]
 pub struct VisualizerData {
-    pub sim_info: SimulationObservation,
     pub simulation_ids: Vec<String>,
     pub reservoir_ids: Vec<String>,
     pub selection_config: SelectionConfig,
@@ -58,12 +57,6 @@ pub struct VisualizerData {
 // TODO: figure this out!
 #[derive(Resource, Default)]
 pub struct ReplayInfo {}
-
-impl VisualizerData {
-    pub fn set_sim_info(&mut self, sim_info: SimulationObservation) {
-        self.sim_info = sim_info;
-    }
-}
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {

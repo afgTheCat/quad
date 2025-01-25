@@ -195,8 +195,7 @@ impl FrameModel for RotorModel {
 
         let state = &current_frame.rotors_state;
         for (i, rotor) in state.iter().enumerate() {
-            let (motor_pwm, motor_e_pow) =
-                rotor.pwm_low_pass_filter.update_two(rotor.pwm, dt, 120.);
+            let (motor_pwm, motor_e_pow) = rotor.pwm_low_pass_filter.update(rotor.pwm, dt, 120.);
             let armature_volt = motor_pwm * current_frame.battery_state.bat_voltage_sag;
 
             // For this calculation we only operate with the effective thrust. I have no idea why
@@ -382,17 +381,17 @@ impl FrameModel for GyroModel {
         let rotation = next_frame.drone_state.rotation;
         let frame_angular_velocity = next_frame.drone_state.angular_velocity;
         let cutoff_freq = 300.;
-        let (gyro_vel_x, gyro_x_e_pow) = current_frame.gyro_state.low_pass_filters[0].update_two(
+        let (gyro_vel_x, gyro_x_e_pow) = current_frame.gyro_state.low_pass_filters[0].update(
             frame_angular_velocity[0],
             dt,
             cutoff_freq,
         );
-        let (gyro_vel_y, gyro_y_e_pow) = current_frame.gyro_state.low_pass_filters[1].update_two(
+        let (gyro_vel_y, gyro_y_e_pow) = current_frame.gyro_state.low_pass_filters[1].update(
             frame_angular_velocity[1],
             dt,
             cutoff_freq,
         );
-        let (gyro_vel_z, gyro_z_e_pow) = current_frame.gyro_state.low_pass_filters[2].update_two(
+        let (gyro_vel_z, gyro_z_e_pow) = current_frame.gyro_state.low_pass_filters[2].update(
             frame_angular_velocity[2],
             dt,
             cutoff_freq,
