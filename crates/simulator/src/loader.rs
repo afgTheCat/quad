@@ -10,7 +10,10 @@ use db::{
     simulation_frame::{DBLowPassFilter, DBRotorState},
     AscentDb,
 };
-use flight_controller::{controllers::bf_controller::BFController, FlightController};
+use flight_controller::{
+    controllers::{bf_controller::BFController, manager::BFController2},
+    FlightController,
+};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},
@@ -21,7 +24,7 @@ use std::{
 // the appropriate logger is a question to be awnsered
 pub trait SimulationLoader: Send + Sync {
     fn load_drone(&self, config_id: i64) -> Drone;
-    fn load_simulation(&self, config_id: i64, fc_id: &str) -> Simulator;
+    fn load_simulation(&self, config_id: i64) -> Simulator;
 }
 
 pub struct SimLoader {
@@ -237,9 +240,9 @@ impl SimulationLoader for SimLoader {
 
     // This should be a configuration id. Suppose I want to load in some custom logger. How should
     // that work?
-    fn load_simulation(&self, config_id: i64, fc_id: &str) -> Simulator {
+    fn load_simulation(&self, config_id: i64) -> Simulator {
         let drone = self.load_drone(config_id);
-        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::new(fc_id));
+        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController2::new());
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::new()));
         let time = Duration::default();
         let dt = Duration::from_nanos(5000);

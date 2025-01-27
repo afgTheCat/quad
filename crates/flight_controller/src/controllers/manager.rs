@@ -21,7 +21,6 @@ unsafe extern "C" {
     fn dlsym(handle: *mut raw::c_void, symbol: *const raw::c_char) -> *mut raw::c_void;
     fn dlclose(handle: *mut raw::c_void) -> i32;
     fn dlerror() -> *mut raw::c_char;
-
 }
 
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
@@ -118,6 +117,7 @@ impl Drop for VirtualBF2 {
 unsafe impl Send for VirtualBF2 {}
 unsafe impl Sync for VirtualBF2 {}
 
+#[derive(Debug)]
 pub struct BFManager2 {
     instances: Mutex<HashMap<String, Arc<VirtualBF2>>>,
 }
@@ -165,6 +165,17 @@ impl BFManager2 {
         let mut guard = self.instances.lock().unwrap();
         guard.remove(instance_id);
     }
+
+    // only static managers can register new controllers
+    pub fn request_new_controller(&'static self) -> BFController2 {
+        let instance_id = self.register_new();
+        let scheduler_delta = Duration::from_micros(50);
+        BFController2 {
+            manager: &self,
+            instance_id,
+            scheduler_delta,
+        }
+    }
 }
 
 pub static VIRTUAL_BF_MANAGER_2: Lazy<BFManager2> = Lazy::new(|| BFManager2::new());
@@ -173,16 +184,19 @@ pub static VIRTUAL_BF_MANAGER_2: Lazy<BFManager2> = Lazy::new(|| BFManager2::new
 pub struct BFController2 {
     pub instance_id: String,
     pub scheduler_delta: Duration,
+    manager: &'static BFManager2,
 }
 
 impl BFController2 {
     pub fn new() -> Self {
-        let instance_id = VIRTUAL_BF_MANAGER_2.register_new();
-        let scheduler_delta = Duration::from_micros(50);
-        Self {
-            instance_id,
-            scheduler_delta,
-        }
+        // default manager
+        VIRTUAL_BF_MANAGER_2.request_new_controller()
+    }
+}
+
+impl Drop for BFController2 {
+    fn drop(&mut self) {
+        self.manager.close(&self.instance_id);
     }
 }
 
@@ -194,10 +208,6 @@ impl FlightController for BFController2 {
             (virtual_bf.vbf_init)(file_name.as_ptr());
             (virtual_bf.vbf_arm)();
         });
-    }
-
-    fn deinit(&self) {
-        VIRTUAL_BF_MANAGER_2.close(&self.instance_id);
     }
 
     fn update(
@@ -242,7 +252,8 @@ impl FlightController for BFController2 {
 
 #[cfg(test)]
 mod test_vb {
-    use crate::controllers::manager::{BFController2, VIRTUAL_BF_MANAGER_2};
+    use super::{dlmopen, LM_ID_NEWLM, RTLD_FLAGS};
+    use crate::controllers::manager::{check_dl_error, BFController2, VIRTUAL_BF_MANAGER_2};
 
     #[test]
     fn test_unique_loading() {
@@ -255,5 +266,19 @@ mod test_vb {
             .access(&controller2.instance_id, |virtual_bf| virtual_bf.lib_handle);
 
         assert_ne!(lib_handle1, lib_handle2);
+    }
+
+    #[test]
+    fn load_many() {
+        // for _ in 0..10 {
+        //     BFController2::new();
+        // }
+        let lib_path = "/home/gabor/ascent/quad/crates/flight_controller/virtual_bf/src/libvirtual_betaflight.so\0";
+        for _ in 0..10 {
+            let lib_handle = unsafe { dlmopen(LM_ID_NEWLM, lib_path.as_ptr().cast(), RTLD_FLAGS) };
+            println!("{lib_handle:?}");
+            let err = unsafe { check_dl_error(lib_handle) };
+            println!("{err:?}");
+        }
     }
 }

@@ -20,9 +20,6 @@ impl FlightController for ResController {
     // TODO: set the reservoir states to zeros
     fn init(&self) {}
 
-    // TODO: set the reservoir states to zeros
-    fn deinit(&self) {}
-
     // TODO: consider the delta time us
     fn update(
         &self,

@@ -24,8 +24,13 @@ class GymEnv(Env):
         self._total_t = np.float64(0)
         self._max_t = np.float64(20)
         self.action_space = spaces.Box(low=-1, high=1, shape=(4,), dtype=np.float64)
-        self.observation_space = spaces.Box(
-            low=-np.inf, high=np.inf, shape=(10,), dtype=np.float64
+        self.observation_space = spaces.Dict(
+            {
+                "agent": spaces.Box(
+                    low=-np.inf, high=np.inf, shape=(21,), dtype=np.float64
+                )
+                # TODO: maybe we want the target here as well?
+            }
         )
 
     def step(
@@ -49,9 +54,9 @@ class GymEnv(Env):
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
-    ) -> tuple[NDArray[np.float64], dict]:
+    ) -> tuple[dict[str, NDArray[np.float64]], dict]:
         obs = self._rust_env.reset()
-        return (obs.flatten, {})
+        return ({"agent": obs.flatten()}, {})
 
     def render(self) -> None:
         pass

@@ -246,10 +246,6 @@ impl FlightController for BFController {
         })
     }
 
-    fn deinit(&self) {
-        VIRTUAL_BF_INSTANCE_MANAGER.close(&self.instance_id);
-    }
-
     fn update(&self, delta_time_us: u64, fc_update: FlightControllerUpdate) -> MotorInput {
         VIRTUAL_BF_INSTANCE_MANAGER.access(&self.instance_id, |virtual_bf| unsafe {
             virtual_bf.vbf_set_battery_data(

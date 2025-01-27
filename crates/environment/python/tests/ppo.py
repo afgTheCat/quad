@@ -9,7 +9,8 @@ def create_env():
 
 
 drone_env = environment.GymEnv()
-env = make_vec_env(create_env, n_envs=4)
+env = make_vec_env(create_env, n_envs=10)
+env.reset()
 model = PPO("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=250)
 
