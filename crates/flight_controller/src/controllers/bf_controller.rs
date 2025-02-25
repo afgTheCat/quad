@@ -192,10 +192,10 @@ impl BFManager2 {
     }
 
     // only static managers can register new controllers
-    pub fn request_new_controller(&'static self) -> BFController2 {
+    pub fn request_new_controller(&'static self) -> BFController {
         let instance_id = unsafe { self.register_new2() };
         let scheduler_delta = Duration::from_micros(50);
-        BFController2 {
+        BFController {
             manager: self,
             instance_id,
             scheduler_delta,
@@ -206,26 +206,26 @@ impl BFManager2 {
 pub static VIRTUAL_BF_MANAGER_2: Lazy<BFManager2> = Lazy::new(|| BFManager2::new());
 
 #[derive(Debug)]
-pub struct BFController2 {
+pub struct BFController {
     pub instance_id: String,
     pub scheduler_delta: Duration,
     manager: &'static BFManager2,
 }
 
-impl Default for BFController2 {
+impl Default for BFController {
     fn default() -> Self {
         // default manager
         VIRTUAL_BF_MANAGER_2.request_new_controller()
     }
 }
 
-impl Drop for BFController2 {
+impl Drop for BFController {
     fn drop(&mut self) {
         self.manager.close(&self.instance_id);
     }
 }
 
-impl FlightController for BFController2 {
+impl FlightController for BFController {
     fn init(&self) {
         VIRTUAL_BF_MANAGER_2.access(&self.instance_id, |virtual_bf| unsafe {
             let file_name =

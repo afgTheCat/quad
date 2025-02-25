@@ -10,7 +10,7 @@ use db::{
     simulation_frame::{DBLowPassFilter, DBRotorState},
     AscentDb,
 };
-use flight_controller::{controllers::bf_controller::BFController2, FlightController};
+use flight_controller::{controllers::bf_controller::BFController, FlightController};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},
@@ -239,7 +239,7 @@ impl SimulationLoader for SimLoader {
     // that work?
     fn load_simulation(&self, config_id: i64) -> Simulator {
         let drone = self.load_drone(config_id);
-        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController2::default());
+        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::default());
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::default()));
         let time = Duration::default();
         let dt = Duration::from_nanos(5000);
