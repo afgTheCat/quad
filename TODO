@@ -1,4 +1,7 @@
 TODO:
   - state management fixes [DONE]
-  - rerun logger
-  - gym env
+  - rerun logger [DONE]
+  - gym env [DONE]
+  - refactor the whole goddamn db
+  - migrate to new version of bevy
+  - use combo box with egui [DONE]

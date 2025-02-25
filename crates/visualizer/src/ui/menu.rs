@@ -15,16 +15,6 @@ pub enum Logger {
     NullLogger,
 }
 
-impl Logger {
-    fn to_str(&self) -> String {
-        match self {
-            Self::DBLogger => "DB logger".into(),
-            Self::Rerun => "Rerun".into(),
-            Self::NullLogger => "NullLogger".into(),
-        }
-    }
-}
-
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub enum Controller {
     #[default]
@@ -32,16 +22,7 @@ pub enum Controller {
     Reservoir(String), // reservoir controller id
 }
 
-impl Controller {
-    fn to_str(&self) -> String {
-        match self {
-            Self::Betafligt => "Betaflight".into(),
-            Self::Reservoir(res_id) => format!("Reservoir controller {}", res_id),
-        }
-    }
-}
-
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum SelectionConfig {
     #[default]
     Menu,
@@ -61,38 +42,6 @@ impl SelectionConfig {
             Self::Menu => "Menu".into(),
             Self::Replay { .. } => "Replay".into(),
             Self::Simulation { .. } => "Simulation".into(),
-        }
-    }
-
-    pub fn to_controller_str(&self) -> String {
-        match &self {
-            Self::Menu => "No controller selected".into(),
-            Self::Replay { controller, .. } | Self::Simulation { controller, .. } => {
-                match controller {
-                    Some(c) => c.to_str(),
-                    _ => "No controller selected".into(),
-                }
-            }
-        }
-    }
-
-    pub fn to_logger_str(&self) -> String {
-        match &self {
-            Self::Menu | Self::Replay { .. } => "No logger selected".into(),
-            Self::Simulation { logger, .. } => match logger {
-                Some(logger) => logger.to_str(),
-                _ => "No logger selected".into(),
-            },
-        }
-    }
-
-    pub fn to_replay_id_str(&self) -> String {
-        match &self {
-            Self::Menu | Self::Simulation { .. } => "No replay id selected".into(),
-            Self::Replay { replay_id, .. } => match replay_id {
-                Some(replay_id) => replay_id.into(),
-                _ => "No logger selected".into(),
-            },
         }
     }
 
@@ -123,29 +72,6 @@ impl SelectionConfig {
             },
         }
     }
-
-    pub fn set_controller(&mut self, set_controller: Controller) {
-        match self {
-            Self::Replay { controller, .. } | Self::Simulation { controller, .. } => {
-                *controller = Some(set_controller)
-            }
-            _ => unreachable!(),
-        }
-    }
-
-    pub fn set_replay_id(&mut self, set_replay_id: String) {
-        match self {
-            Self::Replay { replay_id, .. } => *replay_id = Some(set_replay_id),
-            _ => unreachable!(),
-        }
-    }
-
-    pub fn set_logger(&mut self, set_logger: Logger) {
-        match self {
-            Self::Simulation { logger, .. } => *logger = Some(set_logger),
-            _ => unreachable!(),
-        }
-    }
 }
 
 pub fn main_menu_toggle(
@@ -163,63 +89,61 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Mode:");
-        ui.menu_button(visualizer_data.selection_config.to_state_str(), |ui| {
-            if ui.button("Simulation").clicked() {
-                visualizer_data.selection_config = visualizer_data.selection_config.to_simulation();
-            }
-            if ui.button("Replay").clicked() {
-                visualizer_data.selection_config = visualizer_data.selection_config.to_replay();
-            }
-        });
+        let selection_config = &mut visualizer_data.selection_config;
+        egui::ComboBox::from_id_salt("Mode selector")
+            .selected_text(selection_config.to_state_str())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    selection_config,
+                    selection_config.to_simulation(),
+                    "Simulation",
+                );
+                ui.selectable_value(selection_config, selection_config.to_replay(), "Replay");
+            });
     });
 
     ui.horizontal(|ui| {
         ui.label("Controller:");
-        if matches!(visualizer_data.selection_config, SelectionConfig::Menu) {
-            ui.label("Select mode first");
-        } else {
-            ui.menu_button(visualizer_data.selection_config.to_controller_str(), |ui| {
-                if ui.button("Betaflight").clicked() {
-                    visualizer_data
-                        .selection_config
-                        .set_controller(Controller::Betafligt);
-                }
-                for res_id in visualizer_data.reservoir_ids.iter() {
-                    if ui
-                        .button(format!("Reservoir controller {}", res_id))
-                        .clicked()
-                    {
-                        visualizer_data
-                            .selection_config
-                            .set_controller(Controller::Reservoir(res_id.into()));
-                    }
-                }
-            });
+        match &mut visualizer_data.selection_config {
+            SelectionConfig::Simulation { controller, .. }
+            | SelectionConfig::Replay { controller, .. } => {
+                let label = match controller {
+                    Some(x) => format!("{x:?}"),
+                    None => format!("Not selected"),
+                };
+                egui::ComboBox::from_id_salt("Controller selector")
+                    .selected_text(label)
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(controller, Some(Controller::Betafligt), "Betaflight");
+                        for res_id in visualizer_data.reservoir_ids.iter() {
+                            ui.selectable_value(
+                                controller,
+                                Some(Controller::Reservoir(res_id.into())),
+                                format!("Resrevoid controller {}", res_id),
+                            );
+                        }
+                    });
+            }
+            _ => {
+                ui.label("Select mode first");
+            }
         }
     });
 
     ui.horizontal(|ui| {
         ui.label("Logger:");
-        let is_simulation = matches!(
-            visualizer_data.selection_config,
-            SelectionConfig::Simulation { .. }
-        );
-        if is_simulation {
-            ui.menu_button(visualizer_data.selection_config.to_logger_str(), |ui| {
-                if ui.button("DB logger").clicked() {
-                    visualizer_data
-                        .selection_config
-                        .set_logger(Logger::DBLogger);
-                }
-                if ui.button("Rerun").clicked() {
-                    visualizer_data.selection_config.set_logger(Logger::Rerun);
-                }
-                if ui.button("Null logger").clicked() {
-                    visualizer_data
-                        .selection_config
-                        .set_logger(Logger::NullLogger);
-                }
-            });
+        if let SelectionConfig::Simulation { logger, .. } = &mut visualizer_data.selection_config {
+            let label = match logger {
+                Some(x) => format!("{x:?}"),
+                None => format!("Not selected"),
+            };
+            egui::ComboBox::from_id_salt("Logger selector")
+                .selected_text(label)
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(logger, Some(Logger::DBLogger), "DB logger");
+                    ui.selectable_value(logger, Some(Logger::Rerun), "Rerun");
+                    ui.selectable_value(logger, None, "None");
+                });
         } else {
             ui.label("Only available in simulation mode");
         }
@@ -227,20 +151,18 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Replay id:");
-        let is_replay = matches!(
-            visualizer_data.selection_config,
-            SelectionConfig::Replay { .. }
-        );
-        if is_replay {
-            ui.menu_button(visualizer_data.selection_config.to_replay_id_str(), |ui| {
-                for replay_id in visualizer_data.simulation_ids.iter() {
-                    if ui.button(format!("Replay {}", replay_id)).clicked() {
-                        visualizer_data
-                            .selection_config
-                            .set_replay_id(replay_id.into());
+        if let SelectionConfig::Replay { replay_id, .. } = &mut visualizer_data.selection_config {
+            let label = match replay_id {
+                Some(x) => format!("Replay: {}", x),
+                None => format!("Not selected"),
+            };
+            egui::ComboBox::from_id_salt("Replay selector")
+                .selected_text(label)
+                .show_ui(ui, |ui| {
+                    for id in visualizer_data.simulation_ids.iter() {
+                        ui.selectable_value(replay_id, Some(id.into()), format!("Replay {}", id));
                     }
-                }
-            });
+                });
         } else {
             ui.label("Only available in replay mode");
         }
