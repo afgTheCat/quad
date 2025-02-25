@@ -22,7 +22,7 @@ pub struct BatteryUpdate {
     pub bat_voltage: f64,
     pub amperage: f64,
     pub m_ah_drawn: f64,
-    pub cell_count: u8,
+    pub cell_count: u64,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -98,7 +98,7 @@ impl FlightControllerUpdate {
 
 pub trait FlightController: std::fmt::Debug + Send + Sync + 'static {
     fn init(&self);
-    fn update(&self, delta_time_us: u64, update: FlightControllerUpdate) -> MotorInput;
+    fn update(&self, delta_time: f64, update: FlightControllerUpdate) -> MotorInput;
     fn scheduler_delta(&self) -> Duration;
 }
 
@@ -121,12 +121,12 @@ impl Default for Channels {
 
 impl Channels {
     // TODO: verify this!
-    pub fn to_bf_channels(&self) -> [f32; 8] {
+    pub fn to_bf_channels(&self) -> [f64; 8] {
         [
-            self.roll as f32,
-            self.pitch as f32,
-            self.throttle as f32,
-            self.yaw as f32,
+            self.roll,
+            self.pitch,
+            self.throttle,
+            self.yaw,
             0.,
             0.,
             0.,

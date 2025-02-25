@@ -171,7 +171,7 @@ impl SimulationLoader for SimLoader {
         let battery_model = BatteryModel {
             quad_bat_capacity: drone_model.quad_bat_capacity,
             bat_voltage_curve,
-            quad_bat_cell_count: drone_model.quad_bat_cell_count as u8,
+            quad_bat_cell_count: drone_model.quad_bat_cell_count as u64,
             quad_bat_capacity_charged: drone_model.quad_bat_capacity_charged,
             max_voltage_sag: drone_model.max_voltage_sag,
         };

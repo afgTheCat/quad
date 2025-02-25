@@ -14,37 +14,36 @@ use std::{
 use uuid::Uuid;
 
 const RTLD_FLAGS: i32 = 0x0002; // Resolves all symbols and do not use them for further resolutions
-const LIB_PATH: &str =
-    "/home/gabor/ascent/quad/crates/flight_controller/virtual_bf/src/libvirtual_betaflight.so\0";
+const LIB_PATH: &str = "/home/gabor/ascent/virtual-betaflight/src/libvirtual_betaflight.so\0";
 
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
-type VBFUpdate = unsafe extern "C" fn(micros_passed: u64);
+type VBFUpdate = unsafe extern "C" fn(time_passed: f64);
 type VBFArm = unsafe extern "C" fn();
-// type VBFDisArm = unsafe extern "C" fn();
-// type VBFUpdateSerialWs = unsafe extern "C" fn();
-// type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
-// type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
-// type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
-// type VBFGetMicrosPassed = unsafe extern "C" fn() -> u64;
-type VBFGetMotorSignals = unsafe extern "C" fn(*mut f32);
-type VBFSetMotorRcData = unsafe extern "C" fn(*const f32);
-type VBFSetGyroData = unsafe extern "C" fn(*const f32);
-type VBFSetAttitude = unsafe extern "C" fn(*const f32);
-type VBFSetAccelData = unsafe extern "C" fn(*const f32);
-type VBFSetBattery = unsafe extern "C" fn(u8, f32, f32, f64, f64);
-// type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
-// type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
+type VBFDisarm = unsafe extern "C" fn();
+type VBFStartSerialWsThread = unsafe extern "C" fn();
+type VBFStopSerialWsThread = unsafe extern "C" fn();
+type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
+type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
+type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
+type VBFGetTimePassed = unsafe extern "C" fn() -> f64;
+type VBFGetMotorSignals = unsafe extern "C" fn(*mut f64);
+type VBFSetRcData = unsafe extern "C" fn(*const f64);
+type VBFSetGyroData = unsafe extern "C" fn(*const f64);
+type VBFSetAttitude = unsafe extern "C" fn(*const f64);
+type VBFSetAccelData = unsafe extern "C" fn(*const f64);
+type VBFSetBattery = unsafe extern "C" fn(u64, f64, f64, f64);
+type VBFSetGpsData = unsafe extern "C" fn(f64, f64, f64, f64);
 
 // represents a loaded library
 #[derive(Debug)]
-pub struct VirtualBF2 {
+pub struct VirtualBF {
     pub lib_handle: *mut raw::c_void,
     pub lmid: i64,
     pub vbf_init: VBFInit,
     pub vbf_update: VBFUpdate,
     pub vbf_arm: VBFArm,
     pub vbf_get_motor_signals: VBFGetMotorSignals,
-    pub vbf_set_rc_data: VBFSetMotorRcData,
+    pub vbf_set_rc_data: VBFSetRcData,
     pub vbf_set_gyro_data: VBFSetGyroData,
     pub vbf_set_accel_data: VBFSetAccelData,
     pub vbf_set_attitude: VBFSetAttitude,
@@ -73,7 +72,7 @@ unsafe fn get_lm_id(dl_handle: *mut raw::c_void) -> i64 {
     lmid as Lmid_t
 }
 
-impl VirtualBF2 {
+impl VirtualBF {
     unsafe fn new(lib_handle: *mut c_void, lmid: i64) -> Result<Self, CString> {
         macro_rules! get_vb_method {
             ($fn:ident, $fn_type:ty) => {
@@ -88,7 +87,7 @@ impl VirtualBF2 {
         get_vb_method!(vbf_update, VBFUpdate);
         get_vb_method!(vbf_arm, VBFArm);
         get_vb_method!(vbf_get_motor_signals, VBFGetMotorSignals);
-        get_vb_method!(vbf_set_rc_data, VBFSetMotorRcData);
+        get_vb_method!(vbf_set_rc_data, VBFSetRcData);
         get_vb_method!(vbf_set_gyro_data, VBFSetGyroData);
         get_vb_method!(vbf_set_accel_data, VBFSetAccelData);
         get_vb_method!(vbf_set_attitude, VBFSetAttitude);
@@ -110,7 +109,7 @@ impl VirtualBF2 {
     }
 }
 
-impl Drop for VirtualBF2 {
+impl Drop for VirtualBF {
     fn drop(&mut self) {
         let code = unsafe { dlclose(self.lib_handle) };
         if code == 0 {
@@ -119,12 +118,12 @@ impl Drop for VirtualBF2 {
     }
 }
 
-unsafe impl Send for VirtualBF2 {}
-unsafe impl Sync for VirtualBF2 {}
+unsafe impl Send for VirtualBF {}
+unsafe impl Sync for VirtualBF {}
 
 #[derive(Debug)]
 pub struct BFManager2 {
-    instances: Mutex<HashMap<String, Arc<VirtualBF2>>>,
+    instances: Mutex<HashMap<String, Arc<VirtualBF>>>,
     available_workspace_ids: Mutex<Vec<i64>>,
 }
 
@@ -158,7 +157,7 @@ impl BFManager2 {
 
         match entry {
             Entry::Vacant(vacant) => {
-                let controller = unsafe { VirtualBF2::new(lib_handle, lmid).unwrap() };
+                let controller = unsafe { VirtualBF::new(lib_handle, lmid).unwrap() };
                 vacant.insert(Arc::new(controller));
             }
             Entry::Occupied(_) => {
@@ -170,7 +169,7 @@ impl BFManager2 {
 
     pub fn access<F, R>(&self, instance_id: &str, f: F) -> R
     where
-        F: FnOnce(&VirtualBF2) -> R,
+        F: FnOnce(&VirtualBF) -> R,
     {
         // What we actually want is to prevent access only to the locked instance
         let instance;
@@ -212,6 +211,8 @@ pub struct BFController {
     manager: &'static BFManager2,
 }
 
+impl BFController {}
+
 impl Default for BFController {
     fn default() -> Self {
         // default manager
@@ -235,31 +236,27 @@ impl FlightController for BFController {
         });
     }
 
-    fn update(
-        &self,
-        delta_time_us: u64,
-        update: crate::FlightControllerUpdate,
-    ) -> crate::MotorInput {
+    fn update(&self, delta_time: f64, update: crate::FlightControllerUpdate) -> crate::MotorInput {
         VIRTUAL_BF_MANAGER_2.access(&self.instance_id, |virtual_bf| unsafe {
             (virtual_bf.vbf_set_battery_data)(
                 update.battery_update.cell_count,
-                update.battery_update.bat_voltage as f32,
-                update.battery_update.bat_voltage_sag as f32,
+                update.battery_update.bat_voltage,
+                update.battery_update.bat_voltage_sag,
                 update.battery_update.amperage,
-                update.battery_update.m_ah_drawn,
+                // update.battery_update.m_ah_drawn,
             );
-            let attitude_update = update.gyro_update.rotation.map(|x| x as f32);
+            let attitude_update = update.gyro_update.rotation;
             (virtual_bf.vbf_set_attitude)(attitude_update.as_ptr());
 
-            let accel_update = update.gyro_update.linear_acc.map(|x| x as f32);
+            let accel_update = update.gyro_update.linear_acc;
             (virtual_bf.vbf_set_accel_data)(accel_update.as_ptr());
 
-            let gyro_update = update.gyro_update.angular_velocity.map(|x| x as f32);
+            let gyro_update = update.gyro_update.angular_velocity;
             (virtual_bf.vbf_set_gyro_data)(gyro_update.as_ptr());
 
             let rc_data = update.channels.to_bf_channels();
             (virtual_bf.vbf_set_rc_data)(rc_data.as_ptr());
-            (virtual_bf.vbf_update)(delta_time_us);
+            (virtual_bf.vbf_update)(delta_time);
 
             let mut motors_signal = [0.; 4];
             (virtual_bf.vbf_get_motor_signals)(motors_signal.as_mut_ptr());

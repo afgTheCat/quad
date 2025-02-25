@@ -88,7 +88,7 @@ trait FrameModel {
 pub struct BatteryModel {
     pub quad_bat_capacity: f64,
     pub bat_voltage_curve: SampleCurve,
-    pub quad_bat_cell_count: u8,
+    pub quad_bat_cell_count: u64,
     pub quad_bat_capacity_charged: f64,
     pub max_voltage_sag: f64,
 }
@@ -539,7 +539,7 @@ impl Simulator {
             // update the flight controller
             if call_fc {
                 let motor_input = self.flight_controller.update(
-                    self.fc_time_accu.as_micros() as u64,
+                    self.fc_time_accu.as_secs_f64(),
                     FlightControllerUpdate {
                         battery_update: self.drone.battery_update(),
                         gyro_update: self.drone.current_frame.gyro_state.gyro_update(),

@@ -21,11 +21,7 @@ impl FlightController for ResController {
     fn init(&self) {}
 
     // TODO: consider the delta time us
-    fn update(
-        &self,
-        _delta_time_us: u64,
-        update: crate::FlightControllerUpdate,
-    ) -> crate::MotorInput {
+    fn update(&self, _delta_time: f64, update: crate::FlightControllerUpdate) -> crate::MotorInput {
         let rc_input = update.to_rc_input();
         let input = FlightInput::new_from_rc_input(vec![vec![rc_input]]);
         let mut model = self.model.lock().unwrap();
