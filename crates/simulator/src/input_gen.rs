@@ -311,21 +311,5 @@ mod test {
                     sim.simulate_delta(Duration::from_millis(1), input.clone());
                 }
             });
-
-        // NOTE: Betaflight is not entirly consistent it seems! Super minor differences can occure,
-        // but the overall flight trajectory looks ok. Maybe it is because of the sagged battery
-        // voltage? We should check this later on if we have some problems
-        //
-        // let ref_data1 = reference_simulation1.logger.lock().unwrap().get_data();
-        // let ref_data2 = reference_simulation2.logger.lock().unwrap().get_data();
-        // let sim1_data = simulation1.logger.lock().unwrap().get_data();
-        // let sim2_data = simulation2.logger.lock().unwrap().get_data();
-        // for (ref_dp, sim_dp) in ref_data1.iter().zip(sim1_data.iter()) {
-        //     assert!(ref_dp.data_eq(sim_dp), "{ref_dp:#?}\n, {sim_dp:#?}");
-        // }
-        //
-        // for (ref_dp, sim_dp) in ref_data2.iter().zip(sim2_data.iter()) {
-        //     assert!(ref_dp.data_eq(sim_dp), "{ref_dp:#?}\n, {sim_dp:#?}");
-        // }
     }
 }

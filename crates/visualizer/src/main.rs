@@ -138,7 +138,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(InfiniteGridBundle::default());
     let drone_scene = asset_server.load("drone5.glb");
     let drone_asset = DroneAsset(drone_scene);
-    commands.insert_resource(drone_asset.clone());
+    commands.insert_resource(drone_asset);
     commands.insert_resource(VisualizerData {
         ..Default::default()
     });

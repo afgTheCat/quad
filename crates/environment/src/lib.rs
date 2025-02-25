@@ -25,34 +25,6 @@ use simulator::{
 };
 use std::{f64, sync::Arc, time::Duration};
 
-// TODO: we can implement a bunch more things on this
-struct Target {
-    position: Vector3<f64>,
-    accept_distance: f64,
-}
-
-impl Target {
-    fn new(position: Vector3<f64>, accept_distance: f64) -> Self {
-        Self {
-            position,
-            accept_distance,
-        }
-    }
-
-    fn distance_to_point(&self, drone_pos: Vector3<f64>) -> f64 {
-        self.position.metric_distance(&drone_pos)
-    }
-
-    // Indicates wheter a target has been hit or not
-    fn hit(&self, drone_pos: Vector3<f64>) -> bool {
-        if self.distance_to_point(drone_pos) < self.accept_distance {
-            true
-        } else {
-            false
-        }
-    }
-}
-
 // all that seems useful for now
 #[pyclass]
 pub struct Observation {
@@ -135,14 +107,8 @@ pub struct Environment {
     config_id: i64,
     /// Loads the simulation
     sim_loader: Box<dyn SimulationLoader>,
-    /// Controls how the step function will act
-    delta_t: Duration,
     /// The simulator
     simulator: Simulator,
-    /// The target
-    target: Target,
-    /// Maximum time that we allow per simulation
-    max_ep_len: Duration,
 }
 
 #[pymethods]
@@ -150,6 +116,7 @@ impl Environment {
     // just for testing
     #[staticmethod]
     fn default() -> Self {
+        log::info!("Default environment constructed");
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let sim_loader = SimLoader::new(Arc::new(db));
         let config_id = 1;
@@ -158,10 +125,7 @@ impl Environment {
         Self {
             config_id,
             sim_loader: Box::new(sim_loader),
-            delta_t: Duration::from_millis(10),
             simulator,
-            target: Target::new(Vector3::new(10., 10., 10.), 1.),
-            max_ep_len: Duration::from_secs(20),
         }
     }
 
@@ -182,14 +146,19 @@ impl Environment {
     pub fn reset(&mut self) -> Observation {
         let mut simulator = self.sim_loader.load_simulation(self.config_id);
         simulator.init();
-        self.simulator = simulator;
+
+        // swap the simulators
+        std::mem::swap(&mut self.simulator, &mut simulator);
+
+        // explicitly drop the old simulator just to be sure
+        drop(simulator);
+
         let observation = self.simulator.simulation_info();
         Observation::from_sim_observation(observation)
     }
 
-    pub fn render(&self) {
-        // TODO: what we can do is log things with the logger
-    }
+    // TODO: what we can do is log things with the logger
+    pub fn render(&self) {}
 
     pub fn close(&self) {
         // Just drop everything

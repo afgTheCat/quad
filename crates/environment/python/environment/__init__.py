@@ -5,6 +5,10 @@ from gymnasium import spaces, Env
 from numpy.typing import NDArray
 from .environment import Environment
 from typing import Any
+import logging
+
+# Initialize a logger
+logging.basicConfig(level=logging.INFO)  # Capture info-level logs and above
 
 
 class GymEnv(Env):
@@ -14,7 +18,6 @@ class GymEnv(Env):
     _delta_t: np.float64
     _total_t: np.float64
     _max_t: np.float64
-    # action_space: spaces.Box
 
     def __init__(self) -> None:
         self._rust_env = Environment.default()
@@ -35,7 +38,7 @@ class GymEnv(Env):
 
     def step(
         self, action: NDArray[np.float64]
-    ) -> tuple[NDArray[np.float64], float, bool, bool, dict]:
+    ) -> tuple[dict[str, NDArray[np.float64]], float, bool, bool, dict]:
         assert self.action_space.contains(action)
         assert self._total_t < self._max_t
 
@@ -50,12 +53,14 @@ class GymEnv(Env):
         reward = float(1 / distance_to_target)
         terminated = bool(self._accept_distance > distance_to_target)
         truncuated = bool(self._total_t > self._max_t)
-        return (obs.flatten(), reward, terminated, truncuated, {})
+        return ({"agent": obs.flatten()}, reward, terminated, truncuated, {})
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[dict[str, NDArray[np.float64]], dict]:
         obs = self._rust_env.reset()
+        self._total_t = np.float64(0)
+
         return ({"agent": obs.flatten()}, {})
 
     def render(self) -> None:

@@ -8,7 +8,7 @@ use db::simulation::DBFlightLog;
 use derive_more::derive::{Deref, DerefMut};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use flight_controller::{Channels, FlightController, FlightControllerUpdate};
-use loggers::{DBLogger, Logger};
+use loggers::Logger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -26,20 +26,17 @@ pub const AIR_RHO: f64 = 1.225;
 pub const GRAVITY: f64 = 9.81;
 
 thread_local! {
-    // static RNG: RefCell<Xoshiro256PlusPlus> = RefCell::new(Xoshiro256PlusPlus::from_entropy());
     static RNG: RefCell<StdRng> = RefCell::new(StdRng::seed_from_u64(0));
 }
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
-    // TODO: readd this to generate random
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
-    // range.end - range.start
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct BatteryState {
     pub capacity: f64,
-    pub bat_voltage: f64,
+    pub bat_voltage: f64, // -> view
     pub bat_voltage_sag: f64,
     pub amperage: f64,
     pub m_ah_drawn: f64,
@@ -116,11 +113,8 @@ impl FrameModel for BatteryModel {
 
         let v_sag = self.max_voltage_sag * power_factor_squared
             + (self.max_voltage_sag * charge_factor_inv * charge_factor_inv * power_factor_squared);
-        let bat_voltage_sag = f64::clamp(
-            state.bat_voltage - v_sag - rng_gen_range(-0.01..0.01),
-            0.0,
-            100.,
-        );
+        let bat_voltage_sag =
+            f64::clamp(bat_voltage - v_sag - rng_gen_range(-0.01..0.01), 0.0, 100.);
         let m_a_min = f64::min(0.2, rng_gen_range(-0.125..0.375)) / f64::max(bat_voltage_sag, 0.01);
         let current_sum: f64 = current_frame.rotors_state.iter().map(|s| s.current).sum();
         let currentm_as = f64::max(current_sum / 3.6, m_a_min);
@@ -291,6 +285,10 @@ impl FrameModel for DroneModel {
             speed.powi(2) * linear_velocity_dir * 0.5 * AIR_RHO * self.frame_drag_constant;
 
         sum_force -= self.drag_linear(&drag_dir, &linear_velocity_dir, rotation);
+
+        let local_dir = rotation.transpose() * linear_velocity_dir;
+        let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
+
         // TODO: once testing is done, readd this to the moments
         let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir, rotation);
 
@@ -365,7 +363,6 @@ impl GyroState {
     }
 }
 
-// we can possibly integrate things here
 #[derive(Debug, Clone)]
 pub struct GyroModel {
     // pub low_pass_filter: [LowPassFilter; 3],

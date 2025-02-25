@@ -1,14 +1,8 @@
 // TODO: finish this eventually
 
-use std::ops::DerefMut;
-
-// use diesel::{
-//     query_dsl::methods::{FilterDsl, OrderDsl},
-//     ExpressionMethods, JoinOnDsl, Queryable, RunQueryDsl, Selectable,
-// };
-use diesel::prelude::*;
-
 use crate::{schema::low_pass_filter, simulation_frame::DBLowPassFilter, AscentDb};
+use diesel::prelude::*;
+use std::ops::DerefMut;
 
 #[derive(Clone, Queryable, Selectable, Debug)]
 #[diesel(table_name = crate::schema::sample_point)]

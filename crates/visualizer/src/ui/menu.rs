@@ -12,6 +12,7 @@ use crate::{VisualizerData, VisualizerState};
 pub enum Logger {
     DBLogger,
     Rerun,
+    NullLogger,
 }
 
 impl Logger {
@@ -19,6 +20,7 @@ impl Logger {
         match self {
             Self::DBLogger => "DB logger".into(),
             Self::Rerun => "Rerun".into(),
+            Self::NullLogger => "NullLogger".into(),
         }
     }
 }
@@ -211,6 +213,11 @@ pub fn main_menu_toggle(
                 }
                 if ui.button("Rerun").clicked() {
                     visualizer_data.selection_config.set_logger(Logger::Rerun);
+                }
+                if ui.button("Null logger").clicked() {
+                    visualizer_data
+                        .selection_config
+                        .set_logger(Logger::NullLogger);
                 }
             });
         } else {

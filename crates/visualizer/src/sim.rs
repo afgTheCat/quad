@@ -22,7 +22,9 @@ use flight_controller::{
 };
 use nalgebra::Vector3;
 use simulator::{
-    loader::SimulationLoader, loggers::DBLogger, BatteryUpdate, MotorInput, Simulator,
+    loader::SimulationLoader,
+    loggers::{DBLogger, EmptyLogger},
+    BatteryUpdate, MotorInput, Simulator,
 };
 use simulator::{
     loggers::{Logger as LoggerTrait, RerunLogger},
@@ -169,6 +171,7 @@ pub fn enter_simulation(
             db.clone(),
         ))),
         Logger::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
+        Logger::NullLogger => Arc::new(Mutex::new(EmptyLogger::new())),
     };
     let mut simulation = Simulaton(Simulator {
         drone: drone.clone(),
