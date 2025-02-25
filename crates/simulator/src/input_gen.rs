@@ -5,7 +5,7 @@ use crate::loader::{SimLoader, SimulationLoader};
 use crate::loggers::{EmptyLogger, Logger, RerunLogger};
 use crate::{loggers::DBLogger, Simulator};
 use db::AscentDb;
-use flight_controller::controllers::bf_controller::BFController;
+use flight_controller::controllers::bf_controller::BFController2;
 use flight_controller::{Channels, FlightController, MotorInput};
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
@@ -102,7 +102,7 @@ fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Dur
         LogType::DB {
             sim_id: episode_name,
         },
-        BFController::new("default_id"),
+        BFController2::default(),
     );
     simulation.init();
 
@@ -175,7 +175,7 @@ pub fn build_data_set(
             LogType::DB {
                 sim_id: format!("{}_tr_{}", data_set_id, ep),
             },
-            BFController::new("default_id"),
+            BFController2::default(),
         );
         simulation.init(); // tr_id.clone()
         for input in inputs {
@@ -190,7 +190,7 @@ pub fn build_data_set(
             LogType::DB {
                 sim_id: format!("{}_te_{}", data_set_id, ep),
             },
-            BFController::new("default_id"),
+            BFController2::default(),
         );
         simulation.init(); // tr_id.clone()
         for input in inputs {
@@ -204,10 +204,7 @@ mod test {
     use super::{build_data_set, generate_all_axis, set_up_simulation};
     use crate::{input_gen::LogType, loader::SimLoader};
     use db::AscentDb;
-    use flight_controller::controllers::{
-        bf_controller::BFController,
-        manager::{BFController2, VIRTUAL_BF_MANAGER_2},
-    };
+    use flight_controller::controllers::{bf_controller::BFController, manager::BFController2};
     use rayon::iter::IntoParallelRefMutIterator;
     use rayon::iter::ParallelIterator;
     use std::{sync::Arc, time::Duration};

@@ -10,7 +10,7 @@ use db::{
     simulation_frame::{DBLowPassFilter, DBRotorState},
     AscentDb,
 };
-use flight_controller::{controllers::manager::BFController2, FlightController};
+use flight_controller::{controllers::bf_controller::BFController2, FlightController};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},

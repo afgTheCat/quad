@@ -17,7 +17,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use flight_controller::{
-    controllers::{manager::BFController2, res_controller::ResController},
+    controllers::{bf_controller::BFController2, res_controller::ResController},
     Channels, FlightController,
 };
 use nalgebra::Vector3;
