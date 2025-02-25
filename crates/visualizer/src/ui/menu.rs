@@ -10,9 +10,9 @@ use crate::{VisualizerData, VisualizerState};
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum Logger {
-    DBLogger,
+    DB,
     Rerun,
-    NullLogger,
+    Null,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -109,7 +109,7 @@ pub fn main_menu_toggle(
             | SelectionConfig::Replay { controller, .. } => {
                 let label = match controller {
                     Some(x) => format!("{x:?}"),
-                    None => format!("Not selected"),
+                    None => "Not selected".to_string(),
                 };
                 egui::ComboBox::from_id_salt("Controller selector")
                     .selected_text(label)
@@ -135,14 +135,14 @@ pub fn main_menu_toggle(
         if let SelectionConfig::Simulation { logger, .. } = &mut visualizer_data.selection_config {
             let label = match logger {
                 Some(x) => format!("{x:?}"),
-                None => format!("Not selected"),
+                None => "Not selected".to_string(),
             };
             egui::ComboBox::from_id_salt("Logger selector")
                 .selected_text(label)
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(logger, Some(Logger::DBLogger), "DB logger");
+                    ui.selectable_value(logger, Some(Logger::DB), "DB logger");
                     ui.selectable_value(logger, Some(Logger::Rerun), "Rerun");
-                    ui.selectable_value(logger, None, "None");
+                    ui.selectable_value(logger, Some(Logger::Null), "None");
                 });
         } else {
             ui.label("Only available in simulation mode");
@@ -154,7 +154,7 @@ pub fn main_menu_toggle(
         if let SelectionConfig::Replay { replay_id, .. } = &mut visualizer_data.selection_config {
             let label = match replay_id {
                 Some(x) => format!("Replay: {}", x),
-                None => format!("Not selected"),
+                None => "Not selected".to_string(),
             };
             egui::ComboBox::from_id_salt("Replay selector")
                 .selected_text(label)

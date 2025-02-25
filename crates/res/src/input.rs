@@ -148,7 +148,7 @@ impl FlightInput {
             .iter()
             .map(|fl| {
                 // let columns = fl.iter().map(db_fl_to_rc_input).collect::<Vec<_>>();
-                let m = DMatrix::from_columns(&fl).transpose();
+                let m = DMatrix::from_columns(fl).transpose();
                 println!("{:?}", m.shape());
                 m
             })

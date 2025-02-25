@@ -1,8 +1,8 @@
 pub mod drone;
 pub mod input;
 pub mod representation;
-pub mod ridge;
 pub mod reservoir;
+pub mod ridge;
 
 use matfile::{Array, NumericData};
 use nalgebra::DMatrix;
@@ -23,5 +23,5 @@ fn one_hot_encode(input: Vec<f64>) -> DMatrix<f64> {
     for (i, c) in categories.iter().enumerate() {
         encoded.row_mut(i)[*c as usize - 1] = 1.;
     }
-    return encoded;
+    encoded
 }

@@ -1,5 +1,5 @@
 use crate::{sim::SimulationData, VisualizerState};
-use bevy::prelude::{NextState, Res, ResMut};
+use bevy::prelude::{NextState, ResMut};
 use bevy_egui::{egui, EguiContexts};
 use egui_extras::{Column, TableBuilder};
 

@@ -94,7 +94,7 @@ impl MultiModelCore {
     ) -> Self {
         let states = u
             .into_iter()
-            .zip(v.into_iter())
+            .zip(v)
             .map(|(u, v)| ModelState { u, v })
             .collect::<Vec<_>>();
         Self {
@@ -259,8 +259,9 @@ impl Esn {
         for t in 0..time {
             let current_input = input.input_at_time(t);
             previous_state = self.integrate(current_input, previous_state);
-            for ep in 0..eps {
-                states[ep].set_row(t, &previous_state.row(ep));
+
+            for (ep, state) in states.iter_mut().enumerate().take(eps) {
+                state.set_row(t, &previous_state.row(ep));
             }
         }
 
@@ -291,7 +292,7 @@ impl RcModel {
             input_scaling,
         );
         let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::new()),
+            RepresentationType::LastState => Box::new(LastStateRepr::default()),
             RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
         };
         Self {

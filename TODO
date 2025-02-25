@@ -5,3 +5,4 @@ TODO:
   - refactor the whole goddamn db
   - migrate to new version of bevy
   - use combo box with egui [DONE]
+  - remove bindgen

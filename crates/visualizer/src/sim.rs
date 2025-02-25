@@ -150,13 +150,13 @@ pub fn enter_simulation(
     };
 
     let flight_controller: Arc<dyn FlightController> = match controller {
-        Controller::Betafligt => Arc::new(BFController2::new()),
-        Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, &res_id)),
+        Controller::Betafligt => Arc::new(BFController2::default()),
+        Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, res_id)),
     };
     let battery_state = &drone.current_frame.battery_state;
 
     let logger: Arc<Mutex<dyn LoggerTrait>> = match logger {
-        Logger::DBLogger => Arc::new(Mutex::new(DBLogger::new(
+        Logger::DB => Arc::new(Mutex::new(DBLogger::new(
             simulation_id,
             MotorInput::default(),
             BatteryUpdate {
@@ -171,7 +171,7 @@ pub fn enter_simulation(
             db.clone(),
         ))),
         Logger::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
-        Logger::NullLogger => Arc::new(Mutex::new(EmptyLogger::new())),
+        Logger::Null => Arc::new(Mutex::new(EmptyLogger::default())),
     };
     let mut simulation = Simulaton(Simulator {
         drone: drone.clone(),

@@ -65,7 +65,7 @@ impl RidgeRegression {
     ) -> (DVector<f64>, f64) {
         let y_mean = y.mean();
         for elem in y.iter_mut() {
-            *elem = *elem - y_mean
+            *elem -= -y_mean
         }
 
         let coeff = v_t.transpose() * d.zip_map(&(u.transpose() * y), |x, y| x * y);
@@ -998,7 +998,6 @@ mod test {
         let thing = ridge_regression.predict(x);
         println!("{}", thing);
     }
-
 
     #[test]
     fn fit_mutliple_svd() {

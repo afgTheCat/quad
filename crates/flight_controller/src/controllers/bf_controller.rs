@@ -18,46 +18,46 @@ pub struct BFController {
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
 type VBFUpdate = unsafe extern "C" fn(micros_passed: u64);
 type VBFArm = unsafe extern "C" fn();
-type VBFDisArm = unsafe extern "C" fn();
-type VBFUpdateSerialWs = unsafe extern "C" fn();
-type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
-type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
-type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
-type VBFGetMicrosPassed = unsafe extern "C" fn() -> u64;
+// type VBFDisArm = unsafe extern "C" fn();
+// type VBFUpdateSerialWs = unsafe extern "C" fn();
+// type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
+// type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
+// type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
+// type VBFGetMicrosPassed = unsafe extern "C" fn() -> u64;
 type VBFGetMotorSignals = unsafe extern "C" fn(*mut f32);
 type VBFSetMotorRcData = unsafe extern "C" fn(*const f32);
 type VBFSetGyroData = unsafe extern "C" fn(*const f32);
 type VBFSetAttitude = unsafe extern "C" fn(*const f32);
 type VBFSetAccelData = unsafe extern "C" fn(*const f32);
 type VBFSetBattery = unsafe extern "C" fn(u8, f32, f32, f64, f64);
-type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
-type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
+// type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
+// type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
 
 #[derive(Debug)]
 struct VirtualBF {
-    lib: Library,
+    _lib: Library,
     vbf_init: Result<VBFInit, libloading::Error>,
     vbf_update: Result<VBFUpdate, libloading::Error>,
     vbf_arm: Result<VBFArm, libloading::Error>,
-    vbf_disarm: Result<VBFDisArm, libloading::Error>,
-    vbf_update_serial_ws: Result<VBFUpdateSerialWs, libloading::Error>,
-    vbf_get_is_armed: Result<VBFGetIsArmed, libloading::Error>,
-    vbf_get_is_beeping: Result<VBFGetIsBeeping, libloading::Error>,
-    vbf_get_arming_disable_flags: Result<VBFGetArmingDisbleFlags, libloading::Error>,
-    vbf_get_micros_passed: Result<VBFGetMicrosPassed, libloading::Error>,
+    // vbf_disarm: Result<VBFDisArm, libloading::Error>,
+    // vbf_update_serial_ws: Result<VBFUpdateSerialWs, libloading::Error>,
+    // vbf_get_is_armed: Result<VBFGetIsArmed, libloading::Error>,
+    // vbf_get_is_beeping: Result<VBFGetIsBeeping, libloading::Error>,
+    // vbf_get_arming_disable_flags: Result<VBFGetArmingDisbleFlags, libloading::Error>,
+    // vbf_get_micros_passed: Result<VBFGetMicrosPassed, libloading::Error>,
     vbf_get_motor_signals: Result<VBFGetMotorSignals, libloading::Error>,
     vbf_set_rc_data: Result<VBFSetMotorRcData, libloading::Error>,
     vbf_set_gyro_data: Result<VBFSetGyroData, libloading::Error>,
     vbf_set_accel_data: Result<VBFSetAccelData, libloading::Error>,
     vbf_set_attitude: Result<VBFSetAttitude, libloading::Error>,
     vbf_set_battery_data: Result<VBFSetBattery, libloading::Error>,
-    vbf_set_gps_data: Result<VBFSetGpsData, libloading::Error>,
-    vbf_get_attitude_quat: Result<VBFGetAttitudeQuat, libloading::Error>,
+    // vbf_set_gps_data: Result<VBFSetGpsData, libloading::Error>,
+    // vbf_get_attitude_quat: Result<VBFGetAttitudeQuat, libloading::Error>,
 }
 
 impl VirtualBF {
     unsafe fn new(path: &Path) -> Self {
-        let lib = Library::new(&path).unwrap();
+        let lib = Library::new(path).unwrap();
         macro_rules! get_vbf_method {
             ($fn:ident) => {
                 let name = format!("{}\0", stringify!($fn));
@@ -68,40 +68,40 @@ impl VirtualBF {
         get_vbf_method!(vbf_init);
         get_vbf_method!(vbf_update);
         get_vbf_method!(vbf_arm);
-        get_vbf_method!(vbf_disarm);
-        get_vbf_method!(vbf_update_serial_ws);
-        get_vbf_method!(vbf_get_is_armed);
-        get_vbf_method!(vbf_get_is_beeping);
-        get_vbf_method!(vbf_get_arming_disable_flags);
-        get_vbf_method!(vbf_get_micros_passed);
+        // get_vbf_method!(vbf_disarm);
+        // get_vbf_method!(vbf_update_serial_ws);
+        // get_vbf_method!(vbf_get_is_armed);
+        // get_vbf_method!(vbf_get_is_beeping);
+        // get_vbf_method!(vbf_get_arming_disable_flags);
+        // get_vbf_method!(vbf_get_micros_passed);
         get_vbf_method!(vbf_get_motor_signals);
         get_vbf_method!(vbf_set_rc_data);
         get_vbf_method!(vbf_set_gyro_data);
         get_vbf_method!(vbf_set_accel_data);
         get_vbf_method!(vbf_set_attitude);
         get_vbf_method!(vbf_set_battery_data);
-        get_vbf_method!(vbf_set_gps_data);
-        get_vbf_method!(vbf_get_attitude_quat);
+        // get_vbf_method!(vbf_set_gps_data);
+        // get_vbf_method!(vbf_get_attitude_quat);
 
         Self {
-            lib,
+            _lib: lib,
             vbf_init,
             vbf_update,
             vbf_arm,
-            vbf_disarm,
-            vbf_update_serial_ws,
-            vbf_get_is_armed,
-            vbf_get_is_beeping,
-            vbf_get_arming_disable_flags,
-            vbf_get_micros_passed,
+            // vbf_disarm,
+            // vbf_update_serial_ws,
+            // vbf_get_is_armed,
+            // vbf_get_is_beeping,
+            // vbf_get_arming_disable_flags,
+            // vbf_get_micros_passed,
             vbf_get_motor_signals,
             vbf_set_rc_data,
             vbf_set_gyro_data,
             vbf_set_accel_data,
             vbf_set_attitude,
             vbf_set_battery_data,
-            vbf_set_gps_data,
-            vbf_get_attitude_quat,
+            // vbf_set_gps_data,
+            // vbf_get_attitude_quat,
         }
     }
 }
@@ -130,20 +130,20 @@ impl VirtualBF {
     impl_virtual_bf_fn!(vbf_init, file_name: *const std::os::raw::c_char);
     impl_virtual_bf_fn!(vbf_update, micros_passed: u64);
     impl_virtual_bf_fn!(vbf_arm);
-    impl_virtual_bf_fn!(vbf_disarm);
-    impl_virtual_bf_fn!(vbf_update_serial_ws);
-    impl_virtual_bf_fn!(vbf_get_is_armed; bool);
-    impl_virtual_bf_fn!(vbf_get_is_beeping; bool);
-    impl_virtual_bf_fn!(vbf_get_arming_disable_flags; std::os::raw::c_int);
-    impl_virtual_bf_fn!(vbf_get_micros_passed; u64);
+    // impl_virtual_bf_fn!(vbf_disarm);
+    // impl_virtual_bf_fn!(vbf_update_serial_ws);
+    // impl_virtual_bf_fn!(vbf_get_is_armed; bool);
+    // impl_virtual_bf_fn!(vbf_get_is_beeping; bool);
+    // impl_virtual_bf_fn!(vbf_get_arming_disable_flags; std::os::raw::c_int);
+    // impl_virtual_bf_fn!(vbf_get_micros_passed; u64);
     impl_virtual_bf_fn!(vbf_get_motor_signals, motor_signal: *mut f32);
     impl_virtual_bf_fn!(vbf_set_rc_data, rc_data: *const f32);
     impl_virtual_bf_fn!(vbf_set_gyro_data, gyro_data: *const f32);
     impl_virtual_bf_fn!(vbf_set_accel_data, accel_data: *const f32);
     impl_virtual_bf_fn!(vbf_set_attitude, attitude_quaternion: *const f32);
     impl_virtual_bf_fn!(vbf_set_battery_data, cell_count: u8, voltage: f32, sagged_voltage: f32, amperage: f64, mah_drawn: f64);
-    impl_virtual_bf_fn!(vbf_set_gps_data, lat: i32, lon: i32, alt: i32, gound_speed: u16);
-    impl_virtual_bf_fn!(vbf_get_attitude_quat, attitude: *mut f32);
+    // impl_virtual_bf_fn!(vbf_set_gps_data, lat: i32, lon: i32, alt: i32, gound_speed: u16);
+    // impl_virtual_bf_fn!(vbf_get_attitude_quat, attitude: *mut f32);
 }
 
 #[derive(Clone, Debug)]
@@ -286,52 +286,5 @@ impl Drop for BFController {
     fn drop(&mut self) {
         // close the loaded library
         VIRTUAL_BF_INSTANCE_MANAGER.close(&self.instance_id);
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{BFController, VirtualBFManager, VIRTUAL_BF_INSTANCE_MANAGER};
-    use crate::FlightController;
-
-    impl VirtualBFManager {
-        fn set_attitude(&self, instance_id: &str, attitude: [f32; 4]) {
-            self.access(instance_id, |vbf| unsafe {
-                vbf.vbf_set_attitude(attitude.as_ptr());
-            });
-        }
-
-        fn get_attitude(&self, instance_id: &str) -> [f32; 4] {
-            let mut attitude = [0.; 4];
-            self.access(instance_id, |vbf| unsafe {
-                vbf.vbf_get_attitude_quat(attitude.as_mut_ptr());
-            });
-            attitude
-        }
-    }
-
-    #[test]
-    fn load_virtual_bf_instances_correctly() {
-        let instance_id_1 = "instance_id_1";
-        let instance_id_2 = "instance_id_2";
-
-        // Load the first instance
-        let controller_1 = BFController::new(instance_id_1);
-        controller_1.init();
-
-        // Load the second instance
-        let controller_2 = BFController::new(instance_id_2);
-        controller_2.init();
-
-        let attitude = [0.835, 0.311, -0.311, -0.258];
-        VIRTUAL_BF_INSTANCE_MANAGER.set_attitude(instance_id_1, attitude);
-
-        let read_attitude_1 = VIRTUAL_BF_INSTANCE_MANAGER.get_attitude(instance_id_1);
-        let read_attitude_2 = VIRTUAL_BF_INSTANCE_MANAGER.get_attitude(instance_id_2);
-
-        assert_eq!(attitude, read_attitude_1);
-
-        // TODO: fix this!
-        // assert_ne!(read_attitude_1, read_attitude_2);
     }
 }

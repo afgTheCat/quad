@@ -243,18 +243,6 @@ impl DroneModel {
         let area_linear = Vector3::dot(&self.frame_drag_area, &local_dir.abs());
         drag_dir * area_linear
     }
-
-    fn drag_angular(
-        &self,
-        drag_dir: &Vector3<f64>,
-        linear_velocity_dir: &Vector3<f64>,
-        rotation: Rotation3<f64>,
-    ) -> Vector3<f64> {
-        let local_dir = rotation.transpose() * linear_velocity_dir;
-        let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
-        let drag_angular: Vector3<f64> = rotation.transpose() * (drag_dir * area_angular) * 0.001;
-        drag_angular
-    }
 }
 
 fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
@@ -286,11 +274,11 @@ impl FrameModel for DroneModel {
 
         sum_force -= self.drag_linear(&drag_dir, &linear_velocity_dir, rotation);
 
-        let local_dir = rotation.transpose() * linear_velocity_dir;
-        let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
+        // let local_dir = rotation.transpose() * linear_velocity_dir;
+        // let area_angular = Vector3::dot(&self.frame_drag_area, &local_dir);
 
         // TODO: once testing is done, readd this to the moments
-        let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir, rotation);
+        // let drag_angular = self.drag_angular(&drag_dir, &linear_velocity_dir, rotation);
 
         let speed_factor = f64::min(speed / MAX_EFFECT_SPEED, 1.);
         for rotor in next_frame.rotors_state.iter() {

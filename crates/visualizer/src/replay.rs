@@ -55,7 +55,7 @@ pub fn enter_replay(
 ) {
     let SelectionConfig::Replay {
         replay_id: Some(simulation_id),
-        controller, // TODO: use this
+        ..
     } = &sim_data.selection_config
     else {
         unreachable!()

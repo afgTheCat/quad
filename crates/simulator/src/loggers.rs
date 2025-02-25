@@ -20,7 +20,7 @@ pub struct DBCurrentLog {
 }
 
 impl DBCurrentLog {
-    fn to_db_log(self, simulation_id: String, end_seconds: f64) -> DBNewFlightLog {
+    fn calculate_db(self, simulation_id: String, end_seconds: f64) -> DBNewFlightLog {
         DBNewFlightLog {
             simulation_id,
             start_seconds: self.start_seconds,
@@ -82,7 +82,7 @@ impl Logger for DBLogger {
             },
         );
         self.data
-            .push(current_step.to_db_log(self.simulation_id.to_owned(), time.as_secs_f64()));
+            .push(current_step.calculate_db(self.simulation_id.to_owned(), time.as_secs_f64()));
     }
 
     fn get_data(&self) -> Vec<DBNewFlightLog> {
@@ -125,7 +125,6 @@ impl DBLogger {
 pub struct RerunLogger {
     counter: usize,
     rec: RecordingStream,
-    current_time_step: Duration,
 }
 
 impl Logger for RerunLogger {
@@ -163,7 +162,6 @@ impl Drop for RerunLogger {
 
 impl RerunLogger {
     pub fn new(simulation_id: String) -> Self {
-        let current_time_step = Duration::new(0, 0);
         let rec = rerun::RecordingStreamBuilder::new(simulation_id)
             .spawn()
             .unwrap();
@@ -172,19 +170,12 @@ impl RerunLogger {
         Self {
             counter: 1000, // just because we have a bunch of data
             rec,
-            current_time_step,
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct EmptyLogger {}
-
-impl EmptyLogger {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
 
 impl Logger for EmptyLogger {
     fn process_state(&mut self, _: Duration, _: &Drone, _: Channels, _: bool) {

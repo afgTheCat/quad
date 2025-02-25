@@ -20,20 +20,20 @@ const LIB_PATH: &str =
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
 type VBFUpdate = unsafe extern "C" fn(micros_passed: u64);
 type VBFArm = unsafe extern "C" fn();
-type VBFDisArm = unsafe extern "C" fn();
-type VBFUpdateSerialWs = unsafe extern "C" fn();
-type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
-type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
-type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
-type VBFGetMicrosPassed = unsafe extern "C" fn() -> u64;
+// type VBFDisArm = unsafe extern "C" fn();
+// type VBFUpdateSerialWs = unsafe extern "C" fn();
+// type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
+// type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
+// type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
+// type VBFGetMicrosPassed = unsafe extern "C" fn() -> u64;
 type VBFGetMotorSignals = unsafe extern "C" fn(*mut f32);
 type VBFSetMotorRcData = unsafe extern "C" fn(*const f32);
 type VBFSetGyroData = unsafe extern "C" fn(*const f32);
 type VBFSetAttitude = unsafe extern "C" fn(*const f32);
 type VBFSetAccelData = unsafe extern "C" fn(*const f32);
 type VBFSetBattery = unsafe extern "C" fn(u8, f32, f32, f64, f64);
-type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
-type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
+// type VBFSetGpsData = unsafe extern "C" fn(i32, i32, i32, u16);
+// type VBFGetAttitudeQuat = unsafe extern "C" fn(*mut f32);
 
 // represents a loaded library
 #[derive(Debug)]
@@ -65,7 +65,7 @@ unsafe fn check_dl_error(dl_sym: *mut raw::c_void) -> Result<(), CString> {
     Ok(())
 }
 unsafe fn get_lm_id(dl_handle: *mut raw::c_void) -> i64 {
-    let mut lmid: Lmid_t = std::mem::uninitialized();
+    let mut lmid: Lmid_t = 0;
     let result = dlinfo(dl_handle, RTLD_DI_LMID, &mut lmid as *mut _ as *mut c_void);
     if result != 0 {
         panic!("Could not get dl info");
@@ -196,7 +196,7 @@ impl BFManager2 {
         let instance_id = unsafe { self.register_new2() };
         let scheduler_delta = Duration::from_micros(50);
         BFController2 {
-            manager: &self,
+            manager: self,
             instance_id,
             scheduler_delta,
         }
@@ -212,8 +212,8 @@ pub struct BFController2 {
     manager: &'static BFManager2,
 }
 
-impl BFController2 {
-    pub fn new() -> Self {
+impl Default for BFController2 {
+    fn default() -> Self {
         // default manager
         VIRTUAL_BF_MANAGER_2.request_new_controller()
     }

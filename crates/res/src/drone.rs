@@ -32,7 +32,7 @@ impl DroneRc {
             input_scaling,
         );
         let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::new()),
+            RepresentationType::LastState => Box::new(LastStateRepr::default()),
             RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
         };
         Self {
@@ -98,11 +98,9 @@ impl DroneRc {
     pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcData {
         let internal_weights_serialized =
             BASE64_STANDARD.encode(bincode::serialize(&self.esn.internal_weights).unwrap());
-        let input_weights_serialized = if let Some(input_weights) = &self.esn.input_weights {
-            Some(BASE64_STANDARD.encode(bincode::serialize(input_weights).unwrap()))
-        } else {
-            None
-        };
+        let input_weights_serialized = self.esn.input_weights.as_ref().map(|input_weights| {
+            BASE64_STANDARD.encode(bincode::serialize(input_weights).unwrap())
+        });
         let (coeff, intercept) = if let Some(sol) = &self.readout.sol {
             (
                 Some(BASE64_STANDARD.encode(bincode::serialize(&sol.coeff).unwrap())),
@@ -112,7 +110,7 @@ impl DroneRc {
             (None, None)
         };
         NewDBRcData {
-            rc_id: reservoir_id.into(),
+            rc_id: reservoir_id,
             input_scaling: self.esn.input_scaling,
             n_internal_units: self.esn.n_internal_units as i64,
             internal_weights: internal_weights_serialized,

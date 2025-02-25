@@ -56,6 +56,7 @@ impl OutputRepr {
     }
 }
 
+#[derive(Debug, Default)]
 pub struct LastStateRepr;
 
 impl Repr for LastStateRepr {
@@ -66,11 +67,5 @@ impl Repr for LastStateRepr {
             .map(|ep| ep.row(time_steps - 1))
             .collect::<Vec<_>>();
         DMatrix::from_rows(&last_states)
-    }
-}
-
-impl LastStateRepr {
-    pub fn new() -> Self {
-        Self {}
     }
 }

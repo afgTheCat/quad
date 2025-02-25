@@ -11,7 +11,7 @@ use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
 use std::sync::Mutex;
-use std::{sync::Arc, thread, time::Duration, usize};
+use std::{sync::Arc, thread, time::Duration};
 
 pub enum LogType {
     DB { sim_id: String },
@@ -39,7 +39,7 @@ pub fn set_up_simulation(
             db.clone(),
         ))),
         LogType::Rerun { sim_id } => Arc::new(Mutex::new(RerunLogger::new(sim_id.clone()))),
-        LogType::Empty => Arc::new(Mutex::new(EmptyLogger::new())),
+        LogType::Empty => Arc::new(Mutex::new(EmptyLogger::default())),
     };
 
     let flight_controller = Arc::new(flight_controller);
@@ -67,8 +67,8 @@ fn generate_axis(milisecs: u128) -> Vec<f64> {
             -0.0001
         };
         pos += vel;
-        if pos < -1. || pos > 1. {
-            pos = f64::min(f64::max(pos, -1000.), 1000.);
+        if !(-1. ..=1.).contains(&pos) {
+            pos = f64::clamp(pos, -1000., 1000.);
             vel = 0.;
         }
         pos = pos.clamp(-1., 1.);
@@ -102,7 +102,7 @@ fn build_episode(db: Arc<AscentDb>, episode_name: String, training_duration: Dur
         LogType::DB {
             sim_id: episode_name,
         },
-        BFController::new("default_id".into()),
+        BFController::new("default_id"),
     );
     simulation.init();
 
@@ -175,7 +175,7 @@ pub fn build_data_set(
             LogType::DB {
                 sim_id: format!("{}_tr_{}", data_set_id, ep),
             },
-            BFController::new("default_id".into()),
+            BFController::new("default_id"),
         );
         simulation.init(); // tr_id.clone()
         for input in inputs {
@@ -190,7 +190,7 @@ pub fn build_data_set(
             LogType::DB {
                 sim_id: format!("{}_te_{}", data_set_id, ep),
             },
-            BFController::new("default_id".into()),
+            BFController::new("default_id"),
         );
         simulation.init(); // tr_id.clone()
         for input in inputs {
@@ -247,10 +247,10 @@ mod test {
         let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
         let sim_loader = SimLoader::new(db.clone());
 
-        let reference_controller1 = BFController2::new();
-        let reference_controller2 = BFController2::new();
-        let controller1 = BFController2::new();
-        let controller2 = BFController2::new();
+        let reference_controller1 = BFController2::default();
+        let reference_controller2 = BFController2::default();
+        let controller1 = BFController2::default();
+        let controller2 = BFController2::default();
 
         let test_flight_duration = Duration::from_secs(5);
         let inputs1 = generate_all_axis(test_flight_duration);

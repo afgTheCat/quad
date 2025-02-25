@@ -17,7 +17,7 @@
 
 use db::AscentDb;
 use flight_controller::Channels;
-use nalgebra::{UnitQuaternion, Vector3};
+use nalgebra::UnitQuaternion;
 use pyo3::prelude::*;
 use simulator::{
     SimulationObservation, Simulator,
@@ -95,7 +95,7 @@ impl Observation {
             .chain(self.acceleration.iter())
             .chain(self.angular_velocity.iter())
             .chain(self.thrusts.iter())
-            .chain(vec![self.bat_voltage].iter())
+            .chain([self.bat_voltage].iter())
             .cloned()
             .collect()
     }
