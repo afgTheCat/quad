@@ -340,10 +340,14 @@ impl GyroState {
     pub fn gyro_update(&self) -> GyroUpdate {
         GyroUpdate {
             rotation: [
-                self.rotation.w,
+                // self.rotation.w,
+                // self.rotation.i,
+                // self.rotation.j,
+                // self.rotation.k,
                 self.rotation.i,
                 self.rotation.j,
                 self.rotation.k,
+                self.rotation.w,
             ],
             linear_acc: self.acceleration.data.0[0],
             angular_velocity: self.angular_velocity.data.0[0],

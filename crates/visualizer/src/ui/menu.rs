@@ -20,6 +20,7 @@ pub enum Controller {
     #[default]
     Betafligt,
     Reservoir(String), // reservoir controller id
+    NullController,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -122,6 +123,7 @@ pub fn main_menu_toggle(
                                 format!("Resrevoid controller {}", res_id),
                             );
                         }
+                        ui.selectable_value(controller, Some(Controller::NullController), "Null");
                     });
             }
             _ => {

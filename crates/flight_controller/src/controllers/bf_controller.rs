@@ -14,25 +14,18 @@ use std::{
 use uuid::Uuid;
 
 const RTLD_FLAGS: i32 = 0x0002; // Resolves all symbols and do not use them for further resolutions
-const LIB_PATH: &str = "/home/gabor/ascent/virtual-betaflight/src/libvirtual_betaflight.so\0";
+const LIB_PATH: &str = "/home/gabor/ascent/virtual-betaflight/src/libvirtual-betaflight.so\0";
 
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
 type VBFUpdate = unsafe extern "C" fn(time_passed: f64);
 type VBFArm = unsafe extern "C" fn();
-type VBFDisarm = unsafe extern "C" fn();
 type VBFStartSerialWsThread = unsafe extern "C" fn();
-type VBFStopSerialWsThread = unsafe extern "C" fn();
-type VBFGetIsArmed = unsafe extern "C" fn() -> bool;
-type VBFGetIsBeeping = unsafe extern "C" fn() -> bool;
-type VBFGetArmingDisbleFlags = unsafe extern "C" fn() -> std::os::raw::c_int;
-type VBFGetTimePassed = unsafe extern "C" fn() -> f64;
 type VBFGetMotorSignals = unsafe extern "C" fn(*mut f64);
 type VBFSetRcData = unsafe extern "C" fn(*const f64);
 type VBFSetGyroData = unsafe extern "C" fn(*const f64);
 type VBFSetAttitude = unsafe extern "C" fn(*const f64);
 type VBFSetAccelData = unsafe extern "C" fn(*const f64);
 type VBFSetBattery = unsafe extern "C" fn(u64, f64, f64, f64);
-type VBFSetGpsData = unsafe extern "C" fn(f64, f64, f64, f64);
 
 // represents a loaded library
 #[derive(Debug)]
@@ -48,6 +41,7 @@ pub struct VirtualBF {
     pub vbf_set_accel_data: VBFSetAccelData,
     pub vbf_set_attitude: VBFSetAttitude,
     pub vbf_set_battery_data: VBFSetBattery,
+    pub vbf_start_serial_ws_thread: VBFStartSerialWsThread,
 }
 
 unsafe fn check_dl_error(dl_sym: *mut raw::c_void) -> Result<(), CString> {
@@ -92,6 +86,7 @@ impl VirtualBF {
         get_vb_method!(vbf_set_accel_data, VBFSetAccelData);
         get_vb_method!(vbf_set_attitude, VBFSetAttitude);
         get_vb_method!(vbf_set_battery_data, VBFSetBattery);
+        get_vb_method!(vbf_start_serial_ws_thread, VBFStartSerialWsThread);
 
         Ok(Self {
             lib_handle,
@@ -105,6 +100,7 @@ impl VirtualBF {
             vbf_set_rc_data,
             vbf_set_gyro_data,
             vbf_set_battery_data,
+            vbf_start_serial_ws_thread,
         })
     }
 }
@@ -122,12 +118,12 @@ unsafe impl Send for VirtualBF {}
 unsafe impl Sync for VirtualBF {}
 
 #[derive(Debug)]
-pub struct BFManager2 {
+pub struct BFManager {
     instances: Mutex<HashMap<String, Arc<VirtualBF>>>,
     available_workspace_ids: Mutex<Vec<i64>>,
 }
 
-impl BFManager2 {
+impl BFManager {
     fn new() -> Self {
         Self {
             instances: Mutex::new(HashMap::new()),
@@ -202,13 +198,13 @@ impl BFManager2 {
     }
 }
 
-pub static VIRTUAL_BF_MANAGER_2: Lazy<BFManager2> = Lazy::new(|| BFManager2::new());
+pub static VIRTUAL_BF_MANAGER: Lazy<BFManager> = Lazy::new(|| BFManager::new());
 
 #[derive(Debug)]
 pub struct BFController {
     pub instance_id: String,
     pub scheduler_delta: Duration,
-    manager: &'static BFManager2,
+    manager: &'static BFManager,
 }
 
 impl BFController {}
@@ -216,7 +212,7 @@ impl BFController {}
 impl Default for BFController {
     fn default() -> Self {
         // default manager
-        VIRTUAL_BF_MANAGER_2.request_new_controller()
+        VIRTUAL_BF_MANAGER.request_new_controller()
     }
 }
 
@@ -228,22 +224,22 @@ impl Drop for BFController {
 
 impl FlightController for BFController {
     fn init(&self) {
-        VIRTUAL_BF_MANAGER_2.access(&self.instance_id, |virtual_bf| unsafe {
+        VIRTUAL_BF_MANAGER.access(&self.instance_id, |virtual_bf| unsafe {
             let file_name =
                 CString::new("/home/gabor/ascent/quad/eeprom.bin").expect("CString::new failed");
             (virtual_bf.vbf_init)(file_name.as_ptr());
+            (virtual_bf.vbf_start_serial_ws_thread)();
             (virtual_bf.vbf_arm)();
         });
     }
 
     fn update(&self, delta_time: f64, update: crate::FlightControllerUpdate) -> crate::MotorInput {
-        VIRTUAL_BF_MANAGER_2.access(&self.instance_id, |virtual_bf| unsafe {
+        VIRTUAL_BF_MANAGER.access(&self.instance_id, |virtual_bf| unsafe {
             (virtual_bf.vbf_set_battery_data)(
                 update.battery_update.cell_count,
                 update.battery_update.bat_voltage,
                 update.battery_update.bat_voltage_sag,
                 update.battery_update.amperage,
-                // update.battery_update.m_ah_drawn,
             );
             let attitude_update = update.gyro_update.rotation;
             (virtual_bf.vbf_set_attitude)(attitude_update.as_ptr());
