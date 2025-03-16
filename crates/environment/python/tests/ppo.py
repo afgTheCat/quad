@@ -7,13 +7,9 @@ def create_env():
     return environment.GymEnv()
 
 
-print("Starting env creation")
 drone_env = environment.GymEnv()
 env = make_vec_env(create_env, n_envs=1)
-
-print("reseting env")
 env.reset()
-print("env reset")
 
 model = PPO("MultiInputPolicy", drone_env, verbose=1)
 model.learn(total_timesteps=2500, progress_bar=True)

@@ -7,10 +7,16 @@ use once_cell::sync::Lazy;
 use std::{
     collections::{hash_map::Entry, HashMap},
     ffi::{CStr, CString},
-    os::raw::{self, c_void},
+    fs::{self, File},
+    io::Write,
+    os::{
+        fd::FromRawFd,
+        raw::{self, c_void},
+    },
     sync::{Arc, Mutex},
     time::Duration,
 };
+use tempfile::NamedTempFile;
 use uuid::Uuid;
 
 const RTLD_FLAGS: i32 = 0x0002; // Resolves all symbols and do not use them for further resolutions
@@ -222,12 +228,21 @@ impl Drop for BFController {
     }
 }
 
+fn tmp_eeprom() -> NamedTempFile {
+    let mut temp_eeprom = NamedTempFile::new().expect("Could not create named temp file");
+    let eeprom = std::fs::read("/home/gabor/ascent/quad/eeprom.bin").expect("No file");
+    temp_eeprom
+        .write(&eeprom)
+        .expect("Could not write temp file");
+    temp_eeprom
+}
+
 impl FlightController for BFController {
     fn init(&self) {
         VIRTUAL_BF_MANAGER.access(&self.instance_id, |virtual_bf| unsafe {
-            let file_name =
-                CString::new("/home/gabor/ascent/quad/eeprom.bin").expect("CString::new failed");
-            (virtual_bf.vbf_init)(file_name.as_ptr());
+            let tmp_eeprom = tmp_eeprom();
+            let c_path = std::ffi::CString::new(tmp_eeprom.path().to_str().unwrap()).unwrap();
+            (virtual_bf.vbf_init)(c_path.as_ptr());
             (virtual_bf.vbf_start_serial_ws_thread)();
             (virtual_bf.vbf_arm)();
         });
@@ -257,7 +272,13 @@ impl FlightController for BFController {
             let mut motors_signal = [0.; 4];
             (virtual_bf.vbf_get_motor_signals)(motors_signal.as_mut_ptr());
             MotorInput {
-                input: motors_signal.map(|x| x as f64),
+                // input: motors_signal.map(|x| x as f64),
+                input: [
+                    motors_signal[3],
+                    motors_signal[1],
+                    motors_signal[2],
+                    motors_signal[0],
+                ],
             }
         })
     }

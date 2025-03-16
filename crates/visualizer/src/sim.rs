@@ -74,8 +74,8 @@ pub fn handle_input(
             GamepadAxisType::RightStickX => {
                 sim_data.channels.yaw = if ax_val > -0.96 { ax_val } else { -1. }
             }
-            GamepadAxisType::LeftStickX => sim_data.channels.roll = ax_val,
-            GamepadAxisType::LeftStickY => sim_data.channels.pitch = -ax_val,
+            GamepadAxisType::LeftStickX => sim_data.channels.pitch = ax_val,
+            GamepadAxisType::LeftStickY => sim_data.channels.roll = -ax_val,
             _ => {}
         }
     }
