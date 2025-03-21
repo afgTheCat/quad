@@ -2,7 +2,9 @@ TODO:
   - state management fixes [DONE]
   - rerun logger [DONE]
   - gym env [DONE]
-  - refactor the whole goddamn db
-  - migrate to new version of bevy
+  - refactor the whole goddamn db => this is making things slow
+    = This is a major downside of the project, what is something that we use nicely?
+    = Needs to be embeddable
+  - migrate to a new version of bevy
   - use combo box with egui [DONE]
-  - remove bindgen
+  - remove bindgen [DONE]

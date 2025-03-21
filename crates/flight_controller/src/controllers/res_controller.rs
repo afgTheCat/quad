@@ -192,6 +192,7 @@ mod test {
         db.write_flight_logs("rec", &rec_flight_logs);
     }
 
+    // this is kinda bad, should not do it this way
     #[test]
     fn train_on_many() {
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
@@ -199,11 +200,6 @@ mod test {
         let tr_ids = simulation_id
             .iter()
             .filter(|id| id.starts_with("ds_id_1_tr"))
-            .cloned()
-            .collect::<Vec<_>>();
-        let te_ids = simulation_id
-            .iter()
-            .filter(|id| id.starts_with("ds_id_1_te"))
             .cloned()
             .collect::<Vec<_>>();
 
@@ -225,5 +221,39 @@ mod test {
             .transpose();
             drone_rc.fit(Box::new(input.clone()), data_points);
         }
+
+        drone_rc.save_model_to_db("combined".into(), &db);
+    }
+
+    #[test]
+    fn many_train_two() {
+        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+        let simulation_id = db.select_simulation_ids();
+        let tr_ids = simulation_id
+            .iter()
+            .filter(|id| id.starts_with("ds_id_1_tr"))
+            .cloned()
+            .collect::<Vec<_>>();
+
+        let mut drone_rc = DroneRc::new(
+            500,
+            0.3,
+            0.99,
+            0.2,
+            RepresentationType::Output(1.),
+            RidgeRegression::new(1.),
+        );
+        drone_rc.esn.set_input_weights(18);
+        for tr_id in tr_ids {
+            let flight_log = db.get_simulation_data(&tr_id);
+            let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
+            let data_points = DMatrix::from_columns(
+                &flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>(),
+            )
+            .transpose();
+            drone_rc.fit(Box::new(input.clone()), data_points);
+        }
+
+        drone_rc.save_model_to_db("combined_2".into(), &db);
     }
 }
