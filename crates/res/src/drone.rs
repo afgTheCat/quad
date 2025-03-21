@@ -2,11 +2,12 @@ use crate::{
     input::RcInput,
     representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
     reservoir::Esn,
-    ridge::{RidgeRegression, RidgeRegressionSol},
+    // ridge::{RidgeRegression, RidgeRegressionSol},
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
 use db::{AscentDb, DBRcData, NewDBRcData};
 use nalgebra::DMatrix;
+use ridge::{RidgeRegression, RidgeRegressionSol};
 
 // TODO: serialize this
 #[derive(Debug)]

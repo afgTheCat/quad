@@ -1,7 +1,7 @@
 use crate::input::RcInput;
-use crate::ridge::RidgeRegression;
 use nalgebra::DMatrix;
 use nalgebra::DVector;
+use ridge::RidgeRegression;
 
 pub enum RepresentationType {
     LastState,

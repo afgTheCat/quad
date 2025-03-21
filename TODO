@@ -8,3 +8,4 @@ TODO:
   - migrate to a new version of bevy
   - use combo box with egui [DONE]
   - remove bindgen [DONE]
+  - explore faer: https://github.com/sarah-quinones/faer-rs

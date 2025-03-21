@@ -3,13 +3,13 @@ use crate::{
     input::{RcInput, TSInput},
     one_hot_encode,
     representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
-    ridge::RidgeRegression,
 };
 use matfile::MatFile;
 use nalgebra::{clamp, DVector};
 use nalgebra::{Complex, ComplexField, DMatrix};
 use rand::thread_rng;
 use rand_distr::{Bernoulli, Distribution, Uniform};
+use ridge::RidgeRegression;
 use smartcore::metrics::{f1::F1, Metrics};
 
 pub struct GenericModelCore {
@@ -238,10 +238,10 @@ impl Esn {
         ));
     }
 
-    // current input [episodes, vars]
     // NOTE: This is pure, time less and multiple episodes can be integrated
     pub fn integrate(
         &self,
+        // [episodes, vars] <= current input
         current_input: DMatrix<f64>,
         previous_state: DMatrix<f64>,
     ) -> DMatrix<f64> {
@@ -340,8 +340,10 @@ pub fn fit_and_predict(model: &mut RcModel, mat_file: MatFile) {
 
 #[cfg(test)]
 mod test {
+    use ridge::RidgeRegression;
+
     use super::{fit_and_predict, RcModel};
-    use crate::{representation::RepresentationType, ridge::RidgeRegression};
+    use crate::representation::RepresentationType;
 
     // This example reproduces the classification example from the Multivariate classification
     // example. Ridge regression is also implemented by hand as I do not trust the already existing

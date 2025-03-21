@@ -2,7 +2,6 @@ pub mod drone;
 pub mod input;
 pub mod representation;
 pub mod reservoir;
-pub mod ridge;
 
 use matfile::{Array, NumericData};
 use nalgebra::DMatrix;

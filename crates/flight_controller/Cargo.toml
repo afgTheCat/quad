@@ -15,6 +15,7 @@ res.workspace = true
 db.workspace = true
 uuid.workspace = true
 log.workspace = true
+ridge.workspace = true
 libc = "0.2.169"
 dlopen2 = "0.7.0"
 tempfile = "3.17.1"

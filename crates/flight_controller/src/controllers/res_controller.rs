@@ -1,12 +1,12 @@
 use db::AscentDb;
 use nalgebra::DMatrix;
+use ridge::RidgeRegression;
 use std::{sync::Mutex, time::Duration};
 // This is going to be the rc based flight controller after training
 use res::{
     drone::DroneRc,
     input::{db_fl_to_rc_output, FlightInput},
     representation::RepresentationType,
-    ridge::RidgeRegression,
 };
 
 use crate::{FlightController, MotorInput};
@@ -125,8 +125,8 @@ mod test {
         drone::DroneRc,
         input::{db_fl_to_rc_input, db_fl_to_rc_output, FlightInput},
         representation::RepresentationType,
-        ridge::RidgeRegression,
     };
+    use ridge::RidgeRegression;
 
     #[test]
     fn train_thing() {

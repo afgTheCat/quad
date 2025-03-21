@@ -10,7 +10,7 @@ flight_controller = { path = "crates/flight_controller" }
 db = { path = "crates/db" }
 res = { path = "crates/res" }
 environment = { path = "crates/environment" }
-environment2 = { path = "crates/environment2" }
+ridge = { path = "crates/ridge" }
 
 # external
 nalgebra = { version = "0.33.0", features = ["serde-serialize"] } 
