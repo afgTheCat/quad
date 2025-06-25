@@ -10,10 +10,9 @@ use nalgebra::DMatrix;
 use ridge::{RidgeRegression, RidgeRegressionSol};
 
 // TODO: serialize this
-#[derive(Debug)]
 pub struct DroneRc {
     pub esn: Esn,
-    // representation: Box<dyn Repr>,
+    representation: Box<dyn Repr>,
     pub readout: RidgeRegression,
 }
 
@@ -38,18 +37,16 @@ impl DroneRc {
         };
         Self {
             esn,
-            // representation,
+            representation,
             readout,
         }
     }
 
-    // this is kinda different, but should be ok
-    pub fn fit(&mut self, input: Box<dyn RcInput>, data_points: DMatrix<f64>) {
-        // Vec<DMatrix<f64>> where DMatrix<f64> is a sequence of episodes
-        let res_states = self.esn.compute_state_matricies(&input);
-        // We are training a single thing
-        self.readout
-            .fit_multiple_svd(res_states[0].clone(), &data_points);
+    // this is the same, maybe it works maybe it does not
+    pub fn fit(&mut self, body_rates: Box<dyn RcInput>, rc_data: DMatrix<f64>) {
+        let res_states = self.esn.compute_state_matricies(&body_rates);
+        let input_repr = self.representation.repr(body_rates, res_states);
+        self.readout.fit_multiple_svd(input_repr, &rc_data);
     }
 
     pub fn predict(&mut self, input: Box<dyn RcInput>) -> DMatrix<f64> {
@@ -88,7 +85,11 @@ impl DroneRc {
             alpha: db_data.alpha,
             sol,
         };
-        DroneRc { esn, readout }
+        DroneRc {
+            esn,
+            representation: Box::new(OutputRepr::new(1.)),
+            readout,
+        }
     }
 
     pub fn read_from_db(reservoir_id: &str, db: &AscentDb) -> Option<Self> {

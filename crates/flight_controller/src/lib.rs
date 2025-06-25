@@ -96,7 +96,7 @@ impl FlightControllerUpdate {
     }
 }
 
-pub trait FlightController: std::fmt::Debug + Send + Sync + 'static {
+pub trait FlightController: Send + Sync + 'static {
     fn init(&self);
     fn update(&self, delta_time: f64, update: FlightControllerUpdate) -> MotorInput;
     fn scheduler_delta(&self) -> Duration;

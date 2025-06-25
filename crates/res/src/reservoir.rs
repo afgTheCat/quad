@@ -238,7 +238,6 @@ impl Esn {
         ));
     }
 
-    // NOTE: This is pure, time less and multiple episodes can be integrated
     pub fn integrate(
         &self,
         // [episodes, vars] <= current input
@@ -250,6 +249,8 @@ impl Esn {
         state_before_tanh.map(|e| e.tanh()).transpose()
     }
 
+    // computes the strate matricies for each episode
+    // episodes are represented as DMatrix where each row t represents the states at that time
     pub fn compute_state_matricies(&self, input: &Box<dyn RcInput>) -> Vec<DMatrix<f64>> {
         let (eps, time, _) = input.shape();
         let n_internal_units = self.n_internal_units;
@@ -260,7 +261,7 @@ impl Esn {
             let current_input = input.input_at_time(t);
             previous_state = self.integrate(current_input, previous_state);
 
-            for (ep, state) in states.iter_mut().enumerate().take(eps) {
+            for (ep, state) in states.iter_mut().enumerate() {
                 state.set_row(t, &previous_state.row(ep));
             }
         }

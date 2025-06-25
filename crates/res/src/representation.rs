@@ -10,6 +10,8 @@ pub enum RepresentationType {
 
 // This should be sync and send for comfort
 pub trait Repr: Sync + Send {
+    // calculates the representation for every episode. This way we typically lose one dymension
+    // which is fine I suppose
     fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64>;
 }
 
