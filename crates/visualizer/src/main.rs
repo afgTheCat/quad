@@ -7,20 +7,20 @@ mod replay;
 mod sim;
 mod ui;
 
+use bevy::prelude::IntoScheduleConfigs;
 use bevy::{
-    app::{App, PluginGroup, PreUpdate, Startup, Update},
+    app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets, Handle},
-    color::Color,
+    core_pipeline::core_3d::Camera3d,
     gltf::Gltf,
     input::{mouse::MouseWheel, ButtonInput},
-    math::{EulerRot, Mat3, Quat, Vec3},
-    pbr::{DirectionalLight, DirectionalLightBundle},
+    math::{Mat3, Vec3},
+    pbr::DirectionalLight,
     prelude::{
-        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
-        IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
-        States, Transform,
+        default, in_state, AppExtStates, Commands, Deref, Events, KeyCode, MouseButton, NextState,
+        OnEnter, OnExit, Res, ResMut, Resource, States, Transform,
     },
-    scene::SceneBundle,
+    scene::SceneRoot,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
@@ -107,32 +107,41 @@ struct Loader(SimLoader);
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
 /// initialize the flight controller and start the simulation
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            color: Color::srgb(1.0, 1.0, 0.9),
-            illuminance: 100000.0,
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        transform: Transform {
-            // Tilt the light to simulate the sun's angle (e.g., 45-degree angle)
-            rotation: Quat::from_euler(EulerRot::XYZ, -std::f32::consts::FRAC_PI_4, 0.0, 0.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
+    // commands.spawn(DirectionalLight {
+    //     directional_light: DirectionalLight {
+    //         color: Color::srgb(1.0, 1.0, 0.9),
+    //         illuminance: 100000.0,
+    //         shadows_enabled: true,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform {
+    //         // Tilt the light to simulate the sun's angle (e.g., 45-degree angle)
+    //         rotation: Quat::from_euler(EulerRot::XYZ, -std::f32::consts::FRAC_PI_4, 0.0, 0.0),
+    //         ..Default::default()
+    //     },
+    //     ..Default::default()
+    // });
+    commands.spawn((DirectionalLight::default(), Transform::default()));
 
+    // commands.spawn((
+    //     Camera3dBundle {
+    //         transform: Transform {
+    //             translation: Vec3::new(0.0, 1.5, 5.0),
+    //             ..Transform::IDENTITY
+    //         },
+    //         ..default()
+    //     },
+    //     PanOrbitCamera {
+    //         ..Default::default()
+    //     },
+    // ));
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform {
-                translation: Vec3::new(0.0, 1.5, 5.0),
-                ..Transform::IDENTITY
-            },
-            ..default()
+        Camera3d::default(),
+        Transform {
+            translation: Vec3::new(0.0, 1.5, 5.0),
+            ..Transform::IDENTITY
         },
-        PanOrbitCamera {
-            ..Default::default()
-        },
+        PanOrbitCamera::default(),
     ));
 
     commands.spawn(InfiniteGridBundle::default());
@@ -143,7 +152,8 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
 
-    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
+    let db_file = format!("{}/data.sqlite", env!("CARGO_MANIFEST_DIR"));
+    let db = Arc::new(AscentDb::new(&db_file));
     commands.insert_resource(DB(db.clone()));
     let sim_loader = SimLoader::new(db);
     commands.insert_resource(Loader(sim_loader));
@@ -159,12 +169,7 @@ fn load_drone_scene(
         return;
     };
 
-    // Insert the scene bundle
-    commands.spawn(SceneBundle {
-        scene: gltf.scenes[0].clone(),
-        ..Default::default()
-    });
-
+    commands.spawn((SceneRoot(gltf.scenes[0].clone()), Transform::default()));
     next_state.set(VisualizerState::Menu);
 }
 
@@ -218,20 +223,22 @@ fn main() {
         }),
         ..default()
     });
-
+    let egui_plugin = EguiPlugin {
+        enable_multipass_for_primary_context: false,
+    };
     App::new()
         .add_plugins(default_plugin)
-        .add_plugins(EguiPlugin)
+        .add_plugins(egui_plugin)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_state(VisualizerState::Loading)
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
-        .add_systems(
-            PreUpdate,
-            absorb_egui_inputs
-                .after(bevy_egui::systems::process_input_system)
-                .before(bevy_egui::EguiSet::BeginPass),
-        )
+        // .add_systems(
+        //     PreUpdate,
+        //     absorb_egui_inputs
+        //         .after(bevy_egui::systems::process_input_system)
+        //         .before(bevy_egui::EguiSet::BeginPass),
+        // )
         .add_systems(Update, draw_ui)
         .add_systems(OnEnter(VisualizerState::Menu), prefetch_menu_items)
         .add_systems(

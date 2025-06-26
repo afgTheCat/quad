@@ -2,11 +2,10 @@ use std::time::Duration;
 
 use crate::{ntb_mat3, ntb_vec3, ui::menu::SelectionConfig, Loader, VisualizerData, DB};
 use bevy::{
-    asset::Handle,
     color::palettes::css::RED,
     math::{Quat, Vec3},
     prelude::{Commands, Deref, DerefMut, Gizmos, Query, Res, ResMut, Resource, Transform},
-    scene::Scene,
+    scene::DynamicSceneRoot,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
@@ -21,10 +20,10 @@ pub fn replay_loop(
     timer: Res<Time>,
     mut replay: ResMut<Replay>,
     mut camera_query: Query<&mut PanOrbitCamera>,
-    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut scene_query: Query<(&mut Transform, &DynamicSceneRoot)>,
 ) {
-    let (mut tranform, _) = scene_query.single_mut();
-    let mut camera = camera_query.single_mut();
+    let (mut tranform, _) = scene_query.single_mut().unwrap();
+    let mut camera = camera_query.single_mut().unwrap();
 
     let debug_info = replay.replay_delta(timer.delta());
     let drone_translation = ntb_vec3(debug_info.position);
@@ -75,12 +74,12 @@ pub fn enter_replay(
 }
 
 pub fn exit_replay(
-    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut scene_query: Query<(&mut Transform, &DynamicSceneRoot)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut commands: Commands,
 ) {
-    let (mut tranform, _) = scene_query.single_mut();
-    let mut camera = camera_query.single_mut();
+    let (mut tranform, _) = scene_query.single_mut().unwrap();
+    let mut camera = camera_query.single_mut().unwrap();
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
     camera.target_focus = tranform.translation;
