@@ -6,7 +6,7 @@ use crate::{
 use bevy::{
     color::palettes::css::RED,
     input::{
-        gamepad::{GamepadAxis, GamepadAxisChangedEvent, GamepadEvent},
+        gamepad::{GamepadAxis, GamepadEvent},
         keyboard::KeyboardInput,
         ButtonState,
     },
@@ -15,7 +15,7 @@ use bevy::{
         Commands, Deref, DerefMut, EventReader, Gizmos, KeyCode, Query, Res, ResMut, Resource,
         Transform,
     },
-    scene::{DynamicSceneRoot, Scene},
+    scene::SceneRoot,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
@@ -109,7 +109,7 @@ pub fn sim_loop(
     mut simulation: ResMut<Simulaton>,
     mut sim_data: ResMut<SimulationData>,
     mut camera_query: Query<&mut PanOrbitCamera>,
-    mut scene_query: Query<(&mut Transform, &DynamicSceneRoot)>,
+    mut scene_query: Query<(&mut Transform, &SceneRoot)>,
 ) {
     let (mut tranform, _) = scene_query.single_mut().unwrap();
     let mut camera = camera_query.single_mut().unwrap();
@@ -195,7 +195,7 @@ pub fn enter_simulation(
 }
 
 pub fn exit_simulation(
-    mut scene_query: Query<(&mut Transform, &DynamicSceneRoot)>,
+    mut scene_query: Query<(&mut Transform, &SceneRoot)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut commands: Commands,
 ) {

@@ -211,13 +211,6 @@ pub fn menu_ui(
             let switch_box_min = pos2(available_width / 4., available_height / 4.);
             let switch_box_max = pos2(available_width * 3. / 4., available_height * 3. / 4.);
             let switch_box = Rect::from_min_max(switch_box_min, switch_box_max);
-            // ui.painter().add(Shape::Rect(RectShape::new(
-            //     switch_box,
-            //     Rounding::default(),
-            //     Color32::from_rgb(59, 59, 59),
-            //     Stroke::new(1., Color32::from_rgb(127, 0, 255)),
-            // )));
-
             ui.painter().add(Shape::Rect(RectShape::new(
                 switch_box,
                 CornerRadius::default(),
