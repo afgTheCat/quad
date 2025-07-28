@@ -68,13 +68,6 @@ impl RidgeRegression {
             *elem -= -y_mean
         }
 
-        println!("v_t shape: {:?}", v_t.transpose().shape());
-        println!(
-            "other shape: {:?}",
-            d.zip_map(&(u.transpose() * y.clone()), |x, y| x * y)
-                .shape()
-        );
-
         let coeff = v_t.transpose() * d.zip_map(&(u.transpose() * y), |x, y| x * y);
         let intercept = y_mean - x_mean.dot(&coeff);
 

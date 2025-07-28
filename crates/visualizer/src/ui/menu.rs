@@ -1,8 +1,11 @@
-use bevy::prelude::{NextState, ResMut};
+use bevy::{
+    prelude::{NextState, ResMut},
+    reflect::Reflect,
+};
 use bevy_egui::{
     egui::{
-        self, epaint::RectShape, pos2, Color32, CornerRadius, Frame, Rect, Rounding, Shape, Stroke,
-        Ui, UiBuilder,
+        self, epaint::RectShape, pos2, Color32, CornerRadius, Frame, Rect, Shape, Stroke, Ui,
+        UiBuilder,
     },
     EguiContexts,
 };
@@ -35,6 +38,8 @@ pub enum SelectionConfig {
     Simulation {
         logger: Option<Logger>,
         controller: Option<Controller>,
+        replay_id: Option<String>,
+        placeholder_str: String,
     },
 }
 
@@ -52,10 +57,14 @@ impl SelectionConfig {
             Self::Menu => Self::Simulation {
                 logger: None,
                 controller: None,
+                replay_id: None,
+                placeholder_str: "".into(),
             },
             Self::Replay { controller, .. } => Self::Simulation {
                 logger: None,
                 controller: controller.clone(),
+                replay_id: None,
+                placeholder_str: "".into(),
             },
             _ => self.clone(),
         }
@@ -154,20 +163,37 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Replay id:");
-        if let SelectionConfig::Replay { replay_id, .. } = &mut visualizer_data.selection_config {
-            let label = match replay_id {
-                Some(x) => format!("Replay: {}", x),
-                None => "Not selected".to_string(),
-            };
-            egui::ComboBox::from_id_salt("Replay selector")
-                .selected_text(label)
-                .show_ui(ui, |ui| {
-                    for id in visualizer_data.simulation_ids.iter() {
-                        ui.selectable_value(replay_id, Some(id.into()), format!("Replay {}", id));
-                    }
-                });
-        } else {
-            ui.label("Only available in replay mode");
+        match &mut visualizer_data.selection_config {
+            SelectionConfig::Replay { replay_id, .. } => {
+                let label = match replay_id {
+                    Some(x) => format!("Replay: {}", x),
+                    None => "Not selected".to_string(),
+                };
+                egui::ComboBox::from_id_salt("Replay selector")
+                    .selected_text(label)
+                    .show_ui(ui, |ui| {
+                        for id in visualizer_data.simulation_ids.iter() {
+                            ui.selectable_value(
+                                replay_id,
+                                Some(id.into()),
+                                format!("Replay {}", id),
+                            );
+                        }
+                    });
+            }
+            SelectionConfig::Simulation {
+                replay_id,
+                placeholder_str,
+                ..
+            } => {
+                ui.text_edit_singleline(placeholder_str);
+                if ui.button("Apply").clicked() {
+                    *replay_id = Some(placeholder_str.clone())
+                };
+            }
+            _ => {
+                ui.label("Only available in replay or simulation mode");
+            }
         }
     });
 
@@ -176,6 +202,7 @@ pub fn main_menu_toggle(
             SelectionConfig::Simulation {
                 logger: Some(..),
                 controller: Some(..),
+                ..
             } => {
                 next_visualizer_state.set(VisualizerState::Simulation);
             }

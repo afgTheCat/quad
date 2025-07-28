@@ -144,15 +144,21 @@ pub fn enter_simulation(
     db: Res<DB>,
     loader: Res<Loader>,
 ) {
-    let simulation_id = Uuid::new_v4().to_string();
-    let drone = loader.load_drone(1);
     let SelectionConfig::Simulation {
         logger: Some(logger),
         controller: Some(controller),
+        replay_id,
+        ..
     } = &sim_data.selection_config
     else {
         unreachable!()
     };
+    let simulation_id = if let Some(replay_id) = replay_id {
+        replay_id.clone()
+    } else {
+        Uuid::new_v4().to_string()
+    };
+    let drone = loader.load_drone(1);
 
     let flight_controller: Arc<dyn FlightController> = match controller {
         Controller::Betafligt => Arc::new(BFController::default()),
@@ -197,6 +203,7 @@ pub fn enter_simulation(
 pub fn exit_simulation(
     mut scene_query: Query<(&mut Transform, &SceneRoot)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
+    mut simulation: ResMut<Simulaton>,
     mut commands: Commands,
 ) {
     // reset transform
