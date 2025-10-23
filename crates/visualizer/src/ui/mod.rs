@@ -2,16 +2,17 @@ pub mod menu;
 pub mod replay;
 pub mod simulation;
 
-use crate::{sim::SimulationData, VisualizerData, VisualizerState, DB};
+use crate::{sim::SimulationData, Loader, VisualizerData, VisualizerState};
 use bevy::prelude::{NextState, Res, ResMut, State};
 use bevy_egui::EguiContexts;
+use db2::LoaderTrait;
 use menu::menu_ui;
 use replay::replay_ui;
 use simulation::simulation_ui;
 
-pub fn prefetch_menu_items(mut sim_data: ResMut<VisualizerData>, db: Res<DB>) {
-    sim_data.simulation_ids = db.select_simulation_ids();
-    sim_data.reservoir_ids = db.select_reservoir_ids();
+pub fn prefetch_menu_items(mut sim_data: ResMut<VisualizerData>, db: Res<Loader>) {
+    sim_data.simulation_ids = db.get_simulation_ids();
+    sim_data.reservoir_ids = db.get_reservoir_ids();
 }
 
 pub fn draw_ui(

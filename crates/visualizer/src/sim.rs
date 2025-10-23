@@ -1,7 +1,7 @@
 use crate::{
     ntb_mat3, ntb_vec3,
     ui::menu::{Controller, Logger, SelectionConfig},
-    Loader, VisualizerData, DB,
+    Loader, VisualizerData,
 };
 use bevy::{
     asset::Handle,
@@ -15,7 +15,9 @@ use bevy::{
     scene::Scene,
     time::Time,
 };
+use bevy_egui::egui::load;
 use bevy_panorbit_camera::PanOrbitCamera;
+use db2::LoaderTrait;
 use flight_controller::{
     controllers::{
         bf_controller::BFController, null_controller::NullController, res_controller::ResController,
@@ -138,7 +140,6 @@ pub fn sim_loop(
 pub fn enter_simulation(
     mut commands: Commands,
     sim_data: ResMut<VisualizerData>,
-    db: Res<DB>,
     loader: Res<Loader>,
 ) {
     let simulation_id = Uuid::new_v4().to_string();
@@ -150,7 +151,7 @@ pub fn enter_simulation(
     else {
         unreachable!()
     };
-
+    let db = loader.db.clone();
     let flight_controller: Arc<dyn FlightController> = match controller {
         Controller::Betafligt => Arc::new(BFController::default()),
         Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, res_id)),

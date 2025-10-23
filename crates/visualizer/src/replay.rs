@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{ntb_mat3, ntb_vec3, ui::menu::SelectionConfig, Loader, VisualizerData, DB};
+use crate::{ntb_mat3, ntb_vec3, ui::menu::SelectionConfig, Loader, VisualizerData};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -10,8 +10,9 @@ use bevy::{
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
+use db2::LoaderTrait;
 use nalgebra::Vector3;
-use simulator::{loader::SimulationLoader, Replayer};
+use simulator::Replayer;
 
 #[derive(Resource, Deref, DerefMut)]
 pub struct Replay(pub Replayer);
@@ -49,7 +50,7 @@ pub fn replay_loop(
 
 pub fn enter_replay(
     sim_data: ResMut<VisualizerData>,
-    db: Res<DB>,
+    db: Res<Loader>,
     mut commands: Commands,
     loader: Res<Loader>,
 ) {
@@ -61,7 +62,7 @@ pub fn enter_replay(
         unreachable!()
     };
 
-    let sim_logs = db.get_simulation_data(simulation_id);
+    let sim_logs = db.load_replay(simulation_id);
     let drone = loader.load_drone(1);
     let replay = Replay(Replayer {
         drone,

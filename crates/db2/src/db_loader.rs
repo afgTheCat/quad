@@ -1,61 +1,27 @@
-// NOTE:  HIGHTLY IN PROGRESS
-// This trait is only here as an API proposal. We also have an implementation.
-use crate::{
+use db::AscentDb;
+use flight_controller::{FlightController, controllers::bf_controller::BFController};
+use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
+use simulator::{
+    BatteryModel, BatteryState, DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel,
+    RotorsState, SampleCurve, SamplePoint, SimulationFrame,
+    loader::db_to_rotor_state,
     loggers::{EmptyLogger, Logger},
     low_pass_filter::LowPassFilter,
-    BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
-    RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame, Simulator,
 };
-use db::{
-    simulation_frame::{DBLowPassFilter, DBRotorState},
-    AscentDb,
-};
-use flight_controller::{controllers::bf_controller::BFController, FlightController};
-use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
 
-// This is the prmary API that we wish to use. Loading a drone is straight forward, however using
-// the appropriate logger is a question to be awnsered
-pub trait SimulationLoader: Send + Sync {
-    fn load_drone(&self, config_id: i64) -> Drone;
-    fn load_simulation(&self, config_id: i64) -> Simulator;
+use crate::LoaderTrait;
+
+// for historical reasons mostly
+pub struct DBLoader {
+    pub db: Arc<AscentDb>,
 }
 
-pub struct SimLoader {
-    db: Arc<AscentDb>,
-}
-
-impl SimLoader {
-    pub fn new(db: Arc<AscentDb>) -> Self {
-        Self { db }
-    }
-}
-
-pub fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilter) -> RotorState {
-    RotorState {
-        current: db_rotor_state.current,
-        rpm: db_rotor_state.rpm,
-        motor_torque: db_rotor_state.motor_torque,
-        effective_thrust: db_rotor_state.effective_thrust,
-        pwm: db_rotor_state.pwm,
-        rotor_dir: db_rotor_state.rotor_dir,
-        motor_pos: Vector3::new(
-            db_rotor_state.motor_pos_x,
-            db_rotor_state.motor_pos_y,
-            db_rotor_state.motor_pos_z,
-        ),
-        pwm_low_pass_filter: LowPassFilter {
-            output: pwm_state.output,
-            e_pow: pwm_state.e_pow,
-        },
-    }
-}
-
-impl SimulationLoader for SimLoader {
-    fn load_drone(&self, config_id: i64) -> Drone {
+impl LoaderTrait for DBLoader {
+    fn load_drone(&self, config_id: i64) -> simulator::Drone {
         let (
             db_sim_frame,
             rotor_1_state,
@@ -225,7 +191,7 @@ impl SimulationLoader for SimLoader {
         };
 
         let gyro_model = GyroModel {};
-        Drone {
+        simulator::Drone {
             current_frame,
             next_frame,
             battery_model,
@@ -235,9 +201,7 @@ impl SimulationLoader for SimLoader {
         }
     }
 
-    // This should be a configuration id. Suppose I want to load in some custom logger. How should
-    // that work?
-    fn load_simulation(&self, config_id: i64) -> Simulator {
+    fn load_simulation(&self, config_id: i64) -> simulator::Simulator {
         let drone = self.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::default());
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::default()));
@@ -245,7 +209,7 @@ impl SimulationLoader for SimLoader {
         let dt = Duration::from_nanos(5000);
         let fc_time_accu = Duration::default();
         let time_accu = Duration::default();
-        Simulator {
+        simulator::Simulator {
             drone,
             flight_controller,
             logger,
@@ -254,5 +218,17 @@ impl SimulationLoader for SimLoader {
             fc_time_accu,
             time_accu,
         }
+    }
+
+    fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
+        self.db.get_simulation_data(sim_id)
+    }
+
+    fn get_simulation_ids(&self) -> Vec<String> {
+        self.db.select_simulation_ids()
+    }
+
+    fn get_reservoir_ids(&self) -> Vec<String> {
+        self.db.select_reservoir_ids()
     }
 }

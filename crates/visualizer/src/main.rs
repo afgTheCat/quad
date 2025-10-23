@@ -2,7 +2,6 @@
 //! contfigurations may affect the drone and it's behaviour. This software is super early in
 //! development, expect a lot of changes, including to how configurations are stored, what drone
 //! meshes we want to use etc.
-// mod drone;
 mod replay;
 mod sim;
 mod ui;
@@ -29,10 +28,11 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
 use db::AscentDb;
+use db2::db_loader::DBLoader;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-use simulator::loader::SimLoader;
+// use simulator::loader::SimLoader;
 use std::sync::Arc;
 use ui::{draw_ui, menu::SelectionConfig, prefetch_menu_items};
 
@@ -52,11 +52,6 @@ pub struct VisualizerData {
     pub reservoir_ids: Vec<String>,
     pub selection_config: SelectionConfig,
 }
-
-// replay info
-// TODO: figure this out!
-#[derive(Resource, Default)]
-pub struct ReplayInfo {}
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
 pub fn ntb_vec3(vec: Vector3<f64>) -> Vec3 {
@@ -98,10 +93,7 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 pub struct DroneAsset(Handle<Gltf>);
 
 #[derive(Resource, Deref)]
-struct DB(Arc<AscentDb>);
-
-#[derive(Resource, Deref)]
-struct Loader(SimLoader);
+pub struct Loader(DBLoader);
 
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
@@ -144,9 +136,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 
     let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
-    commands.insert_resource(DB(db.clone()));
-    let sim_loader = SimLoader::new(db);
-    commands.insert_resource(Loader(sim_loader));
+    commands.insert_resource(Loader(DBLoader { db }));
 }
 
 fn load_drone_scene(

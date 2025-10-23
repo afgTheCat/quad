@@ -1,0 +1,11 @@
+[package]
+name = "db2"
+version = "0.1.0"
+edition = "2024"
+resolver = "2"
+
+[dependencies]
+simulator.workspace = true
+db.workspace = true
+nalgebra.workspace = true
+flight_controller.workspace = true
