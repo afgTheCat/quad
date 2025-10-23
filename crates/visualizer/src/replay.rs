@@ -10,7 +10,7 @@ use bevy::{
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use db2::LoaderTrait;
+use db2::DataAccessLayer;
 use nalgebra::Vector3;
 use simulator::Replayer;
 

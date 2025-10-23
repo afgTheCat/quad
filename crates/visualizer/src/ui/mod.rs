@@ -5,7 +5,7 @@ pub mod simulation;
 use crate::{sim::SimulationData, Loader, VisualizerData, VisualizerState};
 use bevy::prelude::{NextState, Res, ResMut, State};
 use bevy_egui::EguiContexts;
-use db2::LoaderTrait;
+use db2::DataAccessLayer;
 use menu::menu_ui;
 use replay::replay_ui;
 use simulation::simulation_ui;

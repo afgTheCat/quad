@@ -32,7 +32,6 @@ use db2::db_loader::DBLoader;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-// use simulator::loader::SimLoader;
 use std::sync::Arc;
 use ui::{draw_ui, menu::SelectionConfig, prefetch_menu_items};
 

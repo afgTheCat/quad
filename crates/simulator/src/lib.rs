@@ -6,13 +6,16 @@ pub mod sample_curve;
 
 use db::simulation::DBFlightLog;
 use derive_more::derive::{Deref, DerefMut};
+use flight_controller::{
+    controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
+};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
-use flight_controller::{Channels, FlightController, FlightControllerUpdate};
 use loggers::Logger;
 use low_pass_filter::LowPassFilter;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 pub use sample_curve::{SampleCurve, SamplePoint};
+use serde::{Deserialize, Serialize};
 use std::{
     cell::RefCell,
     f64::consts::PI,
@@ -20,6 +23,8 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
+
+use crate::loggers::EmptyLogger;
 
 pub const MAX_EFFECT_SPEED: f64 = 18.0;
 pub const AIR_RHO: f64 = 1.225;
@@ -33,7 +38,7 @@ pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BatteryState {
     pub capacity: f64,
     pub bat_voltage: f64, // -> view
@@ -42,7 +47,7 @@ pub struct BatteryState {
     pub m_ah_drawn: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RotorState {
     pub current: f64,
     pub rpm: f64,
@@ -54,10 +59,10 @@ pub struct RotorState {
     pub pwm_low_pass_filter: LowPassFilter,
 }
 
-#[derive(Debug, Deref, DerefMut, Clone)]
+#[derive(Debug, Deref, DerefMut, Clone, Serialize, Deserialize)]
 pub struct RotorsState(pub [RotorState; 4]);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DroneFrameState {
     pub position: Vector3<f64>,
     pub rotation: Rotation3<f64>,
@@ -66,7 +71,7 @@ pub struct DroneFrameState {
     pub acceleration: Vector3<f64>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimulationFrame {
     pub battery_state: BatteryState,
     pub rotors_state: RotorsState,
@@ -84,7 +89,7 @@ trait FrameModel {
     );
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BatteryModel {
     pub quad_bat_capacity: f64,
     pub bat_voltage_curve: SampleCurve,
@@ -130,7 +135,7 @@ impl FrameModel for BatteryModel {
 }
 
 // The rotor model
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RotorModel {
     pub prop_max_rpm: f64,
     pub pwm_low_pass_filter: [LowPassFilter; 4],
@@ -224,7 +229,7 @@ impl FrameModel for RotorModel {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DroneModel {
     pub frame_drag_area: Vector3<f64>,
     pub frame_drag_constant: f64,
@@ -328,7 +333,7 @@ impl FrameModel for DroneModel {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GyroState {
     pub rotation: UnitQuaternion<f64>, // so far it was w, i, j, k
     pub acceleration: Vector3<f64>,
@@ -351,7 +356,7 @@ impl GyroState {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GyroModel {
     // pub low_pass_filter: [LowPassFilter; 3],
 }
@@ -397,7 +402,7 @@ impl FrameModel for GyroModel {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Drone {
     // data
     pub current_frame: SimulationFrame,
@@ -493,6 +498,18 @@ pub struct Simulator {
 }
 
 impl Simulator {
+    pub fn default_from_drone(drone: Drone) -> Self {
+        Self {
+            drone,
+            flight_controller: Arc::new(BFController::default()),
+            logger: Arc::new(Mutex::new(EmptyLogger::default())),
+            time: Duration::default(),
+            dt: Duration::from_nanos(5000),
+            fc_time_accu: Duration::default(),
+            time_accu: Duration::default(),
+        }
+    }
+
     pub fn simulation_info(&self) -> SimulationObservation {
         let current_frame = &self.drone.current_frame;
 
@@ -551,7 +568,7 @@ impl Simulator {
             }
 
             let mut logger = self.logger.lock().unwrap();
-            logger.process_state(self.time, &self.drone, channels, call_fc);
+            logger.log_time_stamp(self.time, &self.drone, channels, call_fc);
 
             self.time_accu -= self.dt;
             self.time += self.dt;

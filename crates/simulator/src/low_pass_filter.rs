@@ -1,6 +1,8 @@
 use std::f64::consts::PI;
 
-#[derive(Debug, Clone, Default)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LowPassFilter {
     pub output: f64,
     pub e_pow: f64,

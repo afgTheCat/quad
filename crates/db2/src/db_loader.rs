@@ -1,26 +1,20 @@
 use db::AscentDb;
-use flight_controller::{FlightController, controllers::bf_controller::BFController};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use simulator::{
     BatteryModel, BatteryState, DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel,
-    RotorsState, SampleCurve, SamplePoint, SimulationFrame,
-    loader::db_to_rotor_state,
-    loggers::{EmptyLogger, Logger},
+    RotorsState, SampleCurve, SamplePoint, SimulationFrame, loader::db_to_rotor_state,
     low_pass_filter::LowPassFilter,
 };
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::sync::Arc;
 
-use crate::LoaderTrait;
+use crate::DataAccessLayer;
 
 // for historical reasons mostly
 pub struct DBLoader {
     pub db: Arc<AscentDb>,
 }
 
-impl LoaderTrait for DBLoader {
+impl DataAccessLayer for DBLoader {
     fn load_drone(&self, config_id: i64) -> simulator::Drone {
         let (
             db_sim_frame,
@@ -203,21 +197,7 @@ impl LoaderTrait for DBLoader {
 
     fn load_simulation(&self, config_id: i64) -> simulator::Simulator {
         let drone = self.load_drone(config_id);
-        let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::default());
-        let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::default()));
-        let time = Duration::default();
-        let dt = Duration::from_nanos(5000);
-        let fc_time_accu = Duration::default();
-        let time_accu = Duration::default();
-        simulator::Simulator {
-            drone,
-            flight_controller,
-            logger,
-            time,
-            dt,
-            fc_time_accu,
-            time_accu,
-        }
+        simulator::Simulator::default_from_drone(drone)
     }
 
     fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {

@@ -15,9 +15,8 @@ use bevy::{
     scene::Scene,
     time::Time,
 };
-use bevy_egui::egui::load;
 use bevy_panorbit_camera::PanOrbitCamera;
-use db2::LoaderTrait;
+use db2::DataAccessLayer;
 use flight_controller::{
     controllers::{
         bf_controller::BFController, null_controller::NullController, res_controller::ResController,

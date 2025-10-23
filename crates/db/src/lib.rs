@@ -185,3 +185,7 @@ impl AscentDb {
         }
     }
 }
+
+pub struct AscentDb2 {
+    conn: sqlx::SqliteConnection,
+}

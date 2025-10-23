@@ -1,5 +1,5 @@
 use crate::schema::flight_log;
-use crate::AscentDb;
+use crate::{AscentDb, AscentDb2};
 use diesel::ExpressionMethods;
 use diesel::{
     prelude::{Insertable, Queryable},
@@ -9,9 +9,10 @@ use diesel::{
 // use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 // use nalgebra::DVector;
 use rusqlite::params;
+use serde::{Deserialize, Serialize};
 use std::ops::DerefMut;
 
-#[derive(Queryable, Selectable, Insertable, Clone)]
+#[derive(Queryable, Selectable, Insertable, Clone, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::flight_log)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DBFlightLog {
@@ -44,7 +45,7 @@ pub struct DBFlightLog {
     pub yaw: f64,
 }
 
-#[derive(Insertable, Default, Clone, Debug)]
+#[derive(Insertable, Default, Clone, Debug, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::flight_log)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct DBNewFlightLog {
@@ -166,5 +167,13 @@ impl AscentDb {
             .order(start_seconds.asc())
             .load::<DBFlightLog>(conn.deref_mut())
             .unwrap()
+    }
+}
+
+impl AscentDb2 {
+    async fn select_simulation_ids(&self) {
+        use sqlx::Executor;
+
+        // self.conn.execute();
     }
 }

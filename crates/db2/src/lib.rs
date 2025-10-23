@@ -4,7 +4,7 @@ pub mod file_loader;
 use db::simulation::DBFlightLog;
 use simulator::{Drone, Simulator};
 
-pub trait LoaderTrait: Send + Sync {
+pub trait DataAccessLayer: Send + Sync {
     // load a drone
     fn load_drone(&self, config_id: i64) -> Drone;
 

@@ -6,21 +6,26 @@ use std::{any::Any, sync::Arc, time::Duration};
 
 pub trait Logger: Sync + Send + Any {
     // process the current state of the simulation
-    fn process_state(&mut self, time: Duration, drone: &Drone, channels: Channels, fc_called: bool);
-    fn get_data(&self) -> Vec<DBNewFlightLog>;
+    fn log_time_stamp(
+        &mut self,
+        time: Duration,
+        drone: &Drone,
+        channels: Channels,
+        fc_called: bool,
+    );
 }
 
 #[derive(Clone)]
 pub struct DBCurrentLog {
-    start_seconds: f64,
-    current_input: MotorInput,
-    current_battery_update: BatteryUpdate,
-    current_gyro: GyroUpdate,
-    current_channels: Channels,
+    pub start_seconds: f64,
+    pub current_input: MotorInput,
+    pub current_battery_update: BatteryUpdate,
+    pub current_gyro: GyroUpdate,
+    pub current_channels: Channels,
 }
 
 impl DBCurrentLog {
-    fn calculate_db(self, simulation_id: String, end_seconds: f64) -> DBNewFlightLog {
+    pub fn calculate_db(self, simulation_id: String, end_seconds: f64) -> DBNewFlightLog {
         DBNewFlightLog {
             simulation_id,
             start_seconds: self.start_seconds,
@@ -61,7 +66,7 @@ pub struct DBLogger {
 }
 
 impl Logger for DBLogger {
-    fn process_state(
+    fn log_time_stamp(
         &mut self,
         time: Duration,
         drone: &Drone,
@@ -83,10 +88,6 @@ impl Logger for DBLogger {
         );
         self.data
             .push(current_step.calculate_db(self.simulation_id.to_owned(), time.as_secs_f64()));
-    }
-
-    fn get_data(&self) -> Vec<DBNewFlightLog> {
-        self.data.clone()
     }
 }
 
@@ -128,7 +129,7 @@ pub struct RerunLogger {
 }
 
 impl Logger for RerunLogger {
-    fn process_state(&mut self, time: Duration, drone: &Drone, _: Channels, fc_called: bool) {
+    fn log_time_stamp(&mut self, time: Duration, drone: &Drone, _: Channels, fc_called: bool) {
         if !fc_called {
             return;
         }
@@ -147,10 +148,6 @@ impl Logger for RerunLogger {
         } else {
             self.counter -= 1;
         }
-    }
-
-    fn get_data(&self) -> Vec<DBNewFlightLog> {
-        unreachable!()
     }
 }
 
@@ -178,11 +175,7 @@ impl RerunLogger {
 pub struct EmptyLogger {}
 
 impl Logger for EmptyLogger {
-    fn process_state(&mut self, _: Duration, _: &Drone, _: Channels, _: bool) {
+    fn log_time_stamp(&mut self, _: Duration, _: &Drone, _: Channels, _: bool) {
         // To nothing
-    }
-
-    fn get_data(&self) -> Vec<DBNewFlightLog> {
-        unreachable!()
     }
 }

@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 fn interpolate(a: f64, b: f64, i: f64) -> f64 {
     a + ((b - a) * i)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SamplePoint {
     pub discharge: f64,
     pub voltage: f64,
@@ -14,7 +16,7 @@ impl SamplePoint {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SampleCurve {
     sample_points: Vec<SamplePoint>,
     min_discharge_point: SamplePoint,
