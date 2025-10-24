@@ -1,5 +1,5 @@
 use crate::schema::flight_log;
-use crate::{AscentDb, AscentDb2};
+use crate::AscentDb;
 use diesel::ExpressionMethods;
 use diesel::{
     prelude::{Insertable, Queryable},
@@ -75,18 +75,6 @@ pub struct DBNewFlightLog {
     pub roll: f64,
     pub pitch: f64,
     pub yaw: f64,
-}
-
-impl DBNewFlightLog {
-    // only calculate the motor inputs
-    pub fn data_eq(&self, other: &Self) -> bool {
-        (self.start_seconds == other.start_seconds)
-            && (self.end_seconds == other.end_seconds)
-            && (self.motor_input_1 == other.motor_input_1)
-            && (self.motor_input_2 == other.motor_input_2)
-            && (self.motor_input_3 == other.motor_input_3)
-            && (self.motor_input_4 == other.motor_input_4)
-    }
 }
 
 const INSERT_FLIGHT_LOGS_QUERY: &str = "
@@ -170,10 +158,81 @@ impl AscentDb {
     }
 }
 
-impl AscentDb2 {
-    async fn select_simulation_ids(&self) {
-        use sqlx::Executor;
+mod ascent_db_2 {
+    use crate::{
+        simulation::{DBFlightLog, DBNewFlightLog},
+        AscentDb2,
+    };
+    use sqlx::Connection;
+    use sqlx::{query, query_as, Executor};
 
-        // self.conn.execute();
+    struct SimulationId {
+        simulation_id: String, // TODO: this should be string
+    }
+
+    impl AscentDb2 {
+        async fn select_simulation_ids(&mut self) -> Vec<String> {
+            let query = query_as!(
+                SimulationId,
+                r#"SELECT DISTINCT simulation_id from flight_log"#
+            );
+            let res = query.fetch_all(&mut self.conn).await.unwrap();
+            res.iter().map(|x| x.simulation_id.clone()).collect()
+        }
+
+        async fn get_simulation_data(&mut self, sim_id: &str) -> Vec<DBFlightLog> {
+            let query = query_as!(
+                DBFlightLog,
+                r#"SELECT * from flight_log WHERE simulation_id = ? ORDER BY start_seconds asc"#,
+                sim_id
+            );
+            query.fetch_all(&mut self.conn).await.unwrap()
+        }
+
+        async fn write_flight_logs(&mut self, simulation_id: &str, flight_logs: &[DBNewFlightLog]) {
+            let mut trx = self.conn.begin().await.unwrap();
+            for flight_log in flight_logs {
+                let query = query!(
+                    r#"
+                    INSERT INTO flight_log (
+                        simulation_id, start_seconds, end_seconds, motor_input_1, motor_input_2,
+                        motor_input_3, motor_input_4, battery_voltage_sag, battery_voltage, amperage,
+                        mah_drawn, cell_count, rot_quat_x, rot_quat_y, rot_quat_z, rot_quat_w,
+                        linear_acceleration_x, linear_acceleration_y, linear_acceleration_z,
+                        angular_velocity_x, angular_velocity_y, angular_velocity_z, throttle, roll, pitch, yaw
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    )"#,
+                    simulation_id,
+                    flight_log.start_seconds,
+                    flight_log.end_seconds,
+                    flight_log.motor_input_1,
+                    flight_log.motor_input_2,
+                    flight_log.motor_input_3,
+                    flight_log.motor_input_4,
+                    flight_log.battery_voltage_sag,
+                    flight_log.battery_voltage,
+                    flight_log.amperage,
+                    flight_log.mah_drawn,
+                    flight_log.cell_count,
+                    flight_log.rot_quat_x,
+                    flight_log.rot_quat_y,
+                    flight_log.rot_quat_z,
+                    flight_log.rot_quat_w,
+                    flight_log.linear_acceleration_x,
+                    flight_log.linear_acceleration_y,
+                    flight_log.linear_acceleration_z,
+                    flight_log.angular_velocity_x,
+                    flight_log.angular_velocity_y,
+                    flight_log.angular_velocity_z,
+                    flight_log.throttle,
+                    flight_log.roll,
+                    flight_log.pitch,
+                    flight_log.yaw,
+                );
+                query.execute(&mut *trx).await.unwrap();
+            }
+            trx.commit().await.unwrap();
+        }
     }
 }
