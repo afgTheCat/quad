@@ -6,6 +6,7 @@ resolver = "2"
 # internal
 visualizer = { path = "crates/visualizer" }
 simulator = { path = "crates/simulator" }
+simulator2 = { path = "crates/simulator2" }
 flight_controller = { path = "crates/flight_controller" }
 db = { path = "crates/db" }
 res = { path = "crates/res" }

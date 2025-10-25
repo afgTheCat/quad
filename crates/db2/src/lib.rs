@@ -2,6 +2,7 @@ pub mod db_loader;
 pub mod file_loader;
 
 use db::simulation::DBFlightLog;
+use flight_controller::controllers::res_controller::ResController;
 use simulator::{Drone, Simulator};
 
 pub trait DataAccessLayer: Send + Sync {
@@ -19,4 +20,7 @@ pub trait DataAccessLayer: Send + Sync {
 
     // Get reservoir ids
     fn get_reservoir_ids(&self) -> Vec<String>;
+
+    // Load reservoir controller
+    fn load_res_controller(&self, controller_id: &str) -> ResController;
 }

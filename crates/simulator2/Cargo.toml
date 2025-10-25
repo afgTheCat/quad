@@ -1,0 +1,13 @@
+[package]
+name = "simulator2"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+simulator.workspace = true
+csv.workspace = true
+db.workspace = true
+db2.workspace = true
+flight_controller.workspace = true
+uuid.workspace = true

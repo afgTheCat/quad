@@ -25,7 +25,6 @@ use flight_controller::{
 };
 use nalgebra::Vector3;
 use simulator::{
-    loader::SimulationLoader,
     loggers::{DBLogger, EmptyLogger},
     BatteryUpdate, MotorInput, Simulator,
 };
@@ -43,7 +42,7 @@ use uuid::Uuid;
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
 // other things, it might make sense to have entities/components
 #[derive(Resource, Deref, DerefMut)]
-pub struct Simulaton(Simulator);
+pub struct Simulation(Simulator);
 
 /// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
 /// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
@@ -104,7 +103,7 @@ pub fn handle_input(
 pub fn sim_loop(
     mut gizmos: Gizmos,
     timer: Res<Time>,
-    mut simulation: ResMut<Simulaton>,
+    mut simulation: ResMut<Simulation>,
     mut sim_data: ResMut<SimulationData>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
@@ -176,7 +175,7 @@ pub fn enter_simulation(
         Logger::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
         Logger::Null => Arc::new(Mutex::new(EmptyLogger::default())),
     };
-    let mut simulation = Simulaton(Simulator {
+    let mut simulation = Simulation(Simulator {
         drone: drone.clone(),
         flight_controller: flight_controller.clone(),
         time_accu: Duration::default(),
@@ -207,6 +206,6 @@ pub fn exit_simulation(
     // simulation.write_remaining_logs();
 
     // Remove the simulation
-    commands.remove_resource::<Simulaton>();
+    commands.remove_resource::<Simulation>();
     commands.remove_resource::<SimulationData>();
 }

@@ -9169,6 +9169,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "simulator2"
+version = "0.1.0"
+dependencies = [
+ "csv",
+ "db",
+ "db2",
+ "flight_controller",
+ "simulator",
+ "uuid",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"

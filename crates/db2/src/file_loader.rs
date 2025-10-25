@@ -1,9 +1,11 @@
 use crate::DataAccessLayer;
+use flight_controller::controllers::res_controller::ResController;
 use simulator::Simulator;
 use std::{fs, path::PathBuf};
 
 const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 
+#[derive(Debug, Clone, Default)]
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
@@ -20,8 +22,10 @@ impl DataAccessLayer for FileLoader {
     }
 
     fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
-        let replays = PathBuf::from(LOADER_PATH);
-        todo!()
+        let mut replay = PathBuf::from(LOADER_PATH);
+        replay.push(format!("replays/{sim_id}"));
+        let content = fs::read_to_string(replay).unwrap();
+        serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
     // just list the file names in the loader.
@@ -44,5 +48,9 @@ impl DataAccessLayer for FileLoader {
             .map(|res| res.map(|e| e.path()))
             .filter_map(|res| res.ok().map(|t| t.to_str().unwrap().to_owned()))
             .collect::<Vec<_>>()
+    }
+
+    fn load_res_controller(&self, controller_id: &str) -> ResController {
+        todo!()
     }
 }

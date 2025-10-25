@@ -489,10 +489,10 @@ pub struct SimulationObservation {
 // information.
 pub struct Simulator {
     pub drone: Drone,
-    pub flight_controller: Arc<dyn FlightController>,
-    pub dt: Duration,
     pub time: Duration,
     pub time_accu: Duration, // the accumulated time between two steps + the correction from the
+    pub dt: Duration,
+    pub flight_controller: Arc<dyn FlightController>,
     pub fc_time_accu: Duration,
     pub logger: Arc<Mutex<dyn Logger>>, // needs to be mutable
 }
@@ -510,6 +510,7 @@ impl Simulator {
         }
     }
 
+    // TODO: dont need this
     pub fn simulation_info(&self) -> SimulationObservation {
         let current_frame = &self.drone.current_frame;
 
@@ -586,12 +587,12 @@ pub struct Replayer {
     pub drone: Drone,
     pub time: Duration, // TODO: remove this
     pub time_accu: Duration,
+    pub dt: Duration,
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
     pub time_steps: Vec<DBFlightLog>,
     pub replay_index: usize,
-    pub dt: Duration,
 }
 
 impl Replayer {

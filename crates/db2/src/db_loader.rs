@@ -1,4 +1,5 @@
-use db::AscentDb;
+use db::{AscentDb, simulation::DBFlightLog};
+use flight_controller::controllers::res_controller::ResController;
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use simulator::{
     BatteryModel, BatteryState, DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel,
@@ -10,6 +11,7 @@ use std::sync::Arc;
 use crate::DataAccessLayer;
 
 // for historical reasons mostly
+#[derive(Debug, Clone)]
 pub struct DBLoader {
     pub db: Arc<AscentDb>,
 }
@@ -200,7 +202,7 @@ impl DataAccessLayer for DBLoader {
         simulator::Simulator::default_from_drone(drone)
     }
 
-    fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
+    fn load_replay(&self, sim_id: &str) -> Vec<DBFlightLog> {
         self.db.get_simulation_data(sim_id)
     }
 
@@ -210,5 +212,9 @@ impl DataAccessLayer for DBLoader {
 
     fn get_reservoir_ids(&self) -> Vec<String> {
         self.db.select_reservoir_ids()
+    }
+
+    fn load_res_controller(&self, controller_id: &str) -> ResController {
+        ResController::from_db(&self.db, controller_id)
     }
 }

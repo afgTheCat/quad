@@ -6,10 +6,12 @@ mod schema;
 pub mod simulation;
 pub mod simulation_frame;
 
+use diesel::dsl::Asc;
 use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
 pub use reservoir::{DBRcData, NewDBRcData};
 use rusqlite::Connection;
+use std::fmt::Debug;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -166,11 +168,26 @@ const ENSURE_FLIGHT_LOGS_QUERY: &str = "
     );
 ";
 
+#[derive(Clone)]
 pub struct AscentDb {
     // Diesel conn for type safty
     diesel_conn: Arc<Mutex<SqliteConnection>>,
     // Rusqlte conn for speed
     rusqlite_conn: Arc<Mutex<Connection>>,
+}
+
+impl Default for AscentDb {
+    fn default() -> Self {
+        // we need to figure this out
+        todo!()
+    }
+}
+
+impl Debug for AscentDb {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO: actually implement this
+        Ok(())
+    }
 }
 
 impl AscentDb {
