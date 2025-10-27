@@ -10509,6 +10509,7 @@ dependencies = [
  "flight_controller",
  "nalgebra",
  "simulator",
+ "simulator2",
  "toml",
  "uuid",
 ]

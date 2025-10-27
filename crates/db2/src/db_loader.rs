@@ -206,11 +206,11 @@ impl DataAccessLayer for DBLoader {
         self.db.get_simulation_data(sim_id)
     }
 
-    fn get_simulation_ids(&self) -> Vec<String> {
+    fn get_replay_ids(&self) -> Vec<String> {
         self.db.select_simulation_ids()
     }
 
-    fn get_reservoir_ids(&self) -> Vec<String> {
+    fn get_reservoir_controller_ids(&self) -> Vec<String> {
         self.db.select_reservoir_ids()
     }
 

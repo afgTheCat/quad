@@ -8,9 +8,7 @@ pub fn simulation_ui(
     sim_data: &SimulationData,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
-    // let side_panel = egui::SidePanel::left("Simulation").default_width(100.);
     egui::SidePanel::left("Simulation")
-        // .default_width(500.)
         .min_width(300.)
         .show(ctx.ctx_mut(), |ui| {
             if ui.button("Back to menu").clicked() {

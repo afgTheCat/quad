@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use crate::{ntb_mat3, ntb_vec3, ui::menu::SelectionConfig, Loader, VisualizerData};
+use crate::{ntb_mat3, ntb_vec3, Context};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -10,7 +8,6 @@ use bevy::{
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use db2::DataAccessLayer;
 use nalgebra::Vector3;
 use simulator::Replayer;
 
@@ -48,31 +45,9 @@ pub fn replay_loop(
     camera.target_focus = drone_translation;
 }
 
-pub fn enter_replay(
-    sim_data: ResMut<VisualizerData>,
-    db: Res<Loader>,
-    mut commands: Commands,
-    loader: Res<Loader>,
-) {
-    let SelectionConfig::Replay {
-        replay_id: Some(simulation_id),
-        ..
-    } = &sim_data.selection_config
-    else {
-        unreachable!()
-    };
-
-    let sim_logs = db.load_replay(simulation_id);
-    let drone = loader.load_drone(1);
-    let replay = Replay(Replayer {
-        drone,
-        time: Duration::new(0, 0),
-        time_accu: Duration::new(0, 0),
-        time_steps: sim_logs,
-        replay_index: 0,
-        dt: Duration::from_nanos(5000), // TODO: update this
-    });
-    commands.insert_resource(replay);
+pub fn enter_replay(context: Res<Context>, mut commands: Commands) {
+    let replay = context.try_load_replay().unwrap();
+    commands.insert_resource(Replay(replay));
 }
 
 pub fn exit_replay(

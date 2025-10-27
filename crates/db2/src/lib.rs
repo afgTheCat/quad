@@ -16,10 +16,10 @@ pub trait DataAccessLayer: Send + Sync {
     fn load_replay(&self, sim_id: &str) -> Vec<DBFlightLog>;
 
     // Get simulation ids
-    fn get_simulation_ids(&self) -> Vec<String>;
+    fn get_replay_ids(&self) -> Vec<String>;
 
     // Get reservoir ids
-    fn get_reservoir_ids(&self) -> Vec<String>;
+    fn get_reservoir_controller_ids(&self) -> Vec<String>;
 
     // Load reservoir controller
     fn load_res_controller(&self, controller_id: &str) -> ResController;

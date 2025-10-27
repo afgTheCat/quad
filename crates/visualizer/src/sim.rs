@@ -1,8 +1,4 @@
-use crate::{
-    ntb_mat3, ntb_vec3,
-    ui::menu::{Controller, Logger, SelectionConfig},
-    Loader, VisualizerData,
-};
+use crate::{ntb_mat3, ntb_vec3, Context};
 use bevy::{
     asset::Handle,
     color::palettes::css::RED,
@@ -16,39 +12,16 @@ use bevy::{
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use db2::DataAccessLayer;
-use flight_controller::{
-    controllers::{
-        bf_controller::BFController, null_controller::NullController, res_controller::ResController,
-    },
-    Channels, FlightController,
-};
+use flight_controller::Channels;
 use nalgebra::Vector3;
-use simulator::{
-    loggers::{DBLogger, EmptyLogger},
-    BatteryUpdate, MotorInput, Simulator,
-};
-use simulator::{
-    loggers::{Logger as LoggerTrait, RerunLogger},
-    SimulationObservation,
-};
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use uuid::Uuid;
+use simulator::SimulationObservation;
+use simulator::Simulator;
 
 // Since we currently only support a single simulation, we should use a resource for the drone and
 // all the auxulary information. In the future, if we include a multi drone setup/collisions and
 // other things, it might make sense to have entities/components
 #[derive(Resource, Deref, DerefMut)]
 pub struct Simulation(Simulator);
-
-/// Acts as storage for the controller inputs. Controller inputs are used as setpoints for the
-/// controller. We are storing them since it's not guaranteed that a new inpout will be sent on
-/// each frame.
-// #[derive(Resource, Deref, DerefMut, Default, Debug)]
-// pub struct PlayerControllerInput(Channels);
 
 #[derive(Resource, Default, Debug)]
 pub struct SimulationData {
@@ -135,58 +108,10 @@ pub fn sim_loop(
 }
 
 // TODO: set it up according to the menu
-pub fn enter_simulation(
-    mut commands: Commands,
-    sim_data: ResMut<VisualizerData>,
-    loader: Res<Loader>,
-) {
-    let simulation_id = Uuid::new_v4().to_string();
-    let drone = loader.load_drone(1);
-    let SelectionConfig::Simulation {
-        logger: Some(logger),
-        controller: Some(controller),
-    } = &sim_data.selection_config
-    else {
-        unreachable!()
-    };
-    let db = loader.db.clone();
-    let flight_controller: Arc<dyn FlightController> = match controller {
-        Controller::Betafligt => Arc::new(BFController::default()),
-        Controller::Reservoir(res_id) => Arc::new(ResController::from_db(&db, res_id)),
-        Controller::NullController => Arc::new(NullController::default()),
-    };
-    let battery_state = &drone.current_frame.battery_state;
-
-    let logger: Arc<Mutex<dyn LoggerTrait>> = match logger {
-        Logger::DB => Arc::new(Mutex::new(DBLogger::new(
-            simulation_id,
-            MotorInput::default(),
-            BatteryUpdate {
-                bat_voltage_sag: battery_state.bat_voltage_sag,
-                bat_voltage: battery_state.bat_voltage,
-                amperage: battery_state.amperage,
-                m_ah_drawn: battery_state.m_ah_drawn,
-                cell_count: drone.battery_model.quad_bat_cell_count,
-            },
-            drone.current_frame.gyro_state.gyro_update(),
-            Channels::default(),
-            db.clone(),
-        ))),
-        Logger::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id))),
-        Logger::Null => Arc::new(Mutex::new(EmptyLogger::default())),
-    };
-    let mut simulation = Simulation(Simulator {
-        drone: drone.clone(),
-        flight_controller: flight_controller.clone(),
-        time_accu: Duration::default(),
-        time: Duration::new(0, 0),
-        dt: Duration::from_nanos(5000), // TODO: update this
-        fc_time_accu: Duration::default(),
-        logger,
-    });
-
+pub fn enter_simulation(mut commands: Commands, context: Res<Context>) {
+    let mut simulation = context.try_load_simulator().unwrap();
     simulation.init();
-    commands.insert_resource(simulation);
+    commands.insert_resource(Simulation(simulation));
     commands.insert_resource(SimulationData::default());
 }
 

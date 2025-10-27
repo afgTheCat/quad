@@ -11,7 +11,9 @@ pub struct FileLoader {}
 impl DataAccessLayer for FileLoader {
     fn load_drone(&self, config_id: i64) -> simulator::Drone {
         let mut simulation = PathBuf::from(LOADER_PATH);
-        simulation.push(format!("drones/{config_id}"));
+        simulation.push("drones/");
+        fs::create_dir_all(&simulation).unwrap();
+        simulation.push(format!("{config_id}"));
         let content = fs::read_to_string(simulation).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
@@ -23,16 +25,19 @@ impl DataAccessLayer for FileLoader {
 
     fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
         let mut replay = PathBuf::from(LOADER_PATH);
-        replay.push(format!("replays/{sim_id}"));
+        replay.push("replays/");
+        fs::create_dir_all(&replay).unwrap();
+        replay.push(sim_id);
         let content = fs::read_to_string(replay).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
     // just list the file names in the loader.
-    fn get_simulation_ids(&self) -> Vec<String> {
+    fn get_replay_ids(&self) -> Vec<String> {
         let mut simulation_dir = PathBuf::from(LOADER_PATH);
         // TODO: are these the replays
         simulation_dir.push("replays/");
+        fs::create_dir_all(&simulation_dir).unwrap();
         fs::read_dir(simulation_dir)
             .unwrap()
             .map(|res| res.map(|e| e.path()))
@@ -40,9 +45,10 @@ impl DataAccessLayer for FileLoader {
             .collect::<Vec<_>>()
     }
 
-    fn get_reservoir_ids(&self) -> Vec<String> {
+    fn get_reservoir_controller_ids(&self) -> Vec<String> {
         let mut reservoir_dir = PathBuf::from(LOADER_PATH);
         reservoir_dir.push("reservoirs/");
+        fs::create_dir_all(&reservoir_dir).unwrap();
         fs::read_dir(reservoir_dir)
             .unwrap()
             .map(|res| res.map(|e| e.path()))

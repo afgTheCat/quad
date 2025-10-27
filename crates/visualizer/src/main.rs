@@ -15,7 +15,7 @@ use bevy::{
     math::{EulerRot, Mat3, Quat, Vec3},
     pbr::{DirectionalLight, DirectionalLightBundle},
     prelude::{
-        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, Events,
+        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, Events,
         IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
         States, Transform,
     },
@@ -27,13 +27,13 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
-use db::AscentDb;
-use db2::db_loader::DBLoader;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-use std::sync::Arc;
-use ui::{draw_ui, menu::SelectionConfig, prefetch_menu_items};
+use simulator2::SimContext;
+use ui::draw_ui;
+
+use crate::ui::menu2::UIState;
 
 // Controll the visualizer state. It controls which systems are going to run.
 #[derive(States, Clone, Eq, PartialEq, Hash, Debug)]
@@ -42,14 +42,6 @@ pub enum VisualizerState {
     Menu,
     Simulation,
     Replay,
-}
-
-// Global data for everything related to the visualizer
-#[derive(Resource, Default)]
-pub struct VisualizerData {
-    pub simulation_ids: Vec<String>,
-    pub reservoir_ids: Vec<String>,
-    pub selection_config: SelectionConfig,
 }
 
 /// A helper function to transform an nalgebra::Vector3 to a Vec3 used by bevy
@@ -91,8 +83,8 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 #[derive(Resource, Clone, Deref)]
 pub struct DroneAsset(Handle<Gltf>);
 
-#[derive(Resource, Deref)]
-pub struct Loader(DBLoader);
+#[derive(Resource, Deref, DerefMut)]
+pub struct Context(SimContext);
 
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
@@ -130,12 +122,8 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let drone_scene = asset_server.load("drone5.glb");
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset);
-    commands.insert_resource(VisualizerData {
-        ..Default::default()
-    });
-
-    let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
-    commands.insert_resource(Loader(DBLoader { db }));
+    commands.insert_resource(UIState::default());
+    commands.insert_resource(Context(SimContext::default()));
 }
 
 fn load_drone_scene(
@@ -222,7 +210,6 @@ fn main() {
                 .before(bevy_egui::EguiSet::BeginPass),
         )
         .add_systems(Update, draw_ui)
-        .add_systems(OnEnter(VisualizerState::Menu), prefetch_menu_items)
         .add_systems(
             Update,
             load_drone_scene.run_if(in_state(VisualizerState::Loading)),
