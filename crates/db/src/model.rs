@@ -103,3 +103,85 @@ impl AscentDb {
             .pop()
     }
 }
+
+mod ascent_db_2 {
+    use crate::{
+        model::{DBDroneModel, DBSamplePoint},
+        simulation_frame::DBLowPassFilter,
+        AscentDb2,
+    };
+    use sqlx::{query_as, Connection, Sqlite, Transaction};
+
+    async fn fetch_lpf(trx: &mut Transaction<'_, Sqlite>, id: i64) -> DBLowPassFilter {
+        let query = query_as!(
+            DBLowPassFilter,
+            r#"
+                SELECT *
+                FROM low_pass_filter
+                WHERE low_pass_filter.id = ?
+            "#,
+            id
+        );
+        query.fetch_one(trx.as_mut()).await.unwrap()
+    }
+
+    impl AscentDb2 {
+        async fn select_sample_points_async(&mut self, drone_id: i64) -> Vec<DBSamplePoint> {
+            let query = query_as!(
+                DBSamplePoint,
+                r#"
+                    SELECT id, drone_model_id, discharge, voltage 
+                    FROM sample_point WHERE drone_model_id = ? order by discharge asc
+                "#,
+                drone_id
+            );
+            query.fetch_all(&mut self.conn).await.unwrap()
+        }
+
+        fn select_sample_points(&mut self, drone_id: i64) -> Vec<DBSamplePoint> {
+            smol::block_on(async { self.select_sample_points_async(drone_id).await })
+        }
+
+        async fn select_drone_model_async(
+            &mut self,
+            drone_id: i64,
+        ) -> (
+            DBDroneModel,
+            DBLowPassFilter,
+            DBLowPassFilter,
+            DBLowPassFilter,
+            DBLowPassFilter,
+        ) {
+            let mut trx = self.conn.begin().await.unwrap();
+            let query = query_as!(
+                DBDroneModel,
+                r#"
+                    SELECT *
+                    FROM drone_model 
+                    WHERE drone_model.id = ?
+                "#,
+                drone_id
+            );
+            let drone_model = query.fetch_one(&mut *trx).await.unwrap();
+            let lpf1 = fetch_lpf(&mut trx, drone_model.motor_1_lpf).await;
+            let lpf2 = fetch_lpf(&mut trx, drone_model.motor_2_lpf).await;
+            let lpf3 = fetch_lpf(&mut trx, drone_model.motor_3_lpf).await;
+            let lpf4 = fetch_lpf(&mut trx, drone_model.motor_4_lpf).await;
+            trx.commit().await.unwrap();
+            (drone_model, lpf1, lpf2, lpf3, lpf4)
+        }
+
+        fn select_drone_model(
+            &mut self,
+            drone_id: i64,
+        ) -> (
+            DBDroneModel,
+            DBLowPassFilter,
+            DBLowPassFilter,
+            DBLowPassFilter,
+            DBLowPassFilter,
+        ) {
+            smol::block_on(async { self.select_drone_model_async(drone_id).await })
+        }
+    }
+}

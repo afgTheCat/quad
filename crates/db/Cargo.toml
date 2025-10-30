@@ -13,3 +13,5 @@ diesel = {version = "2.2.6", features = ["sqlite", "64-column-tables"]}
 serde.workspace = true
 # TODO: we can work with this later on
 sqlx = { version = "0.8.6", features = [ "runtime-tokio", "sqlite", "macros"] }
+smol = "2.0.2"
+futures = "0.3.31"

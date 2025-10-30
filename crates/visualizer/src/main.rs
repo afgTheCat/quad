@@ -6,6 +6,7 @@ mod replay;
 mod sim;
 mod ui;
 
+use crate::ui::menu2::UIState;
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
     asset::{AssetServer, Assets, Handle},
@@ -32,8 +33,6 @@ use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
 use simulator2::SimContext;
 use ui::draw_ui;
-
-use crate::ui::menu2::UIState;
 
 // Controll the visualizer state. It controls which systems are going to run.
 #[derive(States, Clone, Eq, PartialEq, Hash, Debug)]
@@ -83,7 +82,7 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 #[derive(Resource, Clone, Deref)]
 pub struct DroneAsset(Handle<Gltf>);
 
-#[derive(Resource, Deref, DerefMut)]
+#[derive(Resource, Deref, DerefMut, Debug)]
 pub struct Context(SimContext);
 
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading

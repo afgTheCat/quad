@@ -171,7 +171,7 @@ mod ascent_db_2 {
     }
 
     impl AscentDb2 {
-        async fn select_simulation_ids(&mut self) -> Vec<String> {
+        async fn select_simulation_ids_async(&mut self) -> Vec<String> {
             let query = query_as!(
                 SimulationId,
                 r#"SELECT DISTINCT simulation_id from flight_log"#
@@ -180,7 +180,11 @@ mod ascent_db_2 {
             res.iter().map(|x| x.simulation_id.clone()).collect()
         }
 
-        async fn get_simulation_data(&mut self, sim_id: &str) -> Vec<DBFlightLog> {
+        fn select_simulation_ids(&mut self) -> Vec<String> {
+            smol::block_on(async { self.select_simulation_ids_async().await })
+        }
+
+        async fn get_simulation_data_async(&mut self, sim_id: &str) -> Vec<DBFlightLog> {
             let query = query_as!(
                 DBFlightLog,
                 r#"SELECT * from flight_log WHERE simulation_id = ? ORDER BY start_seconds asc"#,
@@ -189,7 +193,15 @@ mod ascent_db_2 {
             query.fetch_all(&mut self.conn).await.unwrap()
         }
 
-        async fn write_flight_logs(&mut self, simulation_id: &str, flight_logs: &[DBNewFlightLog]) {
+        fn get_simulation_data(&mut self, sim_id: &str) -> Vec<DBFlightLog> {
+            smol::block_on(async { self.get_simulation_data_async(sim_id).await })
+        }
+
+        async fn write_flight_logs_async(
+            &mut self,
+            simulation_id: &str,
+            flight_logs: &[DBNewFlightLog],
+        ) {
             let mut trx = self.conn.begin().await.unwrap();
             for flight_log in flight_logs {
                 let query = query!(
@@ -233,6 +245,13 @@ mod ascent_db_2 {
                 query.execute(&mut *trx).await.unwrap();
             }
             trx.commit().await.unwrap();
+        }
+
+        fn write_flighjt_logs(&mut self, simulation_id: &str, flight_logs: &[DBNewFlightLog]) {
+            smol::block_on(async {
+                self.write_flight_logs_async(simulation_id, flight_logs)
+                    .await
+            })
         }
     }
 }

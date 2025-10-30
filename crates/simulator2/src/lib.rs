@@ -4,7 +4,7 @@ use std::{
 };
 
 use db::{simulation::DBFlightLog, AscentDb};
-use db2::{db_loader::DBLoader, file_loader::FileLoader, DataAccessLayer};
+use db2::{db_loader::DBLoader, file_loader::FileLoader, file_logger::FileLogger, DataAccessLayer};
 use flight_controller::{
     controllers::{
         bf_controller::BFController, null_controller::NullController, res_controller::ResController,
@@ -68,6 +68,7 @@ impl Default for Loader {
 }
 
 // #[derive(Default)]
+#[derive(Debug)]
 pub struct SimContext {
     // what kind of logger should be loaded
     logger_type: LoggerType,
@@ -94,7 +95,7 @@ impl Default for SimContext {
             replay_ids: Default::default(),
             reservoir_controller_ids: Default::default(),
             replay_id: Default::default(),
-            config_id: Default::default(),
+            config_id: Some(1), // TODO: this is what we used to have
         };
         sim_context.refresh_cache();
         sim_context
@@ -153,8 +154,7 @@ impl SimContext {
             }
             LoggerType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id.to_owned()))),
             LoggerType::Empty => Arc::new(Mutex::new(EmptyLogger::default())),
-            // TODO: add file logger!
-            LoggerType::File => todo!(),
+            LoggerType::File => Arc::new(Mutex::new(FileLogger::new())),
         };
         Simulator {
             drone: drone.clone(),

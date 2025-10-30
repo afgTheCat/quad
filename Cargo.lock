@@ -2785,9 +2785,11 @@ version = "0.1.0"
 dependencies = [
  "derive_more",
  "diesel",
+ "futures",
  "nalgebra",
  "rusqlite",
  "serde",
+ "smol",
  "sqlx",
 ]
 
@@ -9279,6 +9281,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "smol"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a33bd3e260892199c3ccfc487c88b2da2265080acb316cd920da72fdfd7c599f"
+dependencies = [
+ "async-channel",
+ "async-executor",
+ "async-fs",
+ "async-io",
+ "async-lock",
+ "async-net",
+ "async-process",
+ "blocking",
+ "futures-lite",
+]
+
+[[package]]
 name = "smol_str"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10503,8 +10522,6 @@ dependencies = [
  "bevy_panorbit_camera",
  "cc",
  "csv",
- "db",
- "db2",
  "egui_extras 0.29.1",
  "flight_controller",
  "nalgebra",

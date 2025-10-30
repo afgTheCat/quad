@@ -1,5 +1,6 @@
 pub mod db_loader;
 pub mod file_loader;
+pub mod file_logger;
 
 use db::simulation::DBFlightLog;
 use flight_controller::controllers::res_controller::ResController;

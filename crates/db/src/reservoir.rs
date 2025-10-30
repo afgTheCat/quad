@@ -65,3 +65,37 @@ impl AscentDb {
             .unwrap()
     }
 }
+
+mod ascent_db_2 {
+    use sqlx::query;
+
+    use crate::{AscentDb2, DBRcData, NewDBRcData};
+
+    impl AscentDb2 {
+        async fn insert_reservoir(&mut self, res: NewDBRcData) {
+            let q = query!(
+                r#"
+                    INSERT INTO rc_model (rc_id, n_internal_units, input_scaling, internal_weights, input_weights, alpha, readout_coeff, readout_intercept)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                "#,
+                res.rc_id,
+                res.n_internal_units,
+                res.input_scaling,
+                res.internal_weights,
+                res.input_weights,
+                res.alpha,
+                res.readout_coeff,
+                res.readout_intercept
+            );
+            q.execute(&mut self.conn).await.unwrap();
+        }
+
+        async fn select_reservoir(&mut self, model_id: &str) -> Option<DBRcData> {
+            todo!()
+        }
+
+        async fn select_reservoir_ids(&mut self) -> Vec<String> {
+            todo!()
+        }
+    }
+}
