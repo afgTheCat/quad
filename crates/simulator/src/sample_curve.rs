@@ -18,9 +18,9 @@ impl SamplePoint {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SampleCurve {
-    sample_points: Vec<SamplePoint>,
-    min_discharge_point: SamplePoint,
-    max_discharge_point: SamplePoint,
+    pub sample_points: Vec<SamplePoint>,
+    pub min_discharge_point: SamplePoint,
+    pub max_discharge_point: SamplePoint,
 }
 
 impl SampleCurve {

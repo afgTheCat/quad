@@ -104,7 +104,7 @@ impl Observation {
 #[pyclass]
 pub struct Environment {
     /// Config id
-    config_id: i64,
+    config_id: String,
     /// Loads the simulation
     sim_loader: Box<dyn SimulationLoader>,
     /// The simulator
@@ -119,8 +119,8 @@ impl Environment {
         log::info!("Default environment constructed");
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let sim_loader = SimLoader::new(Arc::new(db));
-        let config_id = 1;
-        let mut simulator = sim_loader.load_simulation(config_id);
+        let config_id = format!("");
+        let mut simulator = sim_loader.load_simulation(&config_id);
         simulator.init();
         Self {
             config_id,
@@ -144,7 +144,7 @@ impl Environment {
 
     // TODO: when we have the machinary we should do a real reset
     pub fn reset(&mut self) -> Observation {
-        let mut simulator = self.sim_loader.load_simulation(self.config_id);
+        let mut simulator = self.sim_loader.load_simulation(&self.config_id);
         simulator.init();
 
         // swap the simulators

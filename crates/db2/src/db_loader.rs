@@ -17,7 +17,7 @@ pub struct DBLoader {
 }
 
 impl DataAccessLayer for DBLoader {
-    fn load_drone(&self, config_id: i64) -> simulator::Drone {
+    fn load_drone(&self, config_id: &str) -> simulator::Drone {
         let (
             db_sim_frame,
             rotor_1_state,
@@ -31,7 +31,7 @@ impl DataAccessLayer for DBLoader {
             gyro_filter_1,
             gyro_filter_2,
             gyro_filter_3,
-        ) = self.db.select_simulation_frame(config_id).unwrap();
+        ) = self.db.select_simulation_frame("").unwrap(); // TODO: we need to change this
         let rotor1 = db_to_rotor_state(rotor_1_state, pwm_filter_1_state);
         let rotor2 = db_to_rotor_state(rotor_2_state, pwm_filter_2_state);
         let rotor3 = db_to_rotor_state(rotor_3_state, pwm_filter_3_state);
@@ -107,7 +107,7 @@ impl DataAccessLayer for DBLoader {
 
         let current_frame = SimulationFrame {
             battery_state,
-            drone_state,
+            drone_frame_state: drone_state,
             rotors_state: RotorsState([rotor1, rotor2, rotor3, rotor4]),
             gyro_state,
         };
@@ -197,7 +197,7 @@ impl DataAccessLayer for DBLoader {
         }
     }
 
-    fn load_simulation(&self, config_id: i64) -> simulator::Simulator {
+    fn load_simulation(&self, config_id: &str) -> simulator::Simulator {
         let drone = self.load_drone(config_id);
         simulator::Simulator::default_from_drone(drone)
     }

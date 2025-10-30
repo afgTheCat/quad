@@ -20,8 +20,8 @@ use std::{
 // This is the prmary API that we wish to use. Loading a drone is straight forward, however using
 // the appropriate logger is a question to be awnsered
 pub trait SimulationLoader: Send + Sync {
-    fn load_drone(&self, config_id: i64) -> Drone;
-    fn load_simulation(&self, config_id: i64) -> Simulator;
+    fn load_drone(&self, config_id: &str) -> Drone;
+    fn load_simulation(&self, config_id: &str) -> Simulator;
 }
 
 pub struct SimLoader {
@@ -55,7 +55,7 @@ pub fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilte
 }
 
 impl SimulationLoader for SimLoader {
-    fn load_drone(&self, config_id: i64) -> Drone {
+    fn load_drone(&self, config_id: &str) -> Drone {
         let (
             db_sim_frame,
             rotor_1_state,
@@ -145,7 +145,7 @@ impl SimulationLoader for SimLoader {
 
         let current_frame = SimulationFrame {
             battery_state,
-            drone_state,
+            drone_frame_state: drone_state,
             rotors_state: RotorsState([rotor1, rotor2, rotor3, rotor4]),
             gyro_state,
         };
@@ -237,7 +237,7 @@ impl SimulationLoader for SimLoader {
 
     // This should be a configuration id. Suppose I want to load in some custom logger. How should
     // that work?
-    fn load_simulation(&self, config_id: i64) -> Simulator {
+    fn load_simulation(&self, config_id: &str) -> Simulator {
         let drone = self.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = Arc::new(BFController::default());
         let logger: Arc<Mutex<dyn Logger>> = Arc::new(Mutex::new(EmptyLogger::default()));

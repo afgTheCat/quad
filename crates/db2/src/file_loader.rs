@@ -9,16 +9,16 @@ const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
-    fn load_drone(&self, config_id: i64) -> simulator::Drone {
+    fn load_drone(&self, config_id: &str) -> simulator::Drone {
         let mut simulation = PathBuf::from(LOADER_PATH);
         simulation.push("drones/");
         fs::create_dir_all(&simulation).unwrap();
-        simulation.push(format!("{config_id}"));
+        simulation.push(format!("{config_id}.json"));
         let content = fs::read_to_string(simulation).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
-    fn load_simulation(&self, config_id: i64) -> simulator::Simulator {
+    fn load_simulation(&self, config_id: &str) -> simulator::Simulator {
         let drone = self.load_drone(config_id);
         Simulator::default_from_drone(drone)
     }
@@ -58,5 +58,22 @@ impl DataAccessLayer for FileLoader {
 
     fn load_res_controller(&self, controller_id: &str) -> ResController {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::file_loader::LOADER_PATH;
+    use simulator::default_drone::default_7in_4s_drone;
+    use std::{fs, path::PathBuf};
+
+    #[test]
+    fn insert_drone() {
+        let defualt_drone = default_7in_4s_drone();
+        let drone_str = serde_json::to_string(&defualt_drone).unwrap();
+        let mut path = PathBuf::from(LOADER_PATH);
+        path.push("drones/");
+        path.push(format!("7in_4s_drone.json"));
+        fs::write(path, drone_str).unwrap();
     }
 }

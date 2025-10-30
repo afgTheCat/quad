@@ -42,7 +42,7 @@ pub enum Loader {
 }
 
 impl Loader {
-    fn load_drone(&self, config_id: i64) -> Drone {
+    fn load_drone(&self, config_id: &str) -> Drone {
         match self {
             Self::DBLoader(loader) => loader.load_drone(config_id),
             Self::FileLoader(loader) => loader.load_drone(config_id),
@@ -83,7 +83,7 @@ pub struct SimContext {
     // Selected replay id
     replay_id: Option<String>,
     // Config id
-    config_id: Option<i64>,
+    config_id: Option<String>,
 }
 
 impl Default for SimContext {
@@ -95,7 +95,7 @@ impl Default for SimContext {
             replay_ids: Default::default(),
             reservoir_controller_ids: Default::default(),
             replay_id: Default::default(),
-            config_id: Some(1), // TODO: this is what we used to have
+            config_id: Some(format!("7in_4s_drone")),
         };
         sim_context.refresh_cache();
         sim_context
@@ -125,7 +125,7 @@ impl SimContext {
         &self.contoller
     }
 
-    pub fn load_simulator(&self, config_id: i64) -> Simulator {
+    pub fn load_simulator(&self, config_id: &str) -> Simulator {
         let simulation_id = Uuid::new_v4().to_string();
         let drone = self.loader.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = match &self.contoller {
@@ -168,13 +168,13 @@ impl SimContext {
     }
 
     pub fn try_load_simulator(&self) -> Option<Simulator> {
-        let Some(config_id) = self.config_id else {
+        let Some(config_id) = &self.config_id else {
             return None;
         };
         Some(self.load_simulator(config_id))
     }
 
-    pub fn load_replayer(&self, config_id: i64, replay_id: &str) -> Replayer {
+    pub fn load_replayer(&self, config_id: &str, replay_id: &str) -> Replayer {
         let drone = self.loader.load_drone(config_id);
         let sim_logs = self.loader.load_replay(replay_id);
         Replayer {
@@ -188,10 +188,10 @@ impl SimContext {
     }
 
     pub fn try_load_replay(&self) -> Option<Replayer> {
-        let (Some(config_id), Some(replay_id)) = (self.config_id, &self.replay_id) else {
+        let (Some(config_id), Some(replay_id)) = (&self.config_id, &self.replay_id) else {
             return None;
         };
-        Some(self.load_replayer(config_id, replay_id))
+        Some(self.load_replayer(&config_id, replay_id))
     }
 
     pub fn load_replay_ids(&mut self) {

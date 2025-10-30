@@ -48,12 +48,14 @@ pub struct DBDroneModel {
 }
 
 impl AscentDb {
-    pub fn select_sample_points(&self, drone_id: i64) -> Vec<DBSamplePoint> {
+    pub fn select_sample_points(&self, drone_id: &str) -> Vec<DBSamplePoint> {
         use crate::schema::sample_point::dsl::*;
 
         let mut conn = self.diesel_conn.lock().unwrap();
         sample_point
-            .filter(drone_model_id.eq(drone_id))
+            .filter(drone_model_id.eq(1)) // TODO: we need
+            // to update the
+            // schema
             .order(discharge.asc())
             .load::<DBSamplePoint>(conn.deref_mut())
             .unwrap()
@@ -61,7 +63,7 @@ impl AscentDb {
 
     pub fn select_drone_model(
         &self,
-        drone_id: i64,
+        drone_id: &str,
     ) -> Option<(
         DBDroneModel,
         DBLowPassFilter,
@@ -79,7 +81,7 @@ impl AscentDb {
         );
 
         crate::schema::drone_model::table
-            .filter(crate::schema::drone_model::id.eq(drone_id))
+            .filter(crate::schema::drone_model::id.eq(1)) // TODO: update the schema
             .inner_join(motor_lpf_1.on(
                 crate::schema::drone_model::motor_1_lpf.eq(motor_lpf_1.field(low_pass_filter::id)),
             ))

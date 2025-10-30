@@ -25,7 +25,7 @@ pub fn set_up_simulation(
     logger: LogType,
     flight_controller: impl FlightController,
 ) -> Simulator {
-    let drone = loader.load_drone(1);
+    let drone = loader.load_drone("default_config");
     let current_battery_update = drone.battery_update();
     let current_gyro = drone.current_frame.gyro_state.gyro_update();
 

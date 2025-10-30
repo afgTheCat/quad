@@ -1,3 +1,4 @@
+pub mod default_drone;
 pub mod input_gen;
 pub mod loader;
 pub mod loggers;
@@ -75,7 +76,7 @@ pub struct DroneFrameState {
 pub struct SimulationFrame {
     pub battery_state: BatteryState,
     pub rotors_state: RotorsState,
-    pub drone_state: DroneFrameState,
+    pub drone_frame_state: DroneFrameState,
     pub gyro_state: GyroState,
 }
 
@@ -187,8 +188,8 @@ impl FrameModel for RotorModel {
         let vel_up = f64::max(
             0.,
             Vector3::dot(
-                &current_frame.drone_state.linear_velocity,
-                &current_frame.drone_state.rotation.matrix().column(0),
+                &current_frame.drone_frame_state.linear_velocity,
+                &current_frame.drone_frame_state.rotation.matrix().column(0),
             ),
         );
 
@@ -265,11 +266,12 @@ impl FrameModel for DroneModel {
         let mut sum_force = Vector3::new(0., -GRAVITY * self.mass, 0.);
         let mut sum_torque = Vector3::zeros();
 
-        let rotation = current_frame.drone_state.rotation;
+        let rotation = current_frame.drone_frame_state.rotation;
         let (linear_velocity_dir, speed) =
-            if current_frame.drone_state.linear_velocity.lp_norm(1) > 0. {
-                let linear_velocity_dir = current_frame.drone_state.linear_velocity.normalize();
-                let speed = current_frame.drone_state.linear_velocity.norm();
+            if current_frame.drone_frame_state.linear_velocity.lp_norm(1) > 0. {
+                let linear_velocity_dir =
+                    current_frame.drone_frame_state.linear_velocity.normalize();
+                let speed = current_frame.drone_frame_state.linear_velocity.norm();
                 (linear_velocity_dir, speed)
             } else {
                 (Vector3::zeros(), 0.)
@@ -307,14 +309,14 @@ impl FrameModel for DroneModel {
         }
 
         let acceleration = sum_force / self.mass;
-        let position = current_frame.drone_state.position
-            + dt * current_frame.drone_state.linear_velocity
+        let position = current_frame.drone_frame_state.position
+            + dt * current_frame.drone_frame_state.linear_velocity
             + (acceleration * dt.powi(2)) / 2.;
-        let linear_velocity = current_frame.drone_state.linear_velocity + acceleration * dt;
+        let linear_velocity = current_frame.drone_frame_state.linear_velocity + acceleration * dt;
 
         let angular_acc: Vector3<f64> =
             rotation * self.inv_tensor * rotation.transpose() * sum_torque;
-        let angular_velocity = current_frame.drone_state.angular_velocity + angular_acc * dt;
+        let angular_velocity = current_frame.drone_frame_state.angular_velocity + angular_acc * dt;
         let rotation = Rotation3::from_matrix_eps(
             &((Matrix3::identity() + cross_product_matrix(angular_velocity * dt))
                 * rotation.matrix()),
@@ -323,7 +325,7 @@ impl FrameModel for DroneModel {
             rotation,
         );
 
-        next_frame.drone_state = DroneFrameState {
+        next_frame.drone_frame_state = DroneFrameState {
             position,
             rotation,
             linear_velocity,
@@ -368,8 +370,8 @@ impl FrameModel for GyroModel {
         next_frame: &mut SimulationFrame,
         dt: f64,
     ) {
-        let rotation = next_frame.drone_state.rotation;
-        let frame_angular_velocity = next_frame.drone_state.angular_velocity;
+        let rotation = next_frame.drone_frame_state.rotation;
+        let frame_angular_velocity = next_frame.drone_frame_state.angular_velocity;
         let cutoff_freq = 300.;
         let (gyro_vel_x, gyro_x_e_pow) = current_frame.gyro_state.low_pass_filters[0].update(
             frame_angular_velocity[0],
@@ -388,7 +390,7 @@ impl FrameModel for GyroModel {
         );
         let angular_velocity =
             rotation.transpose() * Vector3::new(gyro_vel_x, gyro_vel_y, gyro_vel_z);
-        let acceleration = rotation.transpose() * next_frame.drone_state.acceleration;
+        let acceleration = rotation.transpose() * next_frame.drone_frame_state.acceleration;
         next_frame.gyro_state = GyroState {
             rotation: UnitQuaternion::from(rotation),
             acceleration,
@@ -466,7 +468,7 @@ impl Drone {
     }
 
     pub fn position(&self) -> Vector3<f64> {
-        self.current_frame.drone_state.position
+        self.current_frame.drone_frame_state.position
     }
 }
 
@@ -515,7 +517,7 @@ impl Simulator {
         let current_frame = &self.drone.current_frame;
 
         let rotors_state = &current_frame.rotors_state;
-        let drone_state = &current_frame.drone_state;
+        let drone_state = &current_frame.drone_frame_state;
         let battery_state = &current_frame.battery_state;
 
         let thrusts = Vector4::from_row_slice(
@@ -622,7 +624,7 @@ impl Replayer {
         let current_frame = &self.drone.current_frame;
 
         let rotors_state = &current_frame.rotors_state;
-        let drone_state = &current_frame.drone_state;
+        let drone_state = &current_frame.drone_frame_state;
         let battery_state = &current_frame.battery_state;
 
         let thrusts = Vector4::from_row_slice(

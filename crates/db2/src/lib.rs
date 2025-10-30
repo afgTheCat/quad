@@ -8,10 +8,10 @@ use simulator::{Drone, Simulator};
 
 pub trait DataAccessLayer: Send + Sync {
     // load a drone
-    fn load_drone(&self, config_id: i64) -> Drone;
+    fn load_drone(&self, config_id: &str) -> Drone;
 
     // Load simulation
-    fn load_simulation(&self, config_id: i64) -> Simulator;
+    fn load_simulation(&self, config_id: &str) -> Simulator;
 
     // Load replay
     fn load_replay(&self, sim_id: &str) -> Vec<DBFlightLog>;
