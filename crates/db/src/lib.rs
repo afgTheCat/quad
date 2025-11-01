@@ -6,7 +6,6 @@ mod schema;
 pub mod simulation;
 pub mod simulation_frame;
 
-use diesel::dsl::Asc;
 use diesel::Connection as ConnectionTrait;
 use diesel::SqliteConnection;
 pub use reservoir::{DBRcData, NewDBRcData};

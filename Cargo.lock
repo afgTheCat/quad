@@ -5336,6 +5336,7 @@ dependencies = [
  "loggers",
  "nalgebra",
  "rusqlite",
+ "serde_json",
  "simulator",
  "smol",
  "sqlx",
