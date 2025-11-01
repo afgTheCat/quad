@@ -1,4 +1,5 @@
 use crate::DataAccessLayer;
+use drone::Drone;
 use flight_controller::controllers::res_controller::ResController;
 use simulator::Simulator;
 use std::{fs, path::PathBuf};
@@ -9,7 +10,7 @@ const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
-    fn load_drone(&self, config_id: &str) -> simulator::Drone {
+    fn load_drone(&self, config_id: &str) -> Drone {
         let mut simulation = PathBuf::from(LOADER_PATH);
         simulation.push("drones/");
         fs::create_dir_all(&simulation).unwrap();
@@ -64,7 +65,7 @@ impl DataAccessLayer for FileLoader {
 #[cfg(test)]
 mod test {
     use crate::file_loader::LOADER_PATH;
-    use simulator::default_drone::default_7in_4s_drone;
+    use drone::default_drone::default_7in_4s_drone;
     use std::{fs, path::PathBuf};
 
     #[test]

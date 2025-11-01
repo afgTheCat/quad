@@ -2798,6 +2798,7 @@ name = "db2"
 version = "0.1.0"
 dependencies = [
  "db",
+ "drone",
  "flight_controller",
  "nalgebra",
  "serde_json",
@@ -2988,6 +2989,17 @@ name = "dpi"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
+
+[[package]]
+name = "drone"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "flight_controller",
+ "nalgebra",
+ "rand",
+ "serde",
+]
 
 [[package]]
 name = "dsl_auto_type"
@@ -3446,20 +3458,6 @@ dependencies = [
  "is-terminal",
  "log",
  "termcolor",
-]
-
-[[package]]
-name = "environment"
-version = "0.1.0"
-dependencies = [
- "db",
- "flight_controller",
- "libc",
- "log",
- "nalgebra",
- "pyo3",
- "pyo3-log",
- "simulator",
 ]
 
 [[package]]
@@ -5327,6 +5325,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
 
 [[package]]
+name = "loaders"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "diesel",
+ "drone",
+ "flight_controller",
+ "futures",
+ "loggers",
+ "nalgebra",
+ "rusqlite",
+ "simulator",
+ "smol",
+ "sqlx",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5350,6 +5365,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d8a05e3879b317b1b6dbf353e5bba7062bedcc59815267bb23eaa0c576cebf0"
 dependencies = [
  "log",
+]
+
+[[package]]
+name = "loggers"
+version = "0.1.0"
+dependencies = [
+ "db",
+ "drone",
+ "flight_controller",
+ "rerun",
 ]
 
 [[package]]
@@ -9097,6 +9122,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim_context"
+version = "0.1.0"
+dependencies = [
+ "csv",
+ "db",
+ "db2",
+ "drone",
+ "flight_controller",
+ "rand",
+ "simulator",
+ "uuid",
+]
+
+[[package]]
 name = "simba"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9157,6 +9196,7 @@ dependencies = [
  "csv",
  "db",
  "derive_more",
+ "drone",
  "flight_controller",
  "nalgebra",
  "pyo3",
@@ -9167,18 +9207,6 @@ dependencies = [
  "rerun",
  "rusqlite",
  "serde",
- "uuid",
-]
-
-[[package]]
-name = "simulator2"
-version = "0.1.0"
-dependencies = [
- "csv",
- "db",
- "db2",
- "flight_controller",
- "simulator",
  "uuid",
 ]
 
@@ -10525,8 +10553,8 @@ dependencies = [
  "egui_extras 0.29.1",
  "flight_controller",
  "nalgebra",
+ "sim_context",
  "simulator",
- "simulator2",
  "toml",
  "uuid",
 ]

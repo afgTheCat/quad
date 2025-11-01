@@ -1,5 +1,5 @@
 [package]
-name = "simulator2"
+name = "sim_context"
 version = "0.1.0"
 edition = "2021"
 resolver = "2"
@@ -11,3 +11,5 @@ db.workspace = true
 db2.workspace = true
 flight_controller.workspace = true
 uuid.workspace = true
+rand.workspace = true
+drone.workspace = true

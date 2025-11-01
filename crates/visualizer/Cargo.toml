@@ -18,7 +18,7 @@ egui_extras = "0.29.1"
 cc = "1.0"
 uuid.workspace = true
 simulator.workspace = true
-simulator2.workspace = true
+sim_context.workspace = true
 
 [build-dependencies]
 bevy = { version = "0.14.2", features = ["dynamic_linking"] }

@@ -1,11 +1,10 @@
-pub mod db_loader;
-pub mod file_loader;
-pub mod file_logger;
-
-use db::simulation::DBFlightLog;
 use drone::Drone;
-use flight_controller::controllers::res_controller::ResController;
 use simulator::Simulator;
+use loggers::FlightLog;
+use flight_controller::controllers::res_controller::ResController;
+
+mod db_loader;
+mod file_loader;
 
 pub trait DataAccessLayer: Send + Sync {
     // load a drone
@@ -15,7 +14,7 @@ pub trait DataAccessLayer: Send + Sync {
     fn load_simulation(&self, config_id: &str) -> Simulator;
 
     // Load replay
-    fn load_replay(&self, sim_id: &str) -> Vec<DBFlightLog>;
+    fn load_replay(&self, sim_id: &str) -> FlightLog;
 
     // Get simulation ids
     fn get_replay_ids(&self) -> Vec<String>;

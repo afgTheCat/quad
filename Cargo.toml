@@ -6,13 +6,15 @@ resolver = "2"
 # internal
 visualizer = { path = "crates/visualizer" }
 simulator = { path = "crates/simulator" }
-simulator2 = { path = "crates/simulator2" }
+sim_context = { path = "crates/sim_context" }
 flight_controller = { path = "crates/flight_controller" }
 db = { path = "crates/db" }
 res = { path = "crates/res" }
-environment = { path = "crates/environment" }
 ridge = { path = "crates/ridge" }
 db2 = { path = "crates/db2" }
+drone = { path = "crates/drone" }
+loggers = { path = "crates/loggers" }
+
 
 # external
 nalgebra = { version = "0.33.0", features = ["serde-serialize"] } 
@@ -28,6 +30,8 @@ candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.
 rerun = "0.21.0"
 log = "0.4.25"
 serde = { version = "1.0.228", features = ["derive"] } 
+derive_more = { version = "1.0.0", features = ["full"] }
+rand = "0.8.5"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

@@ -1,13 +1,11 @@
 [package]
-name = "db2"
+name = "drone"
 version = "0.1.0"
 edition = "2024"
-resolver = "2"
 
 [dependencies]
-simulator.workspace = true
-db.workspace = true
+serde.workspace = true
 nalgebra.workspace = true
+derive_more.workspace = true
 flight_controller.workspace = true
-serde_json = "1.0.145"
-drone.workspace = true
+rand.workspace = true

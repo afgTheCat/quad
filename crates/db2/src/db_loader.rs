@@ -1,11 +1,19 @@
-use db::{AscentDb, simulation::DBFlightLog};
+use db::{
+    AscentDb,
+    simulation::DBFlightLog,
+    simulation_frame::{DBLowPassFilter, DBRotorState},
+};
+use drone::{
+    BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
+    LowPassFilter, RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame,
+};
 use flight_controller::controllers::res_controller::ResController;
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
-use simulator::{
-    BatteryModel, BatteryState, DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel,
-    RotorsState, SampleCurve, SamplePoint, SimulationFrame, loader::db_to_rotor_state,
-    low_pass_filter::LowPassFilter,
-};
+// use simulator::{
+//     BatteryModel, BatteryState, DroneFrameState, DroneModel, GyroModel, GyroState, RotorModel,
+//     RotorsState, SampleCurve, SamplePoint, SimulationFrame, loader::db_to_rotor_state,
+//     low_pass_filter::LowPassFilter,
+// };
 use std::sync::Arc;
 
 use crate::DataAccessLayer;
@@ -16,8 +24,28 @@ pub struct DBLoader {
     pub db: Arc<AscentDb>,
 }
 
+pub fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilter) -> RotorState {
+    RotorState {
+        current: db_rotor_state.current,
+        rpm: db_rotor_state.rpm,
+        motor_torque: db_rotor_state.motor_torque,
+        effective_thrust: db_rotor_state.effective_thrust,
+        pwm: db_rotor_state.pwm,
+        rotor_dir: db_rotor_state.rotor_dir,
+        motor_pos: Vector3::new(
+            db_rotor_state.motor_pos_x,
+            db_rotor_state.motor_pos_y,
+            db_rotor_state.motor_pos_z,
+        ),
+        pwm_low_pass_filter: LowPassFilter {
+            output: pwm_state.output,
+            e_pow: pwm_state.e_pow,
+        },
+    }
+}
+
 impl DataAccessLayer for DBLoader {
-    fn load_drone(&self, config_id: &str) -> simulator::Drone {
+    fn load_drone(&self, config_id: &str) -> Drone {
         let (
             db_sim_frame,
             rotor_1_state,
@@ -187,7 +215,7 @@ impl DataAccessLayer for DBLoader {
         };
 
         let gyro_model = GyroModel {};
-        simulator::Drone {
+        Drone {
             current_frame,
             next_frame,
             battery_model,

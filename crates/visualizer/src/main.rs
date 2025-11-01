@@ -6,7 +6,7 @@ mod replay;
 mod sim;
 mod ui;
 
-use crate::ui::menu2::UIState;
+use crate::ui::menu::UIState;
 use bevy::{
     app::{App, PluginGroup, PreUpdate, Startup, Update},
     asset::{AssetServer, Assets, Handle},
@@ -31,7 +31,7 @@ use core::f64;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-use simulator2::SimContext;
+use sim_context::SimContext;
 use ui::draw_ui;
 
 // Controll the visualizer state. It controls which systems are going to run.

@@ -10,7 +10,6 @@ pyo3.workspace = true
 pyo3-log.workspace = true 
 rerun.workspace = true
 rand = "0.8.5"
-derive_more = { version = "1.0.0", features = ["full"] }
 nalgebra.workspace = true
 flight_controller.workspace = true
 csv.workspace = true
@@ -18,7 +17,9 @@ serde.workspace = true
 rusqlite.workspace = true
 uuid.workspace = true
 db.workspace = true
+drone.workspace = true
 rayon = "1.10.0"
+derive_more.workspace = true
 
 [features]
 default = []

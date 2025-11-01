@@ -1,3 +1,5 @@
+mod input_gen;
+
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -5,17 +7,18 @@ use std::{
 
 use db::{simulation::DBFlightLog, AscentDb};
 use db2::{db_loader::DBLoader, file_loader::FileLoader, file_logger::FileLogger, DataAccessLayer};
+use drone::Drone;
 use flight_controller::{
     controllers::{
         bf_controller::BFController, null_controller::NullController, res_controller::ResController,
     },
     Channels, FlightController,
 };
+use simulator::Simulator;
 use simulator::{
     loggers::{DBLogger, EmptyLogger, Logger as LoggerTrait, RerunLogger},
     BatteryUpdate, MotorInput, Replayer,
 };
-use simulator::{Drone, Simulator};
 use uuid::Uuid;
 
 #[derive(Default, Eq, PartialEq, Hash, Debug, Clone)]

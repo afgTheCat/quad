@@ -1,3 +1,4 @@
+use crate::VisualizerState;
 use bevy::{
     ecs::system::{ResMut, Resource},
     state::state::NextState,
@@ -8,9 +9,7 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use simulator2::{Controller, LoggerType, SimContext};
-
-use crate::VisualizerState;
+use sim_context::{Controller, LoggerType, SimContext};
 
 #[derive(Resource, Default, Clone, PartialEq)]
 pub enum UIState {
@@ -181,7 +180,7 @@ pub fn main_menu_toggle(
     }
 }
 
-pub fn menu_ui2(
+pub fn menu_ui(
     mut egui_ctx: EguiContexts,
     ui_state: &mut UIState,
     context: &mut SimContext,

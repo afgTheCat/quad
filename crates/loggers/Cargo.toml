@@ -1,0 +1,10 @@
+[package]
+name = "loggers"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+flight_controller.workspace = true
+drone.workspace = true
+db.workspace = true
+rerun.workspace = true

@@ -1,11 +1,10 @@
-// pub mod menu;
-pub mod menu2;
+pub mod menu;
 pub mod replay;
 pub mod simulation;
 
 use crate::{
     sim::SimulationData,
-    ui::menu2::{menu_ui2, UIState},
+    ui::menu::{menu_ui, UIState},
     Context, VisualizerState,
 };
 use bevy::prelude::{NextState, Res, ResMut, State};
@@ -25,7 +24,7 @@ pub fn draw_ui(
     match state {
         VisualizerState::Loading => {} // no ui to show
         VisualizerState::Menu => {
-            menu_ui2(
+            menu_ui(
                 ctx,
                 ui_state.as_mut(),
                 context.as_mut(),
