@@ -7,12 +7,8 @@ use once_cell::sync::Lazy;
 use std::{
     collections::{hash_map::Entry, HashMap},
     ffi::{CStr, CString},
-    fs::{self, File},
     io::Write,
-    os::{
-        fd::FromRawFd,
-        raw::{self, c_void},
-    },
+    os::raw::{self, c_void},
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -20,7 +16,8 @@ use tempfile::NamedTempFile;
 use uuid::Uuid;
 
 const RTLD_FLAGS: i32 = 0x0002; // Resolves all symbols and do not use them for further resolutions
-const LIB_PATH: &str = "/home/gabor/ascent/virtual-betaflight/src/libvirtual-betaflight.so\0";
+const LIB_PATH: &str =
+    "/home/gabor/ascent/virtual-betaflight-dynlib/src/libvirtual-betaflight.so\0";
 
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
 type VBFUpdate = unsafe extern "C" fn(time_passed: f64);
@@ -230,7 +227,7 @@ impl Drop for BFController {
 
 fn tmp_eeprom() -> NamedTempFile {
     let mut temp_eeprom = NamedTempFile::new().expect("Could not create named temp file");
-    let eeprom = std::fs::read("/home/gabor/ascent/quad/eeprom.bin").expect("No file");
+    let eeprom = std::fs::read("/home/gabor/projects/quad/eeprom.bin").expect("No file");
     temp_eeprom
         .write(&eeprom)
         .expect("Could not write temp file");

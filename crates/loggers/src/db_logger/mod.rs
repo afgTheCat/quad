@@ -15,8 +15,11 @@ pub struct DBLogger {
 impl DBLogger {
     pub fn new(simulation_id: String) -> Self {
         // TODO: get the locaction frfr
-        let conn =
-            smol::block_on(async { SqliteConnection::connect("sqlite::memory:").await.unwrap() });
+        let conn = smol::block_on(async {
+            SqliteConnection::connect("sqlite://crates/db/schema.sqlite")
+                .await
+                .unwrap()
+        });
         Self {
             data: vec![],
             simulation_id,
@@ -46,7 +49,7 @@ impl DBLogger {
             rot_quat_w: snapshot.gyro_update.rotation[3],
             linear_acceleration_x: snapshot.gyro_update.linear_acc[0],
             linear_acceleration_y: snapshot.gyro_update.linear_acc[1],
-            linear_acceleration_z: snapshot.gyro_update.linear_acc[3],
+            linear_acceleration_z: snapshot.gyro_update.linear_acc[2],
             angular_velocity_x: snapshot.gyro_update.angular_velocity[0],
             angular_velocity_y: snapshot.gyro_update.angular_velocity[1],
             angular_velocity_z: snapshot.gyro_update.angular_velocity[2],
