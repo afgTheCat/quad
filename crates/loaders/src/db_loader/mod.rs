@@ -1,21 +1,22 @@
 mod schema;
 
-use std::sync::Mutex;
-
 use drone::{
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     LowPassFilter, RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame,
 };
-use flight_controller::controllers::res_controller::ResController;
-use loggers::FlightLog;
+use flight_controller::{Channels, controllers::res_controller::ResController};
+use loggers::{FlightLog, SnapShot};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use res::drone::DroneRc;
+use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
 use sqlx::{Connection, Sqlite, Transaction, query_as};
+use std::{sync::Mutex, time::Duration};
 
 use crate::{
     DataAccessLayer,
     db_loader::schema::{
-        DBDroneModel, DBLowPassFilter, DBRcData, DBRotorState, DBSamplePoint, DBSimulationFrame,
+        DBDroneModel, DBFlightLog, DBLowPassFilter, DBRcData, DBRotorState, DBSamplePoint,
+        DBSimulationFrame,
     },
 };
 
@@ -34,7 +35,63 @@ impl DataAccessLayer for DBLoader {
     }
 
     fn load_replay(&mut self, sim_id: &str) -> FlightLog {
-        todo!()
+        let db_flight_logs = smol::block_on(async { self.get_simulation_data_async(sim_id).await });
+        let snapshots = db_flight_logs
+            .into_iter()
+            .map(|fl| SnapShot {
+                duration: Duration::from_secs_f64(fl.end_seconds - fl.start_seconds),
+                motor_input: MotorInput {
+                    input: [
+                        fl.motor_input_1,
+                        fl.motor_input_2,
+                        fl.motor_input_3,
+                        fl.motor_input_4,
+                    ],
+                },
+                battery_update: BatteryUpdate {
+                    bat_voltage_sag: fl.battery_voltage_sag,
+                    bat_voltage: fl.battery_voltage,
+                    amperage: fl.amperage,
+                    m_ah_drawn: fl.mah_drawn,
+                    cell_count: fl.cell_count as u64,
+                },
+                gyro_update: GyroUpdate {
+                    rotation: [fl.rot_quat_w, fl.rot_quat_x, fl.rot_quat_y, fl.rot_quat_z],
+                    angular_velocity: [
+                        fl.angular_velocity_x,
+                        fl.angular_velocity_y,
+                        fl.angular_velocity_z,
+                    ],
+                    linear_acc: [
+                        fl.linear_acceleration_x,
+                        fl.linear_acceleration_y,
+                        fl.linear_acceleration_z,
+                    ],
+                },
+                channels: Channels {
+                    throttle: fl.throttle,
+                    yaw: fl.yaw,
+                    roll: fl.roll,
+                    pitch: fl.pitch,
+                },
+                // current_frame: SimulationFrame {
+                //     battery_state: BatteryState {
+                //         capacity: fl.,
+                //         bat_voltage: (),
+                //         bat_voltage_sag: (),
+                //         amperage: (),
+                //         m_ah_drawn: (),
+                //     },
+                //     rotors_state: (),
+                //     drone_frame_state: (),
+                //     gyro_state: (),
+                // },
+            })
+            .collect();
+        FlightLog {
+            simulation_id: sim_id.to_owned(),
+            steps: snapshots,
+        }
     }
 
     fn get_replay_ids(&mut self) -> Vec<String> {
@@ -88,10 +145,10 @@ async fn select_drone_model_async(
     let query = query_as!(
         DBDroneModel,
         r#"
-                    SELECT *
-                    FROM drone_model 
-                    WHERE drone_model.id = ?
-            "#,
+            SELECT *
+            FROM drone_model 
+            WHERE drone_model.id = ?
+        "#,
         drone_id
     );
     let drone_model = query.fetch_one(trx.as_mut()).await.unwrap();
@@ -347,5 +404,14 @@ impl DBLoader {
             drone_model,
             gyro_model,
         }
+    }
+
+    async fn get_simulation_data_async(&mut self, sim_id: &str) -> Vec<DBFlightLog> {
+        let query = query_as!(
+            DBFlightLog,
+            r#"SELECT * from flight_log WHERE simulation_id = ? ORDER BY start_seconds asc"#,
+            sim_id
+        );
+        query.fetch_all(&mut self.conn).await.unwrap()
     }
 }

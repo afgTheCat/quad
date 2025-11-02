@@ -14,15 +14,15 @@ pub struct SnapShot {
     pub battery_update: BatteryUpdate,
     pub gyro_update: GyroUpdate,
     pub channels: Channels,
-    // TODO: this has a lot, I think this should be enough
-    pub current_frame: SimulationFrame,
+    // // TODO: this has a lot, I think this should be enough
+    // pub current_frame: SimulationFrame,
 }
 
 // This is what we need to save
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FlightLog {
-    simulation_id: String,
-    steps: Vec<SnapShot>,
+    pub simulation_id: String,
+    pub steps: Vec<SnapShot>,
 }
 
 pub trait Logger: Sync + Send + Any {

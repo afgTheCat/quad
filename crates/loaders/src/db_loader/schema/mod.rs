@@ -117,3 +117,33 @@ pub struct DBRcData {
     pub readout_coeff: Option<String>,
     pub readout_intercept: Option<String>,
 }
+
+pub struct DBFlightLog {
+    pub id: i64,
+    pub simulation_id: String,
+    pub start_seconds: f64,
+    pub end_seconds: f64, // TODO: do we need this? probbaly not
+    pub motor_input_1: f64,
+    pub motor_input_2: f64,
+    pub motor_input_3: f64,
+    pub motor_input_4: f64,
+    pub battery_voltage_sag: f64,
+    pub battery_voltage: f64,
+    pub amperage: f64,
+    pub mah_drawn: f64,
+    pub cell_count: i64,
+    pub rot_quat_x: f64,
+    pub rot_quat_y: f64,
+    pub rot_quat_z: f64,
+    pub rot_quat_w: f64,
+    pub linear_acceleration_x: f64,
+    pub linear_acceleration_y: f64,
+    pub linear_acceleration_z: f64,
+    pub angular_velocity_x: f64,
+    pub angular_velocity_y: f64,
+    pub angular_velocity_z: f64,
+    pub throttle: f64,
+    pub roll: f64,
+    pub pitch: f64,
+    pub yaw: f64,
+}
