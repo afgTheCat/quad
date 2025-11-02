@@ -1,6 +1,7 @@
-mod db_logger;
-mod file_logger;
-mod rerun_logger;
+pub mod db_logger;
+pub mod empty_logger;
+pub mod file_logger;
+pub mod rerun_logger;
 
 use drone::SimulationFrame;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};

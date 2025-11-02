@@ -83,7 +83,7 @@ pub fn build_data_set(
     training_size: usize,
     test_size: usize,
 ) {
-    let context = SimContext::default();
+    let mut context = SimContext::default();
     // let db = Arc::new(AscentDb::new("/home/gabor/ascent/quad/data.sqlite"));
     let training_inputs = (0..training_size)
         .map(|_| generate_all_axis(training_duration))

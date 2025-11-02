@@ -45,7 +45,7 @@ pub fn replay_loop(
     camera.target_focus = drone_translation;
 }
 
-pub fn enter_replay(context: Res<Context>, mut commands: Commands) {
+pub fn enter_replay(mut context: ResMut<Context>, mut commands: Commands) {
     let replay = context.try_load_replay().unwrap();
     commands.insert_resource(Replay(replay));
 }

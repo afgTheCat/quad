@@ -6,7 +6,9 @@ use std::{
 };
 
 use db::{simulation::DBFlightLog, AscentDb};
-use db2::{db_loader::DBLoader, file_loader::FileLoader, file_logger::FileLogger, DataAccessLayer};
+use loaders::file_loader::FileLoader;
+use loaders::{db_loader::DBLoader, DataAccessLayer};
+// use db2::{db_loader::DBLoader, file_loader::FileLoader, file_logger::FileLogger, DataAccessLayer};
 use drone::Drone;
 use flight_controller::{
     controllers::{
@@ -14,10 +16,16 @@ use flight_controller::{
     },
     Channels, FlightController,
 };
+use loggers::{
+    db_logger::DBLogger, empty_logger::EmptyLogger, file_logger::FileLogger,
+    rerun_logger::RerunLogger, Logger as LoggerTrait,
+};
 use simulator::Simulator;
 use simulator::{
-    loggers::{DBLogger, EmptyLogger, Logger as LoggerTrait, RerunLogger},
-    BatteryUpdate, MotorInput, Replayer,
+    // loggers::{DBLogger, EmptyLogger, Logger as LoggerTrait, RerunLogger},
+    BatteryUpdate,
+    MotorInput,
+    Replayer,
 };
 use uuid::Uuid;
 
@@ -38,21 +46,21 @@ pub enum Controller {
     NullController,    // no controller
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Loader {
     DBLoader(DBLoader),
     FileLoader(FileLoader),
 }
 
 impl Loader {
-    fn load_drone(&self, config_id: &str) -> Drone {
+    fn load_drone(&mut self, config_id: &str) -> Drone {
         match self {
             Self::DBLoader(loader) => loader.load_drone(config_id),
             Self::FileLoader(loader) => loader.load_drone(config_id),
         }
     }
 
-    fn load_res_controller(&self, controller_id: &str) -> ResController {
+    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
         match self {
             Self::DBLoader(loader) => loader.load_res_controller(controller_id),
             Self::FileLoader(loader) => loader.load_res_controller(controller_id),
@@ -128,7 +136,7 @@ impl SimContext {
         &self.contoller
     }
 
-    pub fn load_simulator(&self, config_id: &str) -> Simulator {
+    pub fn load_simulator(&mut self, config_id: &str) -> Simulator {
         let simulation_id = Uuid::new_v4().to_string();
         let drone = self.loader.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = match &self.contoller {
@@ -136,23 +144,12 @@ impl SimContext {
             Controller::Reservoir(res_id) => Arc::new(self.loader.load_res_controller(&res_id)),
             Controller::NullController => Arc::new(NullController::default()),
         };
-        let battery_state = &drone.current_frame.battery_state;
         let logger: Arc<Mutex<dyn LoggerTrait>> = match &self.logger_type {
             LoggerType::Db => {
                 let db = Arc::new(AscentDb::default());
                 Arc::new(Mutex::new(DBLogger::new(
-                    simulation_id.to_owned(),
-                    MotorInput::default(),
-                    BatteryUpdate {
-                        bat_voltage_sag: battery_state.bat_voltage_sag,
-                        bat_voltage: battery_state.bat_voltage,
-                        amperage: battery_state.amperage,
-                        m_ah_drawn: battery_state.m_ah_drawn,
-                        cell_count: drone.battery_model.quad_bat_cell_count,
-                    },
-                    drone.current_frame.gyro_state.gyro_update(),
-                    Channels::default(),
                     db.clone(),
+                    simulation_id.to_owned(),
                 )))
             }
             LoggerType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id.to_owned()))),
@@ -170,14 +167,14 @@ impl SimContext {
         }
     }
 
-    pub fn try_load_simulator(&self) -> Option<Simulator> {
-        let Some(config_id) = &self.config_id else {
+    pub fn try_load_simulator(&mut self) -> Option<Simulator> {
+        let Some(config_id) = self.config_id.clone() else {
             return None;
         };
-        Some(self.load_simulator(config_id))
+        Some(self.load_simulator(&config_id))
     }
 
-    pub fn load_replayer(&self, config_id: &str, replay_id: &str) -> Replayer {
+    pub fn load_replayer(&mut self, config_id: &str, replay_id: &str) -> Replayer {
         let drone = self.loader.load_drone(config_id);
         let sim_logs = self.loader.load_replay(replay_id);
         Replayer {
@@ -190,15 +187,17 @@ impl SimContext {
         }
     }
 
-    pub fn try_load_replay(&self) -> Option<Replayer> {
-        let (Some(config_id), Some(replay_id)) = (&self.config_id, &self.replay_id) else {
-            return None;
-        };
-        Some(self.load_replayer(&config_id, replay_id))
+    pub fn try_load_replay(&mut self) -> Option<Replayer> {
+        if let (Some(config_id), Some(replay_id)) = (self.config_id.clone(), self.replay_id.clone())
+        {
+            Some(self.load_replayer(&config_id, &replay_id))
+        } else {
+            None
+        }
     }
 
     pub fn load_replay_ids(&mut self) {
-        let replay_ids = match &self.loader {
+        let replay_ids = match &mut self.loader {
             Loader::DBLoader(db_loader) => db_loader.get_replay_ids(),
             Loader::FileLoader(file_loader) => file_loader.get_replay_ids(),
         };
@@ -206,7 +205,7 @@ impl SimContext {
     }
 
     pub fn load_res_controllers(&mut self) {
-        let reservoir_controler_ids = match &self.loader {
+        let reservoir_controler_ids = match &mut self.loader {
             Loader::DBLoader(db_loader) => db_loader.get_reservoir_controller_ids(),
             Loader::FileLoader(file_loader) => file_loader.get_reservoir_controller_ids(),
         };

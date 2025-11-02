@@ -1,5 +1,17 @@
 [workspace]
-members = ["crates/*"]
+# members = ["crates/*"]
+members = [
+  "crates/visualizer",
+  "crates/simulator",
+  "crates/sim_context",
+  "crates/flight_controller",
+  "crates/db",
+  "crates/res",
+  "crates/ridge",
+  "crates/drone",
+  "crates/loggers",
+  "crates/loaders"
+]
 resolver = "2"
 
 [workspace.dependencies]
@@ -11,9 +23,10 @@ flight_controller = { path = "crates/flight_controller" }
 db = { path = "crates/db" }
 res = { path = "crates/res" }
 ridge = { path = "crates/ridge" }
-db2 = { path = "crates/db2" }
+# db2 = { path = "crates/db2" }
 drone = { path = "crates/drone" }
 loggers = { path = "crates/loggers" }
+loaders = { path = "crates/loaders" }
 
 
 # external

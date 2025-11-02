@@ -35,12 +35,12 @@ impl FlightController for ResController {
 }
 
 impl ResController {
-    pub fn from_db(db: &AscentDb, id: &str) -> Self {
-        let drone_rc = DroneRc::read_from_db(id, db).unwrap();
-        Self {
-            model: Mutex::new(drone_rc),
-        }
-    }
+    // pub fn from_db(db: &AscentDb, id: &str) -> Self {
+    //     let drone_rc = DroneRc::read_from_db(id, db).unwrap();
+    //     Self {
+    //         model: Mutex::new(drone_rc),
+    //     }
+    // }
 }
 
 #[cfg(test)]

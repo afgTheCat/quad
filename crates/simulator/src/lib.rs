@@ -1,7 +1,7 @@
 // pub mod default_drone;
 // pub mod input_gen;
 // pub mod loader;
-pub mod loggers;
+// pub mod loggers;
 // pub mod low_pass_filter;
 // pub mod sample_curve;
 
@@ -11,7 +11,8 @@ use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
 };
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
-use loggers::Logger;
+use loggers::{empty_logger::EmptyLogger, Logger};
+// use loggers::Logger;
 use nalgebra::{Matrix3, Rotation3, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 // pub use sample_curve::{SampleCurve, SamplePoint};
@@ -22,7 +23,7 @@ use std::{
     time::Duration,
 };
 
-use crate::loggers::EmptyLogger;
+// use crate::loggers::EmptyLogger;
 
 pub const MAX_EFFECT_SPEED: f64 = 18.0;
 pub const AIR_RHO: f64 = 1.225;
@@ -139,7 +140,8 @@ impl Simulator {
             }
 
             let mut logger = self.logger.lock().unwrap();
-            logger.log_time_stamp(self.time, &self.drone, channels, call_fc);
+            // TODO: readd this!
+            // logger.log_time_stamp(self.time, &self.drone, channels, call_fc);
 
             self.time_accu -= self.dt;
             self.time += self.dt;

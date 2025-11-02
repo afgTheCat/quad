@@ -108,7 +108,7 @@ pub fn sim_loop(
 }
 
 // TODO: set it up according to the menu
-pub fn enter_simulation(mut commands: Commands, context: Res<Context>) {
+pub fn enter_simulation(mut commands: Commands, mut context: ResMut<Context>) {
     let mut simulation = context.try_load_simulator().unwrap();
     simulation.init();
     commands.insert_resource(Simulation(simulation));

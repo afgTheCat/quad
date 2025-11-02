@@ -7,6 +7,7 @@ use crate::DataAccessLayer;
 
 const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 
+#[derive(Debug, Default)]
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {

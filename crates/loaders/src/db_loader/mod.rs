@@ -20,6 +20,7 @@ use crate::{
     },
 };
 
+#[derive(Debug)]
 pub struct DBLoader {
     conn: sqlx::SqliteConnection,
 }

@@ -25,3 +25,17 @@ impl Drop for RerunLogger {
         self.rec.flush_blocking();
     }
 }
+
+impl RerunLogger {
+    pub fn new(simulation_id: String) -> Self {
+        let rec = rerun::RecordingStreamBuilder::new(simulation_id)
+            .spawn()
+            .unwrap();
+        rec.set_time_seconds("stable_time", 0f64);
+
+        Self {
+            counter: 1000, // just because we have a bunch of data
+            rec,
+        }
+    }
+}

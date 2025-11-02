@@ -3,8 +3,8 @@ use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
 use simulator::Simulator;
 
-mod db_loader;
-mod file_loader;
+pub mod db_loader;
+pub mod file_loader;
 
 pub trait DataAccessLayer: Send + Sync {
     // load a drone
