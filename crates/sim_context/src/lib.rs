@@ -5,28 +5,22 @@ use std::{
     time::Duration,
 };
 
-use db::{simulation::DBFlightLog, AscentDb};
-use loaders::file_loader::FileLoader;
-use loaders::{db_loader::DBLoader, DataAccessLayer};
-// use db2::{db_loader::DBLoader, file_loader::FileLoader, file_logger::FileLogger, DataAccessLayer};
+use db::simulation::DBFlightLog;
 use drone::Drone;
 use flight_controller::{
     controllers::{
         bf_controller::BFController, null_controller::NullController, res_controller::ResController,
     },
-    Channels, FlightController,
+    FlightController,
 };
+use loaders::file_loader::FileLoader;
+use loaders::{db_loader::DBLoader, DataAccessLayer};
 use loggers::{
     db_logger::DBLogger, empty_logger::EmptyLogger, file_logger::FileLogger,
     rerun_logger::RerunLogger, Logger as LoggerTrait,
 };
+use simulator::Replayer;
 use simulator::Simulator;
-use simulator::{
-    // loggers::{DBLogger, EmptyLogger, Logger as LoggerTrait, RerunLogger},
-    BatteryUpdate,
-    MotorInput,
-    Replayer,
-};
 use uuid::Uuid;
 
 #[derive(Default, Eq, PartialEq, Hash, Debug, Clone)]
@@ -145,13 +139,7 @@ impl SimContext {
             Controller::NullController => Arc::new(NullController::default()),
         };
         let logger: Arc<Mutex<dyn LoggerTrait>> = match &self.logger_type {
-            LoggerType::Db => {
-                let db = Arc::new(AscentDb::default());
-                Arc::new(Mutex::new(DBLogger::new(
-                    db.clone(),
-                    simulation_id.to_owned(),
-                )))
-            }
+            LoggerType::Db => Arc::new(Mutex::new(DBLogger::new(simulation_id.to_owned()))),
             LoggerType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id.to_owned()))),
             LoggerType::Empty => Arc::new(Mutex::new(EmptyLogger::default())),
             LoggerType::File => Arc::new(Mutex::new(FileLogger::new())),

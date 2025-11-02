@@ -9,3 +9,5 @@ drone.workspace = true
 db.workspace = true
 rerun.workspace = true
 serde.workspace = true
+sqlx.workspace = true
+smol.workspace = true

@@ -5367,6 +5367,8 @@ dependencies = [
  "flight_controller",
  "rerun",
  "serde",
+ "smol",
+ "sqlx",
 ]
 
 [[package]]

@@ -9,3 +9,13 @@ TODO:
   - use combo box with egui [DONE]
   - remove bindgen [DONE]
   - explore faer: https://github.com/sarah-quinones/faer-rs
+
+TODO:
+  - resurrect the whole project in order for me to be able to use my laptop
+      => remove diesel, too much code
+      => better structure
+      => get betaflight to be able to running
+      => test the thing real time
+      => test replay
+      => reproduce the initial test
+      => add new training infa

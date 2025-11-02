@@ -1,22 +1,27 @@
-use db::{AscentDb, simulation::DBNewFlightLog};
-use std::{sync::Arc, time::Duration};
-
 use crate::{Logger, SnapShot};
+use db::simulation::DBNewFlightLog;
+use sqlx::Connection;
+use sqlx::SqliteConnection;
+use sqlx::query;
+use std::time::Duration;
 
 pub struct DBLogger {
     pub data: Vec<DBNewFlightLog>,
-    pub db: Arc<AscentDb>,
     pub simulation_id: String,
     pub last_time_step: f64,
+    pub conn: SqliteConnection,
 }
 
 impl DBLogger {
-    pub fn new(db: Arc<AscentDb>, simulation_id: String) -> Self {
+    pub fn new(simulation_id: String) -> Self {
+        // TODO: get the locaction frfr
+        let conn =
+            smol::block_on(async { SqliteConnection::connect("sqlite::memory:").await.unwrap() });
         Self {
             data: vec![],
-            db,
             simulation_id,
             last_time_step: 0.,
+            conn,
         }
     }
 
@@ -51,6 +56,56 @@ impl DBLogger {
             yaw: snapshot.channels.yaw,
         });
     }
+
+    async fn write_flight_logs_async(&mut self) {
+        let mut trx = self.conn.begin().await.unwrap();
+        for flight_log in self.data.iter() {
+            let query = query!(
+                r#"
+                    INSERT INTO flight_log (
+                        simulation_id, start_seconds, end_seconds, motor_input_1, motor_input_2,
+                        motor_input_3, motor_input_4, battery_voltage_sag, battery_voltage, amperage,
+                        mah_drawn, cell_count, rot_quat_x, rot_quat_y, rot_quat_z, rot_quat_w,
+                        linear_acceleration_x, linear_acceleration_y, linear_acceleration_z,
+                        angular_velocity_x, angular_velocity_y, angular_velocity_z, throttle, roll, pitch, yaw
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    )"#,
+                self.simulation_id,
+                flight_log.start_seconds,
+                flight_log.end_seconds,
+                flight_log.motor_input_1,
+                flight_log.motor_input_2,
+                flight_log.motor_input_3,
+                flight_log.motor_input_4,
+                flight_log.battery_voltage_sag,
+                flight_log.battery_voltage,
+                flight_log.amperage,
+                flight_log.mah_drawn,
+                flight_log.cell_count,
+                flight_log.rot_quat_x,
+                flight_log.rot_quat_y,
+                flight_log.rot_quat_z,
+                flight_log.rot_quat_w,
+                flight_log.linear_acceleration_x,
+                flight_log.linear_acceleration_y,
+                flight_log.linear_acceleration_z,
+                flight_log.angular_velocity_x,
+                flight_log.angular_velocity_y,
+                flight_log.angular_velocity_z,
+                flight_log.throttle,
+                flight_log.roll,
+                flight_log.pitch,
+                flight_log.yaw,
+            );
+            query.execute(&mut *trx).await.unwrap();
+        }
+        trx.commit().await.unwrap();
+    }
+
+    fn write_flight_logs(&mut self) {
+        smol::block_on(async { self.write_flight_logs_async().await })
+    }
 }
 
 impl Logger for DBLogger {
@@ -62,6 +117,6 @@ impl Logger for DBLogger {
 
 impl Drop for DBLogger {
     fn drop(&mut self) {
-        self.db.write_flight_logs(&self.simulation_id, &self.data);
+        self.write_flight_logs();
     }
 }

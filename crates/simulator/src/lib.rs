@@ -23,8 +23,6 @@ use std::{
     time::Duration,
 };
 
-// use crate::loggers::EmptyLogger;
-
 pub const MAX_EFFECT_SPEED: f64 = 18.0;
 pub const AIR_RHO: f64 = 1.225;
 pub const GRAVITY: f64 = 9.81;
