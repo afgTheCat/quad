@@ -9,7 +9,7 @@ use loggers::{FlightLog, SnapShot};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use res::drone::DroneRc;
 use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
-use sqlx::{Connection, Sqlite, Transaction, query_as};
+use sqlx::{Connection, Sqlite, SqliteConnection, Transaction, query_as};
 use std::{sync::Mutex, time::Duration};
 
 use crate::{
@@ -22,7 +22,18 @@ use crate::{
 
 #[derive(Debug)]
 pub struct DBLoader {
-    conn: sqlx::SqliteConnection,
+    conn: SqliteConnection,
+}
+
+impl Default for DBLoader {
+    fn default() -> Self {
+        let conn = smol::block_on(async {
+            SqliteConnection::connect("sqlite://crates/db/schema.sqlite")
+                .await
+                .unwrap()
+        });
+        Self { conn }
+    }
 }
 
 impl DataAccessLayer for DBLoader {

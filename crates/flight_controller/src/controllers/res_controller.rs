@@ -45,14 +45,40 @@ impl ResController {
 
 #[cfg(test)]
 mod test {
-    use db::{simulation::DBNewFlightLog, AscentDb};
-    use nalgebra::DMatrix;
+    use db::{
+        simulation::{DBFlightLog, DBNewFlightLog},
+        AscentDb,
+    };
+    use nalgebra::{DMatrix, DVector};
     use res::{
         drone::DroneRc,
-        input::{db_fl_to_rc_input, db_fl_to_rc_output, FlightInput},
+        input::{db_fl_to_rc_output, FlightInput},
         representation::RepresentationType,
     };
     use ridge::RidgeRegression;
+
+    fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
+        DVector::from_row_slice(&[
+            fl.battery_voltage_sag,
+            fl.battery_voltage,
+            fl.amperage,
+            fl.mah_drawn,
+            fl.rot_quat_x,
+            fl.rot_quat_y,
+            fl.rot_quat_z,
+            fl.rot_quat_w,
+            fl.linear_acceleration_x,
+            fl.linear_acceleration_y,
+            fl.linear_acceleration_z,
+            fl.angular_velocity_x,
+            fl.angular_velocity_y,
+            fl.angular_velocity_z,
+            fl.throttle,
+            fl.roll,
+            fl.yaw,
+            fl.pitch,
+        ])
+    }
 
     #[test]
     fn train_thing() {
@@ -119,35 +145,35 @@ mod test {
     }
 
     // this is kinda bad, should not do it this way
-    #[test]
-    fn train_on_many() {
-        let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
-        let simulation_id = db.select_simulation_ids();
-        let tr_ids = simulation_id
-            .iter()
-            .filter(|id| id.starts_with("ds_id_1_tr"))
-            .cloned()
-            .collect::<Vec<_>>();
-
-        let mut drone_rc = DroneRc::new(
-            500,
-            0.3,
-            0.99,
-            0.2,
-            RepresentationType::Output(1.),
-            RidgeRegression::new(1.),
-        );
-        drone_rc.esn.set_input_weights(18);
-        for tr_id in tr_ids {
-            let flight_log = db.get_simulation_data(&tr_id);
-            let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
-            let data_points = DMatrix::from_columns(
-                &flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>(),
-            )
-            .transpose();
-            drone_rc.fit(Box::new(input.clone()), data_points);
-        }
-
-        drone_rc.save_model_to_db("combined_2".into(), &db);
-    }
+    // #[test]
+    // fn train_on_many() {
+    //     let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
+    //     let simulation_id = db.select_simulation_ids();
+    //     let tr_ids = simulation_id
+    //         .iter()
+    //         .filter(|id| id.starts_with("ds_id_1_tr"))
+    //         .cloned()
+    //         .collect::<Vec<_>>();
+    //
+    //     let mut drone_rc = DroneRc::new(
+    //         500,
+    //         0.3,
+    //         0.99,
+    //         0.2,
+    //         RepresentationType::Output(1.),
+    //         RidgeRegression::new(1.),
+    //     );
+    //     drone_rc.esn.set_input_weights(18);
+    //     for tr_id in tr_ids {
+    //         let flight_log = db.get_simulation_data(&tr_id);
+    //         let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
+    //         let data_points = DMatrix::from_columns(
+    //             &flight_log.iter().map(db_fl_to_rc_input).collect::<Vec<_>>(),
+    //         )
+    //         .transpose();
+    //         drone_rc.fit(Box::new(input.clone()), data_points);
+    //     }
+    //
+    //     drone_rc.save_model_to_db("combined_2".into(), &db);
+    // }
 }

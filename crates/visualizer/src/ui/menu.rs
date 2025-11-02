@@ -9,7 +9,7 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use sim_context::{Controller, LoggerType, SimContext};
+use sim_context::{Controller, Loader, LoaderType, LoggerType, SimContext};
 
 #[derive(Resource, Default, Clone, PartialEq)]
 pub enum UIState {
@@ -18,10 +18,12 @@ pub enum UIState {
     Replay {
         replay_id: Option<String>,
         controller: Option<Controller>,
+        loader: LoaderType,
     },
     Simulation {
         logger: Option<LoggerType>,
         controller: Option<Controller>,
+        loader: LoaderType,
     },
 }
 
@@ -39,10 +41,14 @@ impl UIState {
             Self::Menu => Self::Simulation {
                 logger: None,
                 controller: None,
+                loader: LoaderType::DB,
             },
-            Self::Replay { controller, .. } => Self::Simulation {
+            Self::Replay {
+                controller, loader, ..
+            } => Self::Simulation {
                 logger: None,
                 controller: controller.clone(),
+                loader: loader.clone(),
             },
             _ => self.clone(),
         }
@@ -53,11 +59,15 @@ impl UIState {
             Self::Menu => Self::Replay {
                 controller: None,
                 replay_id: None,
+                loader: LoaderType::DB,
             },
             Self::Replay { .. } => self.clone(),
-            Self::Simulation { controller, .. } => Self::Replay {
+            Self::Simulation {
+                controller, loader, ..
+            } => Self::Replay {
                 controller: controller.clone(),
                 replay_id: None,
+                loader: loader.clone(),
             },
         }
     }
@@ -153,24 +163,51 @@ pub fn main_menu_toggle(
         }
     });
 
+    ui.horizontal(|ui| {
+        ui.label("Loader:");
+
+        let loader = match ui_state {
+            UIState::Replay { loader, .. } => loader,
+            UIState::Simulation { loader, .. } => loader,
+            _ => {
+                ui.label("Select mode first!");
+                return;
+            }
+        };
+        let label = match loader {
+            LoaderType::DB => format!("Loader"),
+            LoaderType::File => format!("File"),
+        };
+        egui::ComboBox::from_id_salt("Loader selector")
+            .selected_text(label)
+            .show_ui(ui, |ui| {
+                ui.selectable_value(loader, LoaderType::DB, "DB");
+                ui.selectable_value(loader, LoaderType::File, "File");
+            });
+    });
+
     if ui.button("Apply").clicked() {
         match &ui_state {
             UIState::Simulation {
                 logger: Some(logger),
                 controller: Some(controller),
+                loader,
             } => {
+                context.set_loader(loader);
                 // needs to be created
                 context.set_logger_type(logger.clone());
                 // needs to be created
-                context.set_contoller(controller.clone());
+                context.set_controller(controller.clone());
                 next_visualizer_state.set(VisualizerState::Simulation);
             }
             UIState::Replay {
                 replay_id: Some(replay_id),
                 controller: Some(controller),
+                loader,
             } => {
+                context.set_loader(loader);
                 context.set_replay_id(replay_id.to_owned());
-                context.set_contoller(controller.clone());
+                context.set_controller(controller.clone());
                 next_visualizer_state.set(VisualizerState::Replay);
             }
             _ => {

@@ -6,7 +6,6 @@ resolver = "2"
 
 [dependencies]
 nalgebra.workspace = true
-# db.workspace = true
 ridge.workspace = true
 matfile = { version = "0.5.0", features = ["ndarray"] } 
 rand = "0.8.5"

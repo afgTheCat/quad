@@ -1,6 +1,7 @@
 mod input_gen;
 
 use std::{
+    fs::File,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -72,13 +73,29 @@ impl Default for Loader {
     }
 }
 
+#[derive(Default, Clone, PartialEq)]
+pub enum LoaderType {
+    DB,
+    #[default]
+    File,
+}
+
+impl LoaderType {
+    fn to_loader(&self) -> Loader {
+        match self {
+            Self::DB => Loader::DBLoader(DBLoader::default()),
+            Self::File => Loader::FileLoader(FileLoader::default()),
+        }
+    }
+}
+
 // #[derive(Default)]
 #[derive(Debug)]
 pub struct SimContext {
     // what kind of logger should be loaded
     logger_type: LoggerType,
     // what kind of flight controller we want to use
-    contoller: Controller,
+    controller: Controller,
     // loaders
     loader: Loader,
     // Replay ids
@@ -95,7 +112,7 @@ impl Default for SimContext {
     fn default() -> Self {
         let mut sim_context = SimContext {
             logger_type: Default::default(),
-            contoller: Default::default(),
+            controller: Default::default(),
             loader: Default::default(),
             replay_ids: Default::default(),
             reservoir_controller_ids: Default::default(),
@@ -108,8 +125,8 @@ impl Default for SimContext {
 }
 
 impl SimContext {
-    pub fn set_loader(&mut self, loader: Loader) {
-        self.loader = loader;
+    pub fn set_loader(&mut self, loader_type: &LoaderType) {
+        self.loader = loader_type.to_loader();
         self.load_replay_ids();
         self.load_res_controllers();
     }
@@ -118,8 +135,8 @@ impl SimContext {
         self.logger_type = logger_type;
     }
 
-    pub fn set_contoller(&mut self, contoller: Controller) {
-        self.contoller = contoller;
+    pub fn set_controller(&mut self, controller: Controller) {
+        self.controller = controller;
     }
 
     pub fn logger_type(&self) -> &LoggerType {
@@ -127,13 +144,13 @@ impl SimContext {
     }
 
     pub fn contoller(&self) -> &Controller {
-        &self.contoller
+        &self.controller
     }
 
     pub fn load_simulator(&mut self, config_id: &str) -> Simulator {
         let simulation_id = Uuid::new_v4().to_string();
         let drone = self.loader.load_drone(config_id);
-        let flight_controller: Arc<dyn FlightController> = match &self.contoller {
+        let flight_controller: Arc<dyn FlightController> = match &self.controller {
             Controller::Betafligt => Arc::new(BFController::default()),
             Controller::Reservoir(res_id) => Arc::new(self.loader.load_res_controller(&res_id)),
             Controller::NullController => Arc::new(NullController::default()),
