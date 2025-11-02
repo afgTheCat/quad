@@ -105,3 +105,15 @@ pub struct DBSimulationFrame {
     pub gyro_low_pass_filter_2: i64,
     pub gyro_low_pass_filter_3: i64,
 }
+
+pub struct DBRcData {
+    pub id: i64,
+    pub rc_id: String,
+    pub n_internal_units: i64,
+    pub input_scaling: f64,
+    pub internal_weights: String,
+    pub input_weights: Option<String>,
+    pub alpha: f64,
+    pub readout_coeff: Option<String>,
+    pub readout_intercept: Option<String>,
+}

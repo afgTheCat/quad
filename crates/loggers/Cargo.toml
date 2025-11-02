@@ -8,3 +8,4 @@ flight_controller.workspace = true
 drone.workspace = true
 db.workspace = true
 rerun.workspace = true
+serde.workspace = true

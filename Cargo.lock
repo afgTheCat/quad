@@ -3730,6 +3730,7 @@ dependencies = [
  "once_cell",
  "res",
  "ridge",
+ "serde",
  "tempfile",
  "uuid",
 ]
@@ -5335,6 +5336,7 @@ dependencies = [
  "futures",
  "loggers",
  "nalgebra",
+ "res",
  "rusqlite",
  "serde_json",
  "simulator",
@@ -5376,6 +5378,7 @@ dependencies = [
  "drone",
  "flight_controller",
  "rerun",
+ "serde",
 ]
 
 [[package]]

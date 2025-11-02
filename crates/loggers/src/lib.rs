@@ -4,8 +4,10 @@ mod rerun_logger;
 
 use drone::SimulationFrame;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
+use serde::{Deserialize, Serialize};
 use std::{any::Any, time::Duration};
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SnapShot {
     pub duration: Duration,
     pub motor_input: MotorInput,
@@ -17,6 +19,7 @@ pub struct SnapShot {
 }
 
 // This is what we need to save
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FlightLog {
     simulation_id: String,
     steps: Vec<SnapShot>,

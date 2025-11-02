@@ -10,7 +10,7 @@ const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
-    fn load_drone(&self, config_id: &str) -> Drone {
+    fn load_drone(&mut self, config_id: &str) -> Drone {
         let mut simulation = PathBuf::from(LOADER_PATH);
         simulation.push("drones/");
         fs::create_dir_all(&simulation).unwrap();
@@ -19,12 +19,12 @@ impl DataAccessLayer for FileLoader {
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
-    fn load_simulation(&self, config_id: &str) -> simulator::Simulator {
+    fn load_simulation(&mut self, config_id: &str) -> simulator::Simulator {
         let drone = self.load_drone(config_id);
         Simulator::default_from_drone(drone)
     }
 
-    fn load_replay(&self, sim_id: &str) -> loggers::FlightLog {
+    fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
         todo!()
     }
 
@@ -38,7 +38,7 @@ impl DataAccessLayer for FileLoader {
     // }
 
     // just list the file names in the loader.
-    fn get_replay_ids(&self) -> Vec<String> {
+    fn get_replay_ids(&mut self) -> Vec<String> {
         let mut simulation_dir = PathBuf::from(LOADER_PATH);
         // TODO: are these the replays
         simulation_dir.push("replays/");
@@ -50,7 +50,7 @@ impl DataAccessLayer for FileLoader {
             .collect::<Vec<_>>()
     }
 
-    fn get_reservoir_controller_ids(&self) -> Vec<String> {
+    fn get_reservoir_controller_ids(&mut self) -> Vec<String> {
         let mut reservoir_dir = PathBuf::from(LOADER_PATH);
         reservoir_dir.push("reservoirs/");
         fs::create_dir_all(&reservoir_dir).unwrap();
@@ -61,7 +61,7 @@ impl DataAccessLayer for FileLoader {
             .collect::<Vec<_>>()
     }
 
-    fn load_res_controller(&self, controller_id: &str) -> ResController {
+    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
         todo!()
     }
 }

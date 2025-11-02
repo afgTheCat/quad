@@ -1,9 +1,10 @@
 use nalgebra::DVector;
+use serde::{Deserialize, Serialize};
 use std::{ops::Index, time::Duration};
 
 pub mod controllers;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MotorInput {
     pub input: [f64; 4],
 }
@@ -16,7 +17,7 @@ impl Index<usize> for MotorInput {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct BatteryUpdate {
     pub bat_voltage_sag: f64,
     pub bat_voltage: f64,
@@ -25,7 +26,7 @@ pub struct BatteryUpdate {
     pub cell_count: u64,
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct GyroUpdate {
     pub rotation: [f64; 4], // so far it was w, i, j, k
     pub linear_acc: [f64; 3],
@@ -33,7 +34,7 @@ pub struct GyroUpdate {
 }
 
 // each channel between -1 and 1
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Channels {
     pub throttle: f64,
     pub roll: f64,

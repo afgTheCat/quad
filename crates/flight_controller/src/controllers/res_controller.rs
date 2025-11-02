@@ -6,7 +6,7 @@ use res::{drone::DroneRc, input::FlightInput};
 use crate::{FlightController, MotorInput};
 
 pub struct ResController {
-    model: Mutex<DroneRc>,
+    pub model: Mutex<DroneRc>,
 }
 
 impl FlightController for ResController {
