@@ -16,11 +16,12 @@ csv.workspace = true
 serde.workspace = true
 rusqlite.workspace = true
 uuid.workspace = true
-db.workspace = true
+# db.workspace = true
 drone.workspace = true
 rayon = "1.10.0"
 derive_more.workspace = true
 loggers.workspace = true
+db_common.workspace = true
 
 [features]
 default = []

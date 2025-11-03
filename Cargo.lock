@@ -2780,18 +2780,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c297a1c74b71ae29df00c3e22dd9534821d60eb9af5a0192823fa2acea70c2a"
 
 [[package]]
-name = "db"
+name = "db_common"
 version = "0.1.0"
-dependencies = [
- "derive_more",
- "diesel",
- "futures",
- "nalgebra",
- "rusqlite",
- "serde",
- "smol",
- "sqlx",
-]
 
 [[package]]
 name = "der"
@@ -3709,7 +3699,7 @@ name = "flight_controller"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "db",
+ "db_common",
  "dlopen2",
  "libc",
  "libloading 0.8.6",
@@ -5317,6 +5307,7 @@ checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
 name = "loaders"
 version = "0.1.0"
 dependencies = [
+ "db_common",
  "derive_more",
  "diesel",
  "drone",
@@ -5362,7 +5353,7 @@ dependencies = [
 name = "loggers"
 version = "0.1.0"
 dependencies = [
- "db",
+ "db_common",
  "drone",
  "flight_controller",
  "rerun",
@@ -8584,6 +8575,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "bincode",
+ "db_common",
  "matfile",
  "nalgebra",
  "pyo3",
@@ -8592,6 +8584,18 @@ dependencies = [
  "ridge",
  "serde",
  "smartcore",
+]
+
+[[package]]
+name = "res_controller"
+version = "0.1.0"
+dependencies = [
+ "db_common",
+ "flight_controller",
+ "nalgebra",
+ "res",
+ "ridge",
+ "sim_context",
 ]
 
 [[package]]
@@ -9119,7 +9123,7 @@ name = "sim_context"
 version = "0.1.0"
 dependencies = [
  "csv",
- "db",
+ "db_common",
  "drone",
  "flight_controller",
  "loaders",
@@ -9188,7 +9192,7 @@ name = "simulator"
 version = "0.1.0"
 dependencies = [
  "csv",
- "db",
+ "db_common",
  "derive_more",
  "drone",
  "flight_controller",

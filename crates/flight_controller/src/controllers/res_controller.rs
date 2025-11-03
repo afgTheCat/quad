@@ -1,4 +1,3 @@
-use db::AscentDb;
 use std::{sync::Mutex, time::Duration};
 // This is going to be the rc based flight controller after training
 use res::{drone::DroneRc, input::FlightInput};
@@ -45,10 +44,11 @@ impl ResController {
 
 #[cfg(test)]
 mod test {
-    use db::{
-        simulation::{DBFlightLog, DBNewFlightLog},
-        AscentDb,
-    };
+    use db_common::DBFlightLog;
+    // use db::{
+    //     simulation::{DBFlightLog, DBNewFlightLog},
+    //     AscentDb,
+    // };
     use nalgebra::{DMatrix, DVector};
     use res::{
         drone::DroneRc,
@@ -82,6 +82,7 @@ mod test {
 
     #[test]
     fn train_thing() {
+        let sim_context = SimContext::default();
         let db = AscentDb::new("/home/gabor/ascent/quad/data.sqlite");
         let flight_log = db.get_simulation_data(&"86a9dd7f-f730-40cb-8fe8-e5a076867545");
         let mut drone_rc = DroneRc::new(

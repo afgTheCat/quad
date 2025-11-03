@@ -5,13 +5,14 @@ members = [
   "crates/simulator",
   "crates/sim_context",
   "crates/flight_controller",
-  "crates/db",
+  # "crates/db",
   "crates/res",
   "crates/ridge",
   "crates/drone",
   "crates/loggers",
-  "crates/loaders"
-]
+  "crates/loaders", 
+  "crates/db_common"
+, "crates/res_controller"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -20,13 +21,13 @@ visualizer = { path = "crates/visualizer" }
 simulator = { path = "crates/simulator" }
 sim_context = { path = "crates/sim_context" }
 flight_controller = { path = "crates/flight_controller" }
-db = { path = "crates/db" }
+# db = { path = "crates/db" }
 res = { path = "crates/res" }
 ridge = { path = "crates/ridge" }
-# db2 = { path = "crates/db2" }
 drone = { path = "crates/drone" }
 loggers = { path = "crates/loggers" }
 loaders = { path = "crates/loaders" }
+db_common = { path = "crates/db_common" }
 
 
 # external

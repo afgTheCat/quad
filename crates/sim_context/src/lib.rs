@@ -1,12 +1,11 @@
 mod input_gen;
 
 use std::{
-    fs::File,
     sync::{Arc, Mutex},
     time::Duration,
 };
 
-use db::simulation::DBFlightLog;
+use db_common::{DBFlightLog, NewDBRcData};
 use drone::Drone;
 use flight_controller::{
     controllers::{
@@ -48,21 +47,21 @@ pub enum Loader {
 }
 
 impl Loader {
-    fn load_drone(&mut self, config_id: &str) -> Drone {
+    pub fn load_drone(&mut self, config_id: &str) -> Drone {
         match self {
             Self::DBLoader(loader) => loader.load_drone(config_id),
             Self::FileLoader(loader) => loader.load_drone(config_id),
         }
     }
 
-    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
+    pub fn load_res_controller(&mut self, controller_id: &str) -> ResController {
         match self {
             Self::DBLoader(loader) => loader.load_res_controller(controller_id),
             Self::FileLoader(loader) => loader.load_res_controller(controller_id),
         }
     }
 
-    fn load_replay(&self, replay_id: &str) -> Vec<DBFlightLog> {
+    pub fn load_replay(&self, replay_id: &str) -> Vec<DBFlightLog> {
         todo!()
     }
 }
@@ -93,19 +92,19 @@ impl LoaderType {
 #[derive(Debug)]
 pub struct SimContext {
     // what kind of logger should be loaded
-    logger_type: LoggerType,
+    pub logger_type: LoggerType,
     // what kind of flight controller we want to use
-    controller: Controller,
+    pub controller: Controller,
     // loaders
-    loader: Loader,
+    pub loader: Loader,
     // Replay ids
     pub replay_ids: Vec<String>,
     // Res controller ids
     pub reservoir_controller_ids: Vec<String>,
     // Selected replay id
-    replay_id: Option<String>,
+    pub replay_id: Option<String>,
     // Config id
-    config_id: Option<String>,
+    pub config_id: Option<String>,
 }
 
 impl Default for SimContext {
@@ -225,4 +224,6 @@ impl SimContext {
     pub fn set_replay_id(&mut self, replay_id: String) {
         self.replay_id = Some(replay_id);
     }
+
+    pub fn insert_reservoir(&mut self, res: NewDBRcData) {}
 }

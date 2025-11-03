@@ -5,7 +5,8 @@
 // pub mod low_pass_filter;
 // pub mod sample_curve;
 
-use db::simulation::DBFlightLog;
+use db_common::DBFlightLog;
+// use db::simulation::DBFlightLog;
 use drone::{Drone, SimulationFrame};
 use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,

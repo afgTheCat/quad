@@ -65,4 +65,8 @@ impl DataAccessLayer for FileLoader {
     fn load_res_controller(&mut self, controller_id: &str) -> ResController {
         todo!()
     }
+
+    fn insert_reservoir(&mut self, res: db_common::NewDBRcData) {
+        todo!()
+    }
 }

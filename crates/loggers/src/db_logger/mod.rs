@@ -1,5 +1,5 @@
 use crate::{Logger, SnapShot};
-use db::simulation::DBNewFlightLog;
+use db_common::DBNewFlightLog;
 use sqlx::Connection;
 use sqlx::SqliteConnection;
 use sqlx::query;

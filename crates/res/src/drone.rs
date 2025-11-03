@@ -4,7 +4,7 @@ use crate::{
     reservoir::Esn,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
-// use db::{AscentDb, DBRcData, NewDBRcData};
+use db_common::{DBRcData, NewDBRcData};
 use nalgebra::DMatrix;
 use ridge::{RidgeRegression, RidgeRegressionSol};
 
@@ -53,74 +53,74 @@ impl DroneRc {
         self.readout.predict(res_states[0].clone())
     }
 
-    // pub fn from_db(db_data: DBRcData) -> Self {
-    //     let internal_weights_decoded = BASE64_STANDARD.decode(db_data.internal_weights).unwrap();
-    //     let internal_weights: DMatrix<f64> =
-    //         bincode::deserialize(&internal_weights_decoded).unwrap();
-    //     let input_weights = if let Some(input_weights) = db_data.input_weights {
-    //         let input_weights = BASE64_STANDARD.decode(input_weights).unwrap();
-    //         Some(bincode::deserialize(&input_weights).unwrap())
-    //     } else {
-    //         None
-    //     };
-    //     let esn = Esn {
-    //         n_internal_units: db_data.n_internal_units as usize,
-    //         input_scaling: db_data.input_scaling,
-    //         internal_weights,
-    //         input_weights,
-    //     };
-    //     let sol = match (db_data.readout_coeff, db_data.readout_intercept) {
-    //         (Some(coeff), Some(intercept)) => {
-    //             let coeff_decoded = BASE64_STANDARD.decode(coeff).unwrap();
-    //             let intercept_decoded = BASE64_STANDARD.decode(intercept).unwrap();
-    //             Some(RidgeRegressionSol {
-    //                 coeff: bincode::deserialize(&coeff_decoded).unwrap(),
-    //                 intercept: bincode::deserialize(&intercept_decoded).unwrap(),
-    //             })
-    //         }
-    //         _ => None,
-    //     };
-    //     let readout = RidgeRegression {
-    //         alpha: db_data.alpha,
-    //         sol,
-    //     };
-    //     DroneRc {
-    //         esn,
-    //         representation: Box::new(OutputRepr::new(1.)),
-    //         readout,
-    //     }
-    // }
+    pub fn from_db(db_data: DBRcData) -> Self {
+        let internal_weights_decoded = BASE64_STANDARD.decode(db_data.internal_weights).unwrap();
+        let internal_weights: DMatrix<f64> =
+            bincode::deserialize(&internal_weights_decoded).unwrap();
+        let input_weights = if let Some(input_weights) = db_data.input_weights {
+            let input_weights = BASE64_STANDARD.decode(input_weights).unwrap();
+            Some(bincode::deserialize(&input_weights).unwrap())
+        } else {
+            None
+        };
+        let esn = Esn {
+            n_internal_units: db_data.n_internal_units as usize,
+            input_scaling: db_data.input_scaling,
+            internal_weights,
+            input_weights,
+        };
+        let sol = match (db_data.readout_coeff, db_data.readout_intercept) {
+            (Some(coeff), Some(intercept)) => {
+                let coeff_decoded = BASE64_STANDARD.decode(coeff).unwrap();
+                let intercept_decoded = BASE64_STANDARD.decode(intercept).unwrap();
+                Some(RidgeRegressionSol {
+                    coeff: bincode::deserialize(&coeff_decoded).unwrap(),
+                    intercept: bincode::deserialize(&intercept_decoded).unwrap(),
+                })
+            }
+            _ => None,
+        };
+        let readout = RidgeRegression {
+            alpha: db_data.alpha,
+            sol,
+        };
+        DroneRc {
+            esn,
+            representation: Box::new(OutputRepr::new(1.)),
+            readout,
+        }
+    }
 
     // pub fn read_from_db(reservoir_id: &str, db: &AscentDb) -> Option<Self> {
     //     let db_data = db.select_reservoir(reservoir_id)?;
     //     Some(Self::from_db(db_data))
     // }
 
-    // pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcData {
-    //     let internal_weights_serialized =
-    //         BASE64_STANDARD.encode(bincode::serialize(&self.esn.internal_weights).unwrap());
-    //     let input_weights_serialized = self.esn.input_weights.as_ref().map(|input_weights| {
-    //         BASE64_STANDARD.encode(bincode::serialize(input_weights).unwrap())
-    //     });
-    //     let (coeff, intercept) = if let Some(sol) = &self.readout.sol {
-    //         (
-    //             Some(BASE64_STANDARD.encode(bincode::serialize(&sol.coeff).unwrap())),
-    //             Some(BASE64_STANDARD.encode(bincode::serialize(&sol.intercept).unwrap())),
-    //         )
-    //     } else {
-    //         (None, None)
-    //     };
-    //     NewDBRcData {
-    //         rc_id: reservoir_id,
-    //         input_scaling: self.esn.input_scaling,
-    //         n_internal_units: self.esn.n_internal_units as i64,
-    //         internal_weights: internal_weights_serialized,
-    //         input_weights: input_weights_serialized,
-    //         alpha: self.readout.alpha,
-    //         readout_intercept: intercept,
-    //         readout_coeff: coeff,
-    //     }
-    // }
+    pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcData {
+        let internal_weights_serialized =
+            BASE64_STANDARD.encode(bincode::serialize(&self.esn.internal_weights).unwrap());
+        let input_weights_serialized = self.esn.input_weights.as_ref().map(|input_weights| {
+            BASE64_STANDARD.encode(bincode::serialize(input_weights).unwrap())
+        });
+        let (coeff, intercept) = if let Some(sol) = &self.readout.sol {
+            (
+                Some(BASE64_STANDARD.encode(bincode::serialize(&sol.coeff).unwrap())),
+                Some(BASE64_STANDARD.encode(bincode::serialize(&sol.intercept).unwrap())),
+            )
+        } else {
+            (None, None)
+        };
+        NewDBRcData {
+            rc_id: reservoir_id,
+            input_scaling: self.esn.input_scaling,
+            n_internal_units: self.esn.n_internal_units as i64,
+            internal_weights: internal_weights_serialized,
+            input_weights: input_weights_serialized,
+            alpha: self.readout.alpha,
+            readout_intercept: intercept,
+            readout_coeff: coeff,
+        }
+    }
 
     // pub fn save_model_to_db(&self, reservoir_id: String, db: &AscentDb) {
     //     let new_db_rc_data = self.to_new_db(reservoir_id);

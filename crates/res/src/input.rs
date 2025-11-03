@@ -1,3 +1,4 @@
+use db_common::DBFlightLog;
 // use db::simulation::DBFlightLog;
 use matfile::{Array, NumericData};
 use nalgebra::{DMatrix, DVector};
@@ -88,37 +89,37 @@ pub struct FlightInput {
     data: Vec<DMatrix<f64>>,
 }
 
-// pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
-//     DVector::from_row_slice(&[
-//         fl.battery_voltage_sag,
-//         fl.battery_voltage,
-//         fl.amperage,
-//         fl.mah_drawn,
-//         fl.rot_quat_x,
-//         fl.rot_quat_y,
-//         fl.rot_quat_z,
-//         fl.rot_quat_w,
-//         fl.linear_acceleration_x,
-//         fl.linear_acceleration_y,
-//         fl.linear_acceleration_z,
-//         fl.angular_velocity_x,
-//         fl.angular_velocity_y,
-//         fl.angular_velocity_z,
-//         fl.throttle,
-//         fl.roll,
-//         fl.yaw,
-//         fl.pitch,
-//     ])
-// }
+pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
+    DVector::from_row_slice(&[
+        fl.battery_voltage_sag,
+        fl.battery_voltage,
+        fl.amperage,
+        fl.mah_drawn,
+        fl.rot_quat_x,
+        fl.rot_quat_y,
+        fl.rot_quat_z,
+        fl.rot_quat_w,
+        fl.linear_acceleration_x,
+        fl.linear_acceleration_y,
+        fl.linear_acceleration_z,
+        fl.angular_velocity_x,
+        fl.angular_velocity_y,
+        fl.angular_velocity_z,
+        fl.throttle,
+        fl.roll,
+        fl.yaw,
+        fl.pitch,
+    ])
+}
 
-// pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
-//     DVector::from_row_slice(&[
-//         fl.motor_input_1,
-//         fl.motor_input_2,
-//         fl.motor_input_3,
-//         fl.motor_input_4,
-//     ])
-// }
+pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
+    DVector::from_row_slice(&[
+        fl.motor_input_1,
+        fl.motor_input_2,
+        fl.motor_input_3,
+        fl.motor_input_4,
+    ])
+}
 
 impl FlightInput {
     pub fn new_from_db_fl_log(flight_logs: Vec<Vec<DBFlightLog>>) -> Self {

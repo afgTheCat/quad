@@ -1,5 +1,9 @@
-mod schema;
+// mod schema;
 
+use db_common::{
+    DBDroneModel, DBFlightLog, DBLowPassFilter, DBRcData, DBRotorState, DBSamplePoint,
+    DBSimulationFrame, NewDBRcData,
+};
 use drone::{
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     LowPassFilter, RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame,
@@ -9,16 +13,10 @@ use loggers::{FlightLog, SnapShot};
 use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use res::drone::DroneRc;
 use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
-use sqlx::{Connection, Sqlite, SqliteConnection, Transaction, query_as};
+use sqlx::{Connection, Sqlite, SqliteConnection, Transaction, query, query_as};
 use std::{sync::Mutex, time::Duration};
 
-use crate::{
-    DataAccessLayer,
-    db_loader::schema::{
-        DBDroneModel, DBFlightLog, DBLowPassFilter, DBRcData, DBRotorState, DBSamplePoint,
-        DBSimulationFrame,
-    },
-};
+use crate::DataAccessLayer;
 
 #[derive(Debug)]
 pub struct DBLoader {
@@ -124,6 +122,12 @@ impl DataAccessLayer for DBLoader {
             model: Mutex::new(drone_rc),
         }
     }
+
+    fn insert_reservoir(&mut self, res: NewDBRcData) {
+        smol::block_on(async {
+            self.insert_reservoir_async(res).await;
+        })
+    }
 }
 
 async fn fetch_lpf(trx: &mut Transaction<'_, Sqlite>, id: i64) -> DBLowPassFilter {
@@ -207,6 +211,24 @@ pub fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilte
 }
 
 impl DBLoader {
+    async fn insert_reservoir_async(&mut self, res: NewDBRcData) {
+        let q = query!(
+            r#"
+                    INSERT INTO rc_model (rc_id, n_internal_units, input_scaling, internal_weights, input_weights, alpha, readout_coeff, readout_intercept)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            "#,
+            res.rc_id,
+            res.n_internal_units,
+            res.input_scaling,
+            res.internal_weights,
+            res.input_weights,
+            res.alpha,
+            res.readout_coeff,
+            res.readout_intercept
+        );
+        q.execute(&mut self.conn).await.unwrap();
+    }
+
     async fn load_replay_ids_async(&mut self) -> Vec<String> {
         struct SimulationId {
             simulation_id: String, // TODO: this should be string

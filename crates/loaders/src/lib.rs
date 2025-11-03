@@ -1,3 +1,4 @@
+use db_common::NewDBRcData;
 use drone::Drone;
 use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
@@ -25,4 +26,7 @@ pub trait DataAccessLayer: Send + Sync {
 
     // Load reservoir controller
     fn load_res_controller(&mut self, controller_id: &str) -> ResController;
+
+    // Insert a new reservoir
+    fn insert_reservoir(&mut self, res: NewDBRcData);
 }

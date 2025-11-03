@@ -1,0 +1,12 @@
+[package]
+name = "res_controller"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sim_context.workspace = true
+flight_controller.workspace = true
+res.workspace = true
+ridge.workspace = true
+nalgebra.workspace = true
+db_common.workspace = true
