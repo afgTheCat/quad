@@ -91,11 +91,6 @@ impl DroneRc {
         }
     }
 
-    // pub fn read_from_db(reservoir_id: &str, db: &AscentDb) -> Option<Self> {
-    //     let db_data = db.select_reservoir(reservoir_id)?;
-    //     Some(Self::from_db(db_data))
-    // }
-
     pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcData {
         let internal_weights_serialized =
             BASE64_STANDARD.encode(bincode::serialize(&self.esn.internal_weights).unwrap());
@@ -122,6 +117,11 @@ impl DroneRc {
         }
     }
 
+    // pub fn read_from_db(reservoir_id: &str, db: &AscentDb) -> Option<Self> {
+    //     let db_data = db.select_reservoir(reservoir_id)?;
+    //     Some(Self::from_db(db_data))
+    // }
+    //
     // pub fn save_model_to_db(&self, reservoir_id: String, db: &AscentDb) {
     //     let new_db_rc_data = self.to_new_db(reservoir_id);
     //     db.insert_reservoir(new_db_rc_data);

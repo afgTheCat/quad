@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use db_common::{DBFlightLog, NewDBRcData};
+use db_common::{DBFlightLog, DBNewFlightLog, DBRcData, NewDBRcData};
 use drone::Drone;
 use flight_controller::{
     controllers::{
@@ -225,5 +225,15 @@ impl SimContext {
         self.replay_id = Some(replay_id);
     }
 
-    pub fn insert_reservoir(&mut self, res: NewDBRcData) {}
+    pub fn insert_reservoir(&mut self, res: NewDBRcData) {
+        todo!()
+    }
+
+    pub fn select_reservoir(&mut self, id: &str) -> DBRcData {
+        todo!()
+    }
+
+    pub fn insert_logs(&mut self, id: &str, flight_logs: Vec<DBNewFlightLog>) {
+        todo!()
+    }
 }
