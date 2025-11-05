@@ -1,5 +1,3 @@
-// mod schema;
-
 use db_common::{DBLowPassFilter, DBRotorState, NewDBRcModel, queries::TestingDB};
 use drone::{
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,

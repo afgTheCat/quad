@@ -82,7 +82,7 @@ mod test {
         let default_drone = default_7in_4s_drone();
         let serialized = serde_json::to_string(&default_drone).unwrap();
         let mut drone_path = PathBuf::from(LOADER_PATH);
-        drone_path.push("drones/7in_4s.json");
+        drone_path.push("drones/7in_4s_drone.json");
         fs::write(drone_path, serialized).unwrap();
     }
 }
