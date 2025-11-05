@@ -43,8 +43,7 @@ pub struct DBLoader {
 impl DataAccessLayer for DBLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
         let mut db = self.db.lock().unwrap();
-        // TODO: config shit
-        let frame = db.fetch_simulation_frame(1);
+        let frame = db.fetch_simulation_frame(config_id);
         let rotor1_state = db.fetch_rotor_state(frame.rotor_1_state);
         let pwm_filter_1_state = db.fetch_lpf(rotor1_state.pwm_low_pass_filter);
         let rotor2_state = db.fetch_rotor_state(frame.rotor_2_state);
@@ -130,13 +129,13 @@ impl DataAccessLayer for DBLoader {
             gyro_state,
         };
         let next_frame = current_frame.clone();
-        let drone_model = db.fetch_drone_model(1); // TODO: change this
+        let drone_model = db.fetch_drone_model(config_id);
         let motor_lpf1 = db.fetch_lpf(drone_model.motor_1_lpf);
         let motor_lpf2 = db.fetch_lpf(drone_model.motor_2_lpf);
         let motor_lpf3 = db.fetch_lpf(drone_model.motor_3_lpf);
         let motor_lpf4 = db.fetch_lpf(drone_model.motor_4_lpf);
         // TODO: change the config id
-        let sample_points = db.fetch_sample_points(1);
+        let sample_points = db.fetch_sample_points(config_id);
         let bat_voltage_curve = SampleCurve::new(
             sample_points
                 .iter()

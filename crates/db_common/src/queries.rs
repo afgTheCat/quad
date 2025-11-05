@@ -48,7 +48,7 @@ impl TestingDB {
         smol::block_on(async { self.fetch_db_rc_data(model_id).await })
     }
 
-    async fn fetch_sample_points_async(&mut self, config_id: i64) -> Vec<DBSamplePoint> {
+    async fn fetch_sample_points_async(&mut self, config_id: &str) -> Vec<DBSamplePoint> {
         let query = query_as!(
             DBSamplePoint,
             r#"
@@ -60,11 +60,11 @@ impl TestingDB {
         query.fetch_all(&mut self.conn).await.unwrap()
     }
 
-    pub fn fetch_sample_points(&mut self, config_id: i64) -> Vec<DBSamplePoint> {
+    pub fn fetch_sample_points(&mut self, config_id: &str) -> Vec<DBSamplePoint> {
         smol::block_on(async { self.fetch_sample_points_async(config_id).await })
     }
 
-    async fn fetch_drone_model_async(&mut self, drone_id: i64) -> DBDroneModel {
+    async fn fetch_drone_model_async(&mut self, drone_id: &str) -> DBDroneModel {
         let query = query_as!(
             DBDroneModel,
             r#"
@@ -77,11 +77,11 @@ impl TestingDB {
         query.fetch_one(&mut self.conn).await.unwrap()
     }
 
-    pub fn fetch_drone_model(&mut self, drone_id: i64) -> DBDroneModel {
+    pub fn fetch_drone_model(&mut self, drone_id: &str) -> DBDroneModel {
         smol::block_on(async { self.fetch_drone_model_async(drone_id).await })
     }
 
-    async fn fetch_simulation_frame_async(&mut self, config_id: i64) -> DBSimulationFrame {
+    async fn fetch_simulation_frame_async(&mut self, config_id: &str) -> DBSimulationFrame {
         let query = query_as!(
             DBSimulationFrame,
             r#"SELECT * from simulation_frame WHERE simulation_frame.id = ?"#,
@@ -90,7 +90,7 @@ impl TestingDB {
         query.fetch_one(&mut self.conn).await.unwrap()
     }
 
-    pub fn fetch_simulation_frame(&mut self, config_id: i64) -> DBSimulationFrame {
+    pub fn fetch_simulation_frame(&mut self, config_id: &str) -> DBSimulationFrame {
         smol::block_on(async { self.fetch_simulation_frame_async(config_id).await })
     }
 
