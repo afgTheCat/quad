@@ -17,7 +17,7 @@ use loaders::file_loader::FileLoader;
 use loaders::{db_loader::DBLoader, DataAccessLayer};
 use loggers::{
     db_logger::DBLogger, empty_logger::EmptyLogger, file_logger::FileLogger,
-    rerun_logger::RerunLogger, Logger as LoggerTrait,
+    rerun_logger::RerunLogger, FlightLog, Logger as LoggerTrait,
 };
 use simulator::Replayer;
 use simulator::Simulator;
@@ -61,7 +61,11 @@ impl Loader {
         }
     }
 
-    pub fn load_replay(&self, replay_id: &str) -> Vec<DBFlightLog> {
+    pub fn load_replay(&mut self, replay_id: &str) -> FlightLog {
+        match self {
+            Self::DBLoader(loader) => loader.load_replay(replay_id),
+            Self::FileLoader(loader) => loader.load_replay(replay_id),
+        };
         todo!()
     }
 }
@@ -158,7 +162,7 @@ impl SimContext {
             LoggerType::Db => Arc::new(Mutex::new(DBLogger::new(simulation_id.to_owned()))),
             LoggerType::Rerun => Arc::new(Mutex::new(RerunLogger::new(simulation_id.to_owned()))),
             LoggerType::Empty => Arc::new(Mutex::new(EmptyLogger::default())),
-            LoggerType::File => Arc::new(Mutex::new(FileLogger::new())),
+            LoggerType::File => Arc::new(Mutex::new(FileLogger::new(simulation_id.to_string()))),
         };
         Simulator {
             drone: drone.clone(),

@@ -1,8 +1,9 @@
-use db_common::{DBFlightLog, DBNewFlightLog};
+use db_common::DBFlightLog;
+use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
 use res::{drone::DroneRc, input::FlightInput, representation::RepresentationType};
 use ridge::RidgeRegression;
-use sim_context::{LoaderType, SimContext};
+use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
     DVector::from_row_slice(&[
@@ -11,6 +12,54 @@ pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
         fl.motor_input_3,
         fl.motor_input_4,
     ])
+}
+
+pub fn snapshot_fl_input(snapshot: &SnapShot) -> DVector<f64> {
+    DVector::from_row_slice(&[
+        snapshot.battery_update.bat_voltage_sag,
+        snapshot.battery_update.bat_voltage,
+        snapshot.battery_update.amperage,
+        snapshot.battery_update.m_ah_drawn,
+        snapshot.gyro_update.rotation[0],
+        snapshot.gyro_update.rotation[1],
+        snapshot.gyro_update.rotation[2],
+        snapshot.gyro_update.rotation[3],
+        snapshot.gyro_update.linear_acc[0],
+        snapshot.gyro_update.linear_acc[1],
+        snapshot.gyro_update.linear_acc[2],
+        snapshot.gyro_update.angular_velocity[0],
+        snapshot.gyro_update.angular_velocity[1],
+        snapshot.gyro_update.angular_velocity[2],
+        // TODO: double check this
+        snapshot.motor_input[0], // snapshot.throttle,
+        snapshot.motor_input[1], // snapshot.roll,
+        snapshot.motor_input[2], // snapshot.yaw,
+        snapshot.motor_input[3], // snapshot.pitch,
+    ])
+}
+
+fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>) -> FlightInput {
+    let episodes = flight_logs.len();
+    let time = flight_logs.iter().map(|x| x.steps.len()).max().unwrap();
+    let data = flight_logs
+        .iter()
+        .map(|fl| {
+            let columns = fl
+                .steps
+                .iter()
+                .map(|f| snapshot_fl_input(f))
+                .collect::<Vec<_>>();
+            let m = DMatrix::from_columns(&columns).transpose();
+            println!("{:?}", m.shape());
+            m
+        })
+        .collect();
+    FlightInput {
+        episodes,
+        time,
+        vars: 18, // TODO: do not hardcode in the future
+        data,
+    }
 }
 
 pub fn train_thing(replay_id: &str) {
@@ -25,11 +74,12 @@ pub fn train_thing(replay_id: &str) {
         RidgeRegression::new(1.),
     );
     drone_rc.esn.set_input_weights(18);
-    let input = FlightInput::new_from_db_fl_log(vec![flight_log.clone()]);
+    let input = snapshots_to_flight_input(vec![flight_log.clone()]);
     let data_points = DMatrix::from_columns(
         &flight_log
+            .steps
             .iter()
-            .map(db_fl_to_rc_output)
+            .map(snapshot_fl_input)
             .collect::<Vec<_>>(),
     )
     .transpose();
@@ -45,37 +95,37 @@ pub fn train_thing(replay_id: &str) {
     let mut rec_flight_logs = vec![];
 
     // TODO This is fake, what would be better is to launch a simulation with the controller.
-    for (i, motor_outputs) in predicted_points.row_iter().enumerate() {
-        let fl = DBNewFlightLog {
-            simulation_id: "fake_simulation".into(),
-            start_seconds: flight_log[i].start_seconds,
-            end_seconds: flight_log[i].end_seconds,
-            motor_input_1: *motor_outputs.get(0).unwrap(),
-            motor_input_2: *motor_outputs.get(1).unwrap(),
-            motor_input_3: *motor_outputs.get(2).unwrap(),
-            motor_input_4: *motor_outputs.get(3).unwrap(),
-            battery_voltage_sag: flight_log[i].battery_voltage_sag,
-            battery_voltage: flight_log[i].battery_voltage,
-            amperage: flight_log[i].amperage,
-            mah_drawn: flight_log[i].mah_drawn,
-            cell_count: flight_log[i].cell_count,
-            rot_quat_x: flight_log[i].rot_quat_x,
-            rot_quat_y: flight_log[i].rot_quat_y,
-            rot_quat_z: flight_log[i].rot_quat_z,
-            rot_quat_w: flight_log[i].rot_quat_w,
-            linear_acceleration_x: flight_log[i].linear_acceleration_x,
-            linear_acceleration_y: flight_log[i].linear_acceleration_y,
-            linear_acceleration_z: flight_log[i].linear_acceleration_z,
-            angular_velocity_x: flight_log[i].angular_velocity_x,
-            angular_velocity_y: flight_log[i].angular_velocity_y,
-            angular_velocity_z: flight_log[i].angular_velocity_z,
-            throttle: flight_log[i].throttle,
-            roll: flight_log[i].roll,
-            pitch: flight_log[i].pitch,
-            yaw: flight_log[i].yaw,
-        };
-        rec_flight_logs.push(fl);
-    }
+    // for (i, motor_outputs) in predicted_points.row_iter().enumerate() {
+    //     let fl = DBNewFlightLog {
+    //         simulation_id: "fake_simulation".into(),
+    //         start_seconds: flight_log[i].start_seconds,
+    //         end_seconds: flight_log[i].end_seconds,
+    //         motor_input_1: *motor_outputs.get(0).unwrap(),
+    //         motor_input_2: *motor_outputs.get(1).unwrap(),
+    //         motor_input_3: *motor_outputs.get(2).unwrap(),
+    //         motor_input_4: *motor_outputs.get(3).unwrap(),
+    //         battery_voltage_sag: flight_log[i].battery_voltage_sag,
+    //         battery_voltage: flight_log[i].battery_voltage,
+    //         amperage: flight_log[i].amperage,
+    //         mah_drawn: flight_log[i].mah_drawn,
+    //         cell_count: flight_log[i].cell_count,
+    //         rot_quat_x: flight_log[i].rot_quat_x,
+    //         rot_quat_y: flight_log[i].rot_quat_y,
+    //         rot_quat_z: flight_log[i].rot_quat_z,
+    //         rot_quat_w: flight_log[i].rot_quat_w,
+    //         linear_acceleration_x: flight_log[i].linear_acceleration_x,
+    //         linear_acceleration_y: flight_log[i].linear_acceleration_y,
+    //         linear_acceleration_z: flight_log[i].linear_acceleration_z,
+    //         angular_velocity_x: flight_log[i].angular_velocity_x,
+    //         angular_velocity_y: flight_log[i].angular_velocity_y,
+    //         angular_velocity_z: flight_log[i].angular_velocity_z,
+    //         throttle: flight_log[i].throttle,
+    //         roll: flight_log[i].roll,
+    //         pitch: flight_log[i].pitch,
+    //         yaw: flight_log[i].yaw,
+    //     };
+    //     rec_flight_logs.push(fl);
+    // }
 
     sim_context.insert_logs("rec", rec_flight_logs);
 }

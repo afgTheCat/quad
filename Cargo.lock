@@ -5350,6 +5350,7 @@ dependencies = [
  "flight_controller",
  "rerun",
  "serde",
+ "serde_json",
  "smol",
  "sqlx",
 ]
@@ -8509,6 +8510,7 @@ version = "0.1.0"
 dependencies = [
  "db_common",
  "flight_controller",
+ "loggers",
  "nalgebra",
  "res",
  "ridge",

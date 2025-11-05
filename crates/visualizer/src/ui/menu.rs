@@ -136,6 +136,7 @@ pub fn main_menu_toggle(
                 .selected_text(label)
                 .show_ui(ui, |ui| {
                     ui.selectable_value(logger, Some(LoggerType::Db), "DB logger");
+                    ui.selectable_value(logger, Some(LoggerType::File), "File");
                     ui.selectable_value(logger, Some(LoggerType::Rerun), "Rerun");
                     ui.selectable_value(logger, Some(LoggerType::Empty), "None");
                 });
