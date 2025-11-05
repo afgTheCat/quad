@@ -1,9 +1,28 @@
 use crate::{Logger, SnapShot};
 use db_common::DBNewFlightLog;
+use db_common::queries::TestingDB;
 use sqlx::Connection;
 use sqlx::SqliteConnection;
 use sqlx::query;
 use std::time::Duration;
+
+pub struct DBLogger2 {
+    pub data: Vec<DBNewFlightLog>,
+    pub simulation_id: String,
+    pub last_time_step: f64,
+    pub db: TestingDB,
+}
+
+impl DBLogger2 {
+    pub fn new(db: TestingDB, simulation_id: String) -> Self {
+        Self {
+            data: vec![],
+            simulation_id,
+            last_time_step: 0.,
+            db,
+        }
+    }
+}
 
 pub struct DBLogger {
     pub data: Vec<DBNewFlightLog>,

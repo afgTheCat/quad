@@ -1,3 +1,5 @@
+pub mod queries;
+
 pub struct DBDroneModel {
     pub id: i64,
     pub quad_bat_capacity: f64,
@@ -106,7 +108,7 @@ pub struct DBSimulationFrame {
     pub gyro_low_pass_filter_3: i64,
 }
 
-pub struct DBRcData {
+pub struct DBRcModel {
     pub id: i64,
     pub rc_id: String,
     pub n_internal_units: i64,
@@ -178,7 +180,7 @@ pub struct DBNewFlightLog {
     pub yaw: f64,
 }
 
-pub struct NewDBRcData {
+pub struct NewDBRcModel {
     pub rc_id: String,
     pub n_internal_units: i64,
     pub input_scaling: f64,

@@ -66,7 +66,7 @@ impl DataAccessLayer for FileLoader {
         todo!()
     }
 
-    fn insert_reservoir(&mut self, res: db_common::NewDBRcData) {
+    fn insert_reservoir(&mut self, res: db_common::NewDBRcModel) {
         todo!()
     }
 }

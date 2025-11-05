@@ -5,7 +5,6 @@ members = [
   "crates/simulator",
   "crates/sim_context",
   "crates/flight_controller",
-  # "crates/db",
   "crates/res",
   "crates/ridge",
   "crates/drone",
@@ -21,7 +20,6 @@ visualizer = { path = "crates/visualizer" }
 simulator = { path = "crates/simulator" }
 sim_context = { path = "crates/sim_context" }
 flight_controller = { path = "crates/flight_controller" }
-# db = { path = "crates/db" }
 res = { path = "crates/res" }
 ridge = { path = "crates/ridge" }
 drone = { path = "crates/drone" }

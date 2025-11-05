@@ -3,7 +3,6 @@ pub mod empty_logger;
 pub mod file_logger;
 pub mod rerun_logger;
 
-use drone::SimulationFrame;
 use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use serde::{Deserialize, Serialize};
 use std::{any::Any, time::Duration};

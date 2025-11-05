@@ -4,7 +4,7 @@ use crate::{
     reservoir::Esn,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
-use db_common::{DBRcData, NewDBRcData};
+use db_common::{DBRcModel, NewDBRcModel};
 use nalgebra::DMatrix;
 use ridge::{RidgeRegression, RidgeRegressionSol};
 
@@ -53,7 +53,7 @@ impl DroneRc {
         self.readout.predict(res_states[0].clone())
     }
 
-    pub fn from_db(db_data: DBRcData) -> Self {
+    pub fn from_db(db_data: DBRcModel) -> Self {
         let internal_weights_decoded = BASE64_STANDARD.decode(db_data.internal_weights).unwrap();
         let internal_weights: DMatrix<f64> =
             bincode::deserialize(&internal_weights_decoded).unwrap();
@@ -91,7 +91,7 @@ impl DroneRc {
         }
     }
 
-    pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcData {
+    pub fn to_new_db(&self, reservoir_id: String) -> NewDBRcModel {
         let internal_weights_serialized =
             BASE64_STANDARD.encode(bincode::serialize(&self.esn.internal_weights).unwrap());
         let input_weights_serialized = self.esn.input_weights.as_ref().map(|input_weights| {
@@ -105,7 +105,7 @@ impl DroneRc {
         } else {
             (None, None)
         };
-        NewDBRcData {
+        NewDBRcModel {
             rc_id: reservoir_id,
             input_scaling: self.esn.input_scaling,
             n_internal_units: self.esn.n_internal_units as i64,
