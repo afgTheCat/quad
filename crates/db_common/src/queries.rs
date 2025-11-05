@@ -13,7 +13,7 @@ pub struct TestingDB {
 impl Default for TestingDB {
     fn default() -> Self {
         let conn = smol::block_on(async {
-            SqliteConnection::connect("sqlite://crates/db/schema.sqlite")
+            SqliteConnection::connect("sqlite://crates/db_common/schema.sqlite")
                 .await
                 .unwrap()
         });
@@ -184,7 +184,7 @@ impl TestingDB {
         smol::block_on(async { self.load_db_rc_data_async(model_id).await })
     }
 
-    async fn write_flight_logs_async(&mut self, simulation_id: &str, data: Vec<DBNewFlightLog>) {
+    async fn write_flight_logs_async(&mut self, simulation_id: &str, data: &[DBNewFlightLog]) {
         let mut trx = self.conn.begin().await.unwrap();
         for flight_log in data.iter() {
             let query = query!(
@@ -230,7 +230,7 @@ impl TestingDB {
         trx.commit().await.unwrap();
     }
 
-    pub fn write_flight_logs(&mut self, simulation_id: &str, data: Vec<DBNewFlightLog>) {
+    pub fn write_flight_logs(&mut self, simulation_id: &str, data: &[DBNewFlightLog]) {
         smol::block_on(async { self.write_flight_logs_async(simulation_id, data).await })
     }
 }

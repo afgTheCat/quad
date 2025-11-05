@@ -6,8 +6,8 @@ resolver = "2"
 
 [dependencies]
 rand_xoshiro = "0.6.0"
-pyo3.workspace = true
-pyo3-log.workspace = true 
+# pyo3.workspace = true
+# pyo3-log.workspace = true 
 rerun.workspace = true
 rand = "0.8.5"
 nalgebra.workspace = true

@@ -12,11 +12,11 @@ pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
-        let mut simulation = PathBuf::from(LOADER_PATH);
-        simulation.push("drones/");
-        fs::create_dir_all(&simulation).unwrap();
-        simulation.push(format!("{config_id}.json"));
-        let content = fs::read_to_string(simulation).unwrap();
+        let mut drone_path = PathBuf::from(LOADER_PATH);
+        drone_path.push("drones/");
+        fs::create_dir_all(&drone_path).unwrap();
+        drone_path.push(format!("{config_id}.json"));
+        let content = fs::read_to_string(drone_path).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
@@ -68,5 +68,21 @@ impl DataAccessLayer for FileLoader {
 
     fn insert_reservoir(&mut self, res: db_common::NewDBRcModel) {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::file_loader::LOADER_PATH;
+    use drone::default_drone::default_7in_4s_drone;
+    use std::{fs, path::PathBuf};
+
+    #[test]
+    fn save_default_config_to_file() {
+        let default_drone = default_7in_4s_drone();
+        let serialized = serde_json::to_string(&default_drone).unwrap();
+        let mut drone_path = PathBuf::from(LOADER_PATH);
+        drone_path.push("drones/7in_4s.json");
+        fs::write(drone_path, serialized).unwrap();
     }
 }
