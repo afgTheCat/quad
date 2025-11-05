@@ -26,17 +26,13 @@ impl DataAccessLayer for FileLoader {
     }
 
     fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
-        todo!()
+        let mut replay = PathBuf::from(LOADER_PATH);
+        replay.push("replays/");
+        fs::create_dir_all(&replay).unwrap();
+        replay.push(sim_id);
+        let content = fs::read_to_string(replay).unwrap();
+        serde_json::from_slice(content.as_bytes()).unwrap()
     }
-
-    // fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
-    //     let mut replay = PathBuf::from(LOADER_PATH);
-    //     replay.push("replays/");
-    //     fs::create_dir_all(&replay).unwrap();
-    //     replay.push(sim_id);
-    //     let content = fs::read_to_string(replay).unwrap();
-    //     serde_json::from_slice(content.as_bytes()).unwrap()
-    // }
 
     // just list the file names in the loader.
     fn get_replay_ids(&mut self) -> Vec<String> {
