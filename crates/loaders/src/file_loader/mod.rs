@@ -36,7 +36,6 @@ impl DataAccessLayer for FileLoader {
 
     // just list the file names in the loader.
     fn get_replay_ids(&mut self) -> Vec<String> {
-        println!("HELLLOOOOOOO!!!!!");
         let mut simulation_dir = PathBuf::from(LOADER_PATH);
         // TODO: are these the replays
         simulation_dir.push("replays/");

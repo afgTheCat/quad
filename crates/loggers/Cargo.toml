@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 flight_controller.workspace = true
-drone.workspace = true
+# drone.workspace = true
 rerun.workspace = true
 serde.workspace = true
 sqlx.workspace = true
