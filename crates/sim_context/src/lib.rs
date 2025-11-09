@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use db_common::{DBFlightLog, DBNewFlightLog, DBRcModel, NewDBRcModel};
+use db_common::{DBNewFlightLog, DBRcModel, NewDBRcModel};
 use drone::Drone;
 use flight_controller::{
     controllers::{
@@ -13,8 +13,8 @@ use flight_controller::{
     },
     FlightController,
 };
-use loaders::file_loader::FileLoader;
 use loaders::{db_loader::DBLoader, DataAccessLayer};
+use loaders::{default_laoder::DefaultLoader, file_loader::FileLoader};
 use loggers::{
     db_logger::DBLogger, empty_logger::EmptyLogger, file_logger::FileLogger,
     rerun_logger::RerunLogger, FlightLog, Logger as LoggerTrait,
@@ -25,10 +25,10 @@ use uuid::Uuid;
 
 #[derive(Default, Eq, PartialEq, Hash, Debug, Clone)]
 pub enum LoggerType {
-    #[default]
     File,
     Db,
     Rerun,
+    #[default]
     Empty,
 }
 
@@ -44,6 +44,7 @@ pub enum Controller {
 pub enum Loader {
     DBLoader(DBLoader),
     FileLoader(FileLoader),
+    DefaultLoader(DefaultLoader),
 }
 
 impl Loader {
@@ -51,6 +52,7 @@ impl Loader {
         match self {
             Self::DBLoader(loader) => loader.load_drone(config_id),
             Self::FileLoader(loader) => loader.load_drone(config_id),
+            Self::DefaultLoader(loader) => loader.load_drone(config_id),
         }
     }
 
@@ -58,6 +60,7 @@ impl Loader {
         match self {
             Self::DBLoader(loader) => loader.load_res_controller(controller_id),
             Self::FileLoader(loader) => loader.load_res_controller(controller_id),
+            Self::DefaultLoader(loader) => loader.load_res_controller(controller_id),
         }
     }
 
@@ -65,8 +68,8 @@ impl Loader {
         match self {
             Self::DBLoader(loader) => loader.load_replay(replay_id),
             Self::FileLoader(loader) => loader.load_replay(replay_id),
-        };
-        todo!()
+            Self::DefaultLoader(loader) => loader.load_replay(replay_id),
+        }
     }
 }
 
@@ -79,8 +82,9 @@ impl Default for Loader {
 #[derive(Default, Clone, PartialEq)]
 pub enum LoaderType {
     DB,
-    #[default]
     File,
+    #[default]
+    DefaultLoader,
 }
 
 impl LoaderType {
@@ -88,6 +92,7 @@ impl LoaderType {
         match self {
             Self::DB => Loader::DBLoader(DBLoader::default()),
             Self::File => Loader::FileLoader(FileLoader::default()),
+            Self::DefaultLoader => Loader::DefaultLoader(DefaultLoader::default()),
         }
     }
 }
@@ -208,6 +213,7 @@ impl SimContext {
         let replay_ids = match &mut self.loader {
             Loader::DBLoader(db_loader) => db_loader.get_replay_ids(),
             Loader::FileLoader(file_loader) => file_loader.get_replay_ids(),
+            Loader::DefaultLoader(loader) => loader.get_replay_ids(),
         };
         self.replay_ids = replay_ids;
     }
@@ -216,6 +222,7 @@ impl SimContext {
         let reservoir_controler_ids = match &mut self.loader {
             Loader::DBLoader(db_loader) => db_loader.get_reservoir_controller_ids(),
             Loader::FileLoader(file_loader) => file_loader.get_reservoir_controller_ids(),
+            Loader::DefaultLoader(loader) => loader.get_reservoir_controller_ids(),
         };
         self.reservoir_controller_ids = reservoir_controler_ids
     }

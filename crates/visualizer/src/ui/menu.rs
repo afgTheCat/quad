@@ -9,28 +9,35 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use sim_context::{Controller, Loader, LoaderType, LoggerType, SimContext};
+use sim_context::{Controller, LoaderType, LoggerType, SimContext};
 
-#[derive(Resource, Default, Clone, PartialEq)]
+#[derive(Resource, Clone, PartialEq)]
 pub enum UIState {
-    #[default]
-    Menu,
     Replay {
         replay_id: Option<String>,
-        controller: Option<Controller>,
+        controller: Controller,
         loader: LoaderType,
     },
     Simulation {
-        logger: Option<LoggerType>,
-        controller: Option<Controller>,
+        logger: LoggerType,
+        controller: Controller,
         loader: LoaderType,
     },
+}
+
+impl Default for UIState {
+    fn default() -> Self {
+        Self::Simulation {
+            logger: LoggerType::default(),
+            controller: Controller::default(),
+            loader: LoaderType::default(),
+        }
+    }
 }
 
 impl UIState {
     pub fn to_state_str(&self) -> String {
         match &self {
-            Self::Menu => "Menu".into(),
             Self::Replay { .. } => "Replay".into(),
             Self::Simulation { .. } => "Simulation".into(),
         }
@@ -38,15 +45,10 @@ impl UIState {
 
     pub fn to_simulation(&self) -> Self {
         match self {
-            Self::Menu => Self::Simulation {
-                logger: None,
-                controller: None,
-                loader: LoaderType::DB,
-            },
             Self::Replay {
                 controller, loader, ..
             } => Self::Simulation {
-                logger: None,
+                logger: LoggerType::default(),
                 controller: controller.clone(),
                 loader: loader.clone(),
             },
@@ -56,11 +58,6 @@ impl UIState {
 
     pub fn to_replay(&self) -> Self {
         match self {
-            Self::Menu => Self::Replay {
-                controller: None,
-                replay_id: None,
-                loader: LoaderType::DB,
-            },
             Self::Replay { .. } => self.clone(),
             Self::Simulation {
                 controller, loader, ..
@@ -101,26 +98,20 @@ pub fn main_menu_toggle(
         ui.label("Controller:");
         match ui_state {
             UIState::Simulation { controller, .. } | UIState::Replay { controller, .. } => {
-                let label = match controller {
-                    Some(x) => format!("{x:?}"),
-                    None => "Not selected".to_string(),
-                };
+                let label = format!("{controller:?}");
                 egui::ComboBox::from_id_salt("Controller selector")
                     .selected_text(label)
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(controller, Some(Controller::Betafligt), "Betaflight");
+                        ui.selectable_value(controller, Controller::Betafligt, "Betaflight");
                         for res_id in context.reservoir_controller_ids.iter() {
                             ui.selectable_value(
                                 controller,
-                                Some(Controller::Reservoir(res_id.into())),
+                                Controller::Reservoir(res_id.into()),
                                 format!("Resrevoid controller {}", res_id),
                             );
                         }
-                        ui.selectable_value(controller, Some(Controller::NullController), "Null");
+                        ui.selectable_value(controller, Controller::NullController, "Null");
                     });
-            }
-            _ => {
-                ui.label("Select mode first");
             }
         }
     });
@@ -128,17 +119,14 @@ pub fn main_menu_toggle(
     ui.horizontal(|ui| {
         ui.label("Logger:");
         if let UIState::Simulation { logger, .. } = ui_state {
-            let label = match logger {
-                Some(x) => format!("{x:?}"),
-                None => "Not selected".to_string(),
-            };
+            let label = format!("{logger:?}");
             egui::ComboBox::from_id_salt("Logger selector")
                 .selected_text(label)
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(logger, Some(LoggerType::Db), "DB logger");
-                    ui.selectable_value(logger, Some(LoggerType::File), "File");
-                    ui.selectable_value(logger, Some(LoggerType::Rerun), "Rerun");
-                    ui.selectable_value(logger, Some(LoggerType::Empty), "None");
+                    ui.selectable_value(logger, LoggerType::Db, "DB logger");
+                    ui.selectable_value(logger, LoggerType::File, "File");
+                    ui.selectable_value(logger, LoggerType::Rerun, "Rerun");
+                    ui.selectable_value(logger, LoggerType::Empty, "None");
                 });
         } else {
             ui.label("Only available in simulation mode");
@@ -178,20 +166,22 @@ pub fn main_menu_toggle(
         let label = match loader {
             LoaderType::DB => format!("Loader"),
             LoaderType::File => format!("File"),
+            LoaderType::DefaultLoader => format!("Default"),
         };
         egui::ComboBox::from_id_salt("Loader selector")
             .selected_text(label)
             .show_ui(ui, |ui| {
                 ui.selectable_value(loader, LoaderType::DB, "DB");
                 ui.selectable_value(loader, LoaderType::File, "File");
+                ui.selectable_value(loader, LoaderType::DefaultLoader, "Default");
             });
     });
 
     if ui.button("Apply").clicked() {
         match &ui_state {
             UIState::Simulation {
-                logger: Some(logger),
-                controller: Some(controller),
+                logger,
+                controller,
                 loader,
             } => {
                 context.set_loader(loader);
@@ -203,7 +193,7 @@ pub fn main_menu_toggle(
             }
             UIState::Replay {
                 replay_id: Some(replay_id),
-                controller: Some(controller),
+                controller,
                 loader,
             } => {
                 context.set_loader(loader);
