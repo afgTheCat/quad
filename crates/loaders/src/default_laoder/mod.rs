@@ -1,6 +1,6 @@
 // NOTE: only loads the default drone config. This is for debugging and stuff
 
-use drone::default_drone::{default_7in_4s_drone, get_base_model};
+use drone::default_drone::default_7in_4s_drone;
 use simulator::Simulator;
 
 use crate::DataAccessLayer;
@@ -10,7 +10,7 @@ pub struct DefaultLoader {}
 
 impl DataAccessLayer for DefaultLoader {
     fn load_drone(&mut self, config_id: &str) -> drone::Drone {
-        get_base_model()
+        default_7in_4s_drone()
     }
 
     fn load_simulation(&mut self, config_id: &str) -> simulator::Simulator {

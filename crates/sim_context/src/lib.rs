@@ -1,4 +1,4 @@
-mod input_gen;
+pub mod input_gen;
 
 use std::{
     sync::{Arc, Mutex},
@@ -33,7 +33,7 @@ pub enum LoggerType {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
-pub enum Controller {
+pub enum ControllerType {
     #[default]
     Betafligt, // no parameters
     Reservoir(String), // reservoir controller id
@@ -97,13 +97,12 @@ impl LoaderType {
     }
 }
 
-// #[derive(Default)]
 #[derive(Debug)]
 pub struct SimContext {
     // what kind of logger should be loaded
     pub logger_type: LoggerType,
     // what kind of flight controller we want to use
-    pub controller: Controller,
+    pub controller: ControllerType,
     // loaders
     pub loader: Loader,
     // Replay ids
@@ -114,6 +113,8 @@ pub struct SimContext {
     pub replay_id: Option<String>,
     // Config id
     pub config_id: Option<String>,
+    // The id for the simulation that is about to be loaded
+    pub simulation_id: Option<String>,
 }
 
 impl Default for SimContext {
@@ -126,6 +127,7 @@ impl Default for SimContext {
             reservoir_controller_ids: Default::default(),
             replay_id: Default::default(),
             config_id: Some(format!("7in_4s_drone")),
+            simulation_id: Default::default(),
         };
         sim_context.refresh_cache();
         sim_context
@@ -143,7 +145,7 @@ impl SimContext {
         self.logger_type = logger_type;
     }
 
-    pub fn set_controller(&mut self, controller: Controller) {
+    pub fn set_controller(&mut self, controller: ControllerType) {
         self.controller = controller;
     }
 
@@ -151,17 +153,16 @@ impl SimContext {
         &self.logger_type
     }
 
-    pub fn contoller(&self) -> &Controller {
+    pub fn contoller(&self) -> &ControllerType {
         &self.controller
     }
 
-    pub fn load_simulator(&mut self, config_id: &str) -> Simulator {
-        let simulation_id = Uuid::new_v4().to_string();
+    pub fn load_simulator(&mut self, simulation_id: String, config_id: &str) -> Simulator {
         let drone = self.loader.load_drone(config_id);
         let flight_controller: Arc<dyn FlightController> = match &self.controller {
-            Controller::Betafligt => Arc::new(BFController::default()),
-            Controller::Reservoir(res_id) => Arc::new(self.loader.load_res_controller(&res_id)),
-            Controller::NullController => Arc::new(NullController::default()),
+            ControllerType::Betafligt => Arc::new(BFController::default()),
+            ControllerType::Reservoir(res_id) => Arc::new(self.loader.load_res_controller(&res_id)),
+            ControllerType::NullController => Arc::new(NullController::default()),
         };
         let logger: Arc<Mutex<dyn LoggerTrait>> = match &self.logger_type {
             LoggerType::Db => Arc::new(Mutex::new(DBLogger::new(simulation_id.to_owned()))),
@@ -180,11 +181,20 @@ impl SimContext {
         }
     }
 
+    pub fn set_simulation_id(&mut self, simulation_id: String) {
+        self.simulation_id = Some(simulation_id)
+    }
+
     pub fn try_load_simulator(&mut self) -> Option<Simulator> {
         let Some(config_id) = self.config_id.clone() else {
             return None;
         };
-        Some(self.load_simulator(&config_id))
+        let simulation_id = if let Some(simulation_id) = self.simulation_id.take() {
+            simulation_id.clone()
+        } else {
+            Uuid::new_v4().to_string()
+        };
+        Some(self.load_simulator(simulation_id, &config_id))
     }
 
     pub fn load_replayer(&mut self, config_id: &str, replay_id: &str) -> Replayer {
@@ -215,6 +225,7 @@ impl SimContext {
             Loader::FileLoader(file_loader) => file_loader.get_replay_ids(),
             Loader::DefaultLoader(loader) => loader.get_replay_ids(),
         };
+        println!("replays: {replay_ids:?}");
         self.replay_ids = replay_ids;
     }
 

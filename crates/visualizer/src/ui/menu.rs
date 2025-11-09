@@ -9,18 +9,18 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use sim_context::{Controller, LoaderType, LoggerType, SimContext};
+use sim_context::{ControllerType, LoaderType, LoggerType, SimContext};
 
 #[derive(Resource, Clone, PartialEq)]
 pub enum UIState {
     Replay {
         replay_id: Option<String>,
-        controller: Controller,
+        controller: ControllerType,
         loader: LoaderType,
     },
     Simulation {
         logger: LoggerType,
-        controller: Controller,
+        controller: ControllerType,
         loader: LoaderType,
     },
 }
@@ -29,7 +29,7 @@ impl Default for UIState {
     fn default() -> Self {
         Self::Simulation {
             logger: LoggerType::default(),
-            controller: Controller::default(),
+            controller: ControllerType::default(),
             loader: LoaderType::default(),
         }
     }
@@ -102,15 +102,15 @@ pub fn main_menu_toggle(
                 egui::ComboBox::from_id_salt("Controller selector")
                     .selected_text(label)
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(controller, Controller::Betafligt, "Betaflight");
+                        ui.selectable_value(controller, ControllerType::Betafligt, "Betaflight");
                         for res_id in context.reservoir_controller_ids.iter() {
                             ui.selectable_value(
                                 controller,
-                                Controller::Reservoir(res_id.into()),
+                                ControllerType::Reservoir(res_id.into()),
                                 format!("Resrevoid controller {}", res_id),
                             );
                         }
-                        ui.selectable_value(controller, Controller::NullController, "Null");
+                        ui.selectable_value(controller, ControllerType::NullController, "Null");
                     });
             }
         }
@@ -154,14 +154,9 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Loader:");
-
         let loader = match ui_state {
             UIState::Replay { loader, .. } => loader,
             UIState::Simulation { loader, .. } => loader,
-            _ => {
-                ui.label("Select mode first!");
-                return;
-            }
         };
         let label = match loader {
             LoaderType::DB => format!("Loader"),
@@ -171,9 +166,21 @@ pub fn main_menu_toggle(
         egui::ComboBox::from_id_salt("Loader selector")
             .selected_text(label)
             .show_ui(ui, |ui| {
-                ui.selectable_value(loader, LoaderType::DB, "DB");
-                ui.selectable_value(loader, LoaderType::File, "File");
-                ui.selectable_value(loader, LoaderType::DefaultLoader, "Default");
+                if ui.selectable_value(loader, LoaderType::DB, "DB").clicked() {
+                    context.set_loader(&LoaderType::DB);
+                };
+                if ui
+                    .selectable_value(loader, LoaderType::File, "File")
+                    .clicked()
+                {
+                    context.set_loader(&LoaderType::File);
+                };
+                if ui
+                    .selectable_value(loader, LoaderType::DefaultLoader, "Default")
+                    .clicked()
+                {
+                    context.set_loader(&LoaderType::DefaultLoader);
+                };
             });
     });
 
