@@ -40,12 +40,6 @@ impl DataAccessLayer for FileLoader {
         // TODO: are these the replays
         replays_dir.push("replays/");
         fs::create_dir_all(&replays_dir).unwrap();
-        println!("WE ARE HERE");
-        let files = fs::read_dir(replays_dir.clone()).unwrap();
-        for f in files {
-            let f = f.unwrap();
-            println!("{f:?}");
-        }
         fs::read_dir(replays_dir)
             .unwrap()
             .map(|res| res.map(|e| e.path()))

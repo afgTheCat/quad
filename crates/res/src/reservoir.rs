@@ -351,7 +351,7 @@ mod test {
     // implementations
     #[test]
     fn reproduce_test() {
-        let file = std::fs::File::open("/home/gabor/ascent/quad/data/JpVow.mat").unwrap();
+        let file = std::fs::File::open("/home/gabor/projects/quad/data/JpVow.mat").unwrap();
         let mat_file = matfile::MatFile::parse(file).unwrap();
 
         let mut rc_model = RcModel::new(
