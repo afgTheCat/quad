@@ -1,10 +1,8 @@
 use db_common::DBFlightLog;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
-use res::{
-    drone::DroneRc, drone2::DroneRc2, input::FlightInput, representation::RepresentationType,
-};
-use ridge::{RidgeRegression, ridge2::ElasticNetWrapper};
+use res::{drone2::DroneRc2, input::FlightInput, representation::RepresentationType};
+use ridge::ridge2::ElasticNetWrapper;
 use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
