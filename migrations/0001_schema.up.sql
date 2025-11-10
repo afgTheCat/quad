@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS rotor_state (
 );
 
 CREATE TABLE IF NOT EXISTS simulation_frame (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    id TEXT NOT NULL PRIMARY KEY,
 
     capacity DOUBLE NOT NULL,
     bat_voltage DOUBLE NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS sample_point (
 );
 
 CREATE TABLE IF NOT EXISTS drone_model (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    id TEXT NOT NULL PRIMARY KEY,
     quad_bat_capacity DOUBLE NOT NULL,
     quad_bat_cell_count INTEGER NOT NULL,
     quad_bat_capacity_charged DOUBLE NOT NULL,

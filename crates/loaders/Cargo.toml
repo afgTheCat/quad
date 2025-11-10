@@ -6,9 +6,9 @@ edition = "2024"
 [dependencies]
 # TODO: we can work with this later on
 sqlx.workspace = true
-diesel = {version = "2.2.6", features = ["sqlite", "64-column-tables"]}
+# diesel = {version = "2.2.6", features = ["sqlite", "64-column-tables"]}
 derive_more = { version = "1.0.0", features = ["full"] }
-rusqlite.workspace = true
+# rusqlite.workspace = true
 flight_controller.workspace = true
 nalgebra.workspace = true
 drone.workspace = true
@@ -16,6 +16,6 @@ simulator.workspace = true
 loggers.workspace = true
 serde_json.workspace = true
 smol.workspace = true
-futures.workspace = true
+# futures.workspace = true
 res.workspace = true
 db_common.workspace = true

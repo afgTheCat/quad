@@ -7,7 +7,7 @@ use flight_controller::{BatteryUpdate, Channels, GyroUpdate, MotorInput};
 use serde::{Deserialize, Serialize};
 use std::{any::Any, time::Duration};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SnapShot {
     pub duration: Duration,
     pub motor_input: MotorInput,
@@ -19,7 +19,7 @@ pub struct SnapShot {
 }
 
 // This is what we need to save
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FlightLog {
     pub simulation_id: String,
     pub steps: Vec<SnapShot>,

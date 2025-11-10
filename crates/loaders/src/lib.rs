@@ -1,11 +1,12 @@
+pub mod db_loader;
+pub mod default_laoder;
+pub mod file_loader;
+
 use db_common::NewDBRcModel;
 use drone::Drone;
 use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
 use simulator::Simulator;
-
-pub mod db_loader;
-pub mod file_loader;
 
 pub trait DataAccessLayer: Send + Sync {
     // load a drone

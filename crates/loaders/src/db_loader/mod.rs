@@ -1,6 +1,8 @@
-// mod schema;
-
-use db_common::{DBLowPassFilter, DBRotorState, NewDBRcModel, queries::TestingDB};
+use crate::DataAccessLayer;
+use db_common::{
+    DBDroneModel, DBLowPassFilter, DBRotorState, DBSamplePoint, DBSimulationFrame, NewDBRcModel,
+    queries::TestingDB,
+};
 use drone::{
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     LowPassFilter, RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame,
@@ -14,8 +16,6 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
-
-use crate::DataAccessLayer;
 
 pub fn db_to_rotor_state(db_rotor_state: DBRotorState, pwm_state: DBLowPassFilter) -> RotorState {
     RotorState {
@@ -42,11 +42,100 @@ pub struct DBLoader {
     db: Arc<Mutex<TestingDB>>,
 }
 
+pub struct DBParts {
+    pub frame: DBSimulationFrame,
+    pub rotor1_state: DBRotorState,
+    pub pwm_filter_1: DBLowPassFilter,
+    pub rotor2_state: DBRotorState,
+    pub pwm_filter_2: DBLowPassFilter,
+    pub rotor3_state: DBRotorState,
+    pub pwm_filter_3: DBLowPassFilter,
+    pub rotor4_state: DBRotorState,
+    pub pwm_filter_4: DBLowPassFilter,
+    pub gyro_filter1: DBLowPassFilter,
+    pub gyro_filter2: DBLowPassFilter,
+    pub gyro_filter3: DBLowPassFilter,
+    pub drone_model: DBDroneModel,
+    pub motor_lpf1: DBLowPassFilter,
+    pub motor_lpf2: DBLowPassFilter,
+    pub motor_lpf3: DBLowPassFilter,
+    pub motor_lpf4: DBLowPassFilter,
+    pub sample_points: Vec<DBSamplePoint>,
+}
+
+impl DBParts {
+    // TODO: this is big and ugly, and everything in between. We may finish this, but not right
+    // now!
+    fn from_drone(simulation_id: String, drone: &Drone) -> Self {
+        let rotor1_pwm_filter = DBLowPassFilter {
+            id: todo!(),
+            output: todo!(),
+            e_pow: todo!(),
+        };
+        let rotor1_state = DBRotorState {
+            id: 0,
+            current: drone.current_frame.rotors_state[0].current,
+            rpm: drone.current_frame.rotors_state[0].rpm,
+            motor_torque: drone.current_frame.rotors_state[0].motor_torque,
+            effective_thrust: drone.current_frame.rotors_state[0].effective_thrust,
+            pwm: drone.current_frame.rotors_state[0].pwm,
+            rotor_dir: drone.current_frame.rotors_state[0].rotor_dir,
+            motor_pos_x: drone.current_frame.rotors_state[0].motor_pos.x,
+            motor_pos_y: drone.current_frame.rotors_state[0].motor_pos.x,
+            motor_pos_z: drone.current_frame.rotors_state[0].motor_pos.x,
+            pwm_low_pass_filter: 0,
+        };
+        let db_frame = DBSimulationFrame {
+            id: simulation_id,
+            capacity: drone.current_frame.battery_state.capacity,
+            bat_voltage: drone.current_frame.battery_state.bat_voltage,
+            bat_voltage_sag: drone.current_frame.battery_state.bat_voltage_sag,
+            amperage: drone.current_frame.battery_state.amperage,
+            m_ah_drawn: drone.current_frame.battery_state.m_ah_drawn,
+            rotor_1_state: todo!(),
+            rotor_2_state: todo!(),
+            rotor_3_state: todo!(),
+            rotor_4_state: todo!(),
+            position_x: todo!(),
+            position_y: todo!(),
+            position_z: todo!(),
+            rotation_x: todo!(),
+            rotation_y: todo!(),
+            rotation_z: todo!(),
+            rotation_w: todo!(),
+            linear_velocity_x: todo!(),
+            linear_velocity_y: todo!(),
+            linear_velocity_z: todo!(),
+            angular_velocity_x: todo!(),
+            angular_velocity_y: todo!(),
+            angular_velocity_z: todo!(),
+            acceleration_x: todo!(),
+            acceleration_y: todo!(),
+            acceleration_z: todo!(),
+            gyro_rotation_x: todo!(),
+            gyro_rotation_y: todo!(),
+            gyro_rotation_z: todo!(),
+            gyro_rotation_w: todo!(),
+            gyro_acceleration_x: todo!(),
+            gyro_acceleration_y: todo!(),
+            gyro_acceleration_z: todo!(),
+            gyro_angular_velocity_x: todo!(),
+            gyro_angular_velocity_y: todo!(),
+            gyro_angular_velocity_z: todo!(),
+            gyro_low_pass_filter_1: todo!(),
+            gyro_low_pass_filter_2: todo!(),
+            gyro_low_pass_filter_3: todo!(),
+        };
+        todo!()
+    }
+}
+
+// pub fn drone_to_db_parts(drone: &Drone) {}
+
 impl DataAccessLayer for DBLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
         let mut db = self.db.lock().unwrap();
-        // TODO: config shit
-        let frame = db.fetch_simulation_frame(1);
+        let frame = db.fetch_simulation_frame(config_id);
         let rotor1_state = db.fetch_rotor_state(frame.rotor_1_state);
         let pwm_filter_1_state = db.fetch_lpf(rotor1_state.pwm_low_pass_filter);
         let rotor2_state = db.fetch_rotor_state(frame.rotor_2_state);
@@ -132,13 +221,13 @@ impl DataAccessLayer for DBLoader {
             gyro_state,
         };
         let next_frame = current_frame.clone();
-        let drone_model = db.fetch_drone_model(1); // TODO: change this
+        let drone_model = db.fetch_drone_model(config_id);
         let motor_lpf1 = db.fetch_lpf(drone_model.motor_1_lpf);
         let motor_lpf2 = db.fetch_lpf(drone_model.motor_2_lpf);
         let motor_lpf3 = db.fetch_lpf(drone_model.motor_3_lpf);
         let motor_lpf4 = db.fetch_lpf(drone_model.motor_4_lpf);
         // TODO: change the config id
-        let sample_points = db.fetch_sample_points(1);
+        let sample_points = db.fetch_sample_points(config_id);
         let bat_voltage_curve = SampleCurve::new(
             sample_points
                 .iter()
@@ -274,5 +363,36 @@ impl DataAccessLayer for DBLoader {
         ResController {
             model: Mutex::new(drone_rc),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::db_loader::DBParts;
+    use drone::default_drone::default_7in_4s_drone;
+
+    #[test]
+    fn save_default_config_to_db() {
+        let default_drone = default_7in_4s_drone();
+        let DBParts {
+            frame,
+            rotor1_state,
+            pwm_filter_1,
+            rotor2_state,
+            pwm_filter_2,
+            rotor3_state,
+            pwm_filter_3,
+            rotor4_state,
+            pwm_filter_4,
+            gyro_filter1,
+            gyro_filter2,
+            gyro_filter3,
+            drone_model,
+            motor_lpf1,
+            motor_lpf2,
+            motor_lpf3,
+            motor_lpf4,
+            sample_points,
+        } = DBParts::from_drone(format!("7in_4s"), &default_drone);
     }
 }

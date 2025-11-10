@@ -4,23 +4,71 @@ use db_common::queries::TestingDB;
 use sqlx::Connection;
 use sqlx::SqliteConnection;
 use sqlx::query;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::time::Duration;
 
 pub struct DBLogger2 {
     pub data: Vec<DBNewFlightLog>,
     pub simulation_id: String,
     pub last_time_step: f64,
-    pub db: TestingDB,
+    pub db: Arc<Mutex<TestingDB>>,
 }
 
 impl DBLogger2 {
-    pub fn new(db: TestingDB, simulation_id: String) -> Self {
+    pub fn new(db: Arc<Mutex<TestingDB>>, simulation_id: String) -> Self {
         Self {
             data: vec![],
             simulation_id,
             last_time_step: 0.,
             db,
         }
+    }
+
+    fn push_to_data(&mut self, duration: Duration, snapshot: SnapShot) {
+        self.data.push(DBNewFlightLog {
+            simulation_id: self.simulation_id.clone(),
+            // TODO: this is stupid I think
+            start_seconds: self.last_time_step,
+            end_seconds: duration.as_secs_f64(),
+            motor_input_1: snapshot.motor_input[0],
+            motor_input_2: snapshot.motor_input[1],
+            motor_input_3: snapshot.motor_input[2],
+            motor_input_4: snapshot.motor_input[3],
+            battery_voltage_sag: snapshot.battery_update.bat_voltage_sag,
+            battery_voltage: snapshot.battery_update.bat_voltage,
+            amperage: snapshot.battery_update.amperage,
+            mah_drawn: snapshot.battery_update.m_ah_drawn,
+            cell_count: snapshot.battery_update.cell_count as i64,
+            rot_quat_x: snapshot.gyro_update.rotation[0],
+            rot_quat_y: snapshot.gyro_update.rotation[1],
+            rot_quat_z: snapshot.gyro_update.rotation[2],
+            rot_quat_w: snapshot.gyro_update.rotation[3],
+            linear_acceleration_x: snapshot.gyro_update.linear_acc[0],
+            linear_acceleration_y: snapshot.gyro_update.linear_acc[1],
+            linear_acceleration_z: snapshot.gyro_update.linear_acc[2],
+            angular_velocity_x: snapshot.gyro_update.angular_velocity[0],
+            angular_velocity_y: snapshot.gyro_update.angular_velocity[1],
+            angular_velocity_z: snapshot.gyro_update.angular_velocity[2],
+            throttle: snapshot.channels.throttle,
+            roll: snapshot.channels.roll,
+            pitch: snapshot.channels.pitch,
+            yaw: snapshot.channels.yaw,
+        });
+    }
+}
+
+impl Drop for DBLogger2 {
+    fn drop(&mut self) {
+        let mut db = self.db.lock().unwrap();
+        db.write_flight_logs(&self.simulation_id, &self.data);
+    }
+}
+
+impl Logger for DBLogger2 {
+    fn log_time_stamp(&mut self, duration: Duration, snapshot: SnapShot) {
+        self.push_to_data(duration, snapshot);
+        self.last_time_step = duration.as_secs_f64();
     }
 }
 
@@ -35,7 +83,7 @@ impl DBLogger {
     pub fn new(simulation_id: String) -> Self {
         // TODO: get the locaction frfr
         let conn = smol::block_on(async {
-            SqliteConnection::connect("sqlite://crates/db/schema.sqlite")
+            SqliteConnection::connect("sqlite://crates/db_common/schema.sqlite")
                 .await
                 .unwrap()
         });

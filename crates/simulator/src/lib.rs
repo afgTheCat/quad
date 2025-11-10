@@ -12,7 +12,7 @@ use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
 };
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
-use loggers::{empty_logger::EmptyLogger, Logger};
+use loggers::{empty_logger::EmptyLogger, FlightLog, Logger, SnapShot};
 // use loggers::Logger;
 use nalgebra::{Matrix3, Rotation3, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
@@ -136,11 +136,17 @@ impl Simulator {
                 );
                 self.drone.set_motor_pwms(motor_input);
                 self.fc_time_accu -= self.flight_controller.scheduler_delta();
-            }
 
-            let mut logger = self.logger.lock().unwrap();
-            // TODO: readd this!
-            // logger.log_time_stamp(self.time, &self.drone, channels, call_fc);
+                let mut logger = self.logger.lock().unwrap();
+                let snapshot = SnapShot {
+                    duration: self.time,
+                    motor_input: motor_input,
+                    battery_update: self.drone.battery_update(),
+                    gyro_update: self.drone.current_frame.gyro_state.gyro_update(),
+                    channels,
+                };
+                logger.log_time_stamp(self.time, snapshot);
+            }
 
             self.time_accu -= self.dt;
             self.time += self.dt;
@@ -162,27 +168,29 @@ pub struct Replayer {
     // we assume that therer are not gaps in the input and the range of the input is always larger
     // than dt, since the simulation generarally runs at a higher frequency. Maybe in the future we
     // can eliviate these issues
-    pub time_steps: Vec<DBFlightLog>,
+    pub time_steps: FlightLog,
     pub replay_index: usize,
 }
 
 impl Replayer {
     fn get_motor_input(&mut self) -> Option<MotorInput> {
-        if self.replay_index < self.time_steps.len() {
+        if self.replay_index < self.time_steps.steps.len() {
             self.time += self.dt;
-            let DBFlightLog {
-                end_seconds,
-                motor_input_1,
-                motor_input_2,
-                motor_input_3,
-                motor_input_4,
+            let SnapShot {
+                duration,
+                motor_input,
                 ..
-            } = self.time_steps[self.replay_index];
-            if self.time.as_secs_f64() >= end_seconds {
+            } = self.time_steps.steps[self.replay_index];
+            if self.time.as_secs_f64() >= duration.as_secs_f64() {
                 self.replay_index += 1;
             }
             Some(MotorInput {
-                input: [motor_input_1, motor_input_2, motor_input_3, motor_input_4],
+                input: [
+                    motor_input[0],
+                    motor_input[1],
+                    motor_input[2],
+                    motor_input[3],
+                ],
             })
         } else {
             None

@@ -1,5 +1,4 @@
 [workspace]
-# members = ["crates/*"]
 members = [
   "crates/visualizer",
   "crates/simulator",
@@ -34,18 +33,19 @@ toml = "0.8.19"
 csv = "1.3.1"
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 uuid = {version = "1.11.0", features = ["v4", "fast-rng"] }
-pyo3 = {version =  "0.23.3" }
-# pyo3 = {version =  "0.23.3", features = ["extension-module"] }
-pyo3-log = "0.12.0"
-# speed up the training on the gpu
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.2", features = ["cuda"] }
+# speed up the training on the gpu, should readd this in the future
+# candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.2", features = ["cuda"] }
 rerun = "0.21.0"
 log = "0.4.25"
 serde = { version = "1.0.228", features = ["derive"] } 
 derive_more = { version = "1.0.0", features = ["full"] }
 rand = "0.8.5"
 serde_json = "1.0.145"
-sqlx = { version = "0.8.6", features = [ "runtime-tokio", "sqlite", "macros"] }
+sqlx = { version = "0.8.6", features = [
+  # "runtime-tokio", 
+  "sqlite", 
+  "macros"
+] }
 smol = "2.0.2"
 futures = "0.3.31"
 

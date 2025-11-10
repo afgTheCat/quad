@@ -16,8 +16,11 @@ use tempfile::NamedTempFile;
 use uuid::Uuid;
 
 const RTLD_FLAGS: i32 = 0x0002; // Resolves all symbols and do not use them for further resolutions
-const LIB_PATH: &str =
-    "/home/gabor/ascent/virtual-betaflight-dynlib/src/libvirtual-betaflight.so\0";
+
+// const LIB_PATH: &str =
+//     "/home/gabor/ascent/virtual-betaflight-dynlib/src/libvirtual-betaflight.so\0";
+
+const LIB_PATH: &str = "/home/gabor/projects/quad/libvirtual_betaflight.so\0";
 
 type VBFInit = unsafe extern "C" fn(file_name: *const std::os::raw::c_char);
 type VBFUpdate = unsafe extern "C" fn(time_passed: f64);
@@ -269,13 +272,7 @@ impl FlightController for BFController {
             let mut motors_signal = [0.; 4];
             (virtual_bf.vbf_get_motor_signals)(motors_signal.as_mut_ptr());
             MotorInput {
-                // input: motors_signal.map(|x| x as f64),
-                input: [
-                    motors_signal[3],
-                    motors_signal[1],
-                    motors_signal[2],
-                    motors_signal[0],
-                ],
+                input: motors_signal.map(|x| x as f64),
             }
         })
     }

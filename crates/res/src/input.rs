@@ -83,10 +83,10 @@ impl RcInput for TSInput {
 // The thing is that they are variable in size => each episode is going to be each time step
 #[derive(Debug, Clone)]
 pub struct FlightInput {
-    episodes: usize,
-    time: usize,
-    vars: usize, // I guess this can be something else
-    data: Vec<DMatrix<f64>>,
+    pub episodes: usize,
+    pub time: usize,
+    pub vars: usize, // I guess this can be something else
+    pub data: Vec<DMatrix<f64>>,
 }
 
 pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
@@ -141,6 +141,26 @@ impl FlightInput {
             data,
         }
     }
+
+    // pub fn new_from_snapshots(flight_logs: Vec<Vec<SnapShot>>) -> Self {
+    //     let episodes = flight_logs.len();
+    //     let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
+    //     let data = flight_logs
+    //         .iter()
+    //         .map(|fl| {
+    //             let columns = fl.iter().map(db_fl_to_rc_input).collect::<Vec<_>>();
+    //             let m = DMatrix::from_columns(&columns).transpose();
+    //             println!("{:?}", m.shape());
+    //             m
+    //         })
+    //         .collect();
+    //     Self {
+    //         episodes,
+    //         time,
+    //         vars: 18, // TODO: do not hardcode in the future
+    //         data,
+    //     }
+    // }
 
     pub fn new_from_rc_input(flight_logs: Vec<Vec<DVector<f64>>>) -> Self {
         let episodes = flight_logs.len();

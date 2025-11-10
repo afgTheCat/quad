@@ -12,11 +12,11 @@ pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
-        let mut simulation = PathBuf::from(LOADER_PATH);
-        simulation.push("drones/");
-        fs::create_dir_all(&simulation).unwrap();
-        simulation.push(format!("{config_id}.json"));
-        let content = fs::read_to_string(simulation).unwrap();
+        let mut drone_path = PathBuf::from(LOADER_PATH);
+        drone_path.push("drones/");
+        fs::create_dir_all(&drone_path).unwrap();
+        drone_path.push(format!("{config_id}.json"));
+        let content = fs::read_to_string(drone_path).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
@@ -26,25 +26,27 @@ impl DataAccessLayer for FileLoader {
     }
 
     fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
-        todo!()
+        let mut replay = PathBuf::from(LOADER_PATH);
+        replay.push("replays/");
+        fs::create_dir_all(&replay).unwrap();
+        replay.push(sim_id);
+        let content = fs::read_to_string(replay).unwrap();
+        serde_json::from_slice(content.as_bytes()).unwrap()
     }
-
-    // fn load_replay(&self, sim_id: &str) -> Vec<db::simulation::DBFlightLog> {
-    //     let mut replay = PathBuf::from(LOADER_PATH);
-    //     replay.push("replays/");
-    //     fs::create_dir_all(&replay).unwrap();
-    //     replay.push(sim_id);
-    //     let content = fs::read_to_string(replay).unwrap();
-    //     serde_json::from_slice(content.as_bytes()).unwrap()
-    // }
 
     // just list the file names in the loader.
     fn get_replay_ids(&mut self) -> Vec<String> {
-        let mut simulation_dir = PathBuf::from(LOADER_PATH);
+        let mut replays_dir = PathBuf::from(LOADER_PATH);
         // TODO: are these the replays
-        simulation_dir.push("replays/");
-        fs::create_dir_all(&simulation_dir).unwrap();
-        fs::read_dir(simulation_dir)
+        replays_dir.push("replays/");
+        fs::create_dir_all(&replays_dir).unwrap();
+        println!("WE ARE HERE");
+        let files = fs::read_dir(replays_dir.clone()).unwrap();
+        for f in files {
+            let f = f.unwrap();
+            println!("{f:?}");
+        }
+        fs::read_dir(replays_dir)
             .unwrap()
             .map(|res| res.map(|e| e.path()))
             .filter_map(|res| res.ok().map(|t| t.to_str().unwrap().to_owned()))
@@ -68,5 +70,21 @@ impl DataAccessLayer for FileLoader {
 
     fn insert_reservoir(&mut self, res: db_common::NewDBRcModel) {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::file_loader::LOADER_PATH;
+    use drone::default_drone::default_7in_4s_drone;
+    use std::{fs, path::PathBuf};
+
+    #[test]
+    fn save_default_config_to_file() {
+        let default_drone = default_7in_4s_drone();
+        let serialized = serde_json::to_string(&default_drone).unwrap();
+        let mut drone_path = PathBuf::from(LOADER_PATH);
+        drone_path.push("drones/7in_4s_drone.json");
+        fs::write(drone_path, serialized).unwrap();
     }
 }

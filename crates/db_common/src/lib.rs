@@ -1,7 +1,7 @@
 pub mod queries;
 
 pub struct DBDroneModel {
-    pub id: i64,
+    pub id: String,
     pub quad_bat_capacity: f64,
     pub quad_bat_cell_count: i64,
     pub quad_bat_capacity_charged: f64,
@@ -58,7 +58,7 @@ pub struct DBRotorState {
 }
 
 pub struct DBSimulationFrame {
-    pub id: i64,
+    pub id: String,
     pub capacity: f64,
     pub bat_voltage: f64,
     pub bat_voltage_sag: f64,

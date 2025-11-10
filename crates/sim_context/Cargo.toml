@@ -6,7 +6,7 @@ resolver = "2"
 
 [dependencies]
 simulator.workspace = true
-csv.workspace = true
+# csv.workspace = true
 # db.workspace = true
 # db2.workspace = true
 flight_controller.workspace = true

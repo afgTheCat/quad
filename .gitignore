@@ -2,6 +2,6 @@
 **/*.csv
 data.sqlite
 # assets
-**/*.so
+# **/*.so
 **/*.pyc
 __pycache__
