@@ -22,6 +22,7 @@ pub enum UIState {
         logger: LoggerType,
         controller: ControllerType,
         loader: LoaderType,
+        simulation_name: String,
     },
 }
 
@@ -31,6 +32,7 @@ impl Default for UIState {
             logger: LoggerType::default(),
             controller: ControllerType::default(),
             loader: LoaderType::default(),
+            simulation_name: Default::default(),
         }
     }
 }
@@ -51,6 +53,7 @@ impl UIState {
                 logger: LoggerType::default(),
                 controller: controller.clone(),
                 loader: loader.clone(),
+                simulation_name: Default::default(),
             },
             _ => self.clone(),
         }
@@ -92,6 +95,18 @@ pub fn main_menu_toggle(
                 ui.selectable_value(ui_state, ui_state.to_simulation(), "Simulation");
                 ui.selectable_value(ui_state, ui_state.to_replay(), "Replay");
             });
+    });
+
+    ui.horizontal(|ui| {
+        ui.label("Simulation name:");
+        if let UIState::Simulation {
+            simulation_name, ..
+        } = ui_state
+        {
+            ui.text_edit_singleline(simulation_name);
+        } else {
+            ui.label("Only available in simulation mode");
+        }
     });
 
     ui.horizontal(|ui| {
@@ -190,7 +205,11 @@ pub fn main_menu_toggle(
                 logger,
                 controller,
                 loader,
+                simulation_name,
             } => {
+                if simulation_name != "" {
+                    context.set_simulation_id(simulation_name.clone());
+                }
                 context.set_loader(loader);
                 // needs to be created
                 context.set_logger_type(logger.clone());

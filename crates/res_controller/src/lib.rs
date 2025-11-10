@@ -1,8 +1,8 @@
 use db_common::DBFlightLog;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
-use res::{drone::DroneRc, input::FlightInput, representation::RepresentationType};
-use ridge::RidgeRegression;
+use res::{drone2::DroneRc2, input::FlightInput, representation::RepresentationType};
+use ridge::ridge2::ElasticNetWrapper;
 use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
@@ -62,17 +62,27 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>) -> FlightInput {
     }
 }
 
-pub fn train_thing(replay_id: &str) {
+pub fn train_thing() {
+    let replay_id = "only_up";
     let mut sim_context = SimContext::default();
+    sim_context.set_loader(&sim_context::LoaderType::File);
     let flight_log = sim_context.loader.load_replay(replay_id);
-    let mut drone_rc = DroneRc::new(
+    let mut drone_rc = DroneRc2::new(
         500,
         0.3,
         0.99,
         0.2,
         RepresentationType::Output(1.),
-        RidgeRegression::new(1.),
+        ElasticNetWrapper::new_ridge(1.),
     );
+    // let mut drone_rc = DroneRc::new(
+    //     500,
+    //     0.3,
+    //     0.99,
+    //     0.2,
+    //     RepresentationType::Output(1.),
+    //     RidgeRegression::new(1.),
+    // );
     drone_rc.esn.set_input_weights(18);
     let input = snapshots_to_flight_input(vec![flight_log.clone()]);
     let data_points = DMatrix::from_columns(
@@ -85,14 +95,14 @@ pub fn train_thing(replay_id: &str) {
     .transpose();
 
     drone_rc.fit(Box::new(input.clone()), data_points);
-    let db_data = drone_rc.to_new_db("only_up".into());
-    sim_context.insert_reservoir(db_data);
-
-    let drone_rc_db = sim_context.select_reservoir("only_up_3");
-    let mut new_rc_mode = DroneRc::from_db(drone_rc_db);
-    let predicted_points = new_rc_mode.predict(Box::new(input));
-
-    let mut rec_flight_logs = vec![];
+    // let db_data = drone_rc.to_new_db("only_up".into());
+    // sim_context.insert_reservoir(db_data);
+    //
+    // let drone_rc_db = sim_context.select_reservoir("only_up_3");
+    // let mut new_rc_mode = DroneRc::from_db(drone_rc_db);
+    // let predicted_points = new_rc_mode.predict(Box::new(input));
+    //
+    // let mut rec_flight_logs = vec![];
 
     // TODO This is fake, what would be better is to launch a simulation with the controller.
     // for (i, motor_outputs) in predicted_points.row_iter().enumerate() {
@@ -127,7 +137,18 @@ pub fn train_thing(replay_id: &str) {
     //     rec_flight_logs.push(fl);
     // }
 
-    sim_context.insert_logs("rec", rec_flight_logs);
+    // sim_context.insert_logs("rec", rec_flight_logs);
+}
+
+#[cfg(test)]
+mod test {
+    use crate::train_thing;
+
+    // resurrecting the old only up test!
+    #[test]
+    fn old_res_training_thing() {
+        train_thing();
+    }
 }
 
 // TODO: we need to fix this!

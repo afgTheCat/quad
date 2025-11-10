@@ -5,14 +5,17 @@ use std::{fs, path::PathBuf};
 
 use crate::DataAccessLayer;
 
-const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
+// const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
+fn loader_path() -> PathBuf {
+    PathBuf::from(std::env::var("HOME").unwrap()).join(".local/share/quad")
+}
 
 #[derive(Debug, Default)]
 pub struct FileLoader {}
 
 impl DataAccessLayer for FileLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
-        let mut drone_path = PathBuf::from(LOADER_PATH);
+        let mut drone_path = loader_path();
         drone_path.push("drones/");
         fs::create_dir_all(&drone_path).unwrap();
         drone_path.push(format!("{config_id}.json"));
@@ -26,7 +29,7 @@ impl DataAccessLayer for FileLoader {
     }
 
     fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
-        let mut replay = PathBuf::from(LOADER_PATH);
+        let mut replay = loader_path();
         replay.push("replays/");
         fs::create_dir_all(&replay).unwrap();
         replay.push(sim_id);
@@ -36,16 +39,10 @@ impl DataAccessLayer for FileLoader {
 
     // just list the file names in the loader.
     fn get_replay_ids(&mut self) -> Vec<String> {
-        let mut replays_dir = PathBuf::from(LOADER_PATH);
+        let mut replays_dir = loader_path();
         // TODO: are these the replays
         replays_dir.push("replays/");
         fs::create_dir_all(&replays_dir).unwrap();
-        println!("WE ARE HERE");
-        let files = fs::read_dir(replays_dir.clone()).unwrap();
-        for f in files {
-            let f = f.unwrap();
-            println!("{f:?}");
-        }
         fs::read_dir(replays_dir)
             .unwrap()
             .map(|res| res.map(|e| e.path()))
@@ -54,7 +51,7 @@ impl DataAccessLayer for FileLoader {
     }
 
     fn get_reservoir_controller_ids(&mut self) -> Vec<String> {
-        let mut reservoir_dir = PathBuf::from(LOADER_PATH);
+        let mut reservoir_dir = loader_path();
         reservoir_dir.push("reservoirs/");
         fs::create_dir_all(&reservoir_dir).unwrap();
         fs::read_dir(reservoir_dir)
@@ -75,16 +72,19 @@ impl DataAccessLayer for FileLoader {
 
 #[cfg(test)]
 mod test {
-    use crate::file_loader::LOADER_PATH;
     use drone::default_drone::default_7in_4s_drone;
-    use std::{fs, path::PathBuf};
+    use std::fs;
+
+    use crate::file_loader::loader_path;
 
     #[test]
     fn save_default_config_to_file() {
         let default_drone = default_7in_4s_drone();
         let serialized = serde_json::to_string(&default_drone).unwrap();
-        let mut drone_path = PathBuf::from(LOADER_PATH);
-        drone_path.push("drones/7in_4s_drone.json");
+        let mut drone_path = loader_path();
+        drone_path.push("drones");
+        fs::create_dir_all(&drone_path).unwrap();
+        drone_path.push("7in_4s_drone.json");
         fs::write(drone_path, serialized).unwrap();
     }
 }

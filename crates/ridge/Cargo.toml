@@ -5,6 +5,9 @@ edition = "2021"
 resolver = "2"
 
 [dependencies]
+linfa = "0.8.0"
+linfa-elasticnet = "0.8.0"
 nalgebra.workspace = true
+ndarray = "0.16.0"
 
 

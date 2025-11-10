@@ -225,7 +225,6 @@ impl SimContext {
             Loader::FileLoader(file_loader) => file_loader.get_replay_ids(),
             Loader::DefaultLoader(loader) => loader.get_replay_ids(),
         };
-        println!("replays: {replay_ids:?}");
         self.replay_ids = replay_ids;
     }
 
