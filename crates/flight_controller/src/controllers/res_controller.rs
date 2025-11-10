@@ -80,9 +80,6 @@ mod test {
         ])
     }
 
-    #[test]
-    fn old_res_training_thing() {}
-
     // #[test]
     // fn train_thing() {
     //     let sim_context = SimContext::default();
