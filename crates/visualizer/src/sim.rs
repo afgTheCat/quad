@@ -1,14 +1,17 @@
 use crate::{ntb_mat3, ntb_vec3, Context};
 use bevy::{
-    asset::Handle,
     color::palettes::css::RED,
-    input::{gamepad::GamepadEvent, keyboard::KeyboardInput, ButtonState},
+    input::{
+        gamepad::{GamepadAxis, GamepadEvent},
+        keyboard::KeyboardInput,
+        ButtonState,
+    },
     math::{Quat, Vec3},
     prelude::{
-        Commands, Deref, DerefMut, EventReader, GamepadAxisType, Gizmos, KeyCode, Query, Res,
-        ResMut, Resource, Transform,
+        Commands, Deref, DerefMut, EventReader, Gizmos, KeyCode, Query, Res, ResMut, Resource,
+        Transform,
     },
-    scene::Scene,
+    scene::SceneRoot,
     time::Time,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
@@ -42,13 +45,13 @@ pub fn handle_input(
 
         let ax_val = ax.value as f64;
 
-        match ax.axis_type {
-            GamepadAxisType::LeftZ => sim_data.channels.throttle = ax_val,
-            GamepadAxisType::RightStickX => {
+        match ax.axis {
+            GamepadAxis::LeftZ => sim_data.channels.throttle = ax_val,
+            GamepadAxis::RightStickX => {
                 sim_data.channels.yaw = if ax_val > -0.96 { ax_val } else { -1. }
             }
-            GamepadAxisType::LeftStickX => sim_data.channels.roll = ax_val,
-            GamepadAxisType::LeftStickY => sim_data.channels.pitch = -ax_val,
+            GamepadAxis::LeftStickX => sim_data.channels.roll = ax_val,
+            GamepadAxis::LeftStickY => sim_data.channels.pitch = -ax_val,
             _ => {}
         }
     }
@@ -79,10 +82,10 @@ pub fn sim_loop(
     mut simulation: ResMut<Simulation>,
     mut sim_data: ResMut<SimulationData>,
     mut camera_query: Query<&mut PanOrbitCamera>,
-    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut scene_query: Query<(&mut Transform, &SceneRoot)>,
 ) {
-    let (mut tranform, _) = scene_query.single_mut();
-    let mut camera = camera_query.single_mut();
+    let (mut tranform, _) = scene_query.single_mut().unwrap();
+    let mut camera = camera_query.single_mut().unwrap();
     let debug_info = simulation.simulate_delta(timer.delta(), sim_data.channels);
 
     let drone_translation = ntb_vec3(debug_info.position);
@@ -116,13 +119,13 @@ pub fn enter_simulation(mut commands: Commands, mut context: ResMut<Context>) {
 }
 
 pub fn exit_simulation(
-    mut scene_query: Query<(&mut Transform, &Handle<Scene>)>,
+    mut scene_query: Query<(&mut Transform, &SceneRoot)>,
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut commands: Commands,
 ) {
     // reset transform
-    let (mut tranform, _) = scene_query.single_mut();
-    let mut camera = camera_query.single_mut();
+    let (mut tranform, _) = scene_query.single_mut().unwrap();
+    let mut camera = camera_query.single_mut().unwrap();
     tranform.rotation = Quat::IDENTITY;
     tranform.translation = Vec3::ZERO;
     camera.target_focus = tranform.translation;

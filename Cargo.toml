@@ -35,7 +35,7 @@ rusqlite = { version = "0.32.1", features = ["bundled"] }
 uuid = {version = "1.11.0", features = ["v4", "fast-rng"] }
 # speed up the training on the gpu, should readd this in the future
 # candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.2", features = ["cuda"] }
-rerun = "0.21.0"
+rerun = "0.23.3"
 log = "0.4.25"
 serde = { version = "1.0.228", features = ["derive"] } 
 derive_more = { version = "1.0.0", features = ["full"] }
