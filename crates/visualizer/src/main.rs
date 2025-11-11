@@ -8,23 +8,22 @@ mod ui;
 
 use crate::ui::menu::UIState;
 use bevy::{
-    app::{App, PluginGroup, PreUpdate, Startup, Update},
+    app::{App, PluginGroup, Startup, Update},
     asset::{AssetServer, Assets, Handle},
-    color::Color,
+    core_pipeline::core_3d::Camera3d,
+    ecs::schedule::IntoScheduleConfigs,
     gltf::Gltf,
-    input::{mouse::MouseWheel, ButtonInput},
-    math::{EulerRot, Mat3, Quat, Vec3},
-    pbr::{DirectionalLight, DirectionalLightBundle},
+    math::{Mat3, Vec3},
+    pbr::DirectionalLight,
     prelude::{
-        default, in_state, AppExtStates, Camera3dBundle, Commands, Deref, DerefMut, Events,
-        IntoSystemConfigs, KeyCode, MouseButton, NextState, OnEnter, OnExit, Res, ResMut, Resource,
-        States, Transform,
+        default, in_state, AppExtStates, Commands, Deref, DerefMut, NextState, OnEnter, OnExit,
+        Res, ResMut, Resource, States, Transform,
     },
-    scene::SceneBundle,
+    scene::SceneRoot,
     window::{PresentMode, Window, WindowPlugin, WindowTheme},
     DefaultPlugins,
 };
-use bevy_egui::{EguiContexts, EguiPlugin};
+use bevy_egui::{EguiGlobalSettings, EguiPlugin};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use core::f64;
@@ -88,29 +87,19 @@ pub struct Context(SimContext);
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
 /// initialize the flight controller and start the simulation
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            color: Color::srgb(1.0, 1.0, 0.9),
-            illuminance: 100000.0,
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        transform: Transform {
-            // Tilt the light to simulate the sun's angle (e.g., 45-degree angle)
-            rotation: Quat::from_euler(EulerRot::XYZ, -std::f32::consts::FRAC_PI_4, 0.0, 0.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
+pub fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut egui_global_settings: ResMut<EguiGlobalSettings>,
+) {
+    egui_global_settings.enable_absorb_bevy_input_system = true;
+    commands.spawn((DirectionalLight::default(), Transform::default()));
 
     commands.spawn((
-        Camera3dBundle {
-            transform: Transform {
-                translation: Vec3::new(0.0, 1.5, 5.0),
-                ..Transform::IDENTITY
-            },
-            ..default()
+        Camera3d::default(),
+        Transform {
+            translation: Vec3::new(0.0, 1.5, 5.0),
+            ..Transform::IDENTITY
         },
         PanOrbitCamera {
             ..Default::default()
@@ -136,44 +125,9 @@ fn load_drone_scene(
     };
 
     // Insert the scene bundle
-    commands.spawn(SceneBundle {
-        scene: gltf.scenes[0].clone(),
-        ..Default::default()
-    });
+    commands.spawn((SceneRoot(gltf.scenes[0].clone()), Transform::default()));
 
     next_state.set(VisualizerState::Menu);
-}
-
-fn absorb_egui_inputs(
-    mut contexts: EguiContexts,
-    mut mouse: ResMut<ButtonInput<MouseButton>>,
-    mut mouse_wheel: ResMut<Events<MouseWheel>>,
-    mut keyboard: ResMut<ButtonInput<KeyCode>>,
-) {
-    let ctx = contexts.ctx_mut();
-    if !(ctx.wants_pointer_input() || ctx.is_pointer_over_area()) {
-        return;
-    }
-    let modifiers = [
-        KeyCode::SuperLeft,
-        KeyCode::SuperRight,
-        KeyCode::ControlLeft,
-        KeyCode::ControlRight,
-        KeyCode::AltLeft,
-        KeyCode::AltRight,
-        KeyCode::ShiftLeft,
-        KeyCode::ShiftRight,
-    ];
-
-    let pressed = modifiers.map(|key| keyboard.pressed(key).then_some(key));
-
-    mouse.reset_all();
-    mouse_wheel.clear();
-    keyboard.reset_all();
-
-    for key in pressed.into_iter().flatten() {
-        keyboard.press(key);
-    }
 }
 
 fn main() {
@@ -195,19 +149,17 @@ fn main() {
         ..default()
     });
 
+    let egui_plugin = EguiPlugin {
+        enable_multipass_for_primary_context: false,
+    };
+
     App::new()
         .add_plugins(default_plugin)
-        .add_plugins(EguiPlugin)
+        .add_plugins(egui_plugin)
         .add_plugins(PanOrbitCameraPlugin)
         .insert_state(VisualizerState::Loading)
         .add_plugins(InfiniteGridPlugin)
         .add_systems(Startup, setup)
-        .add_systems(
-            PreUpdate,
-            absorb_egui_inputs
-                .after(bevy_egui::systems::process_input_system)
-                .before(bevy_egui::EguiSet::BeginPass),
-        )
         .add_systems(Update, draw_ui)
         .add_systems(
             Update,
