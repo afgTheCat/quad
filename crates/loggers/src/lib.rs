@@ -18,11 +18,38 @@ pub struct SnapShot {
     // pub current_frame: SimulationFrame,
 }
 
+impl SnapShot {
+    pub fn new(
+        duration: Duration,
+        motor_input: MotorInput,
+        battery_update: BatteryUpdate,
+        gyro_update: GyroUpdate,
+        channels: Channels,
+    ) -> Self {
+        Self {
+            duration,
+            motor_input,
+            battery_update,
+            gyro_update,
+            channels,
+        }
+    }
+}
+
 // This is what we need to save
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FlightLog {
     pub simulation_id: String,
     pub steps: Vec<SnapShot>,
+}
+
+impl FlightLog {
+    pub fn new(simulation_id: String, steps: Vec<SnapShot>) -> Self {
+        Self {
+            simulation_id,
+            steps,
+        }
+    }
 }
 
 pub trait Logger: Sync + Send + Any {

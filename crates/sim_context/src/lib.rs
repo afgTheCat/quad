@@ -254,7 +254,7 @@ impl SimContext {
         todo!()
     }
 
-    pub fn insert_logs(&mut self, id: &str, flight_logs: Vec<DBNewFlightLog>) {
+    pub fn insert_logs(&mut self, fl: FlightLog) {
         todo!()
     }
 }
