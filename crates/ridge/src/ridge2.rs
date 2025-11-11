@@ -2,7 +2,7 @@ use linfa::dataset::DatasetBase;
 use linfa::traits::Fit;
 use linfa_elasticnet::{ElasticNetParams, MultiTaskElasticNetParams};
 use nalgebra::{DMatrix, DVector, RawStorage};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, Axis};
 
 #[derive(Debug, Clone)]
 pub struct ENetSol {
@@ -127,6 +127,10 @@ fn dvector_to_array1(v: &DVector<f64>) -> Array1<f64> {
 
 fn array2_to_dmatrix(a: &Array2<f64>) -> DMatrix<f64> {
     let (r, c) = a.dim();
-    let (buf, _offset) = a.clone().into_raw_vec_and_offset();
+    // let (buf, _offset) = a.clone().into_raw_vec_and_offset();
+    let mut buf = Vec::with_capacity(r * c);
+    for row in a.axis_iter(Axis(0)) {
+        buf.extend(row.iter().copied());
+    }
     DMatrix::from_row_slice(r, c, &buf)
 }
