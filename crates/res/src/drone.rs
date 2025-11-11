@@ -6,10 +6,11 @@ use crate::{
 use nalgebra::DMatrix;
 use ridge::RidgeRegression;
 
-// TODO: serialize this
+// TODO: serialize this?
 pub struct DroneRc {
     pub esn: Esn,
     pub representation: Box<dyn Repr>,
+    // TODO: this is
     pub readout: RidgeRegression,
 }
 

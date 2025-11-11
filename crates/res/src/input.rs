@@ -1,5 +1,4 @@
 use db_common::DBFlightLog;
-// use db::simulation::DBFlightLog;
 use matfile::{Array, NumericData};
 use nalgebra::{DMatrix, DVector};
 
@@ -141,26 +140,6 @@ impl FlightInput {
             data,
         }
     }
-
-    // pub fn new_from_snapshots(flight_logs: Vec<Vec<SnapShot>>) -> Self {
-    //     let episodes = flight_logs.len();
-    //     let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
-    //     let data = flight_logs
-    //         .iter()
-    //         .map(|fl| {
-    //             let columns = fl.iter().map(db_fl_to_rc_input).collect::<Vec<_>>();
-    //             let m = DMatrix::from_columns(&columns).transpose();
-    //             println!("{:?}", m.shape());
-    //             m
-    //         })
-    //         .collect();
-    //     Self {
-    //         episodes,
-    //         time,
-    //         vars: 18, // TODO: do not hardcode in the future
-    //         data,
-    //     }
-    // }
 
     pub fn new_from_rc_input(flight_logs: Vec<Vec<DVector<f64>>>) -> Self {
         let episodes = flight_logs.len();
