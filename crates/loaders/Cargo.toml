@@ -19,3 +19,6 @@ smol.workspace = true
 # futures.workspace = true
 res.workspace = true
 db_common.workspace = true
+base64 = "0.22.1"
+bincode = "1.3.3"
+ridge.workspace = true

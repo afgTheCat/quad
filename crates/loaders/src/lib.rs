@@ -2,7 +2,6 @@ pub mod db_loader;
 pub mod default_laoder;
 pub mod file_loader;
 
-use db_common::NewDBRcModel;
 use drone::Drone;
 use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
@@ -29,5 +28,5 @@ pub trait LoaderTrait: Send + Sync {
     fn load_res_controller(&mut self, controller_id: &str) -> ResController;
 
     // Insert a new reservoir
-    fn insert_reservoir(&mut self, res: NewDBRcModel);
+    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController);
 }

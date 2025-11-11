@@ -65,7 +65,7 @@ impl LoaderTrait for FileLoader {
         todo!()
     }
 
-    fn insert_reservoir(&mut self, res: db_common::NewDBRcModel) {
+    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController) {
         todo!()
     }
 }

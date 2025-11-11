@@ -6778,6 +6778,8 @@ checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
 name = "loaders"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
+ "bincode",
  "db_common",
  "derive_more",
  "drone",
@@ -6785,6 +6787,7 @@ dependencies = [
  "loggers",
  "nalgebra",
  "res",
+ "ridge",
  "serde_json",
  "simulator",
  "smol",

@@ -1,4 +1,5 @@
 use crate::LoaderTrait;
+use base64::{Engine, prelude::BASE64_STANDARD};
 use db_common::{
     DBDroneModel, DBLowPassFilter, DBRotorState, DBSamplePoint, DBSimulationFrame, NewDBRcModel,
     queries::TestingDB,
@@ -9,8 +10,10 @@ use drone::{
 };
 use flight_controller::{Channels, controllers::res_controller::ResController};
 use loggers::{FlightLog, SnapShot};
-use nalgebra::{Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
-use res::drone::DroneRc;
+use nalgebra::{DMatrix, Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
+use res::representation::OutputRepr;
+use res::{drone::DroneRc, reservoir::Esn};
+use ridge::{RidgeRegression, RidgeRegressionSol};
 use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
 use std::{
     sync::{Arc, Mutex},
@@ -351,18 +354,75 @@ impl LoaderTrait for DBLoader {
         }
     }
 
-    fn insert_reservoir(&mut self, res: NewDBRcModel) {
-        let mut db = self.db.lock().unwrap();
-        db.insert_reservoir(res);
-    }
-
     fn load_res_controller(&mut self, controller_id: &str) -> ResController {
         let mut db = self.db.lock().unwrap();
-        let rc_data = db.load_db_rc_data(controller_id);
-        let drone_rc = DroneRc::from_db(rc_data);
+        let db_data = db.load_db_rc_data(controller_id);
+        let internal_weights_decoded = BASE64_STANDARD.decode(db_data.internal_weights).unwrap();
+        let internal_weights: DMatrix<f64> =
+            bincode::deserialize(&internal_weights_decoded).unwrap();
+        let input_weights = if let Some(input_weights) = db_data.input_weights {
+            let input_weights = BASE64_STANDARD.decode(input_weights).unwrap();
+            Some(bincode::deserialize(&input_weights).unwrap())
+        } else {
+            None
+        };
+        let esn = Esn {
+            n_internal_units: db_data.n_internal_units as usize,
+            input_scaling: db_data.input_scaling,
+            internal_weights,
+            input_weights,
+        };
+        let sol = match (db_data.readout_coeff, db_data.readout_intercept) {
+            (Some(coeff), Some(intercept)) => {
+                let coeff_decoded = BASE64_STANDARD.decode(coeff).unwrap();
+                let intercept_decoded = BASE64_STANDARD.decode(intercept).unwrap();
+                Some(RidgeRegressionSol {
+                    coeff: bincode::deserialize(&coeff_decoded).unwrap(),
+                    intercept: bincode::deserialize(&intercept_decoded).unwrap(),
+                })
+            }
+            _ => None,
+        };
+        let readout = RidgeRegression {
+            alpha: db_data.alpha,
+            sol,
+        };
+        let drone_rc = DroneRc {
+            esn,
+            representation: Box::new(OutputRepr::new(1.)),
+            readout,
+        };
         ResController {
             model: Mutex::new(drone_rc),
         }
+    }
+
+    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController) {
+        let controller = controller.model.lock().unwrap();
+        let internal_weights_serialized =
+            BASE64_STANDARD.encode(bincode::serialize(&controller.esn.internal_weights).unwrap());
+        let input_weights_serialized = controller.esn.input_weights.as_ref().map(|input_weights| {
+            BASE64_STANDARD.encode(bincode::serialize(input_weights).unwrap())
+        });
+        let (coeff, intercept) = if let Some(sol) = &controller.readout.sol {
+            (
+                Some(BASE64_STANDARD.encode(bincode::serialize(&sol.coeff).unwrap())),
+                Some(BASE64_STANDARD.encode(bincode::serialize(&sol.intercept).unwrap())),
+            )
+        } else {
+            (None, None)
+        };
+        let db_rc_model = NewDBRcModel {
+            rc_id: controller_id.to_owned(),
+            input_scaling: controller.esn.input_scaling,
+            n_internal_units: controller.esn.n_internal_units as i64,
+            internal_weights: internal_weights_serialized,
+            input_weights: input_weights_serialized,
+            alpha: controller.readout.alpha,
+            readout_intercept: intercept,
+            readout_coeff: coeff,
+        };
+        self.db.lock().unwrap().insert_reservoir(db_rc_model);
     }
 }
 
