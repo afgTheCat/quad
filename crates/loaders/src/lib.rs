@@ -8,7 +8,7 @@ use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
 use simulator::Simulator;
 
-pub trait DataAccessLayer: Send + Sync {
+pub trait LoaderTrait: Send + Sync {
     // load a drone
     fn load_drone(&mut self, config_id: &str) -> Drone;
 

@@ -10,7 +10,7 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use sim_context::{ControllerType, LoaderType, LoggerType, SimContext};
+use sim_context::{sim_context2::SimContext2, ControllerType, LoaderType, LoggerType};
 
 #[derive(Resource, Clone, PartialEq)]
 pub enum UIState {
@@ -77,7 +77,7 @@ impl UIState {
 pub fn main_menu_toggle(
     ui: &mut Ui,
     ui_state: &mut UIState,
-    context: &mut SimContext,
+    context: &mut SimContext2,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     ui.vertical_centered(|ui| {
@@ -213,7 +213,7 @@ pub fn main_menu_toggle(
                 }
                 context.set_loader(loader);
                 // needs to be created
-                context.set_logger_type(logger.clone());
+                context.set_logger(logger.clone());
                 // needs to be created
                 context.set_controller(controller.clone());
                 next_visualizer_state.set(VisualizerState::Simulation);
@@ -238,7 +238,7 @@ pub fn main_menu_toggle(
 pub fn menu_ui(
     mut egui_ctx: EguiContexts,
     ui_state: &mut UIState,
-    context: &mut SimContext,
+    context: &mut SimContext2,
     next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     let frame = Frame {

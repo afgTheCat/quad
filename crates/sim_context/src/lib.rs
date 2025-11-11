@@ -1,11 +1,12 @@
 pub mod input_gen;
+pub mod sim_context2;
 
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
 
-use db_common::{DBNewFlightLog, DBRcModel, NewDBRcModel};
+use db_common::{DBRcModel, NewDBRcModel};
 use drone::Drone;
 use flight_controller::{
     controllers::{
@@ -13,7 +14,7 @@ use flight_controller::{
     },
     FlightController,
 };
-use loaders::{db_loader::DBLoader, DataAccessLayer};
+use loaders::{db_loader::DBLoader, LoaderTrait};
 use loaders::{default_laoder::DefaultLoader, file_loader::FileLoader};
 use loggers::{
     db_logger::DBLogger, empty_logger::EmptyLogger, file_logger::FileLogger,
@@ -98,7 +99,7 @@ impl LoaderType {
 }
 
 #[derive(Debug)]
-pub struct SimContext {
+struct SimContext {
     // what kind of logger should be loaded
     pub logger_type: LoggerType,
     // what kind of flight controller we want to use

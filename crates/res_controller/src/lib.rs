@@ -6,7 +6,8 @@ use res::{
     drone::DroneRc, drone2::DroneRc2, input::FlightInput, representation::RepresentationType,
 };
 use ridge::{RidgeRegression, ridge2::ElasticNetWrapper};
-use sim_context::SimContext;
+use sim_context::sim_context2::SimContext2;
+// use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
     DVector::from_row_slice(&[
@@ -67,9 +68,9 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>) -> FlightInput {
 
 pub fn train_thing() {
     let replay_id = "only_up";
-    let mut sim_context = SimContext::default();
+    let mut sim_context = SimContext2::default();
     sim_context.set_loader(&sim_context::LoaderType::File);
-    let flight_log = sim_context.loader.load_replay(replay_id);
+    let flight_log = sim_context.load_replay(replay_id);
     // let mut drone_rc = DroneRc2::new(
     //     500,
     //     0.3,
@@ -101,27 +102,27 @@ pub fn train_thing() {
     // let db_data = drone_rc.to_new_db("only_up".into());
     // sim_context.insert_reservoir(db_data);
     //
-    let drone_rc_db = sim_context.select_reservoir("only_up_2");
-    let mut new_rc_mode = DroneRc::from_db(drone_rc_db);
-    let predicted_points = new_rc_mode.predict(Box::new(input));
-    let mut rec_flight_logs = vec![];
-
-    // TODO This is fake, what would be better is to launch a simulation with the controller.
-    for (i, motor_inputs) in predicted_points.row_iter().enumerate() {
-        let mut fl = flight_log.steps[i].clone();
-        let motor_inputs: MotorInput = MotorInput {
-            input: [
-                *motor_inputs.get(0).unwrap(),
-                *motor_inputs.get(1).unwrap(),
-                *motor_inputs.get(2).unwrap(),
-                *motor_inputs.get(3).unwrap(),
-            ],
-        };
-        fl.motor_input = motor_inputs;
-        rec_flight_logs.push(fl);
-    }
-
-    sim_context.insert_logs(FlightLog::new("rec".into(), rec_flight_logs));
+    // let drone_rc_db = sim_context.select_reservoir("only_up_2");
+    // let mut new_rc_mode = DroneRc::from_db(drone_rc_db);
+    // let predicted_points = new_rc_mode.predict(Box::new(input));
+    // let mut rec_flight_logs = vec![];
+    //
+    // // TODO This is fake, what would be better is to launch a simulation with the controller.
+    // for (i, motor_inputs) in predicted_points.row_iter().enumerate() {
+    //     let mut fl = flight_log.steps[i].clone();
+    //     let motor_inputs: MotorInput = MotorInput {
+    //         input: [
+    //             *motor_inputs.get(0).unwrap(),
+    //             *motor_inputs.get(1).unwrap(),
+    //             *motor_inputs.get(2).unwrap(),
+    //             *motor_inputs.get(3).unwrap(),
+    //         ],
+    //     };
+    //     fl.motor_input = motor_inputs;
+    //     rec_flight_logs.push(fl);
+    // }
+    //
+    // sim_context.insert_logs(FlightLog::new("rec".into(), rec_flight_logs));
 }
 
 #[cfg(test)]

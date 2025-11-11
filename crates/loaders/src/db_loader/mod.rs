@@ -1,4 +1,4 @@
-use crate::DataAccessLayer;
+use crate::LoaderTrait;
 use db_common::{
     DBDroneModel, DBLowPassFilter, DBRotorState, DBSamplePoint, DBSimulationFrame, NewDBRcModel,
     queries::TestingDB,
@@ -132,7 +132,7 @@ impl DBParts {
 
 // pub fn drone_to_db_parts(drone: &Drone) {}
 
-impl DataAccessLayer for DBLoader {
+impl LoaderTrait for DBLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
         let mut db = self.db.lock().unwrap();
         let frame = db.fetch_simulation_frame(config_id);

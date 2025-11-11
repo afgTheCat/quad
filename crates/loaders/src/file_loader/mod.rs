@@ -3,7 +3,7 @@ use flight_controller::controllers::res_controller::ResController;
 use simulator::Simulator;
 use std::{fs, path::PathBuf};
 
-use crate::DataAccessLayer;
+use crate::LoaderTrait;
 
 // const LOADER_PATH: &str = "/home/gabor/.local/share/quad/";
 fn loader_path() -> PathBuf {
@@ -13,7 +13,7 @@ fn loader_path() -> PathBuf {
 #[derive(Debug, Default)]
 pub struct FileLoader {}
 
-impl DataAccessLayer for FileLoader {
+impl LoaderTrait for FileLoader {
     fn load_drone(&mut self, config_id: &str) -> Drone {
         let mut drone_path = loader_path();
         drone_path.push("drones/");

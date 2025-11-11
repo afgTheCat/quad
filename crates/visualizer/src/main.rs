@@ -30,7 +30,7 @@ use core::f64;
 use nalgebra::{Rotation3, Vector3};
 use replay::{enter_replay, exit_replay, replay_loop};
 use sim::{enter_simulation, exit_simulation, handle_input, sim_loop};
-use sim_context::SimContext;
+use sim_context::sim_context2::SimContext2;
 use ui::draw_ui;
 
 // Controll the visualizer state. It controls which systems are going to run.
@@ -82,7 +82,7 @@ pub fn ntb_mat3(matrix: Rotation3<f64>) -> Mat3 {
 pub struct DroneAsset(Handle<Gltf>);
 
 #[derive(Resource, Deref, DerefMut, Debug)]
-pub struct Context(SimContext);
+pub struct Context(SimContext2);
 
 /// Set up the camera, light sources, the infinite grid, and start loading the drone scene. Loading
 /// glb objects in bevy is currently asyncronous and only when the scene is loaded should we
@@ -111,7 +111,7 @@ pub fn setup(
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset);
     commands.insert_resource(UIState::default());
-    commands.insert_resource(Context(SimContext::default()));
+    commands.insert_resource(Context(SimContext2::default()));
 }
 
 fn load_drone_scene(

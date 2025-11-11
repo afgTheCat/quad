@@ -5,7 +5,7 @@ use crate::{
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
 use db_common::{DBRcModel, NewDBRcModel};
-use nalgebra::{DMatrix, QR};
+use nalgebra::DMatrix;
 use ridge::{RidgeRegression, RidgeRegressionSol};
 
 // TODO: serialize this
