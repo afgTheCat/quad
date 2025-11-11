@@ -5,7 +5,7 @@ use crate::{
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
 use db_common::{DBRcModel, NewDBRcModel};
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, QR};
 use ridge::{RidgeRegression, RidgeRegressionSol};
 
 // TODO: serialize this
@@ -42,9 +42,9 @@ impl DroneRc {
     }
 
     // this is the same, maybe it works maybe it does not
-    pub fn fit(&mut self, body_rates: Box<dyn RcInput>, rc_data: DMatrix<f64>) {
-        let res_states = self.esn.compute_state_matricies(&body_rates);
-        let input_repr = self.representation.repr(body_rates, res_states);
+    pub fn fit(&mut self, input: Box<dyn RcInput>, rc_data: DMatrix<f64>) {
+        let res_states = self.esn.compute_state_matricies(&input);
+        let input_repr = self.representation.repr(input, res_states);
         self.readout.fit_multiple_svd(input_repr, &rc_data);
     }
 

@@ -305,7 +305,12 @@ impl RcModel {
 
     pub fn fit(&mut self, input: Box<dyn RcInput>, categories: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
+        // This is going to create create a linear model that is capable of predicting the next
+        // input based on the reseroirs current state. Actually what we have here are flattened
+        // linear models for all 270 training step!
         let input_repr = self.representation.repr(input, res_states);
+        // Next we create a mapping from the representation to the categories. Why though? I have
+        // no idea! I am not sure if this is ok tbh!
         self.readout.fit_multiple_svd(input_repr, &categories);
     }
 

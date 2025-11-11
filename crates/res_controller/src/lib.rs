@@ -1,8 +1,10 @@
 use db_common::DBFlightLog;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
-use res::{drone2::DroneRc2, input::FlightInput, representation::RepresentationType};
-use ridge::ridge2::ElasticNetWrapper;
+use res::{
+    drone::DroneRc, drone2::DroneRc2, input::FlightInput, representation::RepresentationType,
+};
+use ridge::{RidgeRegression, ridge2::ElasticNetWrapper};
 use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
@@ -67,22 +69,22 @@ pub fn train_thing() {
     let mut sim_context = SimContext::default();
     sim_context.set_loader(&sim_context::LoaderType::File);
     let flight_log = sim_context.loader.load_replay(replay_id);
-    let mut drone_rc = DroneRc2::new(
-        500,
-        0.3,
-        0.99,
-        0.2,
-        RepresentationType::Output(1.),
-        ElasticNetWrapper::new_ridge(1.),
-    );
-    // let mut drone_rc = DroneRc::new(
+    // let mut drone_rc = DroneRc2::new(
     //     500,
     //     0.3,
     //     0.99,
     //     0.2,
     //     RepresentationType::Output(1.),
-    //     RidgeRegression::new(1.),
+    //     ElasticNetWrapper::new_ridge(1.),
     // );
+    let mut drone_rc = DroneRc::new(
+        500,
+        0.3,
+        0.99,
+        0.2,
+        RepresentationType::Output(1.),
+        RidgeRegression::new(1.),
+    );
     drone_rc.esn.set_input_weights(18);
     let input = snapshots_to_flight_input(vec![flight_log.clone()]);
     let data_points = DMatrix::from_columns(

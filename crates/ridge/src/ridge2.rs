@@ -110,7 +110,6 @@ impl ElasticNetWrapper {
 }
 
 fn dmatrix_to_array2(m: &DMatrix<f64>) -> Array2<f64> {
-    // safe but not the fastest: fill by index to avoid column-major ordering issues
     let (r, c) = m.shape();
     let mut a = Array2::<f64>::zeros((r, c));
     for i in 0..r {
@@ -127,7 +126,6 @@ fn dvector_to_array1(v: &DVector<f64>) -> Array1<f64> {
 
 fn array2_to_dmatrix(a: &Array2<f64>) -> DMatrix<f64> {
     let (r, c) = a.dim();
-    // let (buf, _offset) = a.clone().into_raw_vec_and_offset();
     let mut buf = Vec::with_capacity(r * c);
     for row in a.axis_iter(Axis(0)) {
         buf.extend(row.iter().copied());

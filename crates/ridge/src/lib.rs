@@ -114,6 +114,8 @@ impl RidgeRegression {
             coeff_mult.set_row(i, &coeff.transpose());
             intercept_mult[i] = intercept;
         }
+        // saves the current solution, which is gonna be the coeffs and the intercepts (bias, wtf
+        // is this called intercept? By anybody? That shit is retarded)
         self.sol = Some(RidgeRegressionSol {
             coeff: coeff_mult.clone(),
             intercept: intercept_mult.clone(),
@@ -121,20 +123,21 @@ impl RidgeRegression {
         (coeff_mult, intercept_mult)
     }
 
-    // makes a prediction
-    pub fn predict(&self, x: DMatrix<f64>) -> DMatrix<f64> {
+    // makes a prediction, based on the calculated solution!
+    pub fn predict(&self, repr: DMatrix<f64>) -> DMatrix<f64> {
         let Some(RidgeRegressionSol { coeff, intercept }) = self.sol.as_ref() else {
             panic!()
         };
 
         DMatrix::from_rows(
-            &x.row_iter()
-                .map(|data_point| {
+            &repr
+                .row_iter()
+                .map(|data_point_repr| {
                     DVector::from(
                         intercept
                             .iter()
                             .zip(coeff.row_iter())
-                            .map(|(ic, c)| ic + data_point.dot(&c))
+                            .map(|(ic, coeff_row)| ic + data_point_repr.dot(&coeff_row))
                             .collect::<Vec<_>>(),
                     )
                     .transpose()

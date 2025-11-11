@@ -20,6 +20,8 @@ pub struct OutputRepr {
 }
 
 impl Repr for OutputRepr {
+    // This is going to be the linear model that predicts the next input based on the current state
+    // of the reservoir.
     fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let mut coeff_tr = vec![];
         let mut biases_tr = vec![];
