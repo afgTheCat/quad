@@ -185,5 +185,24 @@ impl SimContext2 {
         }
     }
 
-    pub fn insert_drone_rc(&mut self, drone_rc: ResController) {}
+    pub fn insert_drone_rc(&mut self, controller_id: &str, controller: ResController) {
+        self.loader
+            .lock()
+            .unwrap()
+            .insert_reservoir(controller_id, controller);
+    }
+
+    pub fn load_drone_rc(&mut self, controller_id: &str) -> ResController {
+        self.loader
+            .lock()
+            .unwrap()
+            .load_res_controller(controller_id)
+    }
+
+    pub fn insert_logs(&mut self, fl: FlightLog) {
+        let mut logger = self.logger.lock().unwrap();
+        for s in fl.steps {
+            logger.log_time_stamp(s);
+        }
+    }
 }

@@ -3,14 +3,14 @@ pub mod ridge2;
 use nalgebra::{DMatrix, DVector, RawStorage, SVD};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RidgeRegressionSol {
     pub coeff: DMatrix<f64>,
     pub intercept: DVector<f64>,
 }
 
 // Super basic ridge regression model using svd
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RidgeRegression {
     pub alpha: f64,
     pub sol: Option<RidgeRegressionSol>,

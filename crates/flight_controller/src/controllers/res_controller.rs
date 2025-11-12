@@ -1,9 +1,19 @@
 use crate::{FlightController, FlightControllerUpdate, MotorInput};
 use res::{drone::DroneRc, input::FlightInput};
+use serde::{Deserialize, Serialize};
 use std::{sync::Mutex, time::Duration};
 
+#[derive(Serialize, Deserialize)]
 pub struct ResController {
     pub model: Mutex<DroneRc>,
+}
+
+impl ResController {
+    pub fn new(drone_rc: DroneRc) -> Self {
+        Self {
+            model: Mutex::new(drone_rc),
+        }
+    }
 }
 
 impl FlightController for ResController {

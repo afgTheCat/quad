@@ -397,7 +397,7 @@ impl LoaderTrait for DBLoader {
         }
     }
 
-    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController) {
+    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
         let controller = controller.model.lock().unwrap();
         let internal_weights_serialized =
             BASE64_STANDARD.encode(bincode::serialize(&controller.esn.internal_weights).unwrap());

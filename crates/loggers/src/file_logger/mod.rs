@@ -10,7 +10,7 @@ pub struct FileLogger {
 }
 
 impl Logger for FileLogger {
-    fn log_time_stamp(&mut self, duration: std::time::Duration, snapshot: SnapShot) {
+    fn log_time_stamp(&mut self, snapshot: SnapShot) {
         self.snapshots.push(snapshot);
     }
 }

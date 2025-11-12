@@ -130,7 +130,7 @@ impl Simulator {
                     gyro_update: self.drone.current_frame.gyro_state.gyro_update(),
                     channels,
                 };
-                logger.log_time_stamp(self.time, snapshot);
+                logger.log_time_stamp(snapshot);
             }
 
             self.time_accu -= self.dt;

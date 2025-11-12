@@ -28,5 +28,5 @@ pub trait LoaderTrait: Send + Sync {
     fn load_res_controller(&mut self, controller_id: &str) -> ResController;
 
     // Insert a new reservoir
-    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController);
+    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController);
 }

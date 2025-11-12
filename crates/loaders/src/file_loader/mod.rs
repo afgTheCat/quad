@@ -62,20 +62,29 @@ impl LoaderTrait for FileLoader {
     }
 
     fn load_res_controller(&mut self, controller_id: &str) -> ResController {
-        todo!()
+        let mut reservoir_dir = loader_path();
+        reservoir_dir.push("reservoirs/");
+        fs::create_dir_all(&reservoir_dir).unwrap();
+        reservoir_dir.push(format!("{controller_id}"));
+        let content = fs::read_to_string(reservoir_dir).unwrap();
+        serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
-    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController) {
-        todo!()
+    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
+        let mut reservoir_dir = loader_path();
+        reservoir_dir.push("reservoirs/");
+        fs::create_dir_all(&reservoir_dir).unwrap();
+        reservoir_dir.push(format!("{controller_id}"));
+        let serialized = serde_json::to_string(&controller).unwrap();
+        fs::write(reservoir_dir, serialized).unwrap();
     }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::file_loader::loader_path;
     use drone::default_drone::default_7in_4s_drone;
     use std::fs;
-
-    use crate::file_loader::loader_path;
 
     #[test]
     fn save_default_config_to_file() {

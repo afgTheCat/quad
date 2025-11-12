@@ -35,7 +35,7 @@ impl LoaderTrait for DefaultLoader {
         unreachable!()
     }
 
-    fn insert_reservoir2(&mut self, controller_id: &str, controller: ResController) {
+    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
         todo!()
     }
 }

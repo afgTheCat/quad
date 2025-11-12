@@ -7,12 +7,10 @@ use nalgebra::DMatrix;
 use ridge::RidgeRegression;
 use serde::{Deserialize, Serialize};
 
-// TODO: serialize this?
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DroneRc {
     pub esn: Esn,
     pub representation: Representation,
-    // TODO: this is
     pub readout: RidgeRegression,
 }
 

@@ -25,12 +25,12 @@ impl DBLogger2 {
         }
     }
 
-    fn push_to_data(&mut self, duration: Duration, snapshot: SnapShot) {
+    fn push_to_data(&mut self, snapshot: SnapShot) {
         self.data.push(DBNewFlightLog {
             simulation_id: self.simulation_id.clone(),
             // TODO: this is stupid I think
             start_seconds: self.last_time_step,
-            end_seconds: duration.as_secs_f64(),
+            end_seconds: snapshot.duration.as_secs_f64(),
             motor_input_1: snapshot.motor_input[0],
             motor_input_2: snapshot.motor_input[1],
             motor_input_3: snapshot.motor_input[2],
@@ -66,9 +66,10 @@ impl Drop for DBLogger2 {
 }
 
 impl Logger for DBLogger2 {
-    fn log_time_stamp(&mut self, duration: Duration, snapshot: SnapShot) {
-        self.push_to_data(duration, snapshot);
-        self.last_time_step = duration.as_secs_f64();
+    fn log_time_stamp(&mut self, snapshot: SnapShot) {
+        let new_update_time = snapshot.duration.as_secs_f64();
+        self.push_to_data(snapshot);
+        self.last_time_step = new_update_time;
     }
 }
 
@@ -95,12 +96,12 @@ impl DBLogger {
         }
     }
 
-    fn push_to_data(&mut self, duration: Duration, snapshot: SnapShot) {
+    fn push_to_data(&mut self, snapshot: SnapShot) {
         self.data.push(DBNewFlightLog {
             simulation_id: self.simulation_id.clone(),
             // TODO: this is stupid I think
             start_seconds: self.last_time_step,
-            end_seconds: duration.as_secs_f64(),
+            end_seconds: snapshot.duration.as_secs_f64(),
             motor_input_1: snapshot.motor_input[0],
             motor_input_2: snapshot.motor_input[1],
             motor_input_3: snapshot.motor_input[2],
@@ -179,9 +180,10 @@ impl DBLogger {
 }
 
 impl Logger for DBLogger {
-    fn log_time_stamp(&mut self, duration: Duration, snapshot: SnapShot) {
-        self.push_to_data(duration, snapshot);
-        self.last_time_step = duration.as_secs_f64();
+    fn log_time_stamp(&mut self, snapshot: SnapShot) {
+        let new_time_step = snapshot.duration.as_secs_f64();
+        self.push_to_data(snapshot);
+        self.last_time_step = new_time_step;
     }
 }
 

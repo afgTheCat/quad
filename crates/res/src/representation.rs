@@ -10,7 +10,7 @@ pub enum RepresentationType {
     Output(f64),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Representation {
     LastState(LastStateRepr),
     Output(OutputRepr),
@@ -25,7 +25,7 @@ impl Representation {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputRepr {
     embedding: RidgeRegression,
 }
@@ -69,7 +69,7 @@ impl OutputRepr {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LastStateRepr;
 
 impl LastStateRepr {

@@ -53,5 +53,5 @@ impl FlightLog {
 }
 
 pub trait Logger: Sync + Send + Any {
-    fn log_time_stamp(&mut self, duration: Duration, snapshot: SnapShot);
+    fn log_time_stamp(&mut self, snapshot: SnapShot);
 }
