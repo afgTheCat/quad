@@ -2,26 +2,35 @@ use crate::input::RcInput;
 use nalgebra::DMatrix;
 use nalgebra::DVector;
 use ridge::RidgeRegression;
+use serde::Deserialize;
+use serde::Serialize;
 
 pub enum RepresentationType {
     LastState,
     Output(f64),
 }
 
-// This should be sync and send for comfort
-pub trait Repr: Sync + Send {
-    // calculates the representation for every episode. This way we typically lose one dymension
-    // which is fine I suppose
-    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64>;
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Representation {
+    LastState(LastStateRepr),
+    Output(OutputRepr),
 }
 
+impl Representation {
+    pub fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+        match self {
+            Self::LastState(ls) => ls.repr(input, res_states),
+            Self::Output(o) => o.repr(input, res_states),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct OutputRepr {
     embedding: RidgeRegression,
 }
 
-impl Repr for OutputRepr {
-    // This is going to be the linear model that predicts the next input based on the current state
-    // of the reservoir.
+impl OutputRepr {
     fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let mut coeff_tr = vec![];
         let mut biases_tr = vec![];
@@ -60,10 +69,10 @@ impl OutputRepr {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct LastStateRepr;
 
-impl Repr for LastStateRepr {
+impl LastStateRepr {
     fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let (_, time_steps, _) = input.shape();
         let last_states = res_states

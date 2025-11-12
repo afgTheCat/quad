@@ -1,22 +1,11 @@
-// pub mod default_drone;
-// pub mod input_gen;
-// pub mod loader;
-// pub mod loggers;
-// pub mod low_pass_filter;
-// pub mod sample_curve;
-
-use db_common::DBFlightLog;
-// use db::simulation::DBFlightLog;
 use drone::{Drone, SimulationFrame};
 use flight_controller::{
     controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
 };
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
 use loggers::{empty_logger::EmptyLogger, FlightLog, Logger, SnapShot};
-// use loggers::Logger;
-use nalgebra::{Matrix3, Rotation3, Vector3, Vector4};
+use nalgebra::{Rotation3, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-// pub use sample_curve::{SampleCurve, SamplePoint};
 use std::{
     cell::RefCell,
     ops::Range,
@@ -34,10 +23,6 @@ thread_local! {
 
 pub fn rng_gen_range(range: Range<f64>) -> f64 {
     RNG.with(|rng| rng.borrow_mut().gen_range(range))
-}
-
-fn cross_product_matrix(v: Vector3<f64>) -> Matrix3<f64> {
-    Matrix3::new(0., -v[2], v[1], v[2], 0., -v[0], -v[1], v[0], 0.)
 }
 
 #[derive(Debug, Default)]

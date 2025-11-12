@@ -11,7 +11,7 @@ use drone::{
 use flight_controller::{Channels, controllers::res_controller::ResController};
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
-use res::representation::OutputRepr;
+use res::representation::{OutputRepr, Representation};
 use res::{drone::DroneRc, reservoir::Esn};
 use ridge::{RidgeRegression, RidgeRegressionSol};
 use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
@@ -389,7 +389,7 @@ impl LoaderTrait for DBLoader {
         };
         let drone_rc = DroneRc {
             esn,
-            representation: Box::new(OutputRepr::new(1.)),
+            representation: Representation::Output(OutputRepr::new(1.)),
             readout,
         };
         ResController {

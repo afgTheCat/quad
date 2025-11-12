@@ -3,13 +3,13 @@ use ridge::ridge2::ElasticNetWrapper;
 
 use crate::{
     input::RcInput,
-    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
+    representation::{LastStateRepr, OutputRepr, Representation, RepresentationType},
     reservoir::Esn,
 };
 
 pub struct DroneRc2 {
     pub esn: Esn,
-    representation: Box<dyn Repr>,
+    representation: Representation,
     pub readout: ElasticNetWrapper,
 }
 
@@ -28,9 +28,9 @@ impl DroneRc2 {
             spectral_radius,
             input_scaling,
         );
-        let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::default()),
-            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        let representation = match representation {
+            RepresentationType::LastState => Representation::LastState(LastStateRepr::default()),
+            RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
         };
         Self {
             esn,

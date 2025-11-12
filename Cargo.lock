@@ -10571,6 +10571,7 @@ dependencies = [
  "linfa-elasticnet",
  "nalgebra",
  "ndarray",
+ "serde",
 ]
 
 [[package]]

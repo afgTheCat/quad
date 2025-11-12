@@ -1,15 +1,17 @@
 use crate::{
     input::RcInput,
-    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
+    representation::{LastStateRepr, OutputRepr, Representation, RepresentationType},
     reservoir::Esn,
 };
 use nalgebra::DMatrix;
 use ridge::RidgeRegression;
+use serde::{Deserialize, Serialize};
 
 // TODO: serialize this?
+#[derive(Serialize, Deserialize)]
 pub struct DroneRc {
     pub esn: Esn,
-    pub representation: Box<dyn Repr>,
+    pub representation: Representation,
     // TODO: this is
     pub readout: RidgeRegression,
 }
@@ -29,9 +31,9 @@ impl DroneRc {
             spectral_radius,
             input_scaling,
         );
-        let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::default()),
-            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        let representation = match representation {
+            RepresentationType::LastState => Representation::LastState(LastStateRepr::default()),
+            RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
         };
         Self {
             esn,

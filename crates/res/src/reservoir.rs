@@ -2,7 +2,7 @@ use crate::{
     extract_double,
     input::{RcInput, TSInput},
     one_hot_encode,
-    representation::{LastStateRepr, OutputRepr, Repr, RepresentationType},
+    representation::{LastStateRepr, OutputRepr, Representation, RepresentationType},
 };
 use matfile::MatFile;
 use nalgebra::{clamp, DVector};
@@ -10,6 +10,7 @@ use nalgebra::{Complex, ComplexField, DMatrix};
 use rand::thread_rng;
 use rand_distr::{Bernoulli, Distribution, Uniform};
 use ridge::{ridge2::ElasticNetWrapper, RidgeRegression};
+use serde::{Deserialize, Serialize};
 use smartcore::metrics::{f1::F1, Metrics};
 
 pub struct GenericModelCore {
@@ -152,7 +153,7 @@ impl MultiModelCore {
 }
 
 // TODO: serialize this
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Esn {
     pub n_internal_units: usize,
     pub input_scaling: f64,
@@ -272,7 +273,7 @@ impl Esn {
 
 pub struct RcModel {
     pub esn: Esn,
-    representation: Box<dyn Repr>,
+    representation: Representation,
     pub readout: RidgeRegression,
 }
 
@@ -292,9 +293,9 @@ impl RcModel {
             spectral_radius,
             input_scaling,
         );
-        let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::default()),
-            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        let representation = match representation {
+            RepresentationType::LastState => Representation::LastState(LastStateRepr::default()),
+            RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
         };
         Self {
             esn,
@@ -327,7 +328,7 @@ impl RcModel {
 
 pub struct RcModel2 {
     pub esn: Esn,
-    representation: Box<dyn Repr>,
+    representation: Representation,
     pub readout: ElasticNetWrapper,
 }
 
@@ -346,9 +347,9 @@ impl RcModel2 {
             spectral_radius,
             input_scaling,
         );
-        let representation: Box<dyn Repr> = match representation {
-            RepresentationType::LastState => Box::new(LastStateRepr::default()),
-            RepresentationType::Output(alpha) => Box::new(OutputRepr::new(alpha)),
+        let representation = match representation {
+            RepresentationType::LastState => Representation::LastState(LastStateRepr::default()),
+            RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
         };
         Self {
             esn,

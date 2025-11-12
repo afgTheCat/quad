@@ -4,7 +4,9 @@ use std::{
 };
 
 use flight_controller::{
-    controllers::{bf_controller::BFController, null_controller::NullController},
+    controllers::{
+        bf_controller::BFController, null_controller::NullController, res_controller::ResController,
+    },
     FlightController,
 };
 use loaders::{
@@ -182,4 +184,6 @@ impl SimContext2 {
             None
         }
     }
+
+    pub fn insert_drone_rc(&mut self, drone_rc: ResController) {}
 }
