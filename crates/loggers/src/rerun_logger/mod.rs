@@ -17,11 +17,19 @@ impl Logger for RerunLogger {
         //     .log("drone/pos", &points.with_radii([0.8]))
         //     .unwrap();
     }
+
+    fn flush(&mut self) {
+        self.rec.flush_blocking();
+    }
+
+    fn set_simulation_id(&mut self, smulation_id: &str) {
+        todo!()
+    }
 }
 
 impl Drop for RerunLogger {
     fn drop(&mut self) {
-        self.rec.flush_blocking();
+        self.flush();
     }
 }
 

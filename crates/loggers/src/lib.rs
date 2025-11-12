@@ -54,4 +54,6 @@ impl FlightLog {
 
 pub trait Logger: Sync + Send + Any {
     fn log_time_stamp(&mut self, snapshot: SnapShot);
+    fn flush(&mut self);
+    fn set_simulation_id(&mut self, simulation_id: &str);
 }

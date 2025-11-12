@@ -43,8 +43,6 @@ impl DroneRc2 {
     pub fn fit(&mut self, body_rates: Box<dyn RcInput>, rc_data: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&body_rates);
         let input_repr = self.representation.repr(body_rates, res_states);
-        println!("input repr: {:?}", input_repr.shape());
-        println!("rc data shape: {:?}", rc_data.shape());
         self.readout.fit_multiple(&input_repr, &rc_data);
     }
 

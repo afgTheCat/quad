@@ -184,18 +184,21 @@ pub fn main_menu_toggle(
             .show_ui(ui, |ui| {
                 if ui.selectable_value(loader, LoaderType::DB, "DB").clicked() {
                     context.set_loader(&LoaderType::DB);
+                    context.refresh_cache();
                 };
                 if ui
                     .selectable_value(loader, LoaderType::File, "File")
                     .clicked()
                 {
                     context.set_loader(&LoaderType::File);
+                    context.refresh_cache();
                 };
                 if ui
                     .selectable_value(loader, LoaderType::DefaultLoader, "Default")
                     .clicked()
                 {
                     context.set_loader(&LoaderType::DefaultLoader);
+                    context.refresh_cache();
                 };
             });
     });

@@ -201,8 +201,10 @@ impl SimContext2 {
 
     pub fn insert_logs(&mut self, fl: FlightLog) {
         let mut logger = self.logger.lock().unwrap();
+        logger.set_simulation_id(&fl.simulation_id);
         for s in fl.steps {
             logger.log_time_stamp(s);
         }
+        logger.flush();
     }
 }

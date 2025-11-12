@@ -54,7 +54,6 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>) -> FlightInput {
                 .map(|f| snapshot_fl_input(f))
                 .collect::<Vec<_>>();
             let m = DMatrix::from_columns(&columns).transpose();
-            println!("{:?}", m.shape());
             m
         })
         .collect();

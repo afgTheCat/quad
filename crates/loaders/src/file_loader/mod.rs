@@ -40,7 +40,6 @@ impl LoaderTrait for FileLoader {
     // just list the file names in the loader.
     fn get_replay_ids(&mut self) -> Vec<String> {
         let mut replays_dir = loader_path();
-        // TODO: are these the replays
         replays_dir.push("replays/");
         fs::create_dir_all(&replays_dir).unwrap();
         fs::read_dir(replays_dir)

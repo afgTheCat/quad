@@ -111,7 +111,9 @@ pub fn setup(
     let drone_asset = DroneAsset(drone_scene);
     commands.insert_resource(drone_asset);
     commands.insert_resource(UIState::default());
-    commands.insert_resource(Context(SimContext2::default()));
+    let mut context = SimContext2::default();
+    context.refresh_cache();
+    commands.insert_resource(Context(context));
 }
 
 fn load_drone_scene(
