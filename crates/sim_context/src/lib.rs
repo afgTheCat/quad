@@ -1,5 +1,4 @@
 pub mod input_gen;
-// pub mod sim_context2;
 
 use drone::Drone;
 use flight_controller::{
