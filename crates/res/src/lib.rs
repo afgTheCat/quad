@@ -1,6 +1,8 @@
+pub mod esn;
 pub mod input;
 pub mod representation;
 pub mod reservoir;
+pub mod verification;
 
 use matfile::{Array, NumericData};
 use nalgebra::DMatrix;
