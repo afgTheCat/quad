@@ -1,8 +1,7 @@
+use crate::SimContext;
 use flight_controller::Channels;
 use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use std::time::Duration;
-
-use crate::SimContext;
 
 // TODO: check if the data set is going to be rich enough
 fn generate_axis(milisecs: u128) -> Vec<f64> {
@@ -49,7 +48,7 @@ pub fn build_data_set(
 ) {
     let mut context = SimContext::default();
     context.set_loader(&crate::LoaderType::File);
-    context.set_logger_type(crate::LoggerType::File);
+    context.set_logger(crate::LoggerType::File);
     let training_inputs = (0..training_size)
         .map(|_| generate_all_axis(training_duration))
         .collect::<Vec<_>>();

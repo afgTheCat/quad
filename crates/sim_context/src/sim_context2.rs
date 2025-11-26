@@ -22,7 +22,7 @@ use uuid::Uuid;
 
 use crate::{ControllerType, LoaderType, LoggerType};
 
-pub struct SimContext2 {
+pub struct SimContext {
     // Logger
     pub flight_controller: Arc<dyn FlightController>,
     // Controller
@@ -42,16 +42,16 @@ pub struct SimContext2 {
     pub simulation_id: Option<String>,
 }
 
-impl std::fmt::Debug for SimContext2 {
+impl std::fmt::Debug for SimContext {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // TODO: add implementation
         Ok(())
     }
 }
 
-impl Default for SimContext2 {
+impl Default for SimContext {
     fn default() -> Self {
-        let mut sim_context = SimContext2 {
+        let mut sim_context = SimContext {
             logger: Arc::new(Mutex::new(EmptyLogger::default())),
             flight_controller: Arc::new(NullController::default()),
             loader: Arc::new(Mutex::new(DefaultLoader::default())),
@@ -66,7 +66,7 @@ impl Default for SimContext2 {
     }
 }
 
-impl SimContext2 {
+impl SimContext {
     pub fn set_loader(&mut self, loader_type: &LoaderType) {
         match loader_type {
             LoaderType::DB => self.loader = Arc::new(Mutex::new(DBLoader::default())),

@@ -10,7 +10,7 @@ use bevy_egui::{
     },
     EguiContexts,
 };
-use sim_context::{sim_context2::SimContext2, ControllerType, LoaderType, LoggerType};
+use sim_context::{ControllerType, LoaderType, LoggerType, SimContext};
 
 #[derive(Resource, Clone, PartialEq)]
 pub enum UIState {
@@ -77,7 +77,7 @@ impl UIState {
 pub fn main_menu_toggle(
     ui: &mut Ui,
     ui_state: &mut UIState,
-    context: &mut SimContext2,
+    context: &mut SimContext,
     mut next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     ui.vertical_centered(|ui| {
@@ -113,7 +113,7 @@ pub fn main_menu_toggle(
     ui.horizontal(|ui| {
         ui.label("Controller:");
         match ui_state {
-            UIState::Simulation { controller, .. } | UIState::Replay { controller, .. } => {
+            UIState::Simulation { controller, .. } => {
                 let label = format!("{controller:?}");
                 egui::ComboBox::from_id_salt("Controller selector")
                     .selected_text(label)
@@ -128,6 +128,9 @@ pub fn main_menu_toggle(
                         }
                         ui.selectable_value(controller, ControllerType::NullController, "Null");
                     });
+            }
+            UIState::Replay { .. } => {
+                ui.label("Only available in simulation mode");
             }
         }
     });
@@ -223,12 +226,12 @@ pub fn main_menu_toggle(
             }
             UIState::Replay {
                 replay_id: Some(replay_id),
-                controller,
                 loader,
+                ..
             } => {
                 context.set_loader(loader);
                 context.set_replay_id(replay_id.to_owned());
-                context.set_controller(controller.clone());
+                // context.set_controller(controller.clone());
                 next_visualizer_state.set(VisualizerState::Replay);
             }
             _ => {
@@ -241,7 +244,7 @@ pub fn main_menu_toggle(
 pub fn menu_ui(
     mut egui_ctx: EguiContexts,
     ui_state: &mut UIState,
-    context: &mut SimContext2,
+    context: &mut SimContext,
     next_visualizer_state: ResMut<NextState<VisualizerState>>,
 ) {
     let frame = Frame {

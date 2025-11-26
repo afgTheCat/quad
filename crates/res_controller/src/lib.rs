@@ -2,12 +2,9 @@ use db_common::DBFlightLog;
 use flight_controller::{MotorInput, controllers::res_controller::ResController};
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
-use res::{
-    drone::DroneRc, drone2::DroneRc2, input::FlightInput, representation::RepresentationType,
-};
-use ridge::{RidgeRegression, ridge2::ElasticNetWrapper};
-use sim_context::sim_context2::SimContext2;
-// use sim_context::SimContext;
+use res::{drone::DroneRc, input::FlightInput, representation::RepresentationType};
+use ridge::RidgeRegression;
+use sim_context::SimContext;
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
     DVector::from_row_slice(&[
@@ -67,7 +64,7 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>) -> FlightInput {
 
 pub fn train_thing() {
     let replay_id = "only_up";
-    let mut sim_context = SimContext2::default();
+    let mut sim_context = SimContext::default();
     // load from files
     sim_context.set_loader(&sim_context::LoaderType::File);
     sim_context.set_logger(sim_context::LoggerType::File);
@@ -102,6 +99,11 @@ pub fn train_thing() {
     let mut rec_flight_logs = vec![];
     for (i, motor_inputs) in predicted_points.row_iter().enumerate() {
         let mut fl = flight_log.steps[i].clone();
+        println!("{}", *motor_inputs.get(0).unwrap());
+        println!("{}", *motor_inputs.get(1).unwrap());
+        println!("{}", *motor_inputs.get(2).unwrap());
+        println!("{}", *motor_inputs.get(3).unwrap());
+        println!("---------------------------------");
         let motor_inputs: MotorInput = MotorInput {
             input: [
                 *motor_inputs.get(0).unwrap(),
