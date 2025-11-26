@@ -1,5 +1,4 @@
-pub mod drone;
-pub mod drone2;
+// pub mod drone;
 pub mod input;
 pub mod representation;
 pub mod reservoir;

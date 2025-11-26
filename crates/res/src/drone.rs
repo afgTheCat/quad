@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct DroneRc {
     pub esn: Esn,
     pub representation: Representation,
+    // Could be changed to ElasticNetWrapper
     pub readout: RidgeRegression,
 }
 
