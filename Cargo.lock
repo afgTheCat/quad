@@ -4947,6 +4947,7 @@ dependencies = [
  "nalgebra",
  "once_cell",
  "res",
+ "res_controller",
  "ridge",
  "serde",
  "tempfile",
@@ -6787,6 +6788,7 @@ dependencies = [
  "loggers",
  "nalgebra",
  "res",
+ "res_controller",
  "ridge",
  "serde_json",
  "simulator",
@@ -10502,10 +10504,22 @@ name = "res_controller"
 version = "0.1.0"
 dependencies = [
  "db_common",
+ "nalgebra",
+ "res",
+ "ridge",
+ "serde",
+]
+
+[[package]]
+name = "res_controller_training"
+version = "0.1.0"
+dependencies = [
+ "db_common",
  "flight_controller",
  "loggers",
  "nalgebra",
  "res",
+ "res_controller",
  "ridge",
  "sim_context",
 ]

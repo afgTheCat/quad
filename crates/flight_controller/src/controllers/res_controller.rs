@@ -1,5 +1,6 @@
 use crate::{FlightController, FlightControllerUpdate, MotorInput};
 use res::input::FlightInput;
+use res_controller::DroneRc;
 use serde::{Deserialize, Serialize};
 use std::{sync::Mutex, time::Duration};
 

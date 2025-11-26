@@ -12,7 +12,8 @@ use flight_controller::{Channels, controllers::res_controller::ResController};
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use res::representation::{OutputRepr, Representation};
-use res::{drone::DroneRc, reservoir::Esn};
+use res::reservoir::Esn;
+use res_controller::DroneRc;
 use ridge::{RidgeRegression, RidgeRegressionSol};
 use simulator::{BatteryUpdate, GyroUpdate, MotorInput};
 use std::{

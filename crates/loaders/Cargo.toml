@@ -22,3 +22,4 @@ db_common.workspace = true
 base64 = "0.22.1"
 bincode = "1.3.3"
 ridge.workspace = true
+res_controller.workspace = true

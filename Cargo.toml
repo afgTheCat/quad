@@ -10,7 +10,9 @@ members = [
   "crates/loggers",
   "crates/loaders", 
   "crates/db_common"
-, "crates/res_controller"]
+, "crates/res_controller",
+  "crates/res_controller_training"
+]
 resolver = "2"
 
 [workspace.dependencies]
@@ -25,6 +27,7 @@ drone = { path = "crates/drone" }
 loggers = { path = "crates/loggers" }
 loaders = { path = "crates/loaders" }
 db_common = { path = "crates/db_common" }
+res_controller = { path = "crates/res_controller" }
 
 
 # external

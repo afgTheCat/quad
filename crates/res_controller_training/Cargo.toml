@@ -1,11 +1,14 @@
 [package]
-name = "res_controller"
+name = "res_controller_training"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+sim_context.workspace = true
+res_controller.workspace = true
+flight_controller.workspace = true
 res.workspace = true
 ridge.workspace = true
 nalgebra.workspace = true
 db_common.workspace = true
-serde.workspace = true
+loggers.workspace = true
