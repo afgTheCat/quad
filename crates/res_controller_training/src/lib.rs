@@ -90,7 +90,7 @@ fn recreate_replay(sim_context: &mut SimContext, controller_id: &str, replay_id:
     sim_context.insert_logs(FlightLog::new(inserted_replay_id.into(), rec_flight_logs));
 }
 
-pub fn train_only_up() {
+pub fn simple_training_strategy() {
     let only_up_trajectory = "only_up";
     let controller_id = "trained_on_only_up";
 
@@ -128,11 +128,11 @@ pub fn train_only_up() {
 
 #[cfg(test)]
 mod test {
-    use crate::train_only_up;
+    use crate::simple_training_strategy;
 
     // resurrecting the old only up test!
     #[test]
     fn old_res_training_thing() {
-        train_only_up();
+        simple_training_strategy();
     }
 }
