@@ -95,3 +95,12 @@ impl AllStatesForSingleEp {
         res_states[0].clone()
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufferedStatesForSingleEp(usize);
+
+impl BufferedStatesForSingleEp {
+    // fn repr(&mut self, _input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    //     assert_eq!(res_states.len(), 1, "Learns from a single episode"); // For now
+    // }
+}

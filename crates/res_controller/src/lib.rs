@@ -4,7 +4,7 @@ use res::{
     input::RcInput,
     representation::{
         AllStatesForSingleEp, LastStateRepr, OutputRepr, Representation, RepresentationType,
-    }, // reservoir::Esn,
+    },
 };
 use ridge::RidgeRegression;
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,8 @@
+use std::time::Duration;
+
 use db_common::DBFlightLog;
 use drone::Drone;
-use flight_controller::{MotorInput, controllers::res_controller::ResController};
+use flight_controller::MotorInput;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
 use res::{input::FlightInput, representation::RepresentationType};
@@ -100,7 +102,8 @@ pub fn simple_training_strategy() {
 
     // does not change
     let drone = sim_context.load_drone().unwrap();
-    let flight_log = sim_context.load_replay(only_up_trajectory);
+    let mut flight_log = sim_context.load_replay(only_up_trajectory);
+    flight_log.downsample(Duration::from_millis(1));
     let mut drone_rc = DroneRc::new(
         500,
         0.3,
@@ -124,6 +127,29 @@ pub fn simple_training_strategy() {
     drone_rc.fit(Box::new(input.clone()), data_points);
     recreate_replay(&mut sim_context, controller_id, only_up_trajectory);
     recreate_replay(&mut sim_context, controller_id, "only_up2");
+}
+
+pub fn buffert_training_strategy() {
+    let only_up_trajectory = "only_up";
+    let controller_id = "buffered_trained_on_only_up";
+
+    let mut sim_context = SimContext::default();
+    sim_context.set_loader(&sim_context::LoaderType::File);
+    sim_context.set_logger(sim_context::LoggerType::File);
+
+    // does not change
+    let drone = sim_context.load_drone().unwrap();
+    let flight_log = sim_context.load_replay(only_up_trajectory);
+    let mut drone_rc = DroneRc::new(
+        500,
+        0.3,
+        0.99,
+        0.2,
+        RepresentationType::AllStates,
+        RidgeRegression::new(1.),
+    );
+    let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
+    drone_rc.esn.set_input_weights(input.vars);
 }
 
 #[cfg(test)]

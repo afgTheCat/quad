@@ -50,6 +50,18 @@ impl FlightLog {
             steps,
         }
     }
+
+    pub fn downsample(&mut self, target_dt: Duration) {
+        let mut t = self.steps[0].duration;
+        let mut new_steps = vec![self.steps[0].clone()];
+        for sample in self.steps.iter() {
+            if sample.duration - t >= target_dt {
+                t = sample.duration;
+                new_steps.push(sample.clone());
+            }
+        }
+        self.steps = new_steps
+    }
 }
 
 pub trait Logger: Sync + Send + Any {
