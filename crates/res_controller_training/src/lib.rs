@@ -66,43 +66,11 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>, drone: &Drone) -> Flig
     }
 }
 
-pub fn train_only_up() {
-    let replay_id = "only_up";
-    let controller_id = "trained_on_only_up";
-    let inserted_replay = "recalculated_inputs";
-
-    let mut sim_context = SimContext::default();
-    sim_context.set_loader(&sim_context::LoaderType::File);
-    sim_context.set_logger(sim_context::LoggerType::File);
-
-    // does not change
+fn recreate_replay(sim_context: &mut SimContext, controller_id: &str, replay_id: &str) {
     let drone = sim_context.load_drone().unwrap();
+    let inserted_replay_id = format!("{replay_id}_recreated");
     let flight_log = sim_context.load_replay(replay_id);
-    let mut drone_rc = DroneRc::new(
-        500,
-        0.3,
-        0.99,
-        0.2,
-        RepresentationType::AllStates,
-        RidgeRegression::new(1.),
-    );
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
-    drone_rc.esn.set_input_weights(input.vars);
-
-    let data_points = DMatrix::from_rows(
-        &flight_log
-            .steps
-            .iter()
-            .map(|e| DVector::from_row_slice(&e.motor_input.input).transpose())
-            .collect::<Vec<_>>(),
-    )
-    .transpose();
-
-    drone_rc.fit(Box::new(input.clone()), data_points);
-    // save the trained reservoir controller
-    sim_context.insert_drone_rc(controller_id, ResController::new(drone_rc.clone()));
-
-    // let drone_rc_db = sim_context.select_reservoir("only_up_2");
     let new_rc_model = sim_context.load_drone_rc(controller_id);
     let predicted_points = new_rc_model.model.lock().unwrap().predict(Box::new(input));
     let mut rec_flight_logs = vec![];
@@ -119,7 +87,43 @@ pub fn train_only_up() {
         fl.motor_input = motor_inputs;
         rec_flight_logs.push(fl);
     }
-    sim_context.insert_logs(FlightLog::new(inserted_replay.into(), rec_flight_logs));
+    sim_context.insert_logs(FlightLog::new(inserted_replay_id.into(), rec_flight_logs));
+}
+
+pub fn train_only_up() {
+    let only_up_trajectory = "only_up";
+    let controller_id = "trained_on_only_up";
+
+    let mut sim_context = SimContext::default();
+    sim_context.set_loader(&sim_context::LoaderType::File);
+    sim_context.set_logger(sim_context::LoggerType::File);
+
+    // does not change
+    let drone = sim_context.load_drone().unwrap();
+    let flight_log = sim_context.load_replay(only_up_trajectory);
+    let mut drone_rc = DroneRc::new(
+        500,
+        0.3,
+        0.99,
+        0.2,
+        RepresentationType::AllStates,
+        RidgeRegression::new(1.),
+    );
+    let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
+    drone_rc.esn.set_input_weights(input.vars);
+
+    let data_points = DMatrix::from_columns(
+        &flight_log
+            .steps
+            .iter()
+            .map(|e| DVector::from_row_slice(&e.motor_input.input))
+            .collect::<Vec<_>>(),
+    )
+    .transpose();
+
+    drone_rc.fit(Box::new(input.clone()), data_points);
+    recreate_replay(&mut sim_context, controller_id, only_up_trajectory);
+    recreate_replay(&mut sim_context, controller_id, "only_up2");
 }
 
 #[cfg(test)]
