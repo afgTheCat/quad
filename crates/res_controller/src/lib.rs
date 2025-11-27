@@ -2,7 +2,9 @@ use nalgebra::DMatrix;
 use res::{
     esn::Esn,
     input::RcInput,
-    representation::{LastStateRepr, OutputRepr, Representation, RepresentationType}, // reservoir::Esn,
+    representation::{
+        AllStatesForSingleEp, LastStateRepr, OutputRepr, Representation, RepresentationType,
+    }, // reservoir::Esn,
 };
 use ridge::RidgeRegression;
 use serde::{Deserialize, Serialize};
@@ -33,6 +35,9 @@ impl DroneRc {
         let representation = match representation {
             RepresentationType::LastState => Representation::LastState(LastStateRepr::default()),
             RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
+            RepresentationType::AllStates => {
+                Representation::AllStateForSingle(AllStatesForSingleEp)
+            }
         };
         Self {
             esn,

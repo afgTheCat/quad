@@ -8,12 +8,14 @@ use serde::Serialize;
 pub enum RepresentationType {
     LastState,
     Output(f64),
+    AllStates,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Representation {
     LastState(LastStateRepr),
     Output(OutputRepr),
+    AllStateForSingle(AllStatesForSingleEp),
 }
 
 impl Representation {
@@ -21,6 +23,7 @@ impl Representation {
         match self {
             Self::LastState(ls) => ls.repr(input, res_states),
             Self::Output(o) => o.repr(input, res_states),
+            Self::AllStateForSingle(r) => r.repr(input, res_states),
         }
     }
 }
@@ -80,5 +83,15 @@ impl LastStateRepr {
             .map(|ep| ep.row(time_steps - 1))
             .collect::<Vec<_>>();
         DMatrix::from_rows(&last_states)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AllStatesForSingleEp;
+
+impl AllStatesForSingleEp {
+    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+        assert_eq!(res_states.len(), 1);
+        res_states[0].clone()
     }
 }

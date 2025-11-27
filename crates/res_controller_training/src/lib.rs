@@ -83,8 +83,7 @@ pub fn train_only_up() {
         0.3,
         0.99,
         0.2,
-        // RepresentationType::Output(1.), // TODO: this will probably not work
-        RepresentationType::LastState,
+        RepresentationType::AllStates,
         RidgeRegression::new(1.),
     );
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
