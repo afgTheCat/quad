@@ -10515,6 +10515,7 @@ name = "res_controller_training"
 version = "0.1.0"
 dependencies = [
  "db_common",
+ "drone",
  "flight_controller",
  "loggers",
  "nalgebra",

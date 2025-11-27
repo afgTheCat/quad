@@ -54,11 +54,11 @@ pub fn exit_replay(
     mut camera_query: Query<&mut PanOrbitCamera>,
     mut commands: Commands,
 ) {
-    let (mut tranform, _) = scene_query.single_mut().unwrap();
+    let (mut transform, _) = scene_query.single_mut().unwrap();
     let mut camera = camera_query.single_mut().unwrap();
-    tranform.rotation = Quat::IDENTITY;
-    tranform.translation = Vec3::ZERO;
-    camera.target_focus = tranform.translation;
+    transform.rotation = Quat::IDENTITY;
+    transform.translation = Vec3::ZERO;
+    camera.target_focus = transform.translation;
 
     commands.remove_resource::<Replay>();
 }

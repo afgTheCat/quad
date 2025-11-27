@@ -12,3 +12,4 @@ ridge.workspace = true
 nalgebra.workspace = true
 db_common.workspace = true
 loggers.workspace = true
+drone.workspace = true

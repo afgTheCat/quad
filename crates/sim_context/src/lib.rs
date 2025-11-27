@@ -227,6 +227,13 @@ impl SimContext {
         self.loader.lock().unwrap().load_replay(replay_id)
     }
 
+    pub fn load_drone(&mut self) -> Option<Drone> {
+        let Some(config_id) = self.config_id.clone() else {
+            return None;
+        };
+        Some(self.loader.lock().unwrap().load_drone(&config_id))
+    }
+
     pub fn load_replayer(&mut self, config_id: &str, replay_id: &str) -> Replayer {
         let drone = self.loader.lock().unwrap().load_drone(config_id);
         let sim_logs = self.loader.lock().unwrap().load_replay(replay_id);

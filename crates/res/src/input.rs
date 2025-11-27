@@ -30,11 +30,9 @@ impl TSInput {
         let NumericData::Double { real, .. } = data.data() else {
             panic!()
         };
-
         let total_ep = size[0];
         let total_time = size[1];
         let total_vars = size[2];
-
         let inputs = (0..total_ep)
             .map(|ep| {
                 DMatrix::from_rows(
@@ -51,7 +49,6 @@ impl TSInput {
                 )
             })
             .collect::<Vec<_>>();
-
         TSInput {
             episodes: size[0],
             time: size[1],
