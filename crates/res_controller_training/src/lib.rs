@@ -89,16 +89,16 @@ pub fn train_only_up() {
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
     drone_rc.esn.set_input_weights(input.vars);
 
-    let data_points = DMatrix::from_columns(
+    let data_points = DMatrix::from_rows(
         &flight_log
             .steps
             .iter()
-            .map(|e| snapshot_fl_input(e, &drone))
+            .map(|e| DVector::from_row_slice(&e.motor_input.input).transpose())
             .collect::<Vec<_>>(),
     )
     .transpose();
 
-    drone_rc.old_fit(Box::new(input.clone()), data_points);
+    drone_rc.fit(Box::new(input.clone()), data_points);
     // save the trained reservoir controller
     sim_context.insert_drone_rc(controller_id, ResController::new(drone_rc.clone()));
 

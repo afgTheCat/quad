@@ -90,8 +90,8 @@ impl LastStateRepr {
 pub struct AllStatesForSingleEp;
 
 impl AllStatesForSingleEp {
-    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
-        assert_eq!(res_states.len(), 1);
+    fn repr(&mut self, _input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+        assert_eq!(res_states.len(), 1, "Learns from a single episode");
         res_states[0].clone()
     }
 }

@@ -47,10 +47,10 @@ impl DroneRc {
     }
 
     // this is the same, maybe it works maybe it does not
-    pub fn fit(&mut self, input: Box<dyn RcInput>, rc_data: DMatrix<f64>) {
+    pub fn fit(&mut self, input: Box<dyn RcInput>, motor_inputs: DMatrix<f64>) {
         let res_states = self.esn.compute_state_matricies(&input);
         let input_repr = self.representation.repr(input, res_states);
-        self.readout.fit_multiple_svd(input_repr, &rc_data);
+        self.readout.fit_multiple_svd(input_repr, &motor_inputs);
     }
 
     // a blast from the past! we are basically fitting on the res states. In fact we are fitting on the
