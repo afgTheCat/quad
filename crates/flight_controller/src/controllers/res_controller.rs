@@ -26,7 +26,6 @@ impl FlightController for ResController {
         let rc_input = update.to_rc_input();
         let input = FlightInput::new_from_rc_input(vec![vec![rc_input]]);
         let mut model = self.model.lock().unwrap();
-
         let pr = model.predict(Box::new(input));
         let motor_input_1 = f64::clamp(*pr.row(0).get(0).unwrap(), 0., 1.);
         let motor_input_2 = f64::clamp(*pr.row(0).get(1).unwrap(), 0., 1.);

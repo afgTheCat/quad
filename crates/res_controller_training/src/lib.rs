@@ -68,9 +68,18 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>, drone: &Drone) -> Flig
     }
 }
 
-fn recreate_replay(sim_context: &mut SimContext, controller_id: &str, replay_id: &str) {
+fn recreate_replay(
+    sim_context: &mut SimContext,
+    controller_id: &str,
+    replay_id: &str,
+    inserted_replay_id: Option<String>,
+) {
     let drone = sim_context.load_drone().unwrap();
-    let inserted_replay_id = format!("{replay_id}_recreated");
+    let inserted_replay_id = if let Some(inserted_replay_id) = inserted_replay_id {
+        inserted_replay_id
+    } else {
+        format!("{replay_id}_recreated")
+    };
     let flight_log = sim_context.load_replay(replay_id);
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
     let new_rc_model = sim_context.load_drone_rc(controller_id);
@@ -125,8 +134,8 @@ pub fn simple_training_strategy() {
     .transpose();
 
     drone_rc.fit(Box::new(input.clone()), data_points);
-    recreate_replay(&mut sim_context, controller_id, only_up_trajectory);
-    recreate_replay(&mut sim_context, controller_id, "only_up2");
+    recreate_replay(&mut sim_context, controller_id, only_up_trajectory, None);
+    recreate_replay(&mut sim_context, controller_id, "only_up2", None);
 }
 
 pub fn buffert_training_strategy() {
@@ -139,7 +148,8 @@ pub fn buffert_training_strategy() {
 
     // does not change
     let drone = sim_context.load_drone().unwrap();
-    let flight_log = sim_context.load_replay(only_up_trajectory);
+    let mut flight_log = sim_context.load_replay(only_up_trajectory);
+    flight_log.downsample(Duration::from_millis(1));
     let mut drone_rc = DroneRc::new(
         500,
         0.3,
@@ -150,15 +160,32 @@ pub fn buffert_training_strategy() {
     );
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
     drone_rc.esn.set_input_weights(input.vars);
+    let data_points = DMatrix::from_columns(
+        &flight_log
+            .steps
+            .iter()
+            .map(|e| DVector::from_row_slice(&e.motor_input.input))
+            .collect::<Vec<_>>(),
+    )
+    .transpose();
+
+    drone_rc.fit(Box::new(input.clone()), data_points);
+    recreate_replay(&mut sim_context, controller_id, only_up_trajectory, None);
+    // recreate_replay(&mut sim_context, controller_id, "only_up2", None);
 }
 
 #[cfg(test)]
 mod test {
-    use crate::simple_training_strategy;
+    use crate::{buffert_training_strategy, simple_training_strategy};
 
     // resurrecting the old only up test!
     #[test]
     fn old_res_training_thing() {
         simple_training_strategy();
+    }
+
+    #[test]
+    fn new_test_training_thing() {
+        buffert_training_strategy();
     }
 }

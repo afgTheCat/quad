@@ -3,7 +3,8 @@ use res::{
     esn::Esn,
     input::RcInput,
     representation::{
-        AllStatesForSingleEp, LastStateRepr, OutputRepr, Representation, RepresentationType,
+        AllStatesForSingleEp, BufferedStatesForSingleEp, LastStateRepr, OutputRepr, Representation,
+        RepresentationType,
     },
 };
 use ridge::RidgeRegression;
@@ -37,6 +38,9 @@ impl DroneRc {
             RepresentationType::Output(alpha) => Representation::Output(OutputRepr::new(alpha)),
             RepresentationType::AllStates => {
                 Representation::AllStateForSingle(AllStatesForSingleEp)
+            }
+            RepresentationType::BufferedStates(states) => {
+                Representation::BufferedStates(BufferedStatesForSingleEp(states))
             }
         };
         Self {
