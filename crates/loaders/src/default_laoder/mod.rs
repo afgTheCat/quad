@@ -1,7 +1,7 @@
 // NOTE: only loads the default drone config. This is for debugging and stuff
 
 use drone::default_drone::default_7in_4s_drone;
-use flight_controller::controllers::res_controller::ResController;
+use res_controller::DroneRc;
 use simulator::Simulator;
 
 use crate::LoaderTrait;
@@ -31,11 +31,11 @@ impl LoaderTrait for DefaultLoader {
         vec![]
     }
 
-    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
+    fn load_res_controller(&mut self, controller_id: &str) -> DroneRc {
         unreachable!()
     }
 
-    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
+    fn insert_reservoir(&mut self, controller_id: &str, controller: DroneRc) {
         todo!()
     }
 }

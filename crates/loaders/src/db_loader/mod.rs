@@ -8,7 +8,7 @@ use drone::{
     BatteryModel, BatteryState, Drone, DroneFrameState, DroneModel, GyroModel, GyroState,
     LowPassFilter, RotorModel, RotorState, RotorsState, SampleCurve, SamplePoint, SimulationFrame,
 };
-use flight_controller::{Channels, controllers::res_controller::ResController};
+use flight_controller::Channels;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, Matrix3, Quaternion, Rotation3, UnitQuaternion, Vector3};
 use res::esn::Esn;
@@ -355,7 +355,7 @@ impl LoaderTrait for DBLoader {
         }
     }
 
-    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
+    fn load_res_controller(&mut self, controller_id: &str) -> DroneRc {
         let mut db = self.db.lock().unwrap();
         let db_data = db.load_db_rc_data(controller_id);
         let internal_weights_decoded = BASE64_STANDARD.decode(db_data.internal_weights).unwrap();
@@ -388,18 +388,14 @@ impl LoaderTrait for DBLoader {
             alpha: db_data.alpha,
             sol,
         };
-        let drone_rc = DroneRc {
+        DroneRc {
             esn,
             representation: Representation::Output(OutputRepr::new(1.)),
             readout,
-        };
-        ResController {
-            model: Mutex::new(drone_rc),
         }
     }
 
-    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
-        let controller = controller.model.lock().unwrap();
+    fn insert_reservoir(&mut self, controller_id: &str, controller: DroneRc) {
         let internal_weights_serialized =
             BASE64_STANDARD.encode(bincode::serialize(&controller.esn.internal_weights).unwrap());
         let input_weights_serialized = controller.esn.input_weights.as_ref().map(|input_weights| {

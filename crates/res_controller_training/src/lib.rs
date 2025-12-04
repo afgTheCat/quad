@@ -83,7 +83,7 @@ fn recreate_replay(
     let flight_log = sim_context.load_replay(replay_id);
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
     let new_rc_model = sim_context.load_drone_rc(controller_id);
-    let predicted_points = new_rc_model.model.lock().unwrap().predict(Box::new(input));
+    let predicted_points = new_rc_model.predict(Box::new(input));
     let mut rec_flight_logs = vec![];
     for (i, motor_inputs) in predicted_points.row_iter().enumerate() {
         let mut fl = flight_log.steps[i].clone();
@@ -138,7 +138,7 @@ pub fn simple_training_strategy() {
     recreate_replay(&mut sim_context, controller_id, "only_up2", None);
 }
 
-pub fn buffert_training_strategy() {
+pub fn buffered_training_strategy() {
     let only_up_trajectory = "only_up";
     let controller_id = "buffered_trained_on_only_up";
 
@@ -149,6 +149,7 @@ pub fn buffert_training_strategy() {
     // does not change
     let drone = sim_context.load_drone().unwrap();
     let mut flight_log = sim_context.load_replay(only_up_trajectory);
+
     flight_log.downsample(Duration::from_millis(1));
     let mut drone_rc = DroneRc::new(
         500,
@@ -170,13 +171,19 @@ pub fn buffert_training_strategy() {
     .transpose();
 
     drone_rc.fit(Box::new(input.clone()), data_points);
-    recreate_replay(&mut sim_context, controller_id, only_up_trajectory, None);
-    // recreate_replay(&mut sim_context, controller_id, "only_up2", None);
+    sim_context.insert_drone_rc(controller_id, drone_rc);
+
+    recreate_replay(
+        &mut sim_context,
+        controller_id,
+        only_up_trajectory,
+        Some("my_recreation".into()),
+    );
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{buffert_training_strategy, simple_training_strategy};
+    use crate::{buffered_training_strategy, simple_training_strategy};
 
     // resurrecting the old only up test!
     #[test]
@@ -186,6 +193,6 @@ mod test {
 
     #[test]
     fn new_test_training_thing() {
-        buffert_training_strategy();
+        buffered_training_strategy();
     }
 }

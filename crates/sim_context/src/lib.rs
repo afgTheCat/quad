@@ -2,9 +2,7 @@ pub mod input_gen;
 
 use drone::Drone;
 use flight_controller::{
-    controllers::{
-        bf_controller::BFController, null_controller::NullController, res_controller::ResController,
-    },
+    controllers::{bf_controller::BFController, null_controller::NullController},
     FlightController,
 };
 use loaders::{db_loader::DBLoader, LoaderTrait};
@@ -14,6 +12,7 @@ use loggers::{
     rerun_logger::RerunLogger, Logger as LoggerTrait,
 };
 use loggers::{FlightLog, Logger};
+use res_controller::DroneRc;
 use simulator::Replayer;
 use simulator::Simulator;
 use std::{
@@ -55,7 +54,7 @@ impl Loader {
         }
     }
 
-    pub fn load_res_controller(&mut self, controller_id: &str) -> ResController {
+    pub fn load_res_controller(&mut self, controller_id: &str) -> DroneRc {
         match self {
             Self::DBLoader(loader) => loader.load_res_controller(controller_id),
             Self::FileLoader(loader) => loader.load_res_controller(controller_id),
@@ -256,14 +255,14 @@ impl SimContext {
         }
     }
 
-    pub fn insert_drone_rc(&mut self, controller_id: &str, controller: ResController) {
+    pub fn insert_drone_rc(&mut self, controller_id: &str, controller: DroneRc) {
         self.loader
             .lock()
             .unwrap()
             .insert_reservoir(controller_id, controller);
     }
 
-    pub fn load_drone_rc(&mut self, controller_id: &str) -> ResController {
+    pub fn load_drone_rc(&mut self, controller_id: &str) -> DroneRc {
         self.loader
             .lock()
             .unwrap()

@@ -57,7 +57,7 @@ impl DroneRc {
         self.readout.fit_multiple_svd(input_repr, &motor_inputs);
     }
 
-    pub fn predict(&mut self, input: Box<dyn RcInput>) -> DMatrix<f64> {
+    pub fn predict(&self, input: Box<dyn RcInput>) -> DMatrix<f64> {
         let res_states = self.esn.compute_state_matricies(&input);
         self.readout.predict(res_states[0].clone())
     }

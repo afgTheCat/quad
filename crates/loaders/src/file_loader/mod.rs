@@ -1,5 +1,6 @@
 use drone::Drone;
-use flight_controller::controllers::res_controller::ResController;
+use res_controller::DroneRc;
+// use flight_controller::controllers::res_controller::ResController;
 use simulator::Simulator;
 use std::{fs, path::PathBuf};
 
@@ -60,7 +61,7 @@ impl LoaderTrait for FileLoader {
             .collect::<Vec<_>>()
     }
 
-    fn load_res_controller(&mut self, controller_id: &str) -> ResController {
+    fn load_res_controller(&mut self, controller_id: &str) -> DroneRc {
         let mut reservoir_dir = loader_path();
         reservoir_dir.push("reservoirs/");
         fs::create_dir_all(&reservoir_dir).unwrap();
@@ -69,7 +70,7 @@ impl LoaderTrait for FileLoader {
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
-    fn insert_reservoir(&mut self, controller_id: &str, controller: ResController) {
+    fn insert_reservoir(&mut self, controller_id: &str, controller: DroneRc) {
         let mut reservoir_dir = loader_path();
         reservoir_dir.push("reservoirs/");
         fs::create_dir_all(&reservoir_dir).unwrap();

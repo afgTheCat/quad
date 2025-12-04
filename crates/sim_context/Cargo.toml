@@ -16,3 +16,4 @@ drone.workspace = true
 loaders.workspace = true
 loggers.workspace = true
 db_common.workspace = true
+res_controller.workspace = true
