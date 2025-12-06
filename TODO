@@ -19,3 +19,11 @@ TODO:
       => test replay
       => reproduce the initial test
       => add new training infa
+
+Reservoir controller training TODO:
+  - fully sunset `simple_training_strategy` (delete/deprecate entry points and tests) [DONE]
+  - ensure buffered strategy uses buffered representation (e.g. `RepresentationType::BufferedStates(10)`) and document the 10-state window [DONE]
+  - add representation before predictions are made [DONE]
+  - fix `GyroState::gyro_update` to emit full linear_acc/angular_velocity vectors; inputs are junk otherwise
+  - harden `snapshots_to_flight_input`/`FlightInput` against variable-length episodes (pad or truncate) to avoid panics
+  - optional: re-run simulator when recreating replays instead of just swapping motor commands in the log

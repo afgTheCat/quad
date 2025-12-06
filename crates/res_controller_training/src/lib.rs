@@ -72,14 +72,9 @@ fn recreate_replay(
     sim_context: &mut SimContext,
     controller_id: &str,
     replay_id: &str,
-    inserted_replay_id: Option<String>,
+    inserted_replay_id: String,
 ) {
     let drone = sim_context.load_drone().unwrap();
-    let inserted_replay_id = if let Some(inserted_replay_id) = inserted_replay_id {
-        inserted_replay_id
-    } else {
-        format!("{replay_id}_recreated")
-    };
     let flight_log = sim_context.load_replay(replay_id);
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
     let new_rc_model = sim_context.load_drone_rc(controller_id);
@@ -101,54 +96,18 @@ fn recreate_replay(
     sim_context.insert_logs(FlightLog::new(inserted_replay_id.into(), rec_flight_logs));
 }
 
-pub fn simple_training_strategy() {
-    let only_up_trajectory = "only_up";
-    let controller_id = "trained_on_only_up";
-
+pub fn buffered_training_strategy(
+    training_trajectory_id: &str,
+    new_controller_id: &str,
+    inserted_replay_id: &str,
+) {
     let mut sim_context = SimContext::default();
     sim_context.set_loader(&sim_context::LoaderType::File);
     sim_context.set_logger(sim_context::LoggerType::File);
 
     // does not change
     let drone = sim_context.load_drone().unwrap();
-    let mut flight_log = sim_context.load_replay(only_up_trajectory);
-    flight_log.downsample(Duration::from_millis(1));
-    let mut drone_rc = DroneRc::new(
-        500,
-        0.3,
-        0.99,
-        0.2,
-        RepresentationType::AllStates,
-        RidgeRegression::new(1.),
-    );
-    let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
-    drone_rc.esn.set_input_weights(input.vars);
-
-    let data_points = DMatrix::from_columns(
-        &flight_log
-            .steps
-            .iter()
-            .map(|e| DVector::from_row_slice(&e.motor_input.input))
-            .collect::<Vec<_>>(),
-    )
-    .transpose();
-
-    drone_rc.fit(Box::new(input.clone()), data_points);
-    recreate_replay(&mut sim_context, controller_id, only_up_trajectory, None);
-    recreate_replay(&mut sim_context, controller_id, "only_up2", None);
-}
-
-pub fn buffered_training_strategy() {
-    let only_up_trajectory = "only_up";
-    let controller_id = "buffered_trained_on_only_up";
-
-    let mut sim_context = SimContext::default();
-    sim_context.set_loader(&sim_context::LoaderType::File);
-    sim_context.set_logger(sim_context::LoggerType::File);
-
-    // does not change
-    let drone = sim_context.load_drone().unwrap();
-    let mut flight_log = sim_context.load_replay(only_up_trajectory);
+    let mut flight_log = sim_context.load_replay(training_trajectory_id);
 
     flight_log.downsample(Duration::from_millis(1));
     let mut drone_rc = DroneRc::new(
@@ -156,7 +115,7 @@ pub fn buffered_training_strategy() {
         0.3,
         0.99,
         0.2,
-        RepresentationType::AllStates,
+        RepresentationType::BufferedStates(10),
         RidgeRegression::new(1.),
     );
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
@@ -171,28 +130,22 @@ pub fn buffered_training_strategy() {
     .transpose();
 
     drone_rc.fit(Box::new(input.clone()), data_points);
-    sim_context.insert_drone_rc(controller_id, drone_rc);
+    sim_context.insert_drone_rc(new_controller_id, drone_rc);
 
     recreate_replay(
         &mut sim_context,
-        controller_id,
-        only_up_trajectory,
-        Some("my_recreation".into()),
+        new_controller_id,
+        training_trajectory_id,
+        inserted_replay_id.to_owned(),
     );
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{buffered_training_strategy, simple_training_strategy};
-
-    // resurrecting the old only up test!
-    #[test]
-    fn old_res_training_thing() {
-        simple_training_strategy();
-    }
+    use crate::buffered_training_strategy;
 
     #[test]
     fn new_test_training_thing() {
-        buffered_training_strategy();
+        buffered_training_strategy("only_up", "buffered_trained_on_only_up", "my_recreation");
     }
 }

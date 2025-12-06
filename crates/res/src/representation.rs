@@ -107,12 +107,15 @@ impl BufferedStatesForSingleEp {
     fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let lag = self.0;
         let (eps, time, n_units) = input.shape();
+        // let eps = res_states.len();
 
         // Each episode's features will be stacked
         let mut features_all_eps = Vec::new();
 
         for ep in 0..eps {
-            let states = &res_states[ep]; // [time × n_units]
+            let states = &res_states[ep];
+            // let time = states.nrows();
+            // let n_units = states.ncols();
             let mut features = DMatrix::zeros(time, n_units * (lag + 1));
 
             for t in 0..time {

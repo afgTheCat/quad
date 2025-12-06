@@ -59,6 +59,8 @@ impl DroneRc {
 
     pub fn predict(&self, input: Box<dyn RcInput>) -> DMatrix<f64> {
         let res_states = self.esn.compute_state_matricies(&input);
-        self.readout.predict(res_states[0].clone())
+        let mut representation = self.representation.clone();
+        let input_repr = representation.repr(input, res_states);
+        self.readout.predict(input_repr)
     }
 }
