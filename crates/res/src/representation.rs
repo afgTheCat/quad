@@ -22,7 +22,7 @@ pub enum Representation {
 }
 
 impl Representation {
-    pub fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    pub fn repr(&self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         match self {
             Self::LastState(ls) => ls.repr(input, res_states),
             Self::Output(o) => o.repr(input, res_states),
@@ -34,17 +34,18 @@ impl Representation {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputRepr {
-    embedding: RidgeRegression,
+    alpha: f64,
 }
 
 impl OutputRepr {
-    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    fn repr(&self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+        let mut embedding = RidgeRegression::new(self.alpha);
         let mut coeff_tr = vec![];
         let mut biases_tr = vec![];
         let (_, time_steps, _) = input.shape();
 
         for (x, res_state) in input.inputs().iter().zip(res_states) {
-            let (coeff, intercept) = self.embedding.fit_multiple_svd(
+            let (coeff, intercept) = embedding.fit_multiple_svd(
                 res_state.rows(0, time_steps - 1).into(),
                 &x.rows(1, time_steps - 1).into(),
             );
@@ -70,9 +71,7 @@ impl OutputRepr {
 
 impl OutputRepr {
     pub fn new(alpha: f64) -> Self {
-        Self {
-            embedding: RidgeRegression::new(alpha),
-        }
+        Self { alpha }
     }
 }
 
@@ -80,7 +79,7 @@ impl OutputRepr {
 pub struct LastStateRepr;
 
 impl LastStateRepr {
-    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    fn repr(&self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let (_, time_steps, _) = input.shape();
         let last_states = res_states
             .iter()
@@ -94,7 +93,7 @@ impl LastStateRepr {
 pub struct AllStatesForSingleEp;
 
 impl AllStatesForSingleEp {
-    fn repr(&mut self, _input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    fn repr(&self, _input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         assert_eq!(res_states.len(), 1, "Learns from a single episode");
         res_states[0].clone()
     }
@@ -104,18 +103,17 @@ impl AllStatesForSingleEp {
 pub struct BufferedStatesForSingleEp(pub usize);
 
 impl BufferedStatesForSingleEp {
-    fn repr(&mut self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    fn repr(&self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
         let lag = self.0;
-        let (eps, time, n_units) = input.shape();
-        // let eps = res_states.len();
+        let eps = res_states.len();
 
         // Each episode's features will be stacked
         let mut features_all_eps = Vec::new();
 
         for ep in 0..eps {
             let states = &res_states[ep];
-            // let time = states.nrows();
-            // let n_units = states.ncols();
+            let time = states.nrows();
+            let n_units = states.ncols();
             let mut features = DMatrix::zeros(time, n_units * (lag + 1));
 
             for t in 0..time {
