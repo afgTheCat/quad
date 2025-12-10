@@ -14,13 +14,11 @@ impl Logger for FileLogger {
     }
 
     fn flush(&mut self) {
-        println!("huuuu???????");
         let flight_log = FlightLog {
             simulation_id: self.simulation_id.clone(),
             steps: self.snapshots.clone(),
         };
         if self.snapshots.len() > 0 {
-            println!("this this {}", self.simulation_id);
             let mut log_path = PathBuf::from(LOG_PATH);
             log_path.push(self.simulation_id.clone());
             let contents = serde_json::to_string(&flight_log).unwrap();

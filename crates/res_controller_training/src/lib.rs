@@ -135,15 +135,14 @@ mod test {
         train_on_flight(strategy);
     }
 
-    // #[test]
-    // fn just_the_controller() {
-    //     const CONTROLLER_ID: &str = "buffered_trained_on_only_up";
-    //     const REPLAY_ID: &str = "only_up";
-    //     const NEW_REPLAY_ID: &str = "hmmmmm";
-    //
-    //     let mut sim_context = SimContext::default();
-    //     sim_context.set_loader(&sim_context::LoaderType::File);
-    //     sim_context.set_logger(sim_context::LoggerType::File(NEW_REPLAY_ID.into()));
-    //     recreate_replay(&mut sim_context, CONTROLLER_ID, REPLAY_ID, "wwwww");
-    // }
+    #[test]
+    fn yaw_plus_throttle_training() {
+        let strategy = SingleFlightTrainingStrategy {
+            train_flight_log_id: "yaw_only".into(),
+            trained_controller_id: "yaw_only_controller".into(),
+            recreated_replay_id: "yaw_only_recreation".into(),
+            representation_type: res::representation::RepresentationType::BufferedStates(10),
+        };
+        train_on_flight(strategy);
+    }
 }
