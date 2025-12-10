@@ -12,6 +12,26 @@ use bevy_egui::{
 };
 use sim_context::{ControllerType, LoaderType, LoggerType, SimContext};
 
+#[derive(Debug, Clone, PartialEq, Default)]
+pub enum LoggerArchType {
+    File,
+    DB,
+    Rerun,
+    #[default]
+    Empty,
+}
+
+impl LoggerArchType {
+    fn to_logger_type(&self, simulation_name: String) -> LoggerType {
+        match self {
+            Self::File => LoggerType::File(simulation_name),
+            Self::DB => LoggerType::Db(simulation_name),
+            Self::Rerun => LoggerType::Rerun(simulation_name),
+            Self::Empty => LoggerType::Empty,
+        }
+    }
+}
+
 #[derive(Resource, Clone, PartialEq)]
 pub enum UIState {
     Replay {
@@ -20,7 +40,7 @@ pub enum UIState {
         loader: LoaderType,
     },
     Simulation {
-        logger: LoggerType,
+        logger: LoggerArchType,
         controller: ControllerType,
         loader: LoaderType,
         simulation_name: String,
@@ -30,7 +50,7 @@ pub enum UIState {
 impl Default for UIState {
     fn default() -> Self {
         Self::Simulation {
-            logger: LoggerType::default(),
+            logger: LoggerArchType::default(),
             controller: ControllerType::default(),
             loader: LoaderType::default(),
             simulation_name: Default::default(),
@@ -51,7 +71,7 @@ impl UIState {
             Self::Replay {
                 controller, loader, ..
             } => Self::Simulation {
-                logger: LoggerType::default(),
+                logger: LoggerArchType::default(),
                 controller: controller.clone(),
                 loader: loader.clone(),
                 simulation_name: Default::default(),
@@ -137,15 +157,20 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Logger:");
-        if let UIState::Simulation { logger, .. } = ui_state {
+        if let UIState::Simulation {
+            logger,
+            simulation_name,
+            ..
+        } = ui_state
+        {
             let label = format!("{logger:?}");
             egui::ComboBox::from_id_salt("Logger selector")
                 .selected_text(label)
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(logger, LoggerType::Db, "DB logger");
-                    ui.selectable_value(logger, LoggerType::File, "File");
-                    ui.selectable_value(logger, LoggerType::Rerun, "Rerun");
-                    ui.selectable_value(logger, LoggerType::Empty, "None");
+                    ui.selectable_value(logger, LoggerArchType::DB, "DB logger");
+                    ui.selectable_value(logger, LoggerArchType::File, "File");
+                    ui.selectable_value(logger, LoggerArchType::Rerun, "Rerun");
+                    ui.selectable_value(logger, LoggerArchType::Empty, "None");
                 });
         } else {
             ui.label("Only available in simulation mode");
@@ -214,12 +239,9 @@ pub fn main_menu_toggle(
                 loader,
                 simulation_name,
             } => {
-                if simulation_name != "" {
-                    context.set_simulation_id(simulation_name.clone());
-                }
                 context.set_loader(loader);
                 // needs to be created
-                context.set_logger(logger.clone());
+                context.set_logger(logger.to_logger_type(simulation_name.to_owned()));
                 // needs to be created
                 context.set_controller(controller.clone());
                 next_visualizer_state.set(VisualizerState::Simulation);

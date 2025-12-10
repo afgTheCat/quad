@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use db_common::DBFlightLog;
 use drone::Drone;
-use flight_controller::MotorInput;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
 use res::{input::FlightInput, representation::RepresentationType};
@@ -47,6 +46,13 @@ pub fn snapshot_fl_input(snapshot: &SnapShot, drone: &Drone) -> DVector<f64> {
     ])
 }
 
+pub struct SingleFlightTrainingStrategy {
+    train_flight_log_id: String,
+    trained_controller_id: String,
+    recreated_replay_id: String,
+    representation_type: RepresentationType,
+}
+
 fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>, drone: &Drone) -> FlightInput {
     let episodes = flight_logs.len();
     let time = flight_logs.iter().map(|x| x.steps.len()).max().unwrap();
@@ -71,43 +77,33 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>, drone: &Drone) -> Flig
 fn recreate_replay(
     sim_context: &mut SimContext,
     controller_id: &str,
-    replay_id: &str,
-    inserted_replay_id: String,
+    flight_log_id: &str,
+    new_fliht_log: &str,
 ) {
-    let drone = sim_context.load_drone().unwrap();
-    let flight_log = sim_context.load_replay(replay_id);
-    let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
-    let new_rc_model = sim_context.load_drone_rc(controller_id);
-    let predicted_points = new_rc_model.predict(Box::new(input));
-    let mut rec_flight_logs = vec![];
-    for (i, motor_inputs) in predicted_points.row_iter().enumerate() {
-        let mut fl = flight_log.steps[i].clone();
-        let motor_inputs: MotorInput = MotorInput {
-            input: [
-                *motor_inputs.get(0).unwrap(),
-                *motor_inputs.get(1).unwrap(),
-                *motor_inputs.get(2).unwrap(),
-                *motor_inputs.get(3).unwrap(),
-            ],
-        };
-        fl.motor_input = motor_inputs;
-        rec_flight_logs.push(fl);
+    sim_context.set_controller(sim_context::ControllerType::Reservoir(controller_id.into()));
+    sim_context.set_logger(sim_context::LoggerType::File(new_fliht_log.into()));
+    let mut simulator = sim_context.try_load_simulator().unwrap();
+    let mut current_time = Duration::ZERO;
+    let flight_log = sim_context.load_flight_log(flight_log_id);
+    for SnapShot {
+        duration: time_elapsed,
+        channels,
+        ..
+    } in flight_log.steps
+    {
+        let delta = time_elapsed - current_time;
+        simulator.simulate_delta(delta, channels);
+        current_time = time_elapsed;
     }
-    sim_context.insert_logs(FlightLog::new(inserted_replay_id.into(), rec_flight_logs));
 }
 
-pub fn buffered_training_strategy(
-    training_trajectory_id: &str,
-    new_controller_id: &str,
-    inserted_replay_id: &str,
-) {
+pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
     let mut sim_context = SimContext::default();
     sim_context.set_loader(&sim_context::LoaderType::File);
-    sim_context.set_logger(sim_context::LoggerType::File);
 
     // does not change
     let drone = sim_context.load_drone().unwrap();
-    let mut flight_log = sim_context.load_replay(training_trajectory_id);
+    let mut flight_log = sim_context.load_flight_log(&strategy.train_flight_log_id);
 
     flight_log.downsample(Duration::from_millis(1));
     let mut drone_rc = DroneRc::new(
@@ -115,10 +111,11 @@ pub fn buffered_training_strategy(
         0.3,
         0.99,
         0.2,
-        RepresentationType::BufferedStates(10),
+        strategy.representation_type,
         RidgeRegression::new(1.),
     );
     let input = snapshots_to_flight_input(vec![flight_log.clone()], &drone);
+
     drone_rc.esn.set_input_weights(input.vars);
     let data_points = DMatrix::from_columns(
         &flight_log
@@ -130,22 +127,42 @@ pub fn buffered_training_strategy(
     .transpose();
 
     drone_rc.fit(Box::new(input.clone()), data_points);
-    sim_context.insert_drone_rc(new_controller_id, drone_rc);
+    sim_context.insert_drone_rc(&strategy.trained_controller_id, drone_rc);
 
     recreate_replay(
         &mut sim_context,
-        new_controller_id,
-        training_trajectory_id,
-        inserted_replay_id.to_owned(),
+        &strategy.trained_controller_id,
+        &strategy.train_flight_log_id,
+        &strategy.recreated_replay_id,
     );
 }
 
 #[cfg(test)]
 mod test {
-    use crate::buffered_training_strategy;
+    use sim_context::SimContext;
+
+    use crate::{SingleFlightTrainingStrategy, recreate_replay, train_on_flight};
 
     #[test]
     fn new_test_training_thing() {
-        buffered_training_strategy("only_up", "buffered_trained_on_only_up", "my_recreation");
+        let strategy = SingleFlightTrainingStrategy {
+            train_flight_log_id: "only_up".into(),
+            trained_controller_id: "controller_trained_on_only_up".into(),
+            recreated_replay_id: "only_up_recreation_last_state".into(),
+            representation_type: res::representation::RepresentationType::LastState,
+        };
+        train_on_flight(strategy);
+    }
+
+    #[test]
+    fn just_the_controler() {
+        const CONTROLLER_ID: &str = "buffered_trained_on_only_up";
+        const REPLAY_ID: &str = "only_up";
+        const NEW_REPLAY_ID: &str = "hmmmmm";
+
+        let mut sim_context = SimContext::default();
+        sim_context.set_loader(&sim_context::LoaderType::File);
+        sim_context.set_logger(sim_context::LoggerType::File(NEW_REPLAY_ID.into()));
+        recreate_replay(&mut sim_context, CONTROLLER_ID, REPLAY_ID, "wwwww");
     }
 }

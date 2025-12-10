@@ -43,6 +43,8 @@ pub struct FlightLog {
     pub steps: Vec<SnapShot>,
 }
 
+struct SimulationInput {}
+
 impl FlightLog {
     pub fn new(simulation_id: String, steps: Vec<SnapShot>) -> Self {
         Self {
@@ -67,5 +69,5 @@ impl FlightLog {
 pub trait Logger: Sync + Send + Any {
     fn log_time_stamp(&mut self, snapshot: SnapShot);
     fn flush(&mut self);
-    fn set_simulation_id(&mut self, simulation_id: &str);
+    // fn set_simulation_id(&mut self, simulation_id: &str);
 }

@@ -116,10 +116,6 @@ impl Logger for DBLogger {
     fn flush(&mut self) {
         smol::block_on(async { self.write_flight_logs_async().await })
     }
-
-    fn set_simulation_id(&mut self, simulation_id: &str) {
-        self.simulation_id = simulation_id.to_string()
-    }
 }
 
 impl Drop for DBLogger {

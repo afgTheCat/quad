@@ -48,7 +48,6 @@ pub fn build_data_set(
 ) {
     let mut context = SimContext::default();
     context.set_loader(&crate::LoaderType::File);
-    context.set_logger(crate::LoggerType::File);
     let training_inputs = (0..training_size)
         .map(|_| generate_all_axis(training_duration))
         .collect::<Vec<_>>();
@@ -58,7 +57,8 @@ pub fn build_data_set(
 
     // TODO: do this on multiple cores
     for (ep, inputs) in training_inputs.into_iter().enumerate() {
-        context.set_simulation_id(format!("{data_set_id}_training_{ep}"));
+        let simulation_id = format!("{data_set_id}_training_{ep}");
+        context.set_logger(crate::LoggerType::File(simulation_id));
         let mut simulation = context.try_load_simulator().unwrap();
         simulation.init();
         for input in inputs {
@@ -67,7 +67,8 @@ pub fn build_data_set(
     }
 
     for (ep, inputs) in test_inputs.into_iter().enumerate() {
-        context.set_simulation_id(format!("{data_set_id}_testing_{ep}"));
+        let simulation_id = format!("{data_set_id}_testing_{ep}");
+        context.set_logger(crate::LoggerType::File(simulation_id));
         let mut simulation = context.try_load_simulator().unwrap();
         simulation.init(); // tr_id.clone()
         for input in inputs {

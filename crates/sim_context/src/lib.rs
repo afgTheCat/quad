@@ -19,13 +19,12 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
-use uuid::Uuid;
 
 #[derive(Default, Eq, PartialEq, Hash, Debug, Clone)]
 pub enum LoggerType {
-    File,
-    Db,
-    Rerun,
+    File(String),
+    Db(String),
+    Rerun(String),
     #[default]
     Empty,
 }
@@ -101,8 +100,6 @@ pub struct SimContext {
     pub replay_id: Option<String>,
     // Config id
     pub config_id: Option<String>,
-    // The id for the simulation that is about to be loaded
-    pub simulation_id: Option<String>,
 }
 
 impl std::fmt::Debug for SimContext {
@@ -122,7 +119,6 @@ impl Default for SimContext {
             reservoir_controller_ids: Default::default(),
             replay_id: Default::default(),
             config_id: Some(format!("7in_4s_drone")),
-            simulation_id: Default::default(),
         };
         sim_context.refresh_cache();
         sim_context
@@ -140,37 +136,16 @@ impl SimContext {
         }
     }
 
-    pub fn get_simulation_id(&mut self) -> String {
-        if let Some(simulation_id) = self.simulation_id.take() {
-            simulation_id.clone()
-        } else {
-            Uuid::new_v4().to_string()
-        }
-    }
-
-    pub fn set_simulation_id(&mut self, simulation_id: String) {
-        self.simulation_id = Some(simulation_id)
-    }
-
     pub fn set_replay_id(&mut self, replay_id: String) {
         self.replay_id = Some(replay_id)
     }
 
     pub fn set_logger(&mut self, logger_type: LoggerType) {
         let logger: Arc<Mutex<dyn LoggerTrait>> = match logger_type {
-            LoggerType::Db => {
-                let simulation_id = self.get_simulation_id();
-                Arc::new(Mutex::new(DBLogger::new(simulation_id)))
-            }
-            LoggerType::Rerun => {
-                let simulation_id = self.get_simulation_id();
-                Arc::new(Mutex::new(RerunLogger::new(simulation_id)))
-            }
+            LoggerType::Db(log_id) => Arc::new(Mutex::new(DBLogger::new(log_id))),
+            LoggerType::Rerun(log_id) => Arc::new(Mutex::new(RerunLogger::new(log_id))),
             LoggerType::Empty => Arc::new(Mutex::new(EmptyLogger::default())),
-            LoggerType::File => {
-                let simulation_id = self.get_simulation_id();
-                Arc::new(Mutex::new(FileLogger::new(simulation_id.to_string())))
-            }
+            LoggerType::File(log_id) => Arc::new(Mutex::new(FileLogger::new(log_id))),
         };
         self.logger = logger;
     }
@@ -222,7 +197,7 @@ impl SimContext {
         self.load_res_controllers_ids();
     }
 
-    pub fn load_replay(&mut self, replay_id: &str) -> FlightLog {
+    pub fn load_flight_log(&mut self, replay_id: &str) -> FlightLog {
         self.loader.lock().unwrap().load_replay(replay_id)
     }
 
@@ -271,7 +246,6 @@ impl SimContext {
 
     pub fn insert_logs(&mut self, fl: FlightLog) {
         let mut logger = self.logger.lock().unwrap();
-        logger.set_simulation_id(&fl.simulation_id);
         for s in fl.steps {
             logger.log_time_stamp(s);
         }
