@@ -1,9 +1,7 @@
 use drone::{Drone, SimulationFrame};
-use flight_controller::{
-    controllers::bf_controller::BFController, Channels, FlightController, FlightControllerUpdate,
-};
 pub use flight_controller::{BatteryUpdate, GyroUpdate, MotorInput};
-use loggers::{empty_logger::EmptyLogger, FlightLog, Logger, SnapShot};
+use flight_controller::{Channels, FlightController, FlightControllerUpdate};
+use loggers::{FlightLog, Logger, SnapShot};
 use nalgebra::{Rotation3, Vector3, Vector4};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::{
@@ -53,18 +51,6 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn default_from_drone(drone: Drone) -> Self {
-        Self {
-            drone,
-            flight_controller: Arc::new(BFController::default()),
-            logger: Arc::new(Mutex::new(EmptyLogger::default())),
-            time: Duration::default(),
-            dt: Duration::from_nanos(5000),
-            fc_time_accu: Duration::default(),
-            time_accu: Duration::default(),
-        }
-    }
-
     // TODO: dont need this
     pub fn simulation_info(&self) -> SimulationObservation {
         let current_frame = &self.drone.current_frame;

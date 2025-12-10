@@ -296,11 +296,6 @@ impl LoaderTrait for DBLoader {
         db.fetch_replay_ids()
     }
 
-    fn load_simulation(&mut self, config_id: &str) -> simulator::Simulator {
-        let drone = self.load_drone(config_id);
-        simulator::Simulator::default_from_drone(drone)
-    }
-
     fn get_reservoir_controller_ids(&mut self) -> Vec<String> {
         let mut db = self.db.lock().unwrap();
         db.fetch_res_controller_ids()

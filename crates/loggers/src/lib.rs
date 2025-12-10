@@ -43,8 +43,6 @@ pub struct FlightLog {
     pub steps: Vec<SnapShot>,
 }
 
-struct SimulationInput {}
-
 impl FlightLog {
     pub fn new(simulation_id: String, steps: Vec<SnapShot>) -> Self {
         Self {

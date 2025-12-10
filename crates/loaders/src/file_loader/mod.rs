@@ -1,7 +1,5 @@
 use drone::Drone;
 use res_controller::DroneRc;
-// use flight_controller::controllers::res_controller::ResController;
-use simulator::Simulator;
 use std::{fs, path::PathBuf};
 
 use crate::LoaderTrait;
@@ -22,11 +20,6 @@ impl LoaderTrait for FileLoader {
         drone_path.push(format!("{config_id}.json"));
         let content = fs::read_to_string(drone_path).unwrap();
         serde_json::from_slice(content.as_bytes()).unwrap()
-    }
-
-    fn load_simulation(&mut self, config_id: &str) -> simulator::Simulator {
-        let drone = self.load_drone(config_id);
-        Simulator::default_from_drone(drone)
     }
 
     fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {

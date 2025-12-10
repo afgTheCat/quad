@@ -6,7 +6,6 @@ use drone::Drone;
 // use flight_controller::controllers::res_controller::ResController;
 use loggers::FlightLog;
 use res_controller::DroneRc;
-use simulator::Simulator;
 
 pub trait LoaderTrait: Send + Sync {
     // load a drone
@@ -14,7 +13,7 @@ pub trait LoaderTrait: Send + Sync {
 
     // TODO: do we need this?
     // Load simulation
-    fn load_simulation(&mut self, config_id: &str) -> Simulator;
+    // fn load_simulation(&mut self, config_id: &str) -> Simulator;
 
     // Load replay
     fn load_replay(&mut self, sim_id: &str) -> FlightLog;
