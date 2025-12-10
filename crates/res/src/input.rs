@@ -86,26 +86,8 @@ pub struct FlightInput {
 }
 
 pub fn db_fl_to_rc_input(fl: &DBFlightLog) -> DVector<f64> {
-    DVector::from_row_slice(&[
-        fl.battery_voltage_sag,
-        fl.battery_voltage,
-        fl.amperage,
-        fl.mah_drawn,
-        fl.rot_quat_x,
-        fl.rot_quat_y,
-        fl.rot_quat_z,
-        fl.rot_quat_w,
-        fl.linear_acceleration_x,
-        fl.linear_acceleration_y,
-        fl.linear_acceleration_z,
-        fl.angular_velocity_x,
-        fl.angular_velocity_y,
-        fl.angular_velocity_z,
-        fl.throttle,
-        fl.roll,
-        fl.yaw,
-        fl.pitch,
-    ])
+    // Keep this aligned with the online controller input (throttle, roll, yaw, pitch).
+    DVector::from_row_slice(&[fl.throttle, fl.roll, fl.yaw, fl.pitch])
 }
 
 pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
@@ -120,7 +102,7 @@ pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
 impl FlightInput {
     pub fn new_from_db_fl_log(flight_logs: Vec<Vec<DBFlightLog>>) -> Self {
         let episodes = flight_logs.len();
-        let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
+        let time = flight_logs.iter().map(|x| x.len()).max().unwrap_or(0);
         let data = flight_logs
             .iter()
             .map(|fl| {
@@ -129,17 +111,23 @@ impl FlightInput {
                 m
             })
             .collect();
+        let vars = flight_logs
+            .iter()
+            .find_map(|ep| ep.first())
+            .map(db_fl_to_rc_input)
+            .map(|v| v.len())
+            .unwrap_or(0);
         Self {
             episodes,
             time,
-            vars: 18, // TODO: do not hardcode in the future
+            vars,
             data,
         }
     }
 
     pub fn new_from_rc_input(flight_logs: Vec<Vec<DVector<f64>>>) -> Self {
         let episodes = flight_logs.len();
-        let time = flight_logs.iter().map(|x| x.len()).max().unwrap();
+        let time = flight_logs.iter().map(|x| x.len()).max().unwrap_or(0);
         let data = flight_logs
             .iter()
             .map(|fl| {
@@ -148,10 +136,15 @@ impl FlightInput {
                 m
             })
             .collect();
+        let vars = flight_logs
+            .iter()
+            .find_map(|ep| ep.first())
+            .map(|v| v.len())
+            .unwrap_or(0);
         Self {
             episodes,
             time,
-            vars: 18, // TODO: do not hardcode in the future
+            vars,
             data,
         }
     }

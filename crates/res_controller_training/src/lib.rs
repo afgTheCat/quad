@@ -21,24 +21,24 @@ pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
 // Normalizes all inputs between -1 and 1
 pub fn snapshot_fl_input(snapshot: &SnapShot, drone: &Drone) -> DVector<f64> {
     DVector::from_row_slice(&[
-        snapshot.battery_update.bat_voltage_sag
-            / (drone.current_frame.battery_state.bat_voltage_sag
-                * drone.battery_model.quad_bat_cell_count as f64),
-        snapshot.battery_update.bat_voltage
-            / (drone.current_frame.battery_state.bat_voltage
-                * drone.battery_model.quad_bat_cell_count as f64),
-        snapshot.battery_update.amperage / 60., // TODO: should be calculated
-        snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
-        snapshot.gyro_update.rotation[0],
-        snapshot.gyro_update.rotation[1],
-        snapshot.gyro_update.rotation[2],
-        snapshot.gyro_update.rotation[3],
-        snapshot.gyro_update.linear_acc[0] / 40.,
-        snapshot.gyro_update.linear_acc[1] / 40.,
-        snapshot.gyro_update.linear_acc[2] / 40.,
-        snapshot.gyro_update.angular_velocity[0] / 20.,
-        snapshot.gyro_update.angular_velocity[1] / 20.,
-        snapshot.gyro_update.angular_velocity[2] / 20.,
+        // snapshot.battery_update.bat_voltage_sag
+        //     / (drone.current_frame.battery_state.bat_voltage_sag
+        //         * drone.battery_model.quad_bat_cell_count as f64),
+        // snapshot.battery_update.bat_voltage
+        //     / (drone.current_frame.battery_state.bat_voltage
+        //         * drone.battery_model.quad_bat_cell_count as f64),
+        // snapshot.battery_update.amperage / 60., // TODO: should be calculated
+        // snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
+        // snapshot.gyro_update.rotation[0],
+        // snapshot.gyro_update.rotation[1],
+        // snapshot.gyro_update.rotation[2],
+        // snapshot.gyro_update.rotation[3],
+        // snapshot.gyro_update.linear_acc[0] / 40.,
+        // snapshot.gyro_update.linear_acc[1] / 40.,
+        // snapshot.gyro_update.linear_acc[2] / 40.,
+        // snapshot.gyro_update.angular_velocity[0] / 20.,
+        // snapshot.gyro_update.angular_velocity[1] / 20.,
+        // snapshot.gyro_update.angular_velocity[2] / 20.,
         snapshot.channels.throttle,
         snapshot.channels.roll,
         snapshot.channels.yaw,
@@ -105,7 +105,7 @@ pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
     let drone = sim_context.load_drone().unwrap();
     let mut flight_log = sim_context.load_flight_log(&strategy.train_flight_log_id);
 
-    flight_log.downsample(Duration::from_millis(1));
+    flight_log.downsample(Duration::from_millis(10));
     let mut drone_rc = DroneRc::new(
         500,
         0.3,
@@ -148,14 +148,14 @@ mod test {
         let strategy = SingleFlightTrainingStrategy {
             train_flight_log_id: "only_up".into(),
             trained_controller_id: "controller_trained_on_only_up".into(),
-            recreated_replay_id: "only_up_recreation_last_state".into(),
-            representation_type: res::representation::RepresentationType::LastState,
+            recreated_replay_id: "only_up_recreation_buffered_states".into(),
+            representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
         train_on_flight(strategy);
     }
 
     #[test]
-    fn just_the_controler() {
+    fn just_the_controller() {
         const CONTROLLER_ID: &str = "buffered_trained_on_only_up";
         const REPLAY_ID: &str = "only_up";
         const NEW_REPLAY_ID: &str = "hmmmmm";
