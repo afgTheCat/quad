@@ -3041,6 +3041,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bf_controller"
+version = "0.1.0"
+dependencies = [
+ "flight_controller",
+ "libc",
+ "log",
+ "once_cell",
+ "tempfile",
+ "uuid",
+]
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4178,29 +4190,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dlopen2"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e1297103d2bbaea85724fcee6294c2d50b1081f9ad47d0f6f6f61eda65315a6"
-dependencies = [
- "dlopen2_derive",
- "libc",
- "once_cell",
- "winapi",
-]
-
-[[package]]
-name = "dlopen2_derive"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b99bf03862d7f545ebc28ddd33a665b50865f4dfd84031a393823879bd4c54"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.110",
-]
-
-[[package]]
 name = "document-features"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4940,18 +4929,9 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "db_common",
- "dlopen2",
  "libc",
- "libloading 0.8.6",
- "log",
  "nalgebra",
- "once_cell",
- "res",
- "res_controller",
- "ridge",
  "serde",
- "tempfile",
- "uuid",
 ]
 
 [[package]]
@@ -10504,6 +10484,7 @@ name = "res_controller"
 version = "0.1.0"
 dependencies = [
  "db_common",
+ "flight_controller",
  "nalgebra",
  "res",
  "ridge",
@@ -11115,6 +11096,7 @@ dependencies = [
 name = "sim_context"
 version = "0.1.0"
 dependencies = [
+ "bf_controller",
  "db_common",
  "drone",
  "flight_controller",

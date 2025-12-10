@@ -1,10 +1,8 @@
 pub mod input_gen;
 
+use bf_controller::BFController;
 use drone::Drone;
-use flight_controller::{
-    controllers::{bf_controller::BFController, null_controller::NullController},
-    FlightController,
-};
+use flight_controller::{controllers::null_controller::NullController, FlightController};
 use loaders::{db_loader::DBLoader, LoaderTrait};
 use loaders::{default_laoder::DefaultLoader, file_loader::FileLoader};
 use loggers::{

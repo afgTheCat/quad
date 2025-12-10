@@ -17,3 +17,4 @@ loaders.workspace = true
 loggers.workspace = true
 db_common.workspace = true
 res_controller.workspace = true
+bf_controller.workspace = true

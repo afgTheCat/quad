@@ -9,9 +9,10 @@ members = [
   "crates/drone",
   "crates/loggers",
   "crates/loaders", 
-  "crates/db_common"
-, "crates/res_controller",
-  "crates/res_controller_training"
+  "crates/db_common", 
+  "crates/res_controller",
+  "crates/res_controller_training", 
+  "crates/bf_controller"
 ]
 resolver = "2"
 
@@ -28,6 +29,7 @@ loggers = { path = "crates/loggers" }
 loaders = { path = "crates/loaders" }
 db_common = { path = "crates/db_common" }
 res_controller = { path = "crates/res_controller" }
+bf_controller = { path = "crates/bf_controller" }
 
 
 # external
