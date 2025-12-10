@@ -113,16 +113,16 @@ pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
 mod test {
     use crate::{SingleFlightTrainingStrategy, train_on_flight};
 
-    #[test]
-    fn only_up_training() {
-        let strategy = SingleFlightTrainingStrategy {
-            train_flight_log_id: "only_up".into(),
-            trained_controller_id: "controller_trained_on_only_up".into(),
-            recreated_replay_id: "only_up_recreation_buffered_states".into(),
-            representation_type: res::representation::RepresentationType::BufferedStates(10),
-        };
-        train_on_flight(strategy);
-    }
+    // #[test]
+    // fn only_up_training() {
+    //     let strategy = SingleFlightTrainingStrategy {
+    //         train_flight_log_id: "only_up".into(),
+    //         trained_controller_id: "controller_trained_on_only_up".into(),
+    //         recreated_replay_id: "only_up_recreation_buffered_states".into(),
+    //         representation_type: res::representation::RepresentationType::BufferedStates(10),
+    //     };
+    //     train_on_flight(strategy);
+    // }
 
     #[test]
     fn up_only_training() {
@@ -136,7 +136,7 @@ mod test {
     }
 
     #[test]
-    fn yaw_plus_throttle_training() {
+    fn yaw_training() {
         let strategy = SingleFlightTrainingStrategy {
             train_flight_log_id: "yaw_only".into(),
             trained_controller_id: "yaw_only_controller".into(),

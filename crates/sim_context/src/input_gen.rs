@@ -4,7 +4,7 @@ use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
 use std::time::Duration;
 
 // TODO: check if the data set is going to be rich enough
-fn generate_axis(milisecs: u128) -> Vec<f64> {
+fn generate_brownian(milisecs: u128) -> Vec<f64> {
     let bernoulli = Bernoulli::new(0.5).unwrap();
     let mut rng = thread_rng();
     let axis = (0..milisecs).fold((0., 0., vec![]), |acc, _| {
@@ -16,6 +16,7 @@ fn generate_axis(milisecs: u128) -> Vec<f64> {
         };
         pos += vel;
         if !(-1. ..=1.).contains(&pos) {
+            // why do we need this?
             pos = f64::clamp(pos, -1000., 1000.);
             vel = 0.;
         }
@@ -26,18 +27,74 @@ fn generate_axis(milisecs: u128) -> Vec<f64> {
     axis.2
 }
 
-// Generates inputs for each axis with 1ms delay
-pub fn generate_all_axis(duration: Duration) -> Vec<Channels> {
-    let milisecs = duration.as_millis();
-    let inputs = [0; 4].map(|_| generate_axis(milisecs));
-    (0..milisecs)
-        .map(|ms| Channels {
-            throttle: inputs[0][ms as usize],
-            roll: inputs[1][ms as usize],
-            pitch: inputs[2][ms as usize],
-            yaw: inputs[3][ms as usize],
-        })
-        .collect()
+pub enum InputGenerationMethod {
+    Uniform(f64),
+    Brownian,
+}
+
+impl InputGenerationMethod {
+    fn to_values(&self, milisecs: u128) -> Vec<f64> {
+        match self {
+            Self::Uniform(val) => vec![*val; milisecs as usize],
+            Self::Brownian => generate_brownian(milisecs),
+        }
+    }
+}
+
+pub struct InputGenerator {
+    throttle: InputGenerationMethod,
+    yaw: InputGenerationMethod,
+    pitch: InputGenerationMethod,
+    roll: InputGenerationMethod,
+}
+
+impl Default for InputGenerator {
+    fn default() -> Self {
+        InputGenerator {
+            throttle: InputGenerationMethod::Uniform(-1.),
+            yaw: InputGenerationMethod::Uniform(0.),
+            pitch: InputGenerationMethod::Uniform(0.),
+            roll: InputGenerationMethod::Uniform(0.),
+        }
+    }
+}
+
+impl InputGenerator {
+    fn set_throttle(self, throttle: InputGenerationMethod) -> Self {
+        Self { throttle, ..self }
+    }
+
+    fn set_yaw(self, yaw: InputGenerationMethod) -> Self {
+        Self { yaw, ..self }
+    }
+
+    fn set_pitch(self, pitch: InputGenerationMethod) -> Self {
+        Self { pitch, ..self }
+    }
+
+    fn set_roll(self, roll: InputGenerationMethod) -> Self {
+        Self { roll, ..self }
+    }
+
+    fn generate(&self, duration: Duration) -> Vec<Channels> {
+        let milisecs = duration.as_millis();
+        let throttle = self.throttle.to_values(milisecs);
+        let yaw = self.yaw.to_values(milisecs);
+        let pitch = self.pitch.to_values(milisecs);
+        let roll = self.roll.to_values(milisecs);
+
+        let mut channels = Vec::with_capacity(milisecs as usize);
+        for ms in 0..milisecs {
+            let idx = ms as usize;
+            channels.push(Channels {
+                throttle: throttle[idx],
+                yaw: yaw[idx],
+                pitch: pitch[idx],
+                roll: roll[idx],
+            });
+        }
+        channels
+    }
 }
 
 pub fn build_data_set(
@@ -47,12 +104,17 @@ pub fn build_data_set(
     test_size: usize,
 ) {
     let mut context = SimContext::default();
+    let axis_generator = InputGenerator::default()
+        .set_throttle(InputGenerationMethod::Brownian)
+        .set_yaw(InputGenerationMethod::Brownian)
+        .set_pitch(InputGenerationMethod::Brownian)
+        .set_roll(InputGenerationMethod::Brownian);
     context.set_loader(&crate::LoaderType::File);
     let training_inputs = (0..training_size)
-        .map(|_| generate_all_axis(training_duration))
+        .map(|_| axis_generator.generate(training_duration))
         .collect::<Vec<_>>();
     let test_inputs = (0..test_size)
-        .map(|_| generate_all_axis(training_duration))
+        .map(|_| axis_generator.generate(training_duration))
         .collect::<Vec<_>>();
 
     // TODO: do this on multiple cores
@@ -79,11 +141,7 @@ pub fn build_data_set(
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        input_gen::{build_data_set, generate_axis},
-        SimContext,
-    };
-    use flight_controller::Channels;
+    use crate::{input_gen::InputGenerator, SimContext};
     use std::time::Duration;
 
     #[test]
@@ -93,17 +151,9 @@ mod test {
         context.set_loader(&crate::LoaderType::File);
         context.set_logger(crate::LoggerType::File("up_only".into()));
 
-        let duration = Duration::from_secs(5);
-        let milisecs = duration.as_millis();
-        let throttle = generate_axis(milisecs);
-        let inputs: Vec<_> = (0..milisecs)
-            .map(|ms| Channels {
-                throttle: throttle[ms as usize], // we can try another one
-                roll: 0.,
-                pitch: 0.,
-                yaw: 0.,
-            })
-            .collect();
+        let input_generator =
+            InputGenerator::default().set_throttle(super::InputGenerationMethod::Brownian);
+        let inputs = input_generator.generate(Duration::from_secs(5));
 
         let mut simulation = context.try_load_simulator().unwrap();
         simulation.init();
@@ -120,17 +170,9 @@ mod test {
         context.set_loader(&crate::LoaderType::File);
         context.set_logger(crate::LoggerType::File("yaw_only".into()));
 
-        let duration = Duration::from_secs(5);
-        let milisecs = duration.as_millis();
-        let yaw = generate_axis(milisecs);
-        let inputs: Vec<_> = (0..milisecs)
-            .map(|ms| Channels {
-                throttle: 0., // we can try another one
-                roll: 0.,
-                pitch: 0.,
-                yaw: yaw[ms as usize],
-            })
-            .collect();
+        let input_generator =
+            InputGenerator::default().set_yaw(super::InputGenerationMethod::Brownian);
+        let inputs = input_generator.generate(Duration::from_secs(5));
 
         let mut simulation = context.try_load_simulator().unwrap();
         simulation.init();
@@ -141,11 +183,64 @@ mod test {
     }
 
     #[test]
-    fn build_data_set_1() {
-        let ds_id_1 = "ds_id_1";
-        let tr_duration = Duration::from_secs(5);
-        let tr_size = 10;
-        let te_size = 10;
-        build_data_set(ds_id_1.into(), tr_duration, tr_size, te_size);
+    fn axis_combination_datasets() {
+        let axis_combinations: Vec<Vec<&str>> = vec![
+            // singles
+            vec!["throttle"],
+            vec!["yaw"],
+            vec!["pitch"],
+            vec!["roll"],
+            // pairs
+            vec!["throttle", "yaw"],
+            vec!["throttle", "pitch"],
+            vec!["throttle", "roll"],
+            vec!["yaw", "pitch"],
+            vec!["yaw", "roll"],
+            vec!["pitch", "roll"],
+            // triplets
+            vec!["throttle", "yaw", "pitch"],
+            vec!["throttle", "yaw", "roll"],
+            vec!["throttle", "pitch", "roll"],
+            vec!["yaw", "pitch", "roll"],
+        ];
+
+        for axes in axis_combinations {
+            let mut generator = InputGenerator::default();
+            let mut log_suffix_parts: Vec<&str> = Vec::with_capacity(axes.len());
+
+            for axis in &axes {
+                match *axis {
+                    "throttle" => {
+                        generator = generator.set_throttle(super::InputGenerationMethod::Brownian)
+                    }
+                    "yaw" => generator = generator.set_yaw(super::InputGenerationMethod::Brownian),
+                    "pitch" => {
+                        generator = generator.set_pitch(super::InputGenerationMethod::Brownian)
+                    }
+                    "roll" => {
+                        generator = generator.set_roll(super::InputGenerationMethod::Brownian)
+                    }
+                    _ => unreachable!(),
+                }
+                log_suffix_parts.push(axis);
+            }
+
+            let log_suffix = log_suffix_parts.join("_");
+            let logger_id = format!("{log_suffix}_combo");
+
+            let mut context = SimContext::default();
+            context.set_controller(crate::ControllerType::Betafligt);
+            context.set_loader(&crate::LoaderType::File);
+            context.set_logger(crate::LoggerType::File(logger_id));
+
+            let inputs = generator.generate(Duration::from_secs(5));
+
+            let mut simulation = context.try_load_simulator().unwrap();
+            simulation.init();
+
+            for input in inputs {
+                simulation.simulate_delta(Duration::from_millis(1), input);
+            }
+        }
     }
 }

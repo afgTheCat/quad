@@ -1,4 +1,3 @@
-use nalgebra::DVector;
 use serde::{Deserialize, Serialize};
 use std::{ops::Index, time::Duration};
 
@@ -47,19 +46,6 @@ pub struct FlightControllerUpdate {
     pub battery_update: BatteryUpdate,
     pub gyro_update: GyroUpdate,
     pub channels: Channels,
-}
-
-impl FlightControllerUpdate {
-    pub fn to_rc_input(&self) -> DVector<f64> {
-        let Channels {
-            throttle,
-            roll,
-            pitch,
-            yaw,
-        } = self.channels;
-        // Keep the feature ordering in sync with training inputs (throttle, roll, yaw, pitch).
-        DVector::from_row_slice(&[throttle, roll, yaw, pitch])
-    }
 }
 
 pub trait FlightController: Send + Sync + 'static {

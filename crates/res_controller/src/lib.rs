@@ -1,5 +1,7 @@
 use drone::Drone;
-use flight_controller::{Channels, FlightController, FlightControllerUpdate, MotorInput};
+use flight_controller::{
+    Channels, FlightController, FlightControllerUpdate, GyroUpdate, MotorInput,
+};
 use loggers::SnapShot;
 use nalgebra::{DMatrix, DVector};
 use res::{
@@ -76,8 +78,8 @@ pub fn flight_controller_update_to_reservoir_input(update: FlightControllerUpdat
         pitch,
         yaw,
     } = update.channels;
-    // Keep the feature ordering in sync with training inputs (throttle, roll, yaw, pitch).
-    DVector::from_row_slice(&[throttle, roll, yaw, pitch])
+    let [rot_w, rot_x, rot_y, rot_z] = update.gyro_update.rotation;
+    DVector::from_row_slice(&[throttle, roll, yaw, pitch, rot_w, rot_x, rot_y, rot_z])
 }
 
 pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone) -> DVector<f64> {
@@ -90,10 +92,6 @@ pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone)
         //         * drone.battery_model.quad_bat_cell_count as f64),
         // snapshot.battery_update.amperage / 60., // TODO: should be calculated
         // snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
-        // snapshot.gyro_update.rotation[0],
-        // snapshot.gyro_update.rotation[1],
-        // snapshot.gyro_update.rotation[2],
-        // snapshot.gyro_update.rotation[3],
         // snapshot.gyro_update.linear_acc[0] / 40.,
         // snapshot.gyro_update.linear_acc[1] / 40.,
         // snapshot.gyro_update.linear_acc[2] / 40.,
@@ -104,6 +102,10 @@ pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone)
         snapshot.channels.roll,
         snapshot.channels.yaw,
         snapshot.channels.pitch,
+        snapshot.gyro_update.rotation[0],
+        snapshot.gyro_update.rotation[1],
+        snapshot.gyro_update.rotation[2],
+        snapshot.gyro_update.rotation[3],
     ])
 }
 
@@ -111,7 +113,7 @@ impl FlightController for DroneRc {
     fn init(&self) {}
 
     fn update(&self, _delta_time: f64, update: FlightControllerUpdate) -> MotorInput {
-        let rc_input = update.to_rc_input();
+        let rc_input = flight_controller_update_to_reservoir_input(update);
         let input = FlightInput::new_from_rc_input(vec![vec![rc_input]]);
         let pr = self.predict(Box::new(input));
         let motor_input_1 = f64::clamp(*pr.row(0).get(0).unwrap(), 0., 1.);

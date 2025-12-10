@@ -25,10 +25,6 @@ impl Logger for FileLogger {
             fs::write(log_path, contents).unwrap();
         }
     }
-
-    // fn set_simulation_id(&mut self, smulation_id: &str) {
-    //     self.simulation_id = smulation_id.to_string()
-    // }
 }
 
 impl FileLogger {
