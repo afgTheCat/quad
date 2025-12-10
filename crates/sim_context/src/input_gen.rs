@@ -79,8 +79,66 @@ pub fn build_data_set(
 
 #[cfg(test)]
 mod test {
-    use crate::input_gen::build_data_set;
+    use crate::{
+        input_gen::{build_data_set, generate_axis},
+        SimContext,
+    };
+    use flight_controller::Channels;
     use std::time::Duration;
+
+    #[test]
+    fn up_only_ds() {
+        let mut context = SimContext::default();
+        context.set_controller(crate::ControllerType::Betafligt);
+        context.set_loader(&crate::LoaderType::File);
+        context.set_logger(crate::LoggerType::File("up_only".into()));
+
+        let duration = Duration::from_secs(5);
+        let milisecs = duration.as_millis();
+        let throttle = generate_axis(milisecs);
+        let inputs: Vec<_> = (0..milisecs)
+            .map(|ms| Channels {
+                throttle: throttle[ms as usize], // we can try another one
+                roll: 0.,
+                pitch: 0.,
+                yaw: 0.,
+            })
+            .collect();
+
+        let mut simulation = context.try_load_simulator().unwrap();
+        simulation.init();
+
+        for input in inputs {
+            simulation.simulate_delta(Duration::from_millis(1), input);
+        }
+    }
+
+    #[test]
+    fn yaw_only_ds() {
+        let mut context = SimContext::default();
+        context.set_controller(crate::ControllerType::Betafligt);
+        context.set_loader(&crate::LoaderType::File);
+        context.set_logger(crate::LoggerType::File("yaw_only".into()));
+
+        let duration = Duration::from_secs(5);
+        let milisecs = duration.as_millis();
+        let yaw = generate_axis(milisecs);
+        let inputs: Vec<_> = (0..milisecs)
+            .map(|ms| Channels {
+                throttle: 0., // we can try another one
+                roll: 0.,
+                pitch: 0.,
+                yaw: yaw[ms as usize],
+            })
+            .collect();
+
+        let mut simulation = context.try_load_simulator().unwrap();
+        simulation.init();
+
+        for input in inputs {
+            simulation.simulate_delta(Duration::from_millis(1), input);
+        }
+    }
 
     #[test]
     fn build_data_set_1() {

@@ -111,12 +111,10 @@ pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
 
 #[cfg(test)]
 mod test {
-    use sim_context::SimContext;
-
-    use crate::{SingleFlightTrainingStrategy, recreate_replay, train_on_flight};
+    use crate::{SingleFlightTrainingStrategy, train_on_flight};
 
     #[test]
-    fn new_test_training_thing() {
+    fn only_up_training() {
         let strategy = SingleFlightTrainingStrategy {
             train_flight_log_id: "only_up".into(),
             trained_controller_id: "controller_trained_on_only_up".into(),
@@ -127,14 +125,25 @@ mod test {
     }
 
     #[test]
-    fn just_the_controller() {
-        const CONTROLLER_ID: &str = "buffered_trained_on_only_up";
-        const REPLAY_ID: &str = "only_up";
-        const NEW_REPLAY_ID: &str = "hmmmmm";
-
-        let mut sim_context = SimContext::default();
-        sim_context.set_loader(&sim_context::LoaderType::File);
-        sim_context.set_logger(sim_context::LoggerType::File(NEW_REPLAY_ID.into()));
-        recreate_replay(&mut sim_context, CONTROLLER_ID, REPLAY_ID, "wwwww");
+    fn up_only_training() {
+        let strategy = SingleFlightTrainingStrategy {
+            train_flight_log_id: "up_only".into(),
+            trained_controller_id: "up_only_controller".into(),
+            recreated_replay_id: "up_only_recreation".into(),
+            representation_type: res::representation::RepresentationType::BufferedStates(10),
+        };
+        train_on_flight(strategy);
     }
+
+    // #[test]
+    // fn just_the_controller() {
+    //     const CONTROLLER_ID: &str = "buffered_trained_on_only_up";
+    //     const REPLAY_ID: &str = "only_up";
+    //     const NEW_REPLAY_ID: &str = "hmmmmm";
+    //
+    //     let mut sim_context = SimContext::default();
+    //     sim_context.set_loader(&sim_context::LoaderType::File);
+    //     sim_context.set_logger(sim_context::LoggerType::File(NEW_REPLAY_ID.into()));
+    //     recreate_replay(&mut sim_context, CONTROLLER_ID, REPLAY_ID, "wwwww");
+    // }
 }
