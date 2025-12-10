@@ -21,7 +21,6 @@ pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
 pub struct SingleFlightTrainingStrategy {
     train_flight_log_id: String,
     trained_controller_id: String,
-    recreated_replay_id: String,
     representation_type: RepresentationType,
 }
 
@@ -46,7 +45,7 @@ fn snapshots_to_flight_input(flight_logs: Vec<FlightLog>, drone: &Drone) -> Flig
     }
 }
 
-fn recreate_replay(
+pub fn recreate_replay(
     sim_context: &mut SimContext,
     controller_id: &str,
     flight_log_id: &str,
@@ -69,10 +68,7 @@ fn recreate_replay(
     }
 }
 
-pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
-    let mut sim_context = SimContext::default();
-    sim_context.set_loader(&sim_context::LoaderType::File);
-
+pub fn train_on_flight(sim_context: &mut SimContext, strategy: &SingleFlightTrainingStrategy) {
     // does not change
     let drone = sim_context.load_drone().unwrap();
     let mut flight_log = sim_context.load_flight_log(&strategy.train_flight_log_id);
@@ -100,49 +96,46 @@ pub fn train_on_flight(strategy: SingleFlightTrainingStrategy) {
 
     drone_rc.fit(Box::new(input.clone()), data_points);
     sim_context.insert_drone_rc(&strategy.trained_controller_id, drone_rc);
-
-    recreate_replay(
-        &mut sim_context,
-        &strategy.trained_controller_id,
-        &strategy.train_flight_log_id,
-        &strategy.recreated_replay_id,
-    );
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{SingleFlightTrainingStrategy, train_on_flight};
-
-    // #[test]
-    // fn only_up_training() {
-    //     let strategy = SingleFlightTrainingStrategy {
-    //         train_flight_log_id: "only_up".into(),
-    //         trained_controller_id: "controller_trained_on_only_up".into(),
-    //         recreated_replay_id: "only_up_recreation_buffered_states".into(),
-    //         representation_type: res::representation::RepresentationType::BufferedStates(10),
-    //     };
-    //     train_on_flight(strategy);
-    // }
+    use crate::{SingleFlightTrainingStrategy, recreate_replay, train_on_flight};
+    use sim_context::SimContext;
 
     #[test]
     fn up_only_training() {
+        let mut sim_context = SimContext::default();
+        sim_context.set_loader(&sim_context::LoaderType::File);
         let strategy = SingleFlightTrainingStrategy {
             train_flight_log_id: "up_only".into(),
             trained_controller_id: "up_only_controller".into(),
-            recreated_replay_id: "up_only_recreation".into(),
             representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
-        train_on_flight(strategy);
+        train_on_flight(&mut sim_context, &strategy);
+        recreate_replay(
+            &mut sim_context,
+            &strategy.trained_controller_id,
+            &strategy.train_flight_log_id,
+            "up_only_recreation",
+        );
     }
 
     #[test]
     fn yaw_training() {
+        let mut sim_context = SimContext::default();
+        sim_context.set_loader(&sim_context::LoaderType::File);
         let strategy = SingleFlightTrainingStrategy {
             train_flight_log_id: "yaw_only".into(),
             trained_controller_id: "yaw_only_controller".into(),
-            recreated_replay_id: "yaw_only_recreation".into(),
             representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
-        train_on_flight(strategy);
+        train_on_flight(&mut sim_context, &strategy);
+        recreate_replay(
+            &mut sim_context,
+            &strategy.trained_controller_id,
+            &strategy.train_flight_log_id,
+            "yaw_only_controller",
+        );
     }
 }

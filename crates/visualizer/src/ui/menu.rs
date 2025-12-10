@@ -157,14 +157,10 @@ pub fn main_menu_toggle(
 
     ui.horizontal(|ui| {
         ui.label("Logger:");
-        if let UIState::Simulation {
-            logger,
-            simulation_name,
-            ..
-        } = ui_state
-        {
+        if let UIState::Simulation { logger, .. } = ui_state {
             let label = format!("{logger:?}");
             egui::ComboBox::from_id_salt("Logger selector")
+                .height(300.)
                 .selected_text(label)
                 .show_ui(ui, |ui| {
                     ui.selectable_value(logger, LoggerArchType::DB, "DB logger");
@@ -184,12 +180,28 @@ pub fn main_menu_toggle(
                 Some(x) => format!("Replay: {}", x),
                 None => "Not selected".to_string(),
             };
-            egui::ComboBox::from_id_salt("Replay selector")
+            let replay_selector_id = format!("replay_selector_{}", context.replay_ids.len());
+            egui::ComboBox::from_id_salt(replay_selector_id)
                 .selected_text(label)
                 .show_ui(ui, |ui| {
-                    for id in context.replay_ids.iter() {
-                        ui.selectable_value(replay_id, Some(id.into()), format!("Replay {}", id));
-                    }
+                    let row_height = ui.spacing().interact_size.y;
+                    let approx_content_height = row_height * context.replay_ids.len() as f32;
+                    // Reset scroll-state when the list size changes so cached height doesn't persist.
+                    let scroll_id = format!("replay_scroll_{}", context.replay_ids.len());
+                    let mut render_replay_options = |ui: &mut egui::Ui| {
+                        for id in context.replay_ids.iter() {
+                            ui.selectable_value(
+                                replay_id,
+                                Some(id.into()),
+                                format!("Replay {}", id),
+                            );
+                        }
+                    };
+
+                    egui::ScrollArea::vertical()
+                        .id_salt(scroll_id)
+                        .min_scrolled_height(approx_content_height)
+                        .show(ui, |ui| render_replay_options(ui));
                 });
         } else {
             ui.label("Only available in replay mode");
@@ -296,6 +308,7 @@ pub fn menu_ui(
                 available_height * 3. / 4. - 10.,
             );
             let info_box = Rect::from_min_max(info_box_min, info_box_max);
+            println!("info box {info_box}");
             ui.allocate_new_ui(UiBuilder::new().max_rect(info_box), |ui| {
                 main_menu_toggle(ui, ui_state, context, next_visualizer_state);
             });

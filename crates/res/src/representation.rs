@@ -6,6 +6,7 @@ use ridge::RidgeRegression;
 use serde::Deserialize;
 use serde::Serialize;
 
+#[derive(Debug, Clone, Copy)]
 pub enum RepresentationType {
     LastState,
     Output(f64),

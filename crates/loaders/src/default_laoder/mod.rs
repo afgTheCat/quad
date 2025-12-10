@@ -9,11 +9,11 @@ use crate::LoaderTrait;
 pub struct DefaultLoader {}
 
 impl LoaderTrait for DefaultLoader {
-    fn load_drone(&mut self, config_id: &str) -> drone::Drone {
+    fn load_drone(&mut self, _config_id: &str) -> drone::Drone {
         default_7in_4s_drone()
     }
 
-    fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
+    fn load_replay(&mut self, _sim_id: &str) -> loggers::FlightLog {
         unreachable!()
     }
 
@@ -25,11 +25,11 @@ impl LoaderTrait for DefaultLoader {
         vec![]
     }
 
-    fn load_res_controller(&mut self, controller_id: &str) -> DroneRc {
+    fn load_res_controller(&mut self, _controller_id: &str) -> DroneRc {
         unreachable!()
     }
 
-    fn insert_reservoir(&mut self, controller_id: &str, controller: DroneRc) {
+    fn insert_reservoir(&mut self, _controller_id: &str, _controller: DroneRc) {
         todo!()
     }
 }
