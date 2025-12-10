@@ -10,3 +10,5 @@ nalgebra.workspace = true
 db_common.workspace = true
 serde.workspace = true
 flight_controller.workspace = true
+loggers.workspace = true
+drone.workspace = true

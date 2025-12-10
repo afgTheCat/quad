@@ -10484,7 +10484,9 @@ name = "res_controller"
 version = "0.1.0"
 dependencies = [
  "db_common",
+ "drone",
  "flight_controller",
+ "loggers",
  "nalgebra",
  "res",
  "ridge",

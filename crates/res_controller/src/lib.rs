@@ -1,7 +1,7 @@
-use std::time::Duration;
-
-use flight_controller::{FlightController, FlightControllerUpdate, MotorInput};
-use nalgebra::DMatrix;
+use drone::Drone;
+use flight_controller::{Channels, FlightController, FlightControllerUpdate, MotorInput};
+use loggers::SnapShot;
+use nalgebra::{DMatrix, DVector};
 use res::{
     esn::Esn,
     input::{FlightInput, RcInput},
@@ -12,6 +12,7 @@ use res::{
 };
 use ridge::RidgeRegression;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct DroneRc {
@@ -65,6 +66,45 @@ impl DroneRc {
         let input_repr = self.representation.repr(input, res_states);
         self.readout.predict(input_repr)
     }
+}
+
+// describes how to convert a flight controller update to a reservoir input
+pub fn flight_controller_update_to_reservoir_input(update: FlightControllerUpdate) -> DVector<f64> {
+    let Channels {
+        throttle,
+        roll,
+        pitch,
+        yaw,
+    } = update.channels;
+    // Keep the feature ordering in sync with training inputs (throttle, roll, yaw, pitch).
+    DVector::from_row_slice(&[throttle, roll, yaw, pitch])
+}
+
+pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone) -> DVector<f64> {
+    DVector::from_row_slice(&[
+        // snapshot.battery_update.bat_voltage_sag
+        //     / (drone.current_frame.battery_state.bat_voltage_sag
+        //         * drone.battery_model.quad_bat_cell_count as f64),
+        // snapshot.battery_update.bat_voltage
+        //     / (drone.current_frame.battery_state.bat_voltage
+        //         * drone.battery_model.quad_bat_cell_count as f64),
+        // snapshot.battery_update.amperage / 60., // TODO: should be calculated
+        // snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
+        // snapshot.gyro_update.rotation[0],
+        // snapshot.gyro_update.rotation[1],
+        // snapshot.gyro_update.rotation[2],
+        // snapshot.gyro_update.rotation[3],
+        // snapshot.gyro_update.linear_acc[0] / 40.,
+        // snapshot.gyro_update.linear_acc[1] / 40.,
+        // snapshot.gyro_update.linear_acc[2] / 40.,
+        // snapshot.gyro_update.angular_velocity[0] / 20.,
+        // snapshot.gyro_update.angular_velocity[1] / 20.,
+        // snapshot.gyro_update.angular_velocity[2] / 20.,
+        snapshot.channels.throttle,
+        snapshot.channels.roll,
+        snapshot.channels.yaw,
+        snapshot.channels.pitch,
+    ])
 }
 
 impl FlightController for DroneRc {
