@@ -16,7 +16,7 @@ pub trait LoaderTrait: Send + Sync {
     // fn load_simulation(&mut self, config_id: &str) -> Simulator;
 
     // Load replay
-    fn load_replay(&mut self, sim_id: &str) -> FlightLog;
+    fn load_flight_log(&mut self, sim_id: &str) -> FlightLog;
 
     // Get simulation ids
     fn get_replay_ids(&mut self) -> Vec<String>;

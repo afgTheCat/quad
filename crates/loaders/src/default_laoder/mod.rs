@@ -13,7 +13,7 @@ impl LoaderTrait for DefaultLoader {
         default_7in_4s_drone()
     }
 
-    fn load_replay(&mut self, _sim_id: &str) -> loggers::FlightLog {
+    fn load_flight_log(&mut self, _sim_id: &str) -> loggers::FlightLog {
         unreachable!()
     }
 

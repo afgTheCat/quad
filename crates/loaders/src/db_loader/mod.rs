@@ -301,7 +301,7 @@ impl LoaderTrait for DBLoader {
         db.fetch_res_controller_ids()
     }
 
-    fn load_replay(&mut self, sim_id: &str) -> FlightLog {
+    fn load_flight_log(&mut self, sim_id: &str) -> FlightLog {
         let mut db = self.db.lock().unwrap();
         let db_flight_logs = db.fetch_flight_logs(sim_id);
         let snapshots = db_flight_logs

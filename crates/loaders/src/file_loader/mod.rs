@@ -22,7 +22,7 @@ impl LoaderTrait for FileLoader {
         serde_json::from_slice(content.as_bytes()).unwrap()
     }
 
-    fn load_replay(&mut self, sim_id: &str) -> loggers::FlightLog {
+    fn load_flight_log(&mut self, sim_id: &str) -> loggers::FlightLog {
         let mut replay = loader_path();
         replay.push("replays/");
         fs::create_dir_all(&replay).unwrap();

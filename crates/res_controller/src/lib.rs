@@ -1,7 +1,5 @@
 use drone::Drone;
-use flight_controller::{
-    Channels, FlightController, FlightControllerUpdate, GyroUpdate, MotorInput,
-};
+use flight_controller::{Channels, FlightController, FlightControllerUpdate, MotorInput};
 use loggers::SnapShot;
 use nalgebra::{DMatrix, DVector};
 use res::{

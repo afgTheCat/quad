@@ -1,7 +1,8 @@
 use std::time::Duration;
 
-use db_common::DBFlightLog;
 use drone::Drone;
+use flight_controller::FlightController;
+use flight_controller::FlightControllerUpdate;
 use loggers::{FlightLog, SnapShot};
 use nalgebra::{DMatrix, DVector};
 use res::{input::FlightInput, representation::RepresentationType};
@@ -9,17 +10,8 @@ use res_controller::{DroneRc, snapshot_to_reservoir_input};
 use ridge::RidgeRegression;
 use sim_context::SimContext;
 
-pub fn db_fl_to_rc_output(fl: &DBFlightLog) -> DVector<f64> {
-    DVector::from_row_slice(&[
-        fl.motor_input_1,
-        fl.motor_input_2,
-        fl.motor_input_3,
-        fl.motor_input_4,
-    ])
-}
-
 pub struct SingleFlightTrainingStrategy {
-    train_flight_log_id: String,
+    train_flight_log: String,
     trained_controller_id: String,
     representation_type: RepresentationType,
 }
@@ -69,9 +61,8 @@ pub fn recreate_replay(
 }
 
 pub fn train_on_flight(sim_context: &mut SimContext, strategy: &SingleFlightTrainingStrategy) {
-    // does not change
     let drone = sim_context.load_drone().unwrap();
-    let mut flight_log = sim_context.load_flight_log(&strategy.train_flight_log_id);
+    let mut flight_log = sim_context.load_flight_log(&strategy.train_flight_log);
 
     flight_log.downsample(Duration::from_millis(10));
     let mut drone_rc = DroneRc::new(
@@ -98,6 +89,45 @@ pub fn train_on_flight(sim_context: &mut SimContext, strategy: &SingleFlightTrai
     sim_context.insert_drone_rc(&strategy.trained_controller_id, drone_rc);
 }
 
+pub struct EvaluateSingleTrainingStrategy {
+    test_flight_log: String,
+    test_flight_controller: String,
+}
+
+pub fn evaluate_single_episode_training(
+    sim_context: &mut SimContext,
+    EvaluateSingleTrainingStrategy {
+        test_flight_log,
+        test_flight_controller,
+    }: &EvaluateSingleTrainingStrategy,
+) {
+    let flight_log = sim_context
+        .loader
+        .lock()
+        .unwrap()
+        .load_flight_log(&test_flight_log);
+    let controller = sim_context
+        .loader
+        .lock()
+        .unwrap()
+        .load_res_controller(&test_flight_controller);
+
+    let mut predicted_motor_inputs = vec![];
+    let mut actual_motor_inputs = vec![];
+    for snapshot in flight_log.steps {
+        actual_motor_inputs.push(snapshot.motor_input);
+        // TODO: this should be the accurate time elapsed, but we don't really use this right now
+        let duration = Duration::default();
+        let update = FlightControllerUpdate {
+            battery_update: snapshot.battery_update,
+            gyro_update: snapshot.gyro_update,
+            channels: snapshot.channels,
+        };
+        let prediction = controller.update(duration.as_secs_f64(), update);
+        predicted_motor_inputs.push(prediction);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{SingleFlightTrainingStrategy, recreate_replay, train_on_flight};
@@ -108,7 +138,7 @@ mod test {
         let mut sim_context = SimContext::default();
         sim_context.set_loader(&sim_context::LoaderType::File);
         let strategy = SingleFlightTrainingStrategy {
-            train_flight_log_id: "up_only".into(),
+            train_flight_log: "up_only".into(),
             trained_controller_id: "up_only_controller".into(),
             representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
@@ -116,7 +146,7 @@ mod test {
         recreate_replay(
             &mut sim_context,
             &strategy.trained_controller_id,
-            &strategy.train_flight_log_id,
+            &strategy.train_flight_log,
             "up_only_recreation",
         );
     }
@@ -126,7 +156,7 @@ mod test {
         let mut sim_context = SimContext::default();
         sim_context.set_loader(&sim_context::LoaderType::File);
         let strategy = SingleFlightTrainingStrategy {
-            train_flight_log_id: "yaw_only".into(),
+            train_flight_log: "yaw_only".into(),
             trained_controller_id: "yaw_only_controller".into(),
             representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
@@ -134,7 +164,7 @@ mod test {
         recreate_replay(
             &mut sim_context,
             &strategy.trained_controller_id,
-            &strategy.train_flight_log_id,
+            &strategy.train_flight_log,
             "yaw_only_controller",
         );
     }

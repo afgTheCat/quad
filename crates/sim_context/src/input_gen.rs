@@ -1,7 +1,14 @@
 use crate::SimContext;
 use flight_controller::Channels;
-use rand::{distributions::Bernoulli, prelude::Distribution, thread_rng};
-use std::time::Duration;
+use rand::{
+    distributions::Bernoulli, prelude::Distribution, rngs::StdRng, thread_rng, SeedableRng,
+};
+use std::{cell::RefCell, time::Duration};
+
+// set seed!
+thread_local! {
+    static RNG: RefCell<StdRng> = RefCell::new(StdRng::seed_from_u64(0));
+}
 
 // TODO: check if the data set is going to be rich enough
 fn generate_brownian(milisecs: u128) -> Vec<f64> {
@@ -226,19 +233,32 @@ mod test {
             }
 
             let log_suffix = log_suffix_parts.join("_");
-            let logger_id = format!("{log_suffix}_combo");
+            let train_logger_id = format!("{log_suffix}_combo_train");
+            let test_logger_id = format!("{log_suffix}_combo_test");
 
             let mut context = SimContext::default();
             context.set_controller(crate::ControllerType::Betafligt);
             context.set_loader(&crate::LoaderType::File);
-            context.set_logger(crate::LoggerType::File(logger_id));
 
-            let inputs = generator.generate(Duration::from_secs(5));
+            // Training trajectory
+            context.set_logger(crate::LoggerType::File(train_logger_id));
+            let train_inputs = generator.generate(Duration::from_secs(5));
 
             let mut simulation = context.try_load_simulator().unwrap();
             simulation.init();
 
-            for input in inputs {
+            for input in train_inputs {
+                simulation.simulate_delta(Duration::from_millis(1), input);
+            }
+
+            // Test trajectory
+            context.set_logger(crate::LoggerType::File(test_logger_id));
+            let test_inputs = generator.generate(Duration::from_secs(5));
+
+            let mut simulation = context.try_load_simulator().unwrap();
+            simulation.init();
+
+            for input in test_inputs {
                 simulation.simulate_delta(Duration::from_millis(1), input);
             }
         }

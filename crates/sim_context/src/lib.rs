@@ -61,9 +61,9 @@ impl Loader {
 
     pub fn load_replay(&mut self, replay_id: &str) -> FlightLog {
         match self {
-            Self::DBLoader(loader) => loader.load_replay(replay_id),
-            Self::FileLoader(loader) => loader.load_replay(replay_id),
-            Self::DefaultLoader(loader) => loader.load_replay(replay_id),
+            Self::DBLoader(loader) => loader.load_flight_log(replay_id),
+            Self::FileLoader(loader) => loader.load_flight_log(replay_id),
+            Self::DefaultLoader(loader) => loader.load_flight_log(replay_id),
         }
     }
 }
@@ -196,7 +196,7 @@ impl SimContext {
     }
 
     pub fn load_flight_log(&mut self, replay_id: &str) -> FlightLog {
-        self.loader.lock().unwrap().load_replay(replay_id)
+        self.loader.lock().unwrap().load_flight_log(replay_id)
     }
 
     pub fn load_drone(&mut self) -> Option<Drone> {
@@ -208,7 +208,7 @@ impl SimContext {
 
     pub fn load_replayer(&mut self, config_id: &str, replay_id: &str) -> Replayer {
         let drone = self.loader.lock().unwrap().load_drone(config_id);
-        let sim_logs = self.loader.lock().unwrap().load_replay(replay_id);
+        let sim_logs = self.loader.lock().unwrap().load_flight_log(replay_id);
         Replayer {
             drone,
             time: Duration::new(0, 0),
