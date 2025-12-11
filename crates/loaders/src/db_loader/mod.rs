@@ -324,7 +324,7 @@ impl LoaderTrait for DBLoader {
                     cell_count: fl.cell_count as u64,
                 },
                 gyro_update: GyroUpdate {
-                    rotation: [fl.rot_quat_w, fl.rot_quat_x, fl.rot_quat_y, fl.rot_quat_z],
+                    rotation: [fl.rot_quat_x, fl.rot_quat_y, fl.rot_quat_z, fl.rot_quat_w],
                     angular_velocity: [
                         fl.angular_velocity_x,
                         fl.angular_velocity_y,

@@ -308,7 +308,6 @@ pub fn menu_ui(
                 available_height * 3. / 4. - 10.,
             );
             let info_box = Rect::from_min_max(info_box_min, info_box_max);
-            println!("info box {info_box}");
             ui.allocate_new_ui(UiBuilder::new().max_rect(info_box), |ui| {
                 main_menu_toggle(ui, ui_state, context, next_visualizer_state);
             });

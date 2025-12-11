@@ -68,34 +68,24 @@ impl DroneRc {
     }
 }
 
-// describes how to convert a flight controller update to a reservoir input
-pub fn flight_controller_update_to_reservoir_input(update: FlightControllerUpdate) -> DVector<f64> {
-    let Channels {
-        throttle,
-        roll,
-        pitch,
-        yaw,
-    } = update.channels;
-    let [rot_w, rot_x, rot_y, rot_z] = update.gyro_update.rotation;
-    DVector::from_row_slice(&[throttle, roll, yaw, pitch, rot_w, rot_x, rot_y, rot_z])
-}
+// TODO: maybe we can add these
+// snapshot.battery_update.bat_voltage_sag
+//     / (drone.current_frame.battery_state.bat_voltage_sag
+//         * drone.battery_model.quad_bat_cell_count as f64),
+// snapshot.battery_update.bat_voltage
+//     / (drone.current_frame.battery_state.bat_voltage
+//         * drone.battery_model.quad_bat_cell_count as f64),
+// snapshot.battery_update.amperage / 60., // TODO: should be calculated
+// snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
+// snapshot.gyro_update.linear_acc[0] / 40.,
+// snapshot.gyro_update.linear_acc[1] / 40.,
+// snapshot.gyro_update.linear_acc[2] / 40.,
+// snapshot.gyro_update.angular_velocity[0] / 20.,
+// snapshot.gyro_update.angular_velocity[1] / 20.,
+// snapshot.gyro_update.angular_velocity[2] / 20.,
 
 pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone) -> DVector<f64> {
     DVector::from_row_slice(&[
-        // snapshot.battery_update.bat_voltage_sag
-        //     / (drone.current_frame.battery_state.bat_voltage_sag
-        //         * drone.battery_model.quad_bat_cell_count as f64),
-        // snapshot.battery_update.bat_voltage
-        //     / (drone.current_frame.battery_state.bat_voltage
-        //         * drone.battery_model.quad_bat_cell_count as f64),
-        // snapshot.battery_update.amperage / 60., // TODO: should be calculated
-        // snapshot.battery_update.m_ah_drawn / drone.battery_model.quad_bat_capacity,
-        // snapshot.gyro_update.linear_acc[0] / 40.,
-        // snapshot.gyro_update.linear_acc[1] / 40.,
-        // snapshot.gyro_update.linear_acc[2] / 40.,
-        // snapshot.gyro_update.angular_velocity[0] / 20.,
-        // snapshot.gyro_update.angular_velocity[1] / 20.,
-        // snapshot.gyro_update.angular_velocity[2] / 20.,
         snapshot.channels.throttle,
         snapshot.channels.roll,
         snapshot.channels.yaw,
@@ -104,6 +94,21 @@ pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone)
         snapshot.gyro_update.rotation[1],
         snapshot.gyro_update.rotation[2],
         snapshot.gyro_update.rotation[3],
+    ])
+}
+
+// describes how to convert a flight controller update to a reservoir input
+pub fn flight_controller_update_to_reservoir_input(update: FlightControllerUpdate) -> DVector<f64> {
+    let Channels {
+        throttle,
+        roll,
+        pitch,
+        yaw,
+    } = update.channels;
+    let [rot_x, rot_y, rot_z, rot_w] = update.gyro_update.rotation;
+    DVector::from_row_slice(&[
+        throttle, roll, yaw, pitch, //
+        rot_w, rot_x, rot_y, rot_z,
     ])
 }
 

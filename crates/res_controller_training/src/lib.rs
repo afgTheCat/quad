@@ -126,46 +126,90 @@ pub fn evaluate_single_episode_training(
         let prediction = controller.update(duration.as_secs_f64(), update);
         predicted_motor_inputs.push(prediction);
     }
+
+    // Compute mean squared error over all motors and timesteps.
+    let total_samples = (predicted_motor_inputs.len() * 4) as f64;
+    if total_samples == 0. {
+        println!("No samples found when evaluating {}", test_flight_log);
+        return;
+    }
+
+    let mut squared_error_sum = 0.0;
+    for (predicted, actual) in predicted_motor_inputs
+        .iter()
+        .zip(actual_motor_inputs.iter())
+    {
+        for i in 0..4 {
+            let diff = predicted[i] - actual[i];
+            squared_error_sum += diff * diff;
+        }
+    }
+
+    let mse = squared_error_sum / total_samples;
+    println!(
+        "MSE for controller '{}' on flight log '{}': {}",
+        test_flight_controller, test_flight_log, mse
+    );
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{SingleFlightTrainingStrategy, recreate_replay, train_on_flight};
+    use crate::{
+        EvaluateSingleTrainingStrategy, SingleFlightTrainingStrategy,
+        evaluate_single_episode_training, train_on_flight,
+    };
     use sim_context::SimContext;
 
     #[test]
-    fn up_only_training() {
+    fn throttle_mse() {
         let mut sim_context = SimContext::default();
         sim_context.set_loader(&sim_context::LoaderType::File);
         let strategy = SingleFlightTrainingStrategy {
-            train_flight_log: "up_only".into(),
-            trained_controller_id: "up_only_controller".into(),
+            train_flight_log: "throttle_combo_train".into(),
+            trained_controller_id: "throttle_train".into(),
             representation_type: res::representation::RepresentationType::BufferedStates(10),
         };
         train_on_flight(&mut sim_context, &strategy);
-        recreate_replay(
-            &mut sim_context,
-            &strategy.trained_controller_id,
-            &strategy.train_flight_log,
-            "up_only_recreation",
-        );
+        let eval = EvaluateSingleTrainingStrategy {
+            test_flight_log: "throttle_combo_test".into(),
+            test_flight_controller: "throttle_train".into(),
+        };
+        evaluate_single_episode_training(&mut sim_context, &eval);
     }
 
-    #[test]
-    fn yaw_training() {
-        let mut sim_context = SimContext::default();
-        sim_context.set_loader(&sim_context::LoaderType::File);
-        let strategy = SingleFlightTrainingStrategy {
-            train_flight_log: "yaw_only".into(),
-            trained_controller_id: "yaw_only_controller".into(),
-            representation_type: res::representation::RepresentationType::BufferedStates(10),
-        };
-        train_on_flight(&mut sim_context, &strategy);
-        recreate_replay(
-            &mut sim_context,
-            &strategy.trained_controller_id,
-            &strategy.train_flight_log,
-            "yaw_only_controller",
-        );
-    }
+    // #[test]
+    // fn up_only_training() {
+    //     let mut sim_context = SimContext::default();
+    //     sim_context.set_loader(&sim_context::LoaderType::File);
+    //     let strategy = SingleFlightTrainingStrategy {
+    //         train_flight_log: "up_only".into(),
+    //         trained_controller_id: "up_only_controller".into(),
+    //         representation_type: res::representation::RepresentationType::BufferedStates(10),
+    //     };
+    //     train_on_flight(&mut sim_context, &strategy);
+    //     recreate_replay(
+    //         &mut sim_context,
+    //         &strategy.trained_controller_id,
+    //         &strategy.train_flight_log,
+    //         "up_only_recreation",
+    //     );
+    // }
+    //
+    // #[test]
+    // fn yaw_training() {
+    //     let mut sim_context = SimContext::default();
+    //     sim_context.set_loader(&sim_context::LoaderType::File);
+    //     let strategy = SingleFlightTrainingStrategy {
+    //         train_flight_log: "yaw_only".into(),
+    //         trained_controller_id: "yaw_only_controller".into(),
+    //         representation_type: res::representation::RepresentationType::BufferedStates(10),
+    //     };
+    //     train_on_flight(&mut sim_context, &strategy);
+    //     recreate_replay(
+    //         &mut sim_context,
+    //         &strategy.trained_controller_id,
+    //         &strategy.train_flight_log,
+    //         "yaw_only_controller",
+    //     );
+    // }
 }

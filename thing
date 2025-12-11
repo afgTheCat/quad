@@ -1,0 +1,851 @@
+   Compiling flight_controller v0.1.0 (/home/gabor/projects/quad/crates/flight_controller)
+warning: unnecessary parentheses around closure body
+   --> crates/res/src/reservoir.rs:108:34
+    |
+108 |                 .filter(|(_, v)| (**v > 30.))
+    |                                  ^         ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+108 -                 .filter(|(_, v)| (**v > 30.))
+108 +                 .filter(|(_, v)| **v > 30.)
+    |
+
+warning: use of deprecated method `nalgebra::base::matrix_view::<impl nalgebra::Matrix<T, R, C, S>>::slice_mut`: Use view_mut instead. See [issue #1076](https://github.com/dimforge/nalgebra/issues/1076) for more information.
+   --> crates/res/src/representation.rs:126:26
+    |
+126 |                         .slice_mut((t, dst_start), (1, n_units))
+    |                          ^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `nalgebra::base::matrix_view::<impl nalgebra::Matrix<T, R, C, S>>::slice`: Use view instead. See [issue #1076](https://github.com/dimforge/nalgebra/issues/1076) for more information.
+   --> crates/res/src/representation.rs:127:44
+    |
+127 |                         .copy_from(&states.slice((src_t, 0), (1, n_units)));
+    |                                            ^^^^^
+
+warning: unused variable: `input`
+   --> crates/res/src/representation.rs:107:20
+    |
+107 |     fn repr(&self, input: Box<dyn RcInput>, res_states: Vec<DMatrix<f64>>) -> DMatrix<f64> {
+    |                    ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `extract_double` is never used
+  --> crates/res/src/lib.rs:10:4
+   |
+10 | fn extract_double(data: Option<&Array>) -> Vec<f64> {
+   |    ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `one_hot_encode` is never used
+  --> crates/res/src/lib.rs:19:4
+   |
+19 | fn one_hot_encode(input: Vec<f64>) -> DMatrix<f64> {
+   |    ^^^^^^^^^^^^^^
+
+warning: `res` (lib) generated 6 warnings (run `cargo fix --lib -p res` to apply 2 suggestions)
+warning: `res` (lib test) generated 4 warnings (4 duplicates)
+   Compiling drone v0.1.0 (/home/gabor/projects/quad/crates/drone)
+   Compiling loggers v0.1.0 (/home/gabor/projects/quad/crates/loggers)
+   Compiling bf_controller v0.1.0 (/home/gabor/projects/quad/crates/bf_controller)
+warning[E0133]: call to unsafe function `libc::dlerror` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:53:27
+   |
+53 |         let dlerror_str = dlerror();
+   |                           ^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> crates/bf_controller/src/lib.rs:51:1
+   |
+51 | unsafe fn check_dl_error(dl_sym: *mut raw::c_void) -> Result<(), CString> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: `#[warn(unsafe_op_in_unsafe_fn)]` (part of `#[warn(rust_2024_compatibility)]`) on by default
+
+warning[E0133]: call to unsafe function `std::ffi::CStr::from_ptr` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:57:29
+   |
+57 |             let error_str = CStr::from_ptr(dlerror_str);
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+warning[E0133]: call to unsafe function `libc::dlinfo` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:66:18
+   |
+66 |     let result = dlinfo(dl_handle, RTLD_DI_LMID, &mut lmid as *mut _ as *mut c_void);
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> crates/bf_controller/src/lib.rs:64:1
+   |
+64 | unsafe fn get_lm_id(dl_handle: *mut raw::c_void) -> i64 {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+84 |         get_vb_method!(vbf_init, VBFInit);
+   |         --------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> crates/bf_controller/src/lib.rs:74:5
+   |
+74 |     unsafe fn new(lib_handle: *mut c_void, lmid: i64) -> Result<Self, CString> {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+84 |         get_vb_method!(vbf_init, VBFInit);
+   |         --------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+84 |         get_vb_method!(vbf_init, VBFInit);
+   |         --------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+85 |         get_vb_method!(vbf_update, VBFUpdate);
+   |         ------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+85 |         get_vb_method!(vbf_update, VBFUpdate);
+   |         ------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+85 |         get_vb_method!(vbf_update, VBFUpdate);
+   |         ------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+86 |         get_vb_method!(vbf_arm, VBFArm);
+   |         ------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+86 |         get_vb_method!(vbf_arm, VBFArm);
+   |         ------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+86 |         get_vb_method!(vbf_arm, VBFArm);
+   |         ------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+87 |         get_vb_method!(vbf_get_motor_signals, VBFGetMotorSignals);
+   |         --------------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+87 |         get_vb_method!(vbf_get_motor_signals, VBFGetMotorSignals);
+   |         --------------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+87 |         get_vb_method!(vbf_get_motor_signals, VBFGetMotorSignals);
+   |         --------------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+88 |         get_vb_method!(vbf_set_rc_data, VBFSetRcData);
+   |         --------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+88 |         get_vb_method!(vbf_set_rc_data, VBFSetRcData);
+   |         --------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+88 |         get_vb_method!(vbf_set_rc_data, VBFSetRcData);
+   |         --------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+89 |         get_vb_method!(vbf_set_gyro_data, VBFSetGyroData);
+   |         ------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+89 |         get_vb_method!(vbf_set_gyro_data, VBFSetGyroData);
+   |         ------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+89 |         get_vb_method!(vbf_set_gyro_data, VBFSetGyroData);
+   |         ------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+90 |         get_vb_method!(vbf_set_accel_data, VBFSetAccelData);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+90 |         get_vb_method!(vbf_set_accel_data, VBFSetAccelData);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+90 |         get_vb_method!(vbf_set_accel_data, VBFSetAccelData);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+91 |         get_vb_method!(vbf_set_attitude, VBFSetAttitude);
+   |         ------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+91 |         get_vb_method!(vbf_set_attitude, VBFSetAttitude);
+   |         ------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+91 |         get_vb_method!(vbf_set_attitude, VBFSetAttitude);
+   |         ------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+92 |         get_vb_method!(vbf_set_battery_data, VBFSetBattery);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+92 |         get_vb_method!(vbf_set_battery_data, VBFSetBattery);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+92 |         get_vb_method!(vbf_set_battery_data, VBFSetBattery);
+   |         --------------------------------------------------- in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlsym` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:78:34
+   |
+78 |                 let fn_pointer = dlsym(lib_handle, function_name.as_ptr().cast());
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+93 |         get_vb_method!(vbf_start_serial_ws_thread, VBFStartSerialWsThread);
+   |         ------------------------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:79:17
+   |
+79 |                 check_dl_error(fn_pointer)?;
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+93 |         get_vb_method!(vbf_start_serial_ws_thread, VBFStartSerialWsThread);
+   |         ------------------------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `std::intrinsics::transmute` is unsafe and requires unsafe block
+  --> crates/bf_controller/src/lib.rs:80:37
+   |
+80 |                 let $fn: $fn_type = std::mem::transmute(fn_pointer);
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+...
+93 |         get_vb_method!(vbf_start_serial_ws_thread, VBFStartSerialWsThread);
+   |         ------------------------------------------------------------------ in this macro invocation
+   |
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+   = note: this warning originates in the macro `get_vb_method` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `libc::dlmopen` is unsafe and requires unsafe block
+   --> crates/bf_controller/src/lib.rs:141:13
+    |
+141 |             dlmopen(workspace_id, LIB_PATH.as_ptr().cast(), RTLD_FLAGS)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> crates/bf_controller/src/lib.rs:138:5
+    |
+138 |     unsafe fn load_library(&self) -> (*mut c_void, i64) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning[E0133]: call to unsafe function `libc::dlmopen` is unsafe and requires unsafe block
+   --> crates/bf_controller/src/lib.rs:143:13
+    |
+143 |             dlmopen(LM_ID_NEWLM, LIB_PATH.as_ptr().cast(), RTLD_FLAGS)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+warning[E0133]: call to unsafe function `check_dl_error` is unsafe and requires unsafe block
+   --> crates/bf_controller/src/lib.rs:145:9
+    |
+145 |         check_dl_error(lib_handle).unwrap();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+warning[E0133]: call to unsafe function `get_lm_id` is unsafe and requires unsafe block
+   --> crates/bf_controller/src/lib.rs:147:20
+    |
+147 |         let lmid = get_lm_id(lib_handle);
+    |                    ^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+
+warning[E0133]: call to unsafe function `BFManager::load_library` is unsafe and requires unsafe block
+   --> crates/bf_controller/src/lib.rs:152:34
+    |
+152 |         let (lib_handle, lmid) = self.load_library();
+    |                                  ^^^^^^^^^^^^^^^^^^^ call to unsafe function
+    |
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> crates/bf_controller/src/lib.rs:151:5
+    |
+151 |     unsafe fn register_new2(&self) -> String {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: use of deprecated method `rerun::RecordingStream::set_time_nanos`: Use `set_time` with either `rerun::TimeCell::from_duration_nanos` or `rerun::TimeCell::from_timestamp_nanos_since_epoch`, or with `std::time::Duration` or `std::time::SystemTime`.
+  --> crates/loggers/src/rerun_logger/mod.rs:12:14
+   |
+12 |             .set_time_nanos("stable_time", snapshot.duration.as_nanos() as i64);
+   |              ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated method `rerun::RecordingStream::set_time_secs`: Use either `set_duration_secs` or `set_timestamp_secs_since_epoch` instead
+  --> crates/loggers/src/rerun_logger/mod.rs:37:13
+   |
+37 |         rec.set_time_secs("stable_time", 0f64);
+   |             ^^^^^^^^^^^^^
+
+warning: unused variable: `name`
+  --> crates/drone/src/default_drone.rs:50:41
+   |
+50 |             PROP_BLADE_MESH_NAMES.map(|(name, rotor_dir, position)| RotorState {
+   |                                         ^^^^ help: if this is intentional, prefix it with an underscore: `_name`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+For more information about this error, try `rustc --explain E0133`.
+warning: `bf_controller` (lib test) generated 38 warnings (run `cargo fix --lib -p bf_controller --tests` to apply 5 suggestions)
+warning: field `counter` is never read
+ --> crates/loggers/src/rerun_logger/mod.rs:5:5
+  |
+4 | pub struct RerunLogger {
+  |            ----------- field in this struct
+5 |     counter: usize,
+  |     ^^^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `loggers` (lib test) generated 3 warnings (2 duplicates)
+warning: `bf_controller` (lib) generated 38 warnings (38 duplicates)
+warning: `drone` (lib test) generated 1 warning (run `cargo fix --lib -p drone --tests` to apply 1 suggestion)
+   Compiling simulator v0.1.0 (/home/gabor/projects/quad/crates/simulator)
+   Compiling res_controller v0.1.0 (/home/gabor/projects/quad/crates/res_controller)
+warning: unused variable: `reference_drone`
+   --> crates/res_controller/src/lib.rs:102:57
+    |
+102 | pub fn snapshot_to_reservoir_input(snapshot: &SnapShot, reference_drone: &Drone) -> DVector<f64> {
+    |                                                         ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_reference_drone`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `drone` (lib) generated 1 warning (1 duplicate)
+   Compiling loaders v0.1.0 (/home/gabor/projects/quad/crates/loaders)
+warning: unreachable expression
+  --> crates/loaders/src/db_loader/mod.rs:76:21
+   |
+75 |             id: todo!(),
+   |                 ------- any code following this expression is unreachable
+76 |             output: todo!(),
+   |                     ^^^^^^^ unreachable expression
+   |
+   = note: `#[warn(unreachable_code)]` (part of `#[warn(unused)]`) on by default
+   = note: this warning originates in the macro `todo` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unreachable expression
+   --> crates/loaders/src/db_loader/mod.rs:100:28
+    |
+ 99 |             rotor_1_state: todo!(),
+    |                            ------- any code following this expression is unreachable
+100 |             rotor_2_state: todo!(),
+    |                            ^^^^^^^ unreachable expression
+    |
+    = note: this warning originates in the macro `todo` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: `res_controller` (lib) generated 1 warning (run `cargo fix --lib -p res_controller` to apply 1 suggestion)
+warning: unused variable: `simulation_id`
+  --> crates/loaders/src/db_loader/mod.rs:73:19
+   |
+73 |     fn from_drone(simulation_id: String, drone: &Drone) -> Self {
+   |                   ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_simulation_id`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `drone`
+  --> crates/loaders/src/db_loader/mod.rs:73:42
+   |
+73 |     fn from_drone(simulation_id: String, drone: &Drone) -> Self {
+   |                                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_drone`
+
+warning: unused variable: `rotor1_pwm_filter`
+  --> crates/loaders/src/db_loader/mod.rs:74:13
+   |
+74 |         let rotor1_pwm_filter = DBLowPassFilter {
+   |             ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_rotor1_pwm_filter`
+
+warning: associated function `from_drone` is never used
+  --> crates/loaders/src/db_loader/mod.rs:73:8
+   |
+70 | impl DBParts {
+   | ------------ associated function in this implementation
+...
+73 |     fn from_drone(simulation_id: String, drone: &Drone) -> Self {
+   |        ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling sim_context v0.1.0 (/home/gabor/projects/quad/crates/sim_context)
+warning: unused variable: `f`
+   --> crates/sim_context/src/lib.rs:104:19
+    |
+104 |     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    |                   ^ help: if this is intentional, prefix it with an underscore: `_f`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `loggers` (lib) generated 3 warnings (1 duplicate)
+warning: unused variable: `frame`
+   --> crates/loaders/src/db_loader/mod.rs:430:13
+    |
+430 |             frame,
+    |             ^^^^^ help: try ignoring the field: `frame: _`
+
+warning: unused variable: `rotor1_state`
+   --> crates/loaders/src/db_loader/mod.rs:431:13
+    |
+431 |             rotor1_state,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `rotor1_state: _`
+
+warning: unused variable: `pwm_filter_1`
+   --> crates/loaders/src/db_loader/mod.rs:432:13
+    |
+432 |             pwm_filter_1,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `pwm_filter_1: _`
+
+warning: unused variable: `rotor2_state`
+   --> crates/loaders/src/db_loader/mod.rs:433:13
+    |
+433 |             rotor2_state,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `rotor2_state: _`
+
+warning: unused variable: `pwm_filter_2`
+   --> crates/loaders/src/db_loader/mod.rs:434:13
+    |
+434 |             pwm_filter_2,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `pwm_filter_2: _`
+
+warning: unused variable: `rotor3_state`
+   --> crates/loaders/src/db_loader/mod.rs:435:13
+    |
+435 |             rotor3_state,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `rotor3_state: _`
+
+warning: unused variable: `pwm_filter_3`
+   --> crates/loaders/src/db_loader/mod.rs:436:13
+    |
+436 |             pwm_filter_3,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `pwm_filter_3: _`
+
+warning: unused variable: `rotor4_state`
+   --> crates/loaders/src/db_loader/mod.rs:437:13
+    |
+437 |             rotor4_state,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `rotor4_state: _`
+
+warning: unused variable: `pwm_filter_4`
+   --> crates/loaders/src/db_loader/mod.rs:438:13
+    |
+438 |             pwm_filter_4,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `pwm_filter_4: _`
+
+warning: unused variable: `gyro_filter1`
+   --> crates/loaders/src/db_loader/mod.rs:439:13
+    |
+439 |             gyro_filter1,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `gyro_filter1: _`
+
+warning: unused variable: `gyro_filter2`
+   --> crates/loaders/src/db_loader/mod.rs:440:13
+    |
+440 |             gyro_filter2,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `gyro_filter2: _`
+
+warning: unused variable: `gyro_filter3`
+   --> crates/loaders/src/db_loader/mod.rs:441:13
+    |
+441 |             gyro_filter3,
+    |             ^^^^^^^^^^^^ help: try ignoring the field: `gyro_filter3: _`
+
+warning: unused variable: `drone_model`
+   --> crates/loaders/src/db_loader/mod.rs:442:13
+    |
+442 |             drone_model,
+    |             ^^^^^^^^^^^ help: try ignoring the field: `drone_model: _`
+
+warning: unused variable: `motor_lpf1`
+   --> crates/loaders/src/db_loader/mod.rs:443:13
+    |
+443 |             motor_lpf1,
+    |             ^^^^^^^^^^ help: try ignoring the field: `motor_lpf1: _`
+
+warning: unused variable: `motor_lpf2`
+   --> crates/loaders/src/db_loader/mod.rs:444:13
+    |
+444 |             motor_lpf2,
+    |             ^^^^^^^^^^ help: try ignoring the field: `motor_lpf2: _`
+
+warning: unused variable: `motor_lpf3`
+   --> crates/loaders/src/db_loader/mod.rs:445:13
+    |
+445 |             motor_lpf3,
+    |             ^^^^^^^^^^ help: try ignoring the field: `motor_lpf3: _`
+
+warning: unused variable: `motor_lpf4`
+   --> crates/loaders/src/db_loader/mod.rs:446:13
+    |
+446 |             motor_lpf4,
+    |             ^^^^^^^^^^ help: try ignoring the field: `motor_lpf4: _`
+
+warning: unused variable: `sample_points`
+   --> crates/loaders/src/db_loader/mod.rs:447:13
+    |
+447 |             sample_points,
+    |             ^^^^^^^^^^^^^ help: try ignoring the field: `sample_points: _`
+
+warning: `res_controller` (lib test) generated 1 warning (1 duplicate)
+warning: `sim_context` (lib) generated 1 warning (run `cargo fix --lib -p sim_context` to apply 1 suggestion)
+warning: `loaders` (lib test) generated 23 warnings (5 duplicates) (run `cargo fix --lib -p loaders --tests` to apply 18 suggestions)
+warning: `loaders` (lib) generated 6 warnings (run `cargo fix --lib -p loaders` to apply 3 suggestions)
+   Compiling res_controller_training v0.1.0 (/home/gabor/projects/quad/crates/res_controller_training)
+   Compiling visualizer v0.1.0 (/home/gabor/projects/quad/crates/visualizer)
+warning: `sim_context` (lib test) generated 1 warning (1 duplicate)
+    Finished `release` profile [optimized + debuginfo] target(s) in 2.81s
+     Running unittests src/lib.rs (target/release/deps/bf_controller-56eaec8494bf59e9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/db_common-d72b674deb69f80c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/drone-6eb80d6b535d1965)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/flight_controller-3e4d0c1fde58c939)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/loaders-4e1ed67091d0f7c6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/loggers-df9f8c3bb856ca57)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/res-71c755fbac85c0de)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/res_controller-ef924f5a47161219)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/res_controller_training-e394a5f096238c91)
+
+running 1 test
+MSE for controller 'throttle_train' on flight log 'throttle_combo_test': 0.0658866173797024
+test test::throttle_mse ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.30s
+
+     Running unittests src/lib.rs (target/release/deps/ridge-e1c1db269ce870c3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/sim_context-310cb21f21411dc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/simulator-facea07d35640462)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/visualizer-816381f2d0854c9f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

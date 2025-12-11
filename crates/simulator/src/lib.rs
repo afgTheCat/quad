@@ -184,7 +184,7 @@ impl Replayer {
         let rpms =
             Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
         let pwms =
-            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.rpm).collect::<Vec<f64>>());
+            Vector4::from_row_slice(&rotors_state.iter().map(|r| r.pwm).collect::<Vec<f64>>());
 
         SimulationObservation {
             simulation_time: self.time,
